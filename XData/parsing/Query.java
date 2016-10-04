@@ -273,6 +273,12 @@ public class Query implements Serializable{
 		return this.repeatedRelationCount;
 	}
 	
+	//added by mathew on 1st october 2016
+	public void setRepeatedRelationCount(HashMap<String,Integer> repeatedRC){
+		this.repeatedRelationCount=repeatedRC;
+	}
+
+	
 	/*public void putTableNameToQueryIndex(String tableName, int queryType, int queryIndex){
 		int [] a = new int[2];
 		a[0] = queryType;

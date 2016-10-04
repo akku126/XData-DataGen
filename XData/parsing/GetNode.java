@@ -173,17 +173,19 @@ public class GetNode {
 			flattenedNodes.addAll(flattenNode(qParser, node.getRight()));
 		} else if (node.getType().equalsIgnoreCase(Node.getInNodeType())){
 			
-			Node lhsrhs = node.getLhsRhs();
-			int queryIndex = lhsrhs.getRight().queryIndex;
-			if(qParser.getWhereClauseSubqueries() != null && !qParser.getWhereClauseSubqueries().isEmpty()){
-			   qParser.getWhereClauseSubqueries().get(queryIndex).getAllConds().add(lhsrhs);
-			} 
-			//left.getSubQueryConds().add(lhsrhs);
-			Node newNode = new Node();
-			newNode.setQueryIndex(queryIndex);
-			node.setLhsRhs(newNode);
-			node.setType(Node.getExistsNodeType());	
-			flattenedNodes.add(node);
+			if(node.getLhsRhs()!=null){
+				Node lhsrhs = node.getLhsRhs();
+				int queryIndex = lhsrhs.getRight().queryIndex;
+				if(qParser.getWhereClauseSubqueries() != null && !qParser.getWhereClauseSubqueries().isEmpty()){
+					qParser.getWhereClauseSubqueries().get(queryIndex).getAllConds().add(lhsrhs);
+				} 
+				//left.getSubQueryConds().add(lhsrhs);
+				Node newNode = new Node();
+				newNode.setQueryIndex(queryIndex);
+				node.setLhsRhs(newNode);
+				node.setType(Node.getExistsNodeType());	
+				flattenedNodes.add(node);
+			}
 		}
 		/* the expression: n.getType().equalsIgnoreCase(Node.getAllAnyNodeType()) 
 		 * from the If condition below removed by mathew on 29 June 2016
@@ -314,14 +316,16 @@ public class GetNode {
 		 else if (node.getType().equalsIgnoreCase(Node.getInNodeType())){
 				
 				Node lhsrhs = node.getLhsRhs();
-				int queryIndex = lhsrhs.getRight().queryIndex;
-				
-				//left.getSubQueryConds().add(lhsrhs);
-				Node newNode = new Node();
-				newNode.setQueryIndex(queryIndex);
-				node.setLhsRhs(newNode);
-				node.setType(Node.getExistsNodeType());	
-				rootOR.leafNodes.add(node);
+				if(lhsrhs!=null) {
+					int queryIndex = lhsrhs.getRight().queryIndex;
+
+					//left.getSubQueryConds().add(lhsrhs);
+					Node newNode = new Node();
+					newNode.setQueryIndex(queryIndex);
+					node.setLhsRhs(newNode);
+					node.setType(Node.getExistsNodeType());	
+					rootOR.leafNodes.add(node);
+				}
 			}
 		 else if (node.getType().equalsIgnoreCase(Node.getExistsNodeType()) || node.getType().equalsIgnoreCase(Node.getNotExistsNodeType())) {
 			rootOR.leafNodes.add(node);

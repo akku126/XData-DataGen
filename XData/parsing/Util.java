@@ -445,6 +445,32 @@ public class Util {
 	}
 	
 	
+	public static Vector<Node> getAllProjectedColumns(Vector<FromListElement> visitedFLEs, QueryParser qParser){
+		Vector<Node> projectedColumns=new Vector<Node>();
+		for(FromListElement fle:visitedFLEs){
+			if(fle!=null && fle.getTableName()!=null){
+				Table t=qParser.getTableMap().getTable(fle.getTableName());
+				Iterator colItr=t.getColumns().values().iterator();
+				while(colItr.hasNext()){
+					Column col=(Column)colItr.next();
+					Node n = new Node();
+					n.setColumn(col);
+					n.setTable(col.getTable());
+					n.setLeft(null);
+					n.setRight(null);
+					n.setOperator(null);
+					n.setType(Node.getColRefType());
+					n.setTableNameNo(fle.getTableNameNo());
+					projectedColumns.add(n);
+				}
+			}
+			else if(fle!=null && fle.getTabs()!=null && !fle.getTabs().isEmpty()){
+				projectedColumns.addAll(getAllProjectedColumns(fle.getTabs(),qParser));				
+			}
+		}
+		return projectedColumns;
+	}
+	
 	public static Vector<Node> addAllProjectedColumns(FromListElement q,int queryType, QueryParser qParser) {
 
 		Vector<Node> projectedCols = new Vector<Node>();
@@ -512,11 +538,11 @@ public class Util {
 	
 	}
 	
-	// adds the form table to the query
-	public static void addFromTable(Table table, QueryParser qParser) {
-		qParser.getQuery().addFromTable(table);
-		// fromTableMap.put(table.getTableName(), table);
-	}
+//	// adds the form table to the query
+//	public static void addFromTable(Table table, QueryParser qParser) {
+//		qParser.getQuery().addFromTable(table);
+//		// fromTableMap.put(table.getTableName(), table);
+//	}
 	
 	public static String chop(String str) {
 		char LF = '\n';
@@ -1043,8 +1069,10 @@ public class Util {
 				n.getType().equalsIgnoreCase(Node.getAnyNodeType())||	n.getType().equalsIgnoreCase(Node.getInNodeType()) ||
 				n.getType().equalsIgnoreCase(Node.getExistsNodeType()) || n.getType().equalsIgnoreCase(Node.getBroNodeSubQType())
 				||n.getType().equalsIgnoreCase(Node.getNotExistsNodeType())){
+			if(n.getSubQueryConds()!=null){
 			for(Node subQ:n.getSubQueryConds()){
 				modifyTreeForComapreSubQ(subQ);
+			}
 			}
 		}
 

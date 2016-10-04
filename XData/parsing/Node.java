@@ -75,7 +75,20 @@ public class Node implements Cloneable, Serializable{
 		queryType=-1;
 		queryIndex=-1;
 		isMutant = false;
+		subQueryParser=null;
 	}
+	
+	//the following line added by mathew on 1st october 2016
+		QueryParser subQueryParser;
+		
+		public QueryParser getSubQueryParser(){
+			return subQueryParser;
+		}
+		
+		public void setSubQueryParser(QueryParser subQP){
+			this.subQueryParser=subQP;
+		}
+	
 	/**
 	 * Copy constructor. Added by Mahesh
 	 * @param functionName
@@ -466,6 +479,46 @@ public class Node implements Cloneable, Serializable{
 
 	@Override
 	public String toString(){
+		String retString="";
+		if(this.getType().equalsIgnoreCase(Node.getNotNodeType())){
+			retString+=" "+Node.getNotNodeType()+" ";
+			if(this.getLeft()!=null){
+				retString+=this.getLeft().toString();
+			}
+			return retString;
+		}
+		else if(this.getType().equalsIgnoreCase(Node.getInNodeType())){
+			if(this.getLeft()!=null){
+				retString+=" "+this.getLeft();
+			}
+			retString+=" "+Node.getInNodeType()+" ";
+			
+			if(this.getRight()!=null&&this.getRight().getSubQueryParser()!=null){
+				retString+="("+this.getRight().getSubQueryParser().getQuery().getQueryString()+")";;
+			}
+			return retString;
+		}
+		else if(this.getType().equalsIgnoreCase(Node.getAnyNodeType())){
+			retString+=" "+Node.getAnyNodeType()+" ";
+			if(this.getSubQueryParser()!=null){
+				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
+			}
+			return retString;
+		}
+		else if(this.getType().equalsIgnoreCase(Node.getAllNodeType())){
+			retString+=" "+Node.getAllNodeType()+" ";
+			if(this.getSubQueryParser()!=null){
+				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
+			}
+			return retString;
+		}
+		 else if(this.getType().equalsIgnoreCase(Node.getExistsNodeType())){
+			retString+=" "+Node.getExistsNodeType()+" ";
+			if(this.getSubQueryParser()!=null){
+				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
+			}
+			return retString;
+		}
 		if(this.getType().equalsIgnoreCase(Node.getValType())){
 			return this.getStrConst();
 		}

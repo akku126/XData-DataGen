@@ -103,8 +103,6 @@ public class QueryParser implements Serializable{
 	private HashMap<String, String> currentAliasTables;
 
 	
-	//Hold the from subquery aliases and maps the table names accordingly
-	private HashMap<String,String> aliasToFromTables;
 	
 	public Vector<Node> subQJC;
 
@@ -128,6 +126,10 @@ public class QueryParser implements Serializable{
 	private Vector<Node> foreignKeys;
 	Vector<Node> projectedCols;
 
+	//added by mathew on 2 september 2016
+	public QueryParser parentQueryParser;
+	public Vector<FromListElement> fromListElements;
+	
 	//Map of case conditions: Key value holds the part of query in which the case conditions occur.
 	//Value holds the case condition vector. Last element of vector contains the else condition
 	private HashMap<Integer,Vector<CaseCondition>> caseConditionMap;
@@ -407,6 +409,18 @@ public class QueryParser implements Serializable{
 	public void setOrderByNodes(Vector<Node> orderByNodes) {
 		this.orderByNodes = orderByNodes;
 	}
+	
+	
+	/* added by mathew on 1st october 2016
+	 * getter-sett function for fromListElements
+	 */
+	public Vector<FromListElement> getFromListElements(){
+		return this.fromListElements;
+	}
+	
+	public void setFromListElements(Vector<FromListElement> FLEs){
+		this.fromListElements=FLEs;
+	}
 
 	public Vector<Node> getSelectionConds() {
 		return selectionConds;
@@ -510,7 +524,8 @@ public class QueryParser implements Serializable{
 		updateColumn=new Vector<Node>();
 		this.FromClauseSubqueries = new Vector<QueryParser>();
 		this.WhereClauseSubqueries = new Vector<QueryParser>();
-		this.aliasToFromTables = new HashMap<String,String>();
+		//added by mathew on oct 1st 2016
+		this.fromListElements=new Vector<FromListElement>();
 	}
 
 	public String getModifiedQuery(ResultSetNode rsNode, boolean debug,
@@ -667,7 +682,11 @@ public class QueryParser implements Serializable{
 			throws Exception {
 		logger.info("beginning to parse query");
 		try{
-			this.query = new Query(queryId, queryString);
+			if(this.query==null)
+				this.query = new Query(queryId, queryString);
+			else
+				this.query.setQueryString(queryString);
+			
 			CCJSqlParserManager pm = new CCJSqlParserManager();
 			Statement stmt = pm.parse(new StringReader(queryString));
 			//SQLParser sqlParser = new SQLParser();
@@ -678,7 +697,8 @@ public class QueryParser implements Serializable{
 				if(((Select) stmt).getSelectBody() instanceof PlainSelect &&
 						((Select)stmt).getWithItemsList() == null){						
 					 plainSelect = (PlainSelect)((Select) stmt).getSelectBody();
-					ProcessResultSetNode.processResultSetNodeJSQL(plainSelect, debug, this);
+					//ProcessResultSetNode.processResultSetNodeJSQL(plainSelect, debug, this);
+					ProcessSelectClause.ProcessSelect(plainSelect, debug, this);
 				}
 				
 				//Check if query contains WithItem list - then Query is of the form  WITH S AS ()
@@ -1098,11 +1118,16 @@ public class QueryParser implements Serializable{
 			List<SelectBody> selectList = setOpList.getSelects();
 			Iterator<SelectBody> selectListIt =selectList.iterator();
 			if(selectListIt.hasNext()){
-				Object nxtElement = selectListIt.next();
+				Object nxtElement = selectListIt.next();				
 				leftQuery = new QueryParser(this.tableMap);
 				if(nxtElement instanceof PlainSelect){
 					PlainSelect left= (PlainSelect)nxtElement;
-					leftQuery.query= new Query("q2", left.toString());
+					
+					if(leftQuery.query==null)
+						leftQuery.query= new Query("q2", left.toString());
+					else
+						leftQuery.query.setQueryString(left.toString());
+					
 					ProcessResultSetNode.processResultSetNodeJSQL(left, debug, leftQuery);
 				}
 				else if(nxtElement instanceof SetOperationList){
@@ -1114,7 +1139,11 @@ public class QueryParser implements Serializable{
 				rightQuery = new QueryParser(this.tableMap);
 				if(nxtElement instanceof PlainSelect){
 					PlainSelect right=(PlainSelect) nxtElement;
-					rightQuery.query=new Query("q3",right.toString());
+					if(rightQuery.query==null)
+						rightQuery.query=new Query("q3",right.toString());
+					else
+						rightQuery.query.setQueryString(right.toString());
+					
 					ProcessResultSetNode.processResultSetNodeJSQL(right, debug, rightQuery);				}
 				else if(nxtElement instanceof SetOperationList){
 					rightQuery.parseQueryJSQL("q3",((SetOperationList)nxtElement).toString(),debug);
@@ -1922,11 +1951,13 @@ public class QueryParser implements Serializable{
 		}
 
 		for(Node n: qParser.allSubQueryConds){
-			Vector<Node> subQConds=(Vector<Node>)n.getSubQueryConds().clone();
-			n.getSubQueryConds().removeAllElements();
-			for(Node subQ:subQConds){
-				n.getSubQueryConds().addAll(GetNode.flattenNode(qParser,subQ));
-				//n.setSubQueryConds(flattenNode(subQ));
+			if(n.getSubQueryConds()!=null){
+				Vector<Node> subQConds=(Vector<Node>)n.getSubQueryConds().clone();
+				n.getSubQueryConds().removeAllElements();
+				for(Node subQ:subQConds){
+					n.getSubQueryConds().addAll(GetNode.flattenNode(qParser,subQ));
+					//n.setSubQueryConds(flattenNode(subQ));
+				}
 			}
 		}
 
