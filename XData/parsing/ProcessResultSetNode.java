@@ -98,7 +98,7 @@ public class ProcessResultSetNode {
 		if (plainSelect.getJoins()==null && ! (prev instanceof SubJoin)){
 			//only one item
 			if (prev instanceof net.sf.jsqlparser.schema.Table){
-				FromListElement temp = OperateOnBaseTable.OperateOnBaseTableJSQL(prev,false, "", qParser.root,qParser, false, false);			
+				FromListElement temp = OperateOnBaseTable.OperateOnBaseTableJSQL((net.sf.jsqlparser.schema.Table)prev, qParser.root,qParser, false, false);			
 				t.add(temp);
 			} else if (prev instanceof SubSelect){
 				FromListElement temp =	OperateOnSubQueryJSQL.OperateOnSubquery((SubSelect) prev,qParser.allConds, qParser.root,true,false,qParser);
@@ -546,7 +546,7 @@ public class ProcessResultSetNode {
 	 * @return
 	 * @throws Exception
 	 */
-	private static boolean caseInWhereClause(Expression whereClause, Expression colExpression, QueryParser qParser) throws Exception{
+	public static boolean caseInWhereClause(Expression whereClause, Expression colExpression, QueryParser qParser) throws Exception{
 		
 		Vector<CaseCondition> caseConditionsVector = new Vector<CaseCondition>();
 		boolean isCaseExpr = false;

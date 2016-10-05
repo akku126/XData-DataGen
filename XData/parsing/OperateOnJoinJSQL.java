@@ -316,8 +316,7 @@ public class OperateOnJoinJSQL {
 		JoinTreeNode rightChild = new JoinTreeNode();
 		if(lt != null){
 			if (lt instanceof net.sf.jsqlparser.schema.Table) {
-				FromListElement temp = OperateOnBaseTable.OperateOnBaseTableJSQL(lt
-						, true, aliasName, leftChild,qParser, isFromSubquery, isWhereSubquery);
+				FromListElement temp = OperateOnBaseTable.OperateOnBaseTableJSQL((net.sf.jsqlparser.schema.Table)lt, leftChild,qParser, isFromSubquery, isWhereSubquery);
 				t.add(temp);
 				leftFle.add(temp);
 			} else if (lt instanceof SubSelect) {
@@ -334,8 +333,8 @@ public class OperateOnJoinJSQL {
 		
 		if (rt instanceof net.sf.jsqlparser.schema.Table) {
 			FromListElement temp;
-			temp = OperateOnBaseTable.OperateOnBaseTableJSQL(rt
-					, true, aliasName, rightChild, qParser, isFromSubquery, isWhereSubquery);
+			temp = OperateOnBaseTable.OperateOnBaseTableJSQL((net.sf.jsqlparser.schema.Table)rt
+					, rightChild, qParser, isFromSubquery, isWhereSubquery);
 			t.add(temp);
 			rightFle.add(temp);
 		} else if (rt instanceof SubSelect) {
@@ -1007,8 +1006,8 @@ public static FromListElement getFromListForJoinItems(Join joinNode,Join leftJoi
 		if(lt == null)
 			lt = leftJoinNode.getRightItem();
 		if (lt instanceof net.sf.jsqlparser.schema.Table) {
-			FromListElement temp = OperateOnBaseTable.OperateOnBaseTableJSQL(lt
-					, true, aliasName, leftChild,qParser, isFromSubquery, isWhereSubquery);
+			FromListElement temp = OperateOnBaseTable.OperateOnBaseTableJSQL((net.sf.jsqlparser.schema.Table)lt,
+					 leftChild,qParser, isFromSubquery, isWhereSubquery);
 			t.add(temp);
 			leftFle.add(temp);
 			//Util.updateTableOccurrences(isFromSubquery, isWhereSubquery, temp,qParser);
@@ -1025,8 +1024,8 @@ public static FromListElement getFromListForJoinItems(Join joinNode,Join leftJoi
 	
 	if (rt instanceof net.sf.jsqlparser.schema.Table) {
 		FromListElement temp;
-		temp = OperateOnBaseTable.OperateOnBaseTableJSQL(rt
-				, true, aliasName, rightChild, qParser, isFromSubquery, isWhereSubquery);
+		temp = OperateOnBaseTable.OperateOnBaseTableJSQL((net.sf.jsqlparser.schema.Table)rt
+				, rightChild, qParser, isFromSubquery, isWhereSubquery);
 		t.add(temp);
 		rightFle.add(temp);
 	} else if (rt instanceof SubSelect) {

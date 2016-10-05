@@ -830,8 +830,8 @@ private float compareHavingClause(ArrayList<Node> master, ArrayList<Node> slave)
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub		
 
-		String studentQuery= "select count(s1.id) from student s1, student s2 where "
-				+ " s1.name<>s2.name group by s1.dept_name";
+		String studentQuery= "SELECT COUNT(TI.NAME) AS Instr_name, TI.SALARY, TS.NAME, TS.grade FROM (TEACHES T INNER JOIN INSTRUCTOR I ON T.ID>I.ID) as TI INNER JOIN (SELECT * from TAKES T, STUDENT S WHERE T.ID=S.ID) as TS ON TI.ID<>TS.ID"
+				+ " WHERE Instr_name > 3 OR TI.SALARY NOT IN (SELECT tot_cred from TAKES T1, STUDENT S1 WHERE T1.ID=S1.ID) GROUP BY  Instr_name, TI.SALARY ";
 
 		//		String studentQuery="SELECT TEACHES.course_id FROM TEACHES INNER JOIN INSTRUCTOR "
 //				+ " ON TEACHES.ID<=INSTRUCTOR.ID, DEPARTMENT WHERE INSTRUCTOR.dept_name<=DEPARTMENT.dept_name "
@@ -843,8 +843,6 @@ private float compareHavingClause(ArrayList<Node> master, ArrayList<Node> slave)
 //				+ " where section.time_slot_id = time_slot.time_slot_id and start_hr < 7)";
 //		
 
-		String instructorQuery="select count(s1.id) from student s1, student s2 where "
-				+ " s1.name<>s2.name group by s2.dept_name";
 
 //	
 //		String studentQuery="SELECT TEACHES.course_id FROM TEACHES RIGHT OUTER JOIN INSTRUCTOR ON TEACHES.ID=INSTRUCTOR.NAME, DEPARTMENT"
@@ -911,7 +909,7 @@ private float compareHavingClause(ArrayList<Node> master, ArrayList<Node> slave)
 			
 //			testObj.StudentQuery=testObj.process(testObj.StudentQuery, studentQuery);
 //			util.SerializeXML.serializeXML("student.xml", testObj.StudentQuery.OuterQuery);
-			testObj.InstructorQuery=testObj.processCanonicalize(testObj.InstructorQuery, instructorQuery);
+//			testObj.InstructorQuery=testObj.processCanonicalize(testObj.InstructorQuery, instructorQuery);
 
 //			util.SerializeXML.serializeXML("instructor.xml", testObj.InstructorQuery.OuterQuery);			
 //			Float normalMarks=testObj.calculateScore(false, testObj.InstructorQuery.OuterQuery, testObj.InstructorQuery.OuterQuery, 0).Marks;

@@ -252,7 +252,7 @@ public class OperateOnSubQueryJSQL {
 				//only one item
 				
 				if(prev instanceof net.sf.jsqlparser.schema.Table){
-					FromListElement temp = OperateOnBaseTable.OperateOnBaseTableJSQL(prev,false, aliasName, jtn, qParser, fromSubquery, whereSubquery);
+					FromListElement temp = OperateOnBaseTable.OperateOnBaseTableJSQL((net.sf.jsqlparser.schema.Table)prev, jtn, qParser, fromSubquery, whereSubquery);
 					t.add(temp);
 				}else if(prev instanceof SubSelect){
 					//QueryParser qp = new QueryParser(qParser.getTableMap());
