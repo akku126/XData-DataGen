@@ -206,6 +206,59 @@ public class QueryParser implements Serializable{
 	public FromListElement queryAliases;
 	
 	public RelationHierarchyNode topLevelRelation;
+	
+	@Override
+	public String toString(){
+		String retString=" Projection list \n";
+		for(Node n:this.getProjectedCols())
+			retString+=" "+n;
+		retString+="\n From list \n";
+		fromListElementsToString(this.fromListElements);
+		retString+="\n Where Clause \n";
+		for(Node n:this.getAllConds())
+			retString+=" "+n;
+		retString+="\n DNF Sel conds \n";
+		for(Vector<Node> v:this.getAllDnfSelCond())
+			retString+=" "+v;
+		retString+="\n Group By \n";
+		for(Node n:this.groupByNodes)
+			retString+=" "+n;
+		retString+="\n Having \n";
+		if(this.havingClause!=null)
+			retString+=" "+this.havingClause;
+		retString+="\n Order By \n";
+		for(Node n:this.orderByNodes)
+			retString+=" "+n;
+		if( this.getFromClauseSubqueries().size()>0){
+		retString+="\n From Subqueries \n";
+		for(QueryParser qp:this.getFromClauseSubqueries())
+			retString+="          "+qp.toString();	
+		}
+		if( this.getWhereClauseSubqueries().size()>0){
+			retString+="\n Where Subqueries  \n";
+			for(QueryParser qp:this.getWhereClauseSubqueries())
+				retString+=" "+qp.toString();	
+		}
+
+		return retString;
+	}
+	
+	private static String fromListElementsToString(Vector<FromListElement> visitedFromListElements) {
+		String retString="";
+		for(FromListElement fle:visitedFromListElements){
+			if(fle!=null && (fle.getTableName()!=null||fle.getTableNameNo()!=null))
+				retString+="\n "+fle.toString();
+			else if(fle!=null && fle.getSubQueryParser()!=null){
+				retString+="\n "+fle.toString();
+				retString+=fromListElementsToString(fle.getSubQueryParser().getFromListElements());
+			}
+			else if(fle!=null && fle.getTabs()!=null && !fle.getTabs().isEmpty()){
+				retString+="\n "+fle.toString();
+				retString+=fromListElementsToString(fle.getTabs());				
+			}	
+		}
+		return retString;
+	}
 
 	public Query getQuery() {
 		return query;
@@ -697,8 +750,8 @@ public class QueryParser implements Serializable{
 				if(((Select) stmt).getSelectBody() instanceof PlainSelect &&
 						((Select)stmt).getWithItemsList() == null){						
 					 plainSelect = (PlainSelect)((Select) stmt).getSelectBody();
-					//ProcessResultSetNode.processResultSetNodeJSQL(plainSelect, debug, this);
-					ProcessSelectClause.ProcessSelect(plainSelect, debug, this);
+					ProcessResultSetNode.processResultSetNodeJSQL(plainSelect, debug, this);
+					//ProcessSelectClause.ProcessSelect(plainSelect, debug, this);
 				}
 				
 				//Check if query contains WithItem list - then Query is of the form  WITH S AS ()
@@ -711,8 +764,8 @@ public class QueryParser implements Serializable{
 					String alteredWithQuery=((Select)stmt).getSelectBody().toString();
 					logger.info("transformed query after substitution of Witt aliases\n"+ alteredWithQuery);
 	
-					//ProcessResultSetNode.processResultSetNodeJSQL((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
-					ProcessSelectClause.ProcessSelect((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
+					ProcessResultSetNode.processResultSetNodeJSQL((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
+					//ProcessSelectClause.ProcessSelect((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
 				}
 				
 				//If it is instance of SetOperationList - UNION,EXCEPT OR INTERSECT
@@ -1128,8 +1181,8 @@ public class QueryParser implements Serializable{
 					else
 						leftQuery.query.setQueryString(left.toString());
 					
-					//ProcessResultSetNode.processResultSetNodeJSQL(left, debug, leftQuery);
-					ProcessSelectClause.ProcessSelect(left, debug, leftQuery);
+					ProcessResultSetNode.processResultSetNodeJSQL(left, debug, leftQuery);
+					//ProcessSelectClause.ProcessSelect(left, debug, leftQuery);
 				}
 				else if(nxtElement instanceof SetOperationList){
 					leftQuery.parseQueryJSQL("q2",((SetOperationList)nxtElement).toString(),debug);
@@ -1145,8 +1198,8 @@ public class QueryParser implements Serializable{
 					else
 						rightQuery.query.setQueryString(right.toString());
 					
-					//ProcessResultSetNode.processResultSetNodeJSQL(right, debug, rightQuery);			
-					ProcessSelectClause.ProcessSelect(right, debug, rightQuery);
+					ProcessResultSetNode.processResultSetNodeJSQL(right, debug, rightQuery);			
+					//ProcessSelectClause.ProcessSelect(right, debug, rightQuery);
 					}
 				else if(nxtElement instanceof SetOperationList){
 					rightQuery.parseQueryJSQL("q3",((SetOperationList)nxtElement).toString(),debug);

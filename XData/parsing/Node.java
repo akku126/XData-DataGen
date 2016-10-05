@@ -480,14 +480,14 @@ public class Node implements Cloneable, Serializable{
 	@Override
 	public String toString(){
 		String retString="";
-		if(this.getType().equalsIgnoreCase(Node.getNotNodeType())){
+		if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getNotNodeType())){
 			retString+=" "+Node.getNotNodeType()+" ";
 			if(this.getLeft()!=null){
 				retString+=this.getLeft().toString();
 			}
 			return retString;
 		}
-		else if(this.getType().equalsIgnoreCase(Node.getInNodeType())){
+		else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getInNodeType())){
 			if(this.getLeft()!=null){
 				retString+=" "+this.getLeft();
 			}
@@ -498,39 +498,45 @@ public class Node implements Cloneable, Serializable{
 			}
 			return retString;
 		}
-		else if(this.getType().equalsIgnoreCase(Node.getAnyNodeType())){
+		else if(this.getType()!=null&& this.getType().equalsIgnoreCase(Node.getAnyNodeType())){
 			retString+=" "+Node.getAnyNodeType()+" ";
 			if(this.getSubQueryParser()!=null){
 				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
 			}
 			return retString;
 		}
-		else if(this.getType().equalsIgnoreCase(Node.getAllNodeType())){
+		else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getAllNodeType())){
 			retString+=" "+Node.getAllNodeType()+" ";
 			if(this.getSubQueryParser()!=null){
 				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
 			}
 			return retString;
 		}
-		 else if(this.getType().equalsIgnoreCase(Node.getExistsNodeType())){
+		 else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getExistsNodeType())){
 			retString+=" "+Node.getExistsNodeType()+" ";
 			if(this.getSubQueryParser()!=null){
 				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
 			}
 			return retString;
 		}
-		if(this.getType().equalsIgnoreCase(Node.getValType())){
+		if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getValType())){
 			return this.getStrConst();
 		}
-		else if(this.getType().equalsIgnoreCase(Node.getColRefType())){
+		else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getColRefType())){
 			//return (this.getColumn().getTableName()+"."+this.getColumn().getColumnName());
 			return (this.getTableNameNo()+"."+this.getColumn().getColumnName());
 		}
-		else if(this.getType().equalsIgnoreCase(Node.getAggrNodeType())){
+		else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getAggrNodeType())){
 			return (this.getAgg().getFunc() + "(" + this.getAgg().getAggExp().toString() + ")");
 		}
-		else{
+		else if (this.getLeft()!=null&&this.getRight()!=null){
 			return "(" + this.getLeft().toString()  + this.getOperator() + this.getRight().toString() + ")";
+		}
+		else if(this.getOperator()!=null) {
+			return this.getOperator();
+		}
+		else {
+			return "";
 		}
 	}
 
