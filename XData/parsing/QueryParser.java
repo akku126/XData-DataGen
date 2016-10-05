@@ -711,8 +711,8 @@ public class QueryParser implements Serializable{
 					String alteredWithQuery=((Select)stmt).getSelectBody().toString();
 					logger.info("transformed query after substitution of Witt aliases\n"+ alteredWithQuery);
 	
-					//parseQueryJSQL(queryId,alteredWithQuery, debug);
-					ProcessResultSetNode.processResultSetNodeJSQL((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
+					//ProcessResultSetNode.processResultSetNodeJSQL((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
+					ProcessSelectClause.ProcessSelect((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
 				}
 				
 				//If it is instance of SetOperationList - UNION,EXCEPT OR INTERSECT
@@ -1128,7 +1128,8 @@ public class QueryParser implements Serializable{
 					else
 						leftQuery.query.setQueryString(left.toString());
 					
-					ProcessResultSetNode.processResultSetNodeJSQL(left, debug, leftQuery);
+					//ProcessResultSetNode.processResultSetNodeJSQL(left, debug, leftQuery);
+					ProcessSelectClause.ProcessSelect(left, debug, leftQuery);
 				}
 				else if(nxtElement instanceof SetOperationList){
 					leftQuery.parseQueryJSQL("q2",((SetOperationList)nxtElement).toString(),debug);
@@ -1144,7 +1145,9 @@ public class QueryParser implements Serializable{
 					else
 						rightQuery.query.setQueryString(right.toString());
 					
-					ProcessResultSetNode.processResultSetNodeJSQL(right, debug, rightQuery);				}
+					//ProcessResultSetNode.processResultSetNodeJSQL(right, debug, rightQuery);			
+					ProcessSelectClause.ProcessSelect(right, debug, rightQuery);
+					}
 				else if(nxtElement instanceof SetOperationList){
 					rightQuery.parseQueryJSQL("q3",((SetOperationList)nxtElement).toString(),debug);
 				}
