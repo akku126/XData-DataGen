@@ -2,6 +2,7 @@ package parsing;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -392,7 +393,6 @@ public class WhereClauseVectorJSQL {
 		else if (clause instanceof Function) {
 			Function an = (Function)clause;
 			String funcName = an.getName();
-		
 			
 			//All these are string manipulation functions and not aggregate function
 			if(! (funcName.equalsIgnoreCase("Lower") || funcName.equalsIgnoreCase("substring") || funcName.equalsIgnoreCase("upper")
@@ -413,7 +413,7 @@ public class WhereClauseVectorJSQL {
 				af.setFunc(funcName.toUpperCase());
 				af.setDistinct(an.isDistinct());
 				af.setAggAliasName(exposedName);
-	
+			
 				Node agg = new Node();
 				agg.setAgg(af);
 				agg.setType(Node.getAggrNodeType());
@@ -429,7 +429,6 @@ public class WhereClauseVectorJSQL {
 				
 					if(af.getAggExp() == null){
 								Node n1 = Util.getNodeForCount(fle, qParser);
-								
 								af.setAggExp(n1);
 								af.setFunc(funcName.toUpperCase());
 								af.setDistinct(an.isDistinct());
@@ -442,6 +441,7 @@ public class WhereClauseVectorJSQL {
 								agg.setLeft(null);
 								agg.setRight(null);
 							}
+					
 						}
 				//Storing sub query details
 				agg.setQueryType(queryType);
@@ -454,8 +454,7 @@ public class WhereClauseVectorJSQL {
 						present = qParser.getAliasedToOriginal().get(exposedName);
 					present.add(agg);
 					qParser.getAliasedToOriginal().put(exposedName, present);
-				}
-	
+				}				
 				return agg;
 			}
 			else {
@@ -1803,7 +1802,7 @@ public class WhereClauseVectorJSQL {
 	
 
 	
-	private static Node transformToAbsoluteTableNames(Node n, Vector<FromListElement> fleList, boolean aliasNameFound, QueryParser qParser) {
+	private static Node transformToAbsoluteTableNames(Node n, Vector<FromListElement> fleList, boolean aliasNameFound, QueryParser qParser) throws Exception {
 		// TODO Auto-generated method stub
 		for(FromListElement fle:fleList){
 			if(fle!=null&&fle.getTableName()!=null){
@@ -1833,21 +1832,68 @@ public class WhereClauseVectorJSQL {
 					}
 				}
 			}
-			else if(fle!=null&&fle.getTableName()==null && fle.getAliasName()!=null){
-				if(fle.getAliasName().equalsIgnoreCase(n.getTableNameNo())){
-					if(fle.getSubQueryParser()!=null){
-						Node k= transformToAbsoluteTableNames(n,fle.getSubQueryParser().getFromListElements(),true,fle.getSubQueryParser());
-						if(!n.getTableNameNo().equalsIgnoreCase(k.getTableNameNo()))
-							return k;
-					}
-					else 
-						return transformToAbsoluteTableNames(n,fle.getTabs(),true, qParser);
-				}				
-				else{
+			if(aliasNameFound){
+				logger.info("alias name found"+n);
+				if(fle.getTabs()!=null&&!fle.getTabs().isEmpty()){
 					Node k= transformToAbsoluteTableNames(n,fle.getTabs(),false,qParser);
 					if(!n.getTableNameNo().equalsIgnoreCase(k.getTableNameNo()))
 						return k;
 				}
+				if(fle.getSubQueryParser()!=null){
+					Node k= transformToAbsoluteTableNames(n,fle.getSubQueryParser().getFromListElements(),true,fle.getSubQueryParser());
+					if(k!=null&&!n.getTableNameNo().equalsIgnoreCase(k.getTableNameNo()))
+						return k;					
+					
+				}
+				logger.info(" Alias name found, but column name cannot be resolved");
+			}
+			if(fle!=null&&fle.getTableName()==null && fle.getAliasName()!=null){
+				logger.info(" alias name is not null, but table name is null");
+				if(fle.getAliasName().equalsIgnoreCase(n.getTableNameNo())){
+					if(fle.getSubQueryParser()!=null){
+						Node k= transformToAbsoluteTableNames(n,fle.getSubQueryParser().getFromListElements(),true,fle.getSubQueryParser());
+						
+						if(k!=null&&!n.getTableNameNo().equalsIgnoreCase(k.getTableNameNo()))
+							return k;		
+					}
+					else {
+						Node k= transformToAbsoluteTableNames(n,fle.getTabs(),true, qParser);
+						if(k!=null&& !n.getTableNameNo().equalsIgnoreCase(k.getTableNameNo()))
+							return k;		
+					}
+				}						
+			}
+			if(fle!=null && fle.getTabs()!=null && !fle.getTabs().isEmpty()){
+				logger.info(" tabs is not null");
+				Node k= transformToAbsoluteTableNames(n,fle.getTabs(),false,qParser);
+				if(!n.getTableNameNo().equalsIgnoreCase(k.getTableNameNo()))
+					return k;
+			}
+			if(fle!=null && fle.getSubQueryParser()!=null){
+				logger.info(" subQueryParser: checking projected cols");
+				
+				for(Node m:fle.getSubQueryParser().getProjectedCols()){
+					if(m.getAgg()!=null && m.getAgg().getAggAliasName()!=null){
+						if(n.getColumn().getColumnName().equalsIgnoreCase(m.getAgg().getAggAliasName())){
+							logger.info(" agg alias Name "+m.getAgg().getAggAliasName()+" node "+m);
+							return m;
+						}
+					}					
+					if(m.getColumn()!=null&&m.getColumn().getColumnName().equalsIgnoreCase(n.getColumn().getColumnName())){	
+						logger.info(" column Name found in subQueryParser "+m);
+						return m;
+					}
+					if(m.getAliasName()!=null&&m.getAliasName().equalsIgnoreCase(n.getColumn().getColumnName())){
+						logger.info(" column Name found as alias in subQueryParser "+m);
+						return m;
+					}
+				}	
+				
+				Node k=transformToAbsoluteTableNames(n,fle.getSubQueryParser().getFromListElements(),false, fle.getSubQueryParser());
+				if(!n.getTableNameNo().equalsIgnoreCase(k.getTableNameNo()))
+					return k;
+
+
 			}
 		}
 		
@@ -2050,6 +2096,7 @@ public class WhereClauseVectorJSQL {
 					}
 					
 					af.setFunc(funcName.toUpperCase());
+					af.setAggAliasName(funcName.toUpperCase());
 					af.setDistinct(an.isDistinct());
 					//af.setAggAliasName(exposedName);
 		
@@ -2064,12 +2111,10 @@ public class WhereClauseVectorJSQL {
 						agg.setColumn(af.getAggExp().getColumn());
 						
 					}//Added by Shree for count(*) 
-					else if(af.getFunc().toUpperCase().contains("COUNT") && an.isAllColumns()){
-					
+					else if(af.getFunc().toUpperCase().contains("COUNT") && an.isAllColumns()){				
 						if(af.getAggExp() == null){
 									//Node n1 = Util.getNodeForCount(fle, qParser);
-								Node n1 = Util.getNodeForCount(fle.get(0), qParser);//modified by mathew
-									
+								Node n1 = Util.getNodeForCount(fle, qParser);
 									af.setAggExp(n1);
 									af.setFunc(funcName.toUpperCase());
 									af.setDistinct(an.isDistinct());
@@ -2140,6 +2185,7 @@ public class WhereClauseVectorJSQL {
 				Column columnReference = (Column) clause;
 				String colName= columnReference.getColumnName();
 				String tableName  = columnReference.getTable().getFullyQualifiedName();
+
 				Node n = new Node();
 				n.setTableNameNo(tableName);
 				n.setColumn(new parsing.Column(colName, tableName));
@@ -2197,19 +2243,7 @@ public class WhereClauseVectorJSQL {
 					n.setQueryType(qParser.getTableNames().get(tableName)[0]);
 					n.setQueryIndex(qParser.getTableNames().get(tableName)[1]);
 				}
-//				else{
-//					n.setQueryType(queryType);
-//					if(queryType == 1) n.setQueryIndex(qParser.getFromClauseSubqueries().size()-1);
-//					if(queryType == 2) n.setQueryIndex(qParser.getWhereClauseSubqueries().size()-1);
-//				}
-//				if(exposedName !=null){
-//					Vector<Node> present = new Vector<Node>();
-//					if( qParser.getAliasedToOriginal().get(exposedName) != null)
-//						present = qParser.getAliasedToOriginal().get(exposedName);
-//					present.add(n);
-//					qParser.getAliasedToOriginal().put(exposedName, present);
-//				}
-				n=transformToAbsoluteTableNames(n,fle,false, qParser);
+				
 				if(n.getTableNameNo()==null||n.getTableNameNo().isEmpty()){
 					for(Node m:Util.getAllProjectedColumns(qParser.fromListElements, qParser)){
 						if(m.getColumn().getColumnName().equalsIgnoreCase(n.getColumn().getColumnName())){
@@ -2219,6 +2253,16 @@ public class WhereClauseVectorJSQL {
 						}
 					}
 				}
+
+				
+//				Node tempn=n;
+				n=transformToAbsoluteTableNames(n,fle,false, qParser);
+//				System.out.println("Before "+tempn+ "after transforming to absolute names "+n);
+//				Scanner scan = new Scanner(System.in);
+//				String s = scan.next();
+				
+
+
 				if(n.getTableNameNo()==null||n.getTableNameNo().isEmpty()){
 					List<SelectItem> projectedItems=plainSelect.getSelectItems();
 					for(int j=0;j<projectedItems.size();j++){
@@ -2233,7 +2277,6 @@ public class WhereClauseVectorJSQL {
 							if(selExpItem.getAlias()!=null){
 								if(n.getColumn().getColumnName().equalsIgnoreCase(selExpItem.getAlias().getName())){
 									n =ProcessSelectClause.processJoinExpression(e,qParser.fromListElements, qParser,plainSelect);
-									logger.info(n+" alias name resolved " +selExpItem.getAlias().getName());
 									break;
 								}
 							}
@@ -2241,6 +2284,10 @@ public class WhereClauseVectorJSQL {
 					}
 
 				}
+				
+
+
+				
 				return n;
 
 			} else if (clause instanceof AndExpression) {

@@ -243,6 +243,48 @@ public class Util {
 	
 	}
 	
+	public static Node getNodeForCount(Vector<FromListElement> fle, QueryParser qParser) {
+		
+		for(FromListElement f:fle){
+			String fromTableName = f.getTableName();
+			if (fromTableName != null && f.getTableNameNo()!= null &&!f.getTableNameNo().isEmpty()) {
+				Table t=qParser.getTableMap().getTable(fromTableName);
+				Column col = t.getColumn(0);
+				if (col == null)
+					return null;
+
+				Node n = new Node();
+				n.setTable(t);
+				n.setTableAlias(t.getAliasName());
+				n.setColumn(col);
+				if(f.getTableNameNo() != null && ! f.getTableNameNo().isEmpty()){
+					n.setTableNameNo(f.getTableNameNo());
+				}//This may not be correct - FIXME Test and fix
+				else{
+					n.setTableNameNo(f.getTableName()+"1");
+				}
+				n.setType(Node.getColRefType());
+				return n;
+			} else if (f.getTabs()!=null && !f.getTabs().isEmpty()){
+				for (int i = 0; i < f.getTabs().size(); i++) {
+					Node n = getNodeForCount(f.getTabs().get(i), qParser);
+					n.setType(Node.getColRefType());
+					if (n != null) {
+						return n;
+					}
+				}
+			}
+			else if(f.getSubQueryParser()!=null){
+				Node n=getNodeForCount(f.getSubQueryParser().fromListElements,f.getSubQueryParser());
+				if(n!=null){
+					n.setType(Node.getColRefType());
+					return n;
+				}
+			}
+		}
+		return null;
+}
+	
 	public static Node getNodeForCount(FromListElement f, QueryParser qParser) {
 		
 			String fromTableName = f.getTableName();
@@ -450,22 +492,27 @@ public class Util {
 		for(FromListElement fle:visitedFLEs){
 			if(fle!=null && fle.getTableName()!=null){
 				Table t=qParser.getTableMap().getTable(fle.getTableName());
-				Iterator colItr=t.getColumns().values().iterator();
-				while(colItr.hasNext()){
-					Column col=(Column)colItr.next();
-					Node n = new Node();
-					n.setColumn(col);
-					n.setTable(col.getTable());
-					n.setLeft(null);
-					n.setRight(null);
-					n.setOperator(null);
-					n.setType(Node.getColRefType());
-					n.setTableNameNo(fle.getTableNameNo());
-					projectedColumns.add(n);
+				if(t!=null){
+					Iterator colItr=t.getColumns().values().iterator();
+					while(colItr.hasNext()){
+						Column col=(Column)colItr.next();
+						Node n = new Node();
+						n.setColumn(col);
+						n.setTable(col.getTable());
+						n.setLeft(null);
+						n.setRight(null);
+						n.setOperator(null);
+						n.setType(Node.getColRefType());
+						n.setTableNameNo(fle.getTableNameNo());
+						projectedColumns.add(n);
+					}
 				}
 			}
 			else if(fle!=null && fle.getTabs()!=null && !fle.getTabs().isEmpty()){
 				projectedColumns.addAll(getAllProjectedColumns(fle.getTabs(),qParser));				
+			}
+			else if(fle!=null && fle.getSubQueryParser()!=null){
+				projectedColumns.addAll(fle.getSubQueryParser().getProjectedCols());
 			}
 		}
 		return projectedColumns;

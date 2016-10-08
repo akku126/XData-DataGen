@@ -289,7 +289,7 @@ public class ProcessResultSetNode {
 		Vector<Node> tempProjectedCols = new Vector<Node>();
 		caseConditionsVector = new Vector<CaseCondition>();
 		for (int k=0;k<rcList.size();k++) {
-
+	
 			if (rcList.get(k) instanceof AllColumns) {
 				tempProjectedCols.addAll(Util.addAllProjectedColumns(qParser.queryAliases,0,qParser));
 			}
@@ -355,6 +355,7 @@ public class ProcessResultSetNode {
 			}
 		}
 		qParser.projectedCols.addAll(tempProjectedCols);
+
 		}catch(Exception e){
 			logger.log(Level.SEVERE,"Error in Processing ResultSet Node : "+e.getMessage(),e);
 			throw e;
