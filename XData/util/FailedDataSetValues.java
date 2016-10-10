@@ -15,6 +15,7 @@ public class FailedDataSetValues {
 
 	private String status = "passed";
 	private float Marks = 0.0f;
+	private float maxMarks = 0.0f;
 	private String ErrorMessage = "";
 	//This query id is used for displaying failed datasets when query equivalence is tested in TESTER mode
 	private int queryId = 0;
@@ -24,6 +25,7 @@ public class FailedDataSetValues {
 	private String dataSetName;
 	
 	private ArrayList<String> dataSetIdList = new ArrayList<String>();
+	
 	//This map stores columnName and failed DS values - incorrect output's - column name and its values
 	private Map<String,ArrayList<FailedColumnValues>> dsValueMap = new HashMap<String,ArrayList<FailedColumnValues>>();
 	
@@ -199,6 +201,12 @@ public class FailedDataSetValues {
 	}
 	public void setMarks(float marks) {
 		Marks = marks;
+	}
+	public float getMaxMarks() {
+		return maxMarks;
+	}
+	public void setMaxMarks(float maxMarks) {
+		this.maxMarks = maxMarks;
 	}
 	
 }

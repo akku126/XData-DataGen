@@ -21,6 +21,7 @@ import parsing.ForeignKey;
 import parsing.Node;
 import parsing.Query;
 import parsing.Table;
+import testDataGen.PopulateTestData;
 import util.Configuration;
 import util.DatabaseConnection;
 import util.MyConnection;

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import testDataGen.WriteFileAndUploadDatasets;
 import util.Configuration;
 import util.MyConnection;
 import util.TableMap;
@@ -66,9 +67,6 @@ public class GenerateDataset_new {
 		logger.log(Level.INFO,"DATA SETS FOR QUERY "+queryId+" ARE GENERATED");
 		logger.log(Level.INFO,"\n\n***********************************************************************\n");
 
-		/**Update query info table */
-		WriteFileAndUploadDatasets.updateQueryInfo(this, assignmentId,questionId,queryId, query, queryDesc);
-		
 		
 		/**Upload the data sets into the database */
 		TableMap tm = cvc.getTableMap();
@@ -128,10 +126,6 @@ public class GenerateDataset_new {
 		logger.log(Level.INFO,"DATA SETS FOR QUERY "+queryId+" ARE GENERATED");
 		logger.log(Level.INFO,"\n\n***********************************************************************\n");
 
-		/**Update query info table */
-		WriteFileAndUploadDatasets.updateQueryInfo(this, assignmentId,questionId,queryId, query, queryDesc);
-		
-		
 		/**Upload the data sets into the database */
 		TableMap tm = cvc.getTableMap();
 		WriteFileAndUploadDatasets.uploadDataset(this, assignmentId,questionId,queryId, course_id,dataSets,tm);			
@@ -170,8 +164,7 @@ public class GenerateDataset_new {
 		int q_id = Integer.parseInt(question_id);
 		int query_id = Integer.parseInt(args[2]);
 		 String course_id = args[3];
-        TestAnswer test=new TestAnswer();
-	    try(Connection dbcon = MyConnection.getDatabaseConnection()){
+         try(Connection dbcon = MyConnection.getDatabaseConnection()){
 	    	if(dbcon!=null){
 	    	    	  logger.log(Level.INFO,"Connected successfullly");
 	    	    	  

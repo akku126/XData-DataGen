@@ -8,7 +8,7 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import testDataGen.TestAssignment;
+//import testDataGen.TestAssignment;
 
 public class RunTest {
 	
@@ -37,9 +37,9 @@ public class RunTest {
 			
 			System.out.println("Running Tests");
 			//now run the tests
-			TestAssignment ta = new TestAssignment();
+			//TestAssignment ta = new TestAssignment();
 			List<String> corrQueries = new ArrayList<String>();
-			corrQueries.addAll(ta.evaluateAssignment(assignmentNo));
+			//corrQueries.addAll(ta.evaluateAssignment(assignmentNo));
 			outputAnswerToFile(corrQueries,assignmentNo);
 			System.out.println("DONE :"+folderPath);
 		} catch (Exception e){

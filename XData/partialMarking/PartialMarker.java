@@ -33,6 +33,7 @@ public class PartialMarker {
 	// Maximum marks
 	int maxMarks;
 	
+	String guestStudentQuery;
 	
 	// Details corresponding to the instructor query
 	public QueryDetails InstructorQuery;
@@ -94,6 +95,7 @@ public class PartialMarker {
 		this.InstructorQuery = new QueryDetails();
 		this.StudentQuery = new QueryDetails();
 		this.Configuration = new PartialMarkerConfig();
+		this.guestStudentQuery = null;
 		try{
 			this.Configuration.setConfigurationValues(assignmentId, quesId, queryId);
 		} catch (Exception ex){
@@ -102,10 +104,30 @@ public class PartialMarker {
 		}
 	}
 	
+	public PartialMarker(int assignmentId, int quesId, int queryId, String course_id, String rollNum,String studQuery){
+		this.assignmentId = assignmentId;
+		this.questionId = quesId;
+		this.queryId = queryId;
+		this.maxMarks = 100;
+		this.course_id = course_id;
+		this.studentId = rollNum;
+		this.InstructorQuery = new QueryDetails();
+		this.StudentQuery = new QueryDetails();
+		this.Configuration = new PartialMarkerConfig();
+		this.guestStudentQuery = studQuery;
+		try{
+			this.Configuration.setConfigurationValues(assignmentId, quesId, queryId);
+		} catch (Exception ex){
+			logger.log(Level.SEVERE,ex.getMessage(),ex);
+			//ex.printStackTrace();
+		}
+	}
+	
+	
 	private void initialize(){
 		try{		
 			this.maxMarks = this.InstructorQuery.InitializeInstructorQuery(this.assignmentId, this.questionId, this.queryId);
-			this.StudentQuery.InitializeStudentQuery(this.assignmentId, this.questionId, this.studentId);
+			this.StudentQuery.InitializeStudentQuery(this.assignmentId, this.questionId, this.studentId,this.guestStudentQuery);
 		}
 		catch(Exception ex){
 			logger.log(Level.SEVERE,ex.getMessage(), ex);

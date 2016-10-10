@@ -20,12 +20,11 @@ import java.util.regex.Pattern;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-
-import util.Configuration;
-import util.DataSetValue;
-import util.DatabaseConnection;
 import util.FailedColumnValues;
 import util.FailedDataSetValues;
+import util.DataSetValue;
+import util.Configuration;
+import util.DatabaseConnection;
 import util.MyConnection;
 import util.TableMap;
 
@@ -47,20 +46,6 @@ public class WriteFileAndUploadDatasets {
 		}
 	}
 	
-	
-	/**
-	 * Update the query info table
-	 * @param gd
-	 * @param queryId
-	 * @param query
-	 * @param queryDesc
-	 * @throws Exception
-	 */
-	@Deprecated
-	public static void updateQueryInfo(GenerateDataset_new gd,int assignmentId,int questionId,int queryId, String query,String queryDesc) throws Exception{
-
-	}
-
 	/**
 	 * Upload the data sets into inout database
 	 * @param gd
@@ -115,7 +100,7 @@ public class WriteFileAndUploadDatasets {
 						continue;
 					}else if(copyFiles == null){
 						continue;
-					}
+					} 
 					ArrayList <DataSetValue> dsList = new ArrayList<DataSetValue>();
 					String line="";
 					String tag="";
@@ -266,7 +251,7 @@ public class WriteFileAndUploadDatasets {
 					}
 					System.out.println("instrQuery = "+ instrQuery);
 					if(instrQuery != null){
-						TestAnswer testAns = new TestAnswer();
+						//TestAnswer testAns = new TestAnswer();
 			
 						//If there are two columns with same name like count(distinct col_name) and count(col_name)
 						// output will have col name as count for both - to use this as key, suffix with index 1,2,.,
