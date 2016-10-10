@@ -28,6 +28,8 @@ import parsing.AggregateFunction;
 import parsing.Column;
 import parsing.Conjunct;
 import parsing.Node;
+
+import testDataGen.WriteFile;
 import util.Configuration;
 import util.Utilities;
 
@@ -62,12 +64,12 @@ public class CountEstimationRelated {
 			CVCText += GetCVC3HeaderAndFooter.generateCvc3_Footer();
 
 			/**write these constraints into a file and execute*/
-			WriteFileAndUploadDatasets.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints.cvc", CVCText);
+			WriteFile.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints.cvc", CVCText);
 			Runtime r = Runtime.getRuntime();
 			String cmdString = "";
 			cmdString = "#!/bin/bash\n";
 			cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints.cvc | grep -e 'Invalid' > isValid \n";
-			WriteFileAndUploadDatasets.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints", cmdString);
+			WriteFile.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints", cmdString);
 			String[] command = {"/bin/sh", "-c",  "sh "+Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints"};
 			logger.log(Level.INFO, "sh "+ Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints");
 
@@ -302,7 +304,7 @@ public class CountEstimationRelated {
 					CVCStr = GenerateCVCConstraintForNode.generateCVCForCNTForPositiveINT( queryBlock, havingColConds, col, c);
 
 					/**write these constraints into a file and execute*/
-					WriteFileAndUploadDatasets.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/getCount.cvc", CVCStr);
+					WriteFile.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/getCount.cvc", CVCStr);
 					
 					Runtime r = Runtime.getRuntime();
 					cmdString = "";
@@ -310,7 +312,7 @@ public class CountEstimationRelated {
 					cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/getCount.cvc > "+Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/COUNTCVC \n";
 					cmdString +=Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/getCount.cvc | grep -e 'Invalid' > isValid \n";
 					cmdString += "grep -e 'COUNT = ' "+ Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/COUNTCVC" +" | awk -F \" \" '{print $4}' | awk -F \")\" '{print $1}' > "+Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/COUNT\n";
-					WriteFileAndUploadDatasets.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/execCOUNT", cmdString);
+					WriteFile.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/execCOUNT", cmdString);
 					String[] command = {"/bin/sh", "-c",  "sh "+Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/execCOUNT"};
 
 

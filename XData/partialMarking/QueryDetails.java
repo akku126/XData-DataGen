@@ -71,8 +71,9 @@ public class QueryDetails {
 		
 	}
 	
-	public void InitializeStudentQuery(int aId, int qId, String rollNum) throws Exception{		
+	public void InitializeStudentQuery(int aId, int qId, String rollNum, String guestStudentQuery) throws Exception{		
 		String qry = "select * from xdata_student_queries where assignment_id = ? and question_id = ? and rollnum = ?";		
+		if(guestStudentQuery == null){
 		//Connection conn = MyConnection.getExistingDatabaseConnection();
 		try(Connection conn = MyConnection.getDatabaseConnection()){
 			try(PreparedStatement pstmt = conn.prepareStatement(qry)){
@@ -82,17 +83,25 @@ public class QueryDetails {
 				
 				try(ResultSet rs = pstmt.executeQuery()){
 					String sqlQuery = null;
-					if(rs.next()){
+					if(rs.next()){	
 						sqlQuery = rs.getString("querystring");
+					}else{
+						sqlQuery = guestStudentQuery;
 					}
 					this.query = sqlQuery;
 					this.initialize(aId, qId, sqlQuery);
 		}
 		}
+		}
+	}else{
+		String sqlQuery = guestStudentQuery;
+		this.query = sqlQuery;
+		this.initialize(aId, qId, sqlQuery);
 	}
 		
 	}
 
+	
 	public void initialize(int assignmentId, int questionId, String query) throws Exception {
 		GenerateCVC1 cvc = new GenerateCVC1();
 				

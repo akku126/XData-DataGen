@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 
 import parsing.Column;
 import parsing.Node;
+import testDataGen.WriteFile;
 import util.Configuration;
 import util.JoinAndUniqueAttributes;
 import util.JoinGraphNode;
@@ -1138,7 +1139,7 @@ public class GetTupleAssignmentUsingSolver {
 		long startT, endT;
 
 		/**write these constraints to a cvc file*/
-		WriteFileAndUploadDatasets.writeFile(Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/tupleAssignment.cvc", constraints);
+		WriteFile.writeFile(Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/tupleAssignment.cvc", constraints);
 
 		String cmdString = "";
 
@@ -1165,7 +1166,7 @@ public class GetTupleAssignmentUsingSolver {
 				Configuration.homeDir+"/temp_cvc"+ getFilePath() + "/assignment\n";
 
 		/**write these command to a file*/
-		WriteFileAndUploadDatasets.writeFile(Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/execTupleAssgnCVC", cmdString);
+		WriteFile.writeFile(Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/execTupleAssgnCVC", cmdString);
 
 		startT = System.currentTimeMillis();
 		/**execute these commands using process*/

@@ -113,7 +113,7 @@ public class TestAssignment {
 										// OriginalQry ,"student",filePath);
 										FailedDataSetValues fdValue = test.testAnswer(assignment_id,
 												corr_query_id.get(i), "AutomatedTesting", OriginalQry, rolln, filePath,
-												false);
+												false,null);
 										logger.log(Level.INFO, "ans:" + fdValue.getStatus());
 										if (fdValue.getStatus().equalsIgnoreCase("failed")) {
 											upstmt.setBoolean(1, false);
@@ -229,7 +229,7 @@ public class TestAssignment {
 										// "4/"+courseId+"/"+queryId);
 										FailedDataSetValues failedDs = test.testAnswer(assignment_id, question_id,
 												courseId, testQuery, rollNum, "4/" + courseId + "/" + queryId,
-												isLateSubmission);
+												isLateSubmission,null);
 
 										if (failedDs.getStatus().equalsIgnoreCase("Failed")) {
 											Map<String, Map<String, ArrayList<String>>> failedStudDataMap = new HashMap<String, Map<String, ArrayList<String>>>();
@@ -379,7 +379,6 @@ public class TestAssignment {
 	 * @throws SQLException
 	 */
 	public FailedDataSetValues evaluateGuestAnswer(Connection dbcon, Connection testCon, String[] args) throws SQLException {
-		String StudQueryString = args[4];
 		TestAnswer test = new TestAnswer();
 		QueryStatus queryStatus = QueryStatus.Correct;
 		boolean queryExists = false;
@@ -392,6 +391,8 @@ public class TestAssignment {
 		String qId = "A" + assignment_id + "Q" + question_id + "S" + 1;
 		String rollNum = args[2];
 		String courseId = args[3];
+		String StudQueryString = args[4];
+		String studRole = args[5];
 		String json = "";
 		int flag = 0;
 		FailedDataSetValues failedDs = new FailedDataSetValues();
@@ -414,7 +415,9 @@ public class TestAssignment {
 			logger.log(Level.SEVERE, e.getMessage(), e);
 			// e.printStackTrace();
 			statusData.ErrorMessage = e.getMessage();
-			queryStatus = QueryStatus.Error;			
+			queryStatus = QueryStatus.Error;	
+			failedDs.setStatus("Error");
+			failedDs.setErrorMessage(e.getMessage());
 			flag = 1;
 		}
 		if (flag == 0) {
@@ -423,7 +426,7 @@ public class TestAssignment {
 			try {
 				String queryId = "A" + assignment_id + "Q" + question_id + "S" + 1;
 				failedDs = test.testAnswer(assignment_id, question_id, courseId,
-						StudQueryString, rollNum, "4/" + courseId + "/" + queryId, false);
+						StudQueryString, rollNum, "4/" + courseId + "/" + queryId, false,studRole);
 				GenerateCVC1 cvc = new GenerateCVC1();
 				cvc.initializeConnectionDetails(assignment_id, question_id, 1, courseId);
 				TableMap tm = cvc.getTableMap();
@@ -578,7 +581,7 @@ public class TestAssignment {
 								try {
 									String queryId = "A" + assignment_id + "Q" + question_id + "S" + 1;
 									FailedDataSetValues failedDs = test.testAnswer(assignment_id, question_id, courseId,
-											OriginalQry, rollNum, "4/" + courseId + "/" + queryId, false);
+											OriginalQry, rollNum, "4/" + courseId + "/" + queryId, false,null);
 									GenerateCVC1 cvc = new GenerateCVC1();
 									cvc.initializeConnectionDetails(assignment_id, question_id, 1, courseId);
 									TableMap tm = cvc.getTableMap();
@@ -694,14 +697,14 @@ public class TestAssignment {
 		} else if (queryStatus == QueryStatus.Correct) {
 			String qryUpdate = "update xdata_student_queries set verifiedcorrect = true,score = 100 where assignment_id = '"
 					+ assignment_id + "' and question_id='" + question_id + "' and rollnum = '" + rollNum
-					+ "'and course_id= '" + courseId + "'";
+					+ "' and course_id= '" + courseId + "'";
 			try (PreparedStatement pstmt3 = dbcon.prepareStatement(qryUpdate)) {
 				pstmt3.executeUpdate();
 			}
 		} else {
 			String qryUpdate = "update xdata_student_queries set verifiedcorrect = false, result=? where assignment_id = '"
 					+ assignment_id + "' and question_id='" + question_id + "' and rollnum = '" + rollNum
-					+ "'and course_id= '" + courseId + "'";
+					+ "' and course_id= '" + courseId + "'";
 			try (PreparedStatement pstmt3 = dbcon.prepareStatement(qryUpdate)) {
 				pstmt3.setString(1, json1);
 				pstmt3.executeUpdate();
@@ -955,7 +958,7 @@ public class TestAssignment {
 
 											FailedDataSetValues failedDs = test.testAnswer(assignment_id, question_id,
 													course_Id, OriginalQry, StudQueries.getString("rollnum"),
-													"4/" + course_Id + "/" + oldQueryId, isLateSubmission);
+													"4/" + course_Id + "/" + oldQueryId, isLateSubmission,null);
 											logger.log(Level.INFO, "Answer is :" + ans);
 
 											if (failedDs.getStatus().equalsIgnoreCase("Failed")) {
