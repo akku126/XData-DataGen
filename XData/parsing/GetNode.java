@@ -427,6 +427,7 @@ public class GetNode {
 		} else if (node != null && node.getType().equalsIgnoreCase(Node.getInNodeType())){
 			
 			Node lhsrhs = node.getLhsRhs();
+			if(lhsrhs!=null){
 			int queryIndex = lhsrhs.getRight().queryIndex;
 			
 			//left.getSubQueryConds().add(lhsrhs);
@@ -435,6 +436,7 @@ public class GetNode {
 			node.setLhsRhs(newNode);
 			node.setType(Node.getExistsNodeType());	
 			rootAND.leafNodes.add(node);
+			}
 		}else if ((node != null && node.getType().equalsIgnoreCase(Node.getExistsNodeType())) || (node != null && node.getType().equalsIgnoreCase(Node.getNotExistsNodeType()))) {
 			rootAND.leafNodes.add(node);
 		}
@@ -528,15 +530,17 @@ public class GetNode {
 		}  else if (node.getType().equalsIgnoreCase(Node.getInNodeType())){
 			
 			Node lhsrhs = node.getLhsRhs();
-			int queryIndex = lhsrhs.getRight().queryIndex;
-			
-			//left.getSubQueryConds().add(lhsrhs);
-			Node newNode = new Node();
-			newNode.setQueryIndex(queryIndex);
-			node.setLhsRhs(newNode);
-			node.setType(Node.getExistsNodeType());	
-			flattenNodes.add(node);
-			cnf.add(flattenNodes);
+			if(lhsrhs!=null){
+				int queryIndex = lhsrhs.getRight().queryIndex;
+
+				//left.getSubQueryConds().add(lhsrhs);
+				Node newNode = new Node();
+				newNode.setQueryIndex(queryIndex);
+				node.setLhsRhs(newNode);
+				node.setType(Node.getExistsNodeType());	
+				flattenNodes.add(node);
+				cnf.add(flattenNodes);
+			}
 		}else if (node.getType().equalsIgnoreCase(Node.getExistsNodeType()) || node.getType().equalsIgnoreCase(Node.getNotExistsNodeType())) {
 			flattenNodes.add(node);
 			cnf.add(flattenNodes);

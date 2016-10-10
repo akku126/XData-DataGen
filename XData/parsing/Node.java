@@ -76,6 +76,7 @@ public class Node implements Cloneable, Serializable{
 		queryIndex=-1;
 		isMutant = false;
 		subQueryParser=null;
+		aliasName=null;
 	}
 	
 	//the following line added by mathew on 1st october 2016
@@ -87,6 +88,16 @@ public class Node implements Cloneable, Serializable{
 		
 		public void setSubQueryParser(QueryParser subQP){
 			this.subQueryParser=subQP;
+		}
+		
+		private String aliasName;
+		
+		public String getAliasName(){
+			return aliasName;
+		}
+		
+		public void setAliasName(String aName){
+			this.aliasName=aName;
 		}
 	
 	/**

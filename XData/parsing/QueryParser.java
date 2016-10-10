@@ -237,7 +237,7 @@ public class QueryParser implements Serializable{
 		if( this.getWhereClauseSubqueries().size()>0){
 			retString+="\n Where Subqueries  \n";
 			for(QueryParser qp:this.getWhereClauseSubqueries())
-				retString+=" "+qp.toString();	
+				retString+="          "+qp.toString();	
 		}
 
 		return retString;
@@ -751,7 +751,7 @@ public class QueryParser implements Serializable{
 						((Select)stmt).getWithItemsList() == null){						
 					 plainSelect = (PlainSelect)((Select) stmt).getSelectBody();
 					ProcessResultSetNode.processResultSetNodeJSQL(plainSelect, debug, this);
-					//ProcessSelectClause.ProcessSelect(plainSelect, debug, this);
+//					ProcessSelectClause.ProcessSelect(plainSelect, debug, this);
 				}
 				
 				//Check if query contains WithItem list - then Query is of the form  WITH S AS ()
@@ -815,6 +815,16 @@ public class QueryParser implements Serializable{
 				subJoin.setLeft(sub);					
 			}
 		}
+		//checks if the left item (assumed to be a  Table or SubJoin itself) is a SubJoin, if then recursive call
+		else if(leftFromItem instanceof SubJoin){
+			transformSubJoinForWithAs(srcWithItem,(SubJoin)leftFromItem);
+		}
+		// if fromitem is a subselect , then call the corresponding method that handles it
+		else if(leftFromItem instanceof SubSelect){
+			logger.info("processing subselect");
+			SubSelect leftSubSelect=(SubSelect) leftFromItem;
+			transformSubSelectForWithAs(srcWithItem, leftSubSelect);
+		}
 		// deals with the right item of the subjoin
 		FromItem rightFromItem=subJoin.getJoin().getRightItem();
 		//checks if the right item (assumed to be a  Table or SubJoin itself) is a Table, then if its name is the same as the name of the 
@@ -840,6 +850,11 @@ public class QueryParser implements Serializable{
 		//checks if the right item (assumed to be a  Table or SubJoin itself) is a SubJoin, if then recursive call
 		else if(rightFromItem instanceof SubJoin){
 			transformSubJoinForWithAs(srcWithItem,(SubJoin)rightFromItem);
+		}
+		else if(rightFromItem instanceof SubSelect){
+			logger.info("processing subselect");
+			SubSelect rightSubSelect=(SubSelect) rightFromItem;
+			transformSubSelectForWithAs(srcWithItem, rightSubSelect);
 		}
 		return subJoin;
 	}
@@ -1157,6 +1172,7 @@ public class QueryParser implements Serializable{
 	 */
 	public void parseQueriesForSetOp(SetOperationList setOpList, boolean debug) throws Exception {
 		
+		logger.info(" set operation List"+setOpList.toString());
 		SetOperation setOperation =  setOpList.getOperations().get(0);
 		
 		if(setOperation instanceof ExceptOp || setOperation instanceof MinusOp || setOperation instanceof IntersectOp || setOperation instanceof UnionOp){
@@ -1183,6 +1199,7 @@ public class QueryParser implements Serializable{
 					
 					ProcessResultSetNode.processResultSetNodeJSQL(left, debug, leftQuery);
 					//ProcessSelectClause.ProcessSelect(left, debug, leftQuery);
+					this.projectedCols.addAll(leftQuery.projectedCols);
 				}
 				else if(nxtElement instanceof SetOperationList){
 					leftQuery.parseQueryJSQL("q2",((SetOperationList)nxtElement).toString(),debug);
@@ -1200,6 +1217,8 @@ public class QueryParser implements Serializable{
 					
 					ProcessResultSetNode.processResultSetNodeJSQL(right, debug, rightQuery);			
 					//ProcessSelectClause.ProcessSelect(right, debug, rightQuery);
+					if(projectedCols.isEmpty())
+						this.projectedCols.addAll(rightQuery.projectedCols);
 					}
 				else if(nxtElement instanceof SetOperationList){
 					rightQuery.parseQueryJSQL("q3",((SetOperationList)nxtElement).toString(),debug);
