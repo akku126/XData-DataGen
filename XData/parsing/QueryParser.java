@@ -181,7 +181,6 @@ public class QueryParser implements Serializable{
 	Vector<Vector<Node>> dnfIsNullConds;
 	Vector<Vector<Node>> allDnfSubQuery;
 	Vector<Vector<Node>> dnfJoinCond;
-	Vector<Vector<Vector<Node>>> EqClass;
 	
 	private boolean isDistinct;
 
@@ -390,13 +389,7 @@ public class QueryParser implements Serializable{
 		this.dnfJoinCond = dnfJoinCond;
 	}
 
-	public Vector<Vector<Vector<Node>>> getEqClass() {
-		return EqClass;
-	}
 
-	public void setEqClass(Vector<Vector<Vector<Node>>> eqClass) {
-		EqClass = eqClass;
-	}
 
 
 	// @junaid modified
@@ -532,7 +525,6 @@ public class QueryParser implements Serializable{
 		dnfJoinCond = new Vector<Vector<Node>>();
 		dnfLikeConds = new Vector<Vector<Node>>();
 		allDnfSelCond = new Vector<Vector<Node>>();
-		EqClass =new Vector<Vector<Vector<Node>>>();
 		dnfIsNullConds = new Vector<Vector<Node>>();
 		allDnfSubQuery =new Vector<Vector<Node>>();
 		//setCaseConditions(new Vector<CaseCondition>());
