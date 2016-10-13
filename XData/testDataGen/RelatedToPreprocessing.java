@@ -527,9 +527,7 @@ public class RelatedToPreprocessing {
 			for(int i=0;i<f2.length;i++){
 				if(f2[i].isDirectory() && f2[i].getName().startsWith("DS")){
 					
-					Process proc = r.exec("rm -rf "+Configuration.homeDir+"/temp_cvc"+g.getFilePath()+"/"+f2[i].getName());
-					proc.waitFor();
-					Utilities.closeProcessStreams(proc);
+					Utilities.deletePath(Configuration.homeDir+"/temp_cvc"+g.getFilePath()+"/"+f2[i].getName());
 				}
 			}
 		}

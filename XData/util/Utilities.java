@@ -134,6 +134,36 @@ public class Utilities {
 		catch(IOException io){logger.log(Level.SEVERE, "CloseProcessStreams:ErrorStream : ", io);}		
 	}
 	
+	/**
+	 * Given the path of a directory recursively deletes all files in it. If the path if of a file the file is deleted
+	 * @param path Path of directory or file to be deleted
+	 * @return true if successfully deleted else false
+	 */
+	public static boolean deletePath(String path)	throws IOException{
+		
+		boolean retVal=true;
+		Boolean res;
+		File file=new File(path);
+		if(file.isDirectory())	{
+			
+			File[] files = file.listFiles();
+			for(File fileToDel:files)	{
+				res=deletePath(fileToDel.getAbsolutePath());
+				retVal=res && retVal;
+			}
+				
+			res= file.delete();
+			return res && retVal;
+			
+			
+		} else {
+			return file.delete();
+		}
+		
+		
+	}
+	
+	
 	public static ArrayList<String> createQueries(String path) throws Exception    
     {   
         String queryLine =      new String();  

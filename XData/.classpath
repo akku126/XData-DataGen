@@ -16,16 +16,5 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="jars/gson-2.2.4.jar"/>
-	<classpathentry kind="lib" path="/home/shree/GITCODE_XData/XData-DataGen/XData/jars/automaton.jar"/>
-	<classpathentry kind="lib" path="/home/shree/GITCODE_XData/XData-DataGen/XData/jars/com.mysql.jdbc_5.1.5.jar"/>
-	<classpathentry kind="lib" path="/home/shree/GITCODE_XData/XData-DataGen/XData/jars/derby-10.8.jar"/>
-	<classpathentry kind="lib" path="/home/shree/GITCODE_XData/XData-DataGen/XData/jars/google-collect-1.0-rc2.jar"/>
-	<classpathentry kind="lib" path="/home/shree/GITCODE_XData/XData-DataGen/XData/jars/gson-2.2.4.jar"/>
-	<classpathentry kind="lib" path="/home/shree/GITCODE_XData/XData-DataGen/XData/jars/jsqlparser.jar"/>
-	<classpathentry kind="lib" path="/home/shree/GITCODE_XData/XData-DataGen/XData/jars/ojdbc6-11.2.0.2.0.jar"/>
-	<classpathentry kind="lib" path="/home/shree/GITCODE_XData/XData-DataGen/XData/jars/postgresql-9.0-801.jdbc4.jar"/>
-	<classpathentry kind="lib" path="/home/shree/GITCODE_XData/XData-DataGen/XData/jars/tomcat-jdbc-7.0.54.jar"/>
-	<classpathentry kind="lib" path="/home/shree/GITCODE_XData/XData-DataGen/XData/jars/tomcat-juli-7.0.54.jar"/>
-	<classpathentry kind="lib" path="/home/shree/GITCODE_XData/XData-DataGen/XData/jars/uncommons-maths-1.2.jar"/>
 	<classpathentry kind="output" path=""/>
 </classpath>
