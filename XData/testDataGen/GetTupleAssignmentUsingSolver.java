@@ -1,3 +1,5 @@
+
+
 package testDataGen;
 
 import generateConstraints.GetCVC3HeaderAndFooter;
@@ -1137,7 +1139,8 @@ public class GetTupleAssignmentUsingSolver {
 	private boolean solveConstraints(String constraints) throws Exception{
 
 		long startT, endT;
-
+		//Escape the White Spaces in the file name for using it in BASH script. This is OS Specific and work for *nix and Mac
+		String filePath= getFilePath().replace(" ", "\\ ");
 		/**write these constraints to a cvc file*/
 		WriteFile.writeFile(Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/tupleAssignment.cvc", constraints);
 
@@ -1146,24 +1149,24 @@ public class GetTupleAssignmentUsingSolver {
 		cmdString = "#!/bin/bash\n";
 
 		/**command to redirect output*/
-		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/tupleAssignment.cvc > tupleAssignmentOutput \n";
+		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc"+ filePath +"/tupleAssignment.cvc > tupleAssignmentOutput \n";
 
 		/**command to check if solution is valid/ not i.e. possible or not*/
 		//cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/tupleAssignment.cvc | grep -e 'Valid' > isValid \n";
 
 		/**remove previous file*/
-		cmdString += "rm "+Configuration.homeDir+"/temp_cvc"+ getFilePath() + "/assignment\n";
+		cmdString += "rm "+Configuration.homeDir+"/temp_cvc"+ filePath + "/assignment\n";
 
 		/**command to check if solution exist or not*/
-		cmdString += "grep -e 'Valid' "+ Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/tupleAssignmentOutput  > isValid \n";
+		cmdString += "grep -e 'Valid' "+ Configuration.homeDir+"/temp_cvc"+ filePath +"/tupleAssignmentOutput  > isValid \n";
 
 		/**command to get tuple assignment (count) to each relation*/
-		cmdString += "grep -e 'ASSERT (COUNT\\[' "+ Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/tupleAssignmentOutput >> "+
-				Configuration.homeDir+"/temp_cvc"+ getFilePath() + "/assignment\n";
+		cmdString += "grep -e 'ASSERT (COUNT\\[' "+ Configuration.homeDir+"/temp_cvc"+ filePath +"/tupleAssignmentOutput >> "+
+				Configuration.homeDir+"/temp_cvc"+ filePath + "/assignment\n";
 
 		/**command to get unique elements inferred*/
-		cmdString += "grep -e 'ASSERT UNIQUE(' "+ Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/tupleAssignmentOutput >> "+
-				Configuration.homeDir+"/temp_cvc"+ getFilePath() + "/assignment\n";
+		cmdString += "grep -e 'ASSERT UNIQUE(' "+ Configuration.homeDir+"/temp_cvc"+ filePath +"/tupleAssignmentOutput >> "+
+				Configuration.homeDir+"/temp_cvc"+ filePath + "/assignment\n";
 
 		/**write these command to a file*/
 		WriteFile.writeFile(Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/execTupleAssgnCVC", cmdString);
@@ -1487,3 +1490,4 @@ public class GetTupleAssignmentUsingSolver {
 	}
 
 }
+

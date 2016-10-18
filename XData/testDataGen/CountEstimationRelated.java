@@ -1,3 +1,5 @@
+
+
 package testDataGen;
 
 import generateConstraints.GenerateCVCConstraintForNode;
@@ -62,15 +64,18 @@ public class CountEstimationRelated {
 
 
 			CVCText += GetCVC3HeaderAndFooter.generateCvc3_Footer();
-
+			//Escape the whitespaces in the file path when writing File Name in BASH SCRIPT OR Enclose it with single quotes in BASH SCRIPT
+			//This is OS specific.
+			String filePath =  cvc.getFilePath().replace(" ", "\\ ");
+			
 			/**write these constraints into a file and execute*/
 			WriteFile.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints.cvc", CVCText);
 			Runtime r = Runtime.getRuntime();
 			String cmdString = "";
 			cmdString = "#!/bin/bash\n";
-			cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints.cvc | grep -e 'Invalid' > isValid \n";
+			cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc" +filePath + "/checkAggConstraints.cvc | grep -e 'Invalid' > isValid \n";
 			WriteFile.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints", cmdString);
-			String[] command = {"/bin/sh", "-c",  "sh "+Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints"};
+			String[] command = {"/bin/sh", "-c",  "sh "+Configuration.homeDir+"/temp_cvc" + filePath + "/checkAggConstraints"};
 			logger.log(Level.INFO, "sh "+ Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints");
 
 			ProcessBuilder pb = new ProcessBuilder("/bin/bash", "checkAggConstraints");
@@ -299,7 +304,9 @@ public class CountEstimationRelated {
 						logger.log(Level.INFO,"\nGiving up. Tried "+limit+" times. Returning: "+finalCount);
 						return finalCount;
 					}
-
+					//Escape the whitespaces in the file path when writing File Name in BASH SCRIPT OR Enclose it with single quotes in BASH SCRIPT
+					//This is OS specific.
+					String filePath =  cvc.getFilePath().replace(" ", "\\ ");
 					/**Get the constraints related CVC3*/
 					CVCStr = GenerateCVCConstraintForNode.generateCVCForCNTForPositiveINT( queryBlock, havingColConds, col, c);
 
@@ -309,11 +316,11 @@ public class CountEstimationRelated {
 					Runtime r = Runtime.getRuntime();
 					cmdString = "";
 					cmdString = "#!/bin/bash\n";
-					cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/getCount.cvc > "+Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/COUNTCVC \n";
-					cmdString +=Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/getCount.cvc | grep -e 'Invalid' > isValid \n";
-					cmdString += "grep -e 'COUNT = ' "+ Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/COUNTCVC" +" | awk -F \" \" '{print $4}' | awk -F \")\" '{print $1}' > "+Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/COUNT\n";
+					cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc" +filePath+ "/getCount.cvc > "+Configuration.homeDir+"/temp_cvc" + filePath + "/COUNTCVC \n";
+					cmdString +=Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc" + filePath + "/getCount.cvc | grep -e 'Invalid' > isValid \n";
+					cmdString += "grep -e 'COUNT = ' "+ Configuration.homeDir+"/temp_cvc" + filePath + "/COUNTCVC" +" | awk -F \" \" '{print $4}' | awk -F \")\" '{print $1}' > "+Configuration.homeDir+"/temp_cvc" +filePath + "/COUNT\n";
 					WriteFile.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/execCOUNT", cmdString);
-					String[] command = {"/bin/sh", "-c",  "sh "+Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/execCOUNT"};
+					String[] command = {"/bin/sh", "-c",  "sh "+Configuration.homeDir+"/temp_cvc" +filePath+ "/execCOUNT"};
 
 
 					ProcessBuilder pb = new ProcessBuilder("/bin/bash", "execCOUNT");
@@ -669,3 +676,4 @@ public class CountEstimationRelated {
 	}
 
 }
+
