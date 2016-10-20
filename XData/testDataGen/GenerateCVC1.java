@@ -4,12 +4,17 @@ package testDataGen;
 import generateConstraints.GetCVC3HeaderAndFooter;
 import generateConstraints.TupleRange;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.io.Writer;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -19,6 +24,9 @@ import java.util.Map.Entry;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.taskdefs.SQLExec;
 
 import killMutations.GenerateDataForOriginalQuery;
 import killMutations.MutationsInFromSubQuery;
@@ -33,8 +41,7 @@ import parsing.QueryParser;
 import parsing.Table;
 import testDataGen.PopulateTestData;
 import stringSolver.StringConstraintSolver;
-import util.DatabaseConnection;
-import util.MyConnection;
+
 import util.TableMap;
 import util.TagDatasets;
 import util.Utilities;
@@ -117,6 +124,12 @@ public class GenerateCVC1 implements Serializable{
 
 	/** Sets the path to the location where the file containing queries is located and where the output files will be generated */
 	private String filePath;
+	
+	/** Holds the name of the schema file */
+	private String schemaFile;
+	
+	/** Holds the name of the data file */
+	private String dataFile;
 
 	/** Used to number the data sets */
 	private int count;
@@ -124,7 +137,7 @@ public class GenerateCVC1 implements Serializable{
 
 	private ArrayList<Table> resultsetTables;
 
-	/** I/P DATABASE: 		ipdb = true/false*/
+	/** I/P DATABASE: ipdb = true/false*/
 	private boolean ipdb;   		
 
 	/**Stores CVC3 Header*/
@@ -153,6 +166,9 @@ public class GenerateCVC1 implements Serializable{
 	private int questionId;
 	private int queryId;
 	private String courseId; 
+	private String concatenatedQueryId;
+	// Holds true if result is order Independent of projection columns
+	private boolean orderindependent = true;
 	
 	private transient Connection connection;
 	
@@ -976,151 +992,105 @@ public class GenerateCVC1 implements Serializable{
 		this.connection = conn;
 	}
 	
-	public void initializeConnectionDetails(int assignId, int questionId, int queryId, String course_id) throws Exception {
+	/*public void initializeConnectionDetails() throws Exception {
 		
-			try(Connection conn = MyConnection.getDatabaseConnection()){
-			int connId = 0, schemaId = 0, optionalSchemaId=0;
-				
-			this.assignmentId = assignId;
-			this.questionId = questionId;
-			this.setQueryId(queryId);
-			this.setCourseId(course_id);
-		//	String questionId = queryId.substring(queryId.indexOf("Q")+1,queryId.indexOf("Q")+2);
-			int q_id = questionId;
+		try{
+			Connection assignmentConn = this.getConnection();
+			PopulateTestData p = new PopulateTestData();
+			p.deleteAllTempTablesFromTestUser(assignmentConn);
+			byte[] dataBytes = null;
+			String tempFile = "";
+			FileOutputStream fos = null;
+			ArrayList<String> listOfQueries = null;
+			ArrayList<String> listOfDDLQueries = new ArrayList<String>();
+			String[] inst = null;
 			
-			try(PreparedStatement stmt = conn.prepareStatement("select connection_id, defaultschemaid from xdata_assignment where assignment_id = ?")){
-				stmt.setInt(1, assignmentId); 
-				 
-				try(ResultSet result = stmt.executeQuery()){
+			String fileContent= getSchemaFile();
+			dataBytes = fileContent.getBytes();
+			tempFile = "/tmp/dummyschema.sql";
+			
+			 fos = new FileOutputStream(tempFile);
+			fos.write(dataBytes);
+			fos.close();
+			listOfQueries = Utilities.createQueries(tempFile);
+			inst = listOfQueries.toArray(new String[listOfQueries.size()]);
+			listOfDDLQueries.addAll(listOfQueries);
+			for (int i = 0; i < inst.length; i++) {
+				// we ensure that there is no spaces before or after the request string  
+				// in order to not execute empty statements  
+				if (!inst[i].trim().equals("") && ! inst[i].trim().contains("drop table")) {
+					//Changed for MSSQL testing
+					String temp = inst[i].replaceAll("(?i)^[ ]*create[ ]+table[ ]+", "create temporary table ");
+					PreparedStatement stmt2 = assignmentConn.prepareStatement(temp);
+						stmt2.executeUpdate();	
+					stmt2.close();
 				
-				//Get optional Schema Id for this question
-				try(PreparedStatement statement = conn.prepareStatement("select optionalschemaid from xdata_qinfo where assignment_id = ? and question_id= ? ")){
-					statement.setInt(1, assignmentId); 
-					statement.setInt(2,q_id); 
-					
-					try(ResultSet resultSet = statement.executeQuery()){
-						if(resultSet.next()){
-							optionalSchemaId = resultSet.getInt("optionalschemaid");
-						}
-					}
-				}
-				
-				if(result.next()){
-					connId = result.getInt("connection_id");
-					//If optional schema id exists and it is not same as default schema id, then set it as schemaId 
-					if(optionalSchemaId != 0 && optionalSchemaId != result.getInt("defaultschemaid")){	
-						schemaId = optionalSchemaId;
-					} else{
-						schemaId = result.getInt("defaultschemaid");
-					}
-				} 
+					    
 				}
 			}
-				if(connId != 0 && schemaId != 0){
-					 
-					try(Connection assignmentConn = new DatabaseConnection().getTesterConnection(assignmentId)){
-					PopulateTestData p = new PopulateTestData();
-					p.deleteAllTempTablesFromTestUser(assignmentConn);
-					byte[] dataBytes = null;
-					String tempFile = "";
-					FileOutputStream fos = null;
-					ArrayList<String> listOfQueries = null;
-					ArrayList<String> listOfDDLQueries = new ArrayList<String>();
-					String[] inst = null;
-					
-					if(assignmentConn != null){
-					
-						try(PreparedStatement stmt1 = conn.prepareStatement("select ddltext from xdata_schemainfo where schema_id = ?")){
-						stmt1.setInt(1, schemaId);			
-						try(ResultSet result = stmt1.executeQuery()){
-						
-						    
-						// Process the result			
-						if(result.next()){
-							String fileContent= result.getString("ddltext");
-							// CCJSqlParserManager fleParser = new CCJSqlParserManager();
-								//Statement parsedStmt = fleParser.parse(new StringReader(fileContent));
-							dataBytes = fileContent.getBytes();
-							tempFile = "/tmp/dummy";
-							
-							 fos = new FileOutputStream(tempFile);
-							fos.write(dataBytes);
-							fos.close();
-							
-							
-							listOfQueries = Utilities.createQueries(tempFile);
-							inst = listOfQueries.toArray(new String[listOfQueries.size()]);
-							listOfDDLQueries.addAll(listOfQueries);
-							for (int i = 0; i < inst.length; i++) {
-								// we ensure that there is no spaces before or after the request string  
-								// in order to not execute empty statements  
-								if (!inst[i].trim().equals("") && ! inst[i].trim().contains("drop table")) {
-									//Changed for MSSQL testing
-									//String temp = inst[i].replaceAll("(?i)^[ ]*create[ ]+table[ ]+", "create table ##");
-									//stmt = assignmentConn.prepareStatement(temp);
-									String temp = inst[i].replaceAll("(?i)^[ ]*create[ ]+table[ ]+", "create temporary table ");
-									PreparedStatement stmt2 = assignmentConn.prepareStatement(temp);
-										stmt2.executeUpdate();	
-									stmt2.close();
-								
-									    
-								}
-							}
-						}
-						}
-						}
-						try(PreparedStatement stmt2 = conn.prepareStatement("select sample_data from xdata_sampledata where schema_id = ?")){
-							stmt2.setInt(1, schemaId);			
-							try(ResultSet result = stmt2.executeQuery()){
-								if(result.next()){
-									String sdContent= result.getString("sample_data");
-								//	String sdReplace=sdContent.replace("\\\\","'");
-									//fc = sdContent.replace("\t", "    ");
-									dataBytes = sdContent.getBytes(); 
-									fos = new FileOutputStream(tempFile);
-									fos.write(dataBytes);
-									fos.close();
-									
-									listOfQueries = Utilities.createQueries(tempFile);
-									inst = listOfQueries.toArray(new String[listOfQueries.size()]);
-									 
-									for (int i = 0; i < inst.length; i++) {
-										// we ensure that there is no spaces before or after the request string  
-										// in order to not execute empty statements  
-										 
-										if (!inst[i].trim().equals("") && !inst[i].contains("drop table") && !inst[i].contains("delete from")) {
-											//System.out.println(inst[i]);
-										//Changed for MSSQL TESTING
-											//String temp = inst[i].replaceAll("(?i)^[ ]*insert[ ]+into[ ]+", "insert into [xdata].[dbo].##");
-											//stmt = assignmentConn.prepareStatement(temp+";");
-											
-											PreparedStatement stmt3 = assignmentConn.prepareStatement(inst[i]);
-												stmt3.executeUpdate();							
-												stmt3.close();
-										}
-									}
-								} 
-						}
-						}
-					} 
-					
-				
-					
-					this.connection = assignmentConn;
-		
-					//this.tableMap = TableMap.getInstances(this.connection,schemaId,listOfDDLQueries);
-					this.tableMap = TableMap.getInstances(this.connection,schemaId);
-					
+			String sdContent= getDataFile();
+			dataBytes = sdContent.getBytes(); 
+			fos = new FileOutputStream(tempFile);
+			fos.write(dataBytes);
+			fos.close();
+			
+				listOfQueries = Utilities.createQueries(tempFile);
+			inst = listOfQueries.toArray(new String[listOfQueries.size()]);
+			 
+			for (int i = 0; i < inst.length; i++) {
+				// we ensure that there is no spaces before or after the request string  
+				// in order to not execute empty statements  
+				 if (!inst[i].trim().equals("") && !inst[i].contains("drop table") && !inst[i].contains("delete from")) {
+					//System.out.println(inst[i]);
+					//Changed for MSSQL TESTING
+					PreparedStatement stmt3 = assignmentConn.prepareStatement(inst[i]);
+						stmt3.executeUpdate();							
+						stmt3.close();
 				}
 			}
-			}
+			this.connection = assignmentConn;	
+		}
+			
 		catch(Exception ex){
-			//this.closeConn();
 			logger.log(Level.SEVERE,ex.getMessage(), ex);
-			//ex.printStackTrace();
 			throw ex;
 		}
 	}
+	 
+	/**
+	 * This method creates the tables from the sql file
+	 * @param dbConnDetails
+	 */
+	/*protected void executeSqlFile(DatabaseConnectionDetails dbConnDetails) {
+		
+	    final class SqlExecuter extends SQLExec {
+	        public SqlExecuter() {
+	            Project project = new Project();
+	            project.init();
+	            setProject(project);
+	            setTaskType("sql");
+	            setTaskName("sql");
+	        }
+	    }
+	    try{
+   			String hostName = dbConnDetails.getJdbc_Url().substring(0,dbConnDetails.getJdbc_Url().indexOf(":"));
+	         String portNumber = dbConnDetails.getJdbc_Url().substring(dbConnDetails.getJdbc_Url().indexOf(":")+1,dbConnDetails.getJdbc_Url().length());
+	       
+	    SqlExecuter executer = new SqlExecuter(); 
+	    executer.setSrc(new File(dbConnDetails.getFileName()));
+	    //poolProp.setUrl("jdbc:postgresql://"+dbDetails.getJdbc_Url()+"/"+dbDetails.getDbName());
+	    executer.setDriver("org.postgresql.Driver");
+	    executer.setPassword(dbConnDetails.getDbPwd());
+	    executer.setUserid(dbConnDetails.getDbUser());
+	    executer.setUrl("jdbc:postgresql://"+dbConnDetails.getJdbc_Url()+"/"+dbConnDetails.getDbName());
+	    
+	    executer.execute(); 
+	    }catch(Exception ex){
+	    	logger.log(Level.SEVERE,ex.getMessage(), ex);
+			ex.printStackTrace();
+			throw ex;
+	    }
+	}*/
 	
 	public GenerateCVC1 copy() throws Exception{
 		//TODO: change implementation to provide faster copy
@@ -1160,6 +1130,46 @@ public class GenerateCVC1 implements Serializable{
 
 	public void setCourseId(String courseId) {
 		this.courseId = courseId;
+	}
+
+
+	public String getSchemaFile() {
+		return schemaFile;
+	}
+
+
+	public void setSchemaFile(String schemaFile) {
+		this.schemaFile = schemaFile;
+	}
+
+
+	public String getDataFile() {
+		return dataFile;
+	}
+
+
+	public void setDataFileName(String dataFile) {
+		this.dataFile = dataFile;
+	}
+
+
+	public boolean isOrderindependent() {
+		return orderindependent;
+	}
+
+
+	public void setOrderindependent(boolean orderindependent) {
+		this.orderindependent = orderindependent;
+	}
+
+
+	public String getConcatenatedQueryId() {
+		return concatenatedQueryId;
+	}
+
+
+	public void setConcatenatedQueryId(String concatenatedQueryId) {
+		this.concatenatedQueryId = concatenatedQueryId;
 	}
 }
 

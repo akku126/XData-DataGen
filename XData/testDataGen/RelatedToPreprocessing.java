@@ -23,8 +23,6 @@ import parsing.Query;
 import parsing.Table;
 import testDataGen.PopulateTestData;
 import util.Configuration;
-import util.DatabaseConnection;
-import util.MyConnection;
 import util.Utilities;
 
 /**
@@ -37,12 +35,6 @@ public class RelatedToPreprocessing {
 	private static Logger logger = Logger.getLogger(RelatedToPreprocessing.class.getName());
 	/**
 	 * 
-	 * @param filePath
-	 */
-	@Deprecated
-	public static void deleteDatasets(String filePath) {
-
-	}
 
 	/**
 	 * Generates data values from the input data base
@@ -65,59 +57,21 @@ public class RelatedToPreprocessing {
 	 * @throws Exception
 	 */
 	public static void populateDataWithBranchQueries(GenerateCVC1 cvc) throws Exception{
+		
 		int connId = 0, schemaId = 0,optionalSchemaId=0;
-		try(Connection conn = MyConnection.getDatabaseConnection()){
-			try(PreparedStatement stmt = conn.prepareStatement("select connection_id, defaultschemaid from xdata_assignment where assignment_id = ?")){
-				stmt.setInt(1, cvc.getAssignmentId());
-				 
-				try(ResultSet result = stmt.executeQuery()){
-					
-					
-					//Get optional Schema Id for this question
-					try(PreparedStatement statement = conn.prepareStatement("select optionalschemaid from xdata_qinfo where assignment_id = ? and question_id= ? ")){
-						statement.setInt(1, cvc.getAssignmentId()); 
-						statement.setInt(2,cvc.getQuestionId()); 
-						
-						try(ResultSet resultSet = statement.executeQuery()){
-							if(resultSet.next()){
-								optionalSchemaId = resultSet.getInt("optionalschemaid");
-							}
-						} //try-with-resources - ResultSet -resultSet obj
-					}//try-with-resources -PreparedStatement statement obj
-					if(result.next()){
-						connId = result.getInt("connection_id");
-						//If optional schema id exists and it is not same as default schema id, then set it as schemaId 
-						if(optionalSchemaId != 0 && optionalSchemaId != result.getInt("defaultschemaid")){	
-							schemaId = optionalSchemaId;
-						} else{
-							schemaId = result.getInt("defaultschemaid");
-						}
-					} 
-				}//try-with-resource - ResultSet obj
-			}//try-with-resource - Preparedstmt obj
-			try(Connection assignmentConn = (new DatabaseConnection()).getTesterConnection(cvc.getAssignmentId())){
-				PopulateTestData p = new PopulateTestData();
-				p.deleteAllTempTablesFromTestUser(assignmentConn);
-				if(connId != 0 && schemaId != 0){
+		
+		Connection assignmentConn = cvc.getConnection();
+			
 					byte[] dataBytes = null;
 					String tempFile = "";
 					FileOutputStream fos = null;
 					ArrayList<String> listOfQueries = null;
 					String[] inst = null;
-					if(assignmentConn != null){
+					/*if(assignmentConn != null){
 					
-						try(PreparedStatement stmt = conn.prepareStatement("select ddltext from xdata_schemainfo where schema_id = ?")){
-							stmt.setInt(1, schemaId);			
-							try(ResultSet result = stmt.executeQuery()){
-							
-								// Process the result			
-								if(result.next()){
-									String fileContent= result.getString("ddltext");
-									//String fr=fileContent.replace("\\\\","'");
-									//String fc = fr.replace("\t", "    ");
-									dataBytes = fileContent.getBytes();
+						
+									dataBytes = cvc.getSchemaFile().getBytes();
 									tempFile = "/tmp/dummy";
-									
 									fos = new FileOutputStream(tempFile);
 									fos.write(dataBytes);
 									fos.close();
@@ -133,21 +87,10 @@ public class RelatedToPreprocessing {
 											try(PreparedStatement stmt2 = assignmentConn.prepareStatement(temp)){
 												stmt2.executeUpdate();	
 											}
-										}
+										}									
 									}
-								}
-							}
-						}
-						try(PreparedStatement stmt = conn.prepareStatement("select sample_data from xdata_sampledata where schema_id = ?")){
-							stmt.setInt(1, schemaId);			
-							try(ResultSet result = stmt.executeQuery()){
-							
-								// Process the result			
-								if(result.next()){
-									String sdContent= result.getString("sample_data");
-									//String sdReplace=sdContent.replace("\\\\","'");
-									//fc = sdReplace.replace("\t", "    ");
-									dataBytes = sdContent.getBytes(); 
+						
+									dataBytes =cvc.getDataFile().getBytes();
 									fos = new FileOutputStream(tempFile);
 									fos.write(dataBytes);
 									fos.close();
@@ -164,12 +107,9 @@ public class RelatedToPreprocessing {
 													stmt2.executeUpdate();		
 												}
 											}
-								}
-							}//try-with-resource resultset obj
-						}//try-with-resource statement obj
-					}
-				  }
-				}
+										}							
+					}*/
+				
 				
 				Query query = cvc.getQuery();
 				Query branchQuery[] = cvc.getBranchQueries().getBranchQuery();
@@ -304,9 +244,6 @@ public class RelatedToPreprocessing {
 					}
 				}
 				}//try-with resource - Close assignmentConn obj
-		
-	 }//try-with-resource - connection obj
-	}
 
 	/**
 	 * generates data values for this query
@@ -318,51 +255,20 @@ public class RelatedToPreprocessing {
 
 		Query query = cvc.getQuery();
 		int connId = 0, schemaId = 0,optionalSchemaId=0;
+		Connection assignmentConn  = cvc.getConnection();
 		
-		try(Connection conn= MyConnection.getDatabaseConnection()){
-			try(PreparedStatement stmt = conn.prepareStatement("select connection_id, defaultschemaid from xdata_assignment where assignment_id = ?")){
-				stmt.setInt(1, cvc.getAssignmentId());				
-				try(ResultSet result = stmt.executeQuery()){
-
-				//Get optional Schema Id for this question
-				try(PreparedStatement statement = conn.prepareStatement("select optionalschemaid from xdata_qinfo where assignment_id = ? and question_id= ? ")){
-					statement.setInt(1, cvc.getAssignmentId()); 
-					statement.setInt(2,cvc.getQuestionId()); 
-					
-					try(ResultSet resultSet = statement.executeQuery()){
-						if(resultSet.next()){
-							optionalSchemaId = resultSet.getInt("optionalschemaid");
-						}
-					}//try-with-resources - ResultSet resultSet ends
-				}//try-with-resources -PreparedStatement statement ends
-				if(result.next()){
-					connId = result.getInt("connection_id");
-					//If optional schema id exists and it is not same as default schema id, then set it as schemaId 
-					if(optionalSchemaId != 0 && optionalSchemaId != result.getInt("defaultschemaid")){	
-						schemaId = optionalSchemaId;
-					} else{
-						schemaId = result.getInt("defaultschemaid");
-					}
-				} 
-				}//try-with-resources - ResultSet result Ends
-			}//try-with-resources - PreparedStatement stmt ends
-			try(Connection assignmentConn = (new DatabaseConnection()).getGraderConnection(cvc.getAssignmentId())){
-				PopulateTestData p = new PopulateTestData();
-				p.deleteAllTempTablesFromTestUser(assignmentConn);
 				byte[] dataBytes = null;
 				String tempFile = "";
 				
 				ArrayList<String> listOfQueries = null;
 				String[] inst = null;
-				if(connId != 0 && schemaId != 0){			
-					if(assignmentConn != null){
-						try(PreparedStatement stmt = conn.prepareStatement("select ddltext from xdata_schemainfo where schema_id = ?")){
-							stmt.setInt(1, schemaId);			
-							try(ResultSet result = stmt.executeQuery()){
+							
+				/*	if(assignmentConn != null){
+						
 							
 							// Process the result			
-							if(result.next()){
-								dataBytes = result.getBytes("ddltext");
+							
+								dataBytes = cvc.getDataFile().getBytes();
 								
 								tempFile = "/tmp/dummy";
 								
@@ -384,16 +290,10 @@ public class RelatedToPreprocessing {
 										
 									}
 								}
-							}
-							}
-						}
-						try(PreparedStatement stmt = conn.prepareStatement("select sample_data from xdata_sampledata where schema_id = ?")){
-							stmt.setInt(1, schemaId);			
-							try(ResultSet result = stmt.executeQuery()){
 							
-							// Process the result			
-							if(result.next()){
-								dataBytes = result.getBytes("sample_data");
+							
+						
+								dataBytes = cvc.getDataFile().getBytes();
 								try(FileOutputStream fos = new FileOutputStream(tempFile)){
 									fos.write(dataBytes);
 								}
@@ -410,13 +310,11 @@ public class RelatedToPreprocessing {
 											stmt2.executeUpdate();
 										}
 									}
-					}
-				}
-				}//try-with-resources ResultSet result  ends
-			}//try-with-resources - PreparedStatement stmt ends
+								}
+				
 		   }
-		}
 		
+		*/
 				/**Gets the name of tables required for the query and the name columns of that query. 
 				 * Also checks for any foreign key reference and adds the referenced table to the list of tables being considered.*/
 		
@@ -466,8 +364,8 @@ public class RelatedToPreprocessing {
 						rs.close();				
 					}
 				}
-			  }
-			}
+			  
+			
 	}
 	/**
 	 * Segregate selection conditions of the query
@@ -511,13 +409,9 @@ public class RelatedToPreprocessing {
 
 	}
 
-
-
-
-
 	public static void deletePreviousDatasets(GenerateDataset_new g, String query) throws IOException,InterruptedException {
 
-		Runtime r = Runtime.getRuntime();
+		//Runtime r = Runtime.getRuntime();
 		logger.log(Level.INFO,Configuration.homeDir+"/temp_cvc"+g.getFilePath()+"/");
 		File f=new File(Configuration.homeDir+"/temp_cvc"+g.getFilePath()+"/");
 		
@@ -551,7 +445,42 @@ public class RelatedToPreprocessing {
 		ord1.close();
 	}
 
+	public static void deletePreviousDatasets(GenerateCVC1 g, String query) throws IOException,InterruptedException {
 
+		//Runtime r = Runtime.getRuntime();
+		logger.log(Level.INFO,Configuration.homeDir+"/temp_cvc"+g.getFilePath()+"/");
+		File f=new File(Configuration.homeDir+"/temp_cvc"+g.getFilePath()+"/");
+		
+		if(f.exists()){		
+			File f2[]=f.listFiles();
+			if(f2 != null)
+			for(int i=0;i<f2.length;i++){
+				if(f2[i].isDirectory() && f2[i].getName().startsWith("DS")){
+					
+					Utilities.deletePath(Configuration.homeDir+"/temp_cvc"+g.getFilePath()+"/"+f2[i].getName());
+				}
+			}
+		}
+		
+
+		File dir= new File(Configuration.homeDir+"/temp_cvc"+g.getFilePath());
+		if(dir.exists()){
+			for(File file: dir.listFiles()) {
+				file.delete();
+			}
+		}
+		else{
+			dir.mkdirs();
+		}
+		
+		BufferedWriter ord = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+g.getFilePath()+"/queries.txt"));
+		BufferedWriter ord1 = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+g.getFilePath()+"/queries_mutant.txt"));
+		ord.write(query);
+		ord1.write(query);
+		ord.close();
+		ord1.close();
+	}
+	
 	/** 
 	 * Get the list of datasets generated
 	 * @param gd
@@ -581,6 +510,35 @@ public class RelatedToPreprocessing {
 		return datasets;
 	}
 
+	/** 
+	 * Get the list of datasets generated
+	 * @param gd
+	 * @return
+	 * @throws Exception
+	 */
+	public static ArrayList<String> getListOfDataset(GenerateCVC1 gd) throws Exception{
+
+		ArrayList<String> fileListVector = new ArrayList<String>();		
+		ArrayList<String> datasets = new ArrayList<String>();
+
+		String fileList[]=new File(Configuration.homeDir+"/temp_cvc" + gd.getFilePath()).list();
+
+		for(int k=0;k<fileList.length;k++){
+			fileListVector.add(fileList[k]);
+		}
+		Collections.sort(fileListVector);	        
+		for(int i=0;i<fileList.length;i++)
+		{
+			File f1=new File(Configuration.homeDir+"/temp_cvc" + gd.getFilePath() +"/"+fileListVector.get(i));	          
+			if(f1.isDirectory() && fileListVector.get(i).substring(0,2).equals("DS"))
+			{
+				datasets.add(fileListVector.get(i));
+			}
+		}
+
+		return datasets;
+	}
+	
 
 	/**
 	 * Sorts the foreign keys using the topological sort. 
@@ -658,7 +616,7 @@ public class RelatedToPreprocessing {
 		BranchQueriesDetails branchQueries = cvc.getBranchQueries();
 
 		int count=1;
-		BufferedReader input2 = null;
+		BufferedReader input2 = null; 
 		BufferedReader input3 = null;
 		
 		BufferedReader input4 = null;
@@ -673,7 +631,7 @@ public class RelatedToPreprocessing {
 		}
 		catch(Exception e)
 		{
-			logger.log(Level.SEVERE," "+e.getStackTrace(),e);
+			logger.log(Level.INFO," "+e.getMessage(),e);
 		}finally{
 			try {
 				if(input2 != null)
@@ -728,7 +686,7 @@ public class RelatedToPreprocessing {
 		}
 		catch(Exception e)
 		{
-			logger.log(Level.SEVERE,""+e.getMessage(),e);
+			logger.log(Level.INFO,""+e.getMessage(),e);
 		}finally{
 			try {
 				if(input4 != null)
@@ -737,7 +695,7 @@ public class RelatedToPreprocessing {
 					input3.close();
 			} catch (IOException e) {
 				
-				logger.log(Level.SEVERE,"Error in RelatedToPreProcessing : uploadBranchQueriesDetails Method :" + e.getMessage(),e);
+				logger.log(Level.INFO,"Not Severe: Error in RelatedToPreProcessing : uploadBranchQueriesDetails Method :" + e.getMessage(),e);
 			}
 			
 		}

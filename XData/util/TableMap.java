@@ -256,7 +256,7 @@ public class TableMap implements Serializable{
             		topSortedTables.add(table);
             }          
            
-        conn.close(); 
+         //conn.close(); 
         }catch(Exception e){
         	logger.log(Level.SEVERE, "TableMap not created", e);
         	//e.printStackTrace();

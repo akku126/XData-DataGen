@@ -1180,6 +1180,9 @@ public class GetTupleAssignmentUsingSolver {
 		Process myProcess = pb.start();
 		int exitVal = myProcess.waitFor();
 
+		if(exitVal != 0 || myProcess.exitValue() != 0){
+			logger.log(Level.SEVERE,"GetTupleAssignmentUsingSolver.java: solveConstraints Method :  Processing Aggregates failed.");
+		}
 		endT = System.currentTimeMillis();
 		logger.log(Level.INFO,"Constraint Solving Time: " + (endT-startT) );
 

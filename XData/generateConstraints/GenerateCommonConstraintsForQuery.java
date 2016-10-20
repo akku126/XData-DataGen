@@ -14,7 +14,7 @@ import parsing.Node;
 import parsing.RelationHierarchyNode;
 import parsing.Table;
 import testDataGen.PopulateTestData;
-import testDataGen.WriteFileAndUploadDatasets;
+import testDataGen.WriteFile;
 import testDataGen.GenerateCVC1;
 import testDataGen.GenerateDataset_new;
 import testDataGen.QueryBlockDetails;
@@ -127,7 +127,7 @@ public class GenerateCommonConstraintsForQuery {
 	
 			/** Call CVC3 Solver with constraints */
 			logger.log(Level.INFO,"cvc count =="+cvc.getCount());
-			WriteFileAndUploadDatasets.writeFile(Configuration.homeDir + "/temp_cvc" + cvc.getFilePath() + "/cvc3_" + cvc.getCount() + ".cvc", CVCStr);
+			WriteFile.writeFile(Configuration.homeDir + "/temp_cvc" + cvc.getFilePath() + "/cvc3_" + cvc.getCount() + ".cvc", CVCStr);
 			
 			Boolean success= new PopulateTestData().killedMutants("cvc3_" + cvc.getCount() + ".cvc", cvc.getQuery(), "DS" + cvc.getCount(), cvc.getQueryString(), cvc.getFilePath(), cvc.getNoOfOutputTuples(), cvc.getTableMap(), cvc.getResultsetColumns(), cvc.getAssignmentId(), cvc.getQuestionId(),cvc.getRepeatedRelationCount().keySet()) ;
 			cvc.setOutput( cvc.getOutput() + success);
@@ -152,8 +152,7 @@ public class GenerateCommonConstraintsForQuery {
 			logger.log(Level.INFO,"\n\n***********************************************************************\n");
 			GenerateDataset_new fp = new GenerateDataset_new( cvc.getFilePath());
 			/**Upload the data sets into the database */
-			WriteFileAndUploadDatasets.uploadDataset(fp, cvc.getAssignmentId(),cvc.getQuestionId(),cvc.getQueryId(),cvc.getCourseId(), newList,cvc.getTableMap());			
-
+			
 			logger.log(Level.INFO,"\n***********************************************************************\n\n");
 			logger.log(Level.INFO,"DATASET FOR QUERY "+cvc.getAssignmentId()+cvc.getQuestionId()+" ARE UPLOADED");
 			logger.log(Level.INFO,"\n***********************************************************************\n\n");

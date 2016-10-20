@@ -9,9 +9,7 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import testDataGen.WriteFileAndUploadDatasets;
 import util.Configuration;
-import util.MyConnection;
 import util.TableMap;
 
 
@@ -54,7 +52,7 @@ public class GenerateDataset_new {
 		cvc.setFne(false); 
 		cvc.setIpdb(false);
 		cvc.setFilePath(this.getFilePath());
-		cvc.initializeConnectionDetails(assignmentId, questionId, queryId,course_id);
+		//cvc.initializeConnectionDetails(assignmentId, questionId, queryId,course_id);
 		
 		/**Call pre processing functions before calling data generation methods */
 		PreProcessingActivity.preProcessingActivity(cvc);
@@ -70,13 +68,15 @@ public class GenerateDataset_new {
 		
 		/**Upload the data sets into the database */
 		TableMap tm = cvc.getTableMap();
-		WriteFileAndUploadDatasets.uploadDataset(this, assignmentId,questionId,queryId, course_id,dataSets,tm);			
+		//WriteFileAndUploadDatasets.uploadDataset(this, assignmentId,questionId,queryId, course_id,dataSets,tm);			
 
 		logger.log(Level.INFO,"\n***********************************************************************\n\n");
 		logger.log(Level.INFO,"DATASET FOR QUERY "+queryId+" ARE UPLOADED");
 		logger.log(Level.INFO,"\n***********************************************************************\n\n");
 		}finally{
-			cvc.closeConn();
+			if(cvc!= null && cvc.getConnection() != null){
+			 cvc.closeConn();
+			}
 		}
 	}
 
@@ -89,7 +89,7 @@ public class GenerateDataset_new {
 		
 			
 		/** delete previous data sets*/		
-		RelatedToPreprocessing.deletePreviousDatasets(this, query);
+	    RelatedToPreprocessing.deletePreviousDatasets(this, query);
 	
 		/**upload the details about the list of queries and the conditions between the branch queries*/
 		BufferedWriter ord2 = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+filePath+"/branchQuery.txt"));
@@ -128,7 +128,7 @@ public class GenerateDataset_new {
 
 		/**Upload the data sets into the database */
 		TableMap tm = cvc.getTableMap();
-		WriteFileAndUploadDatasets.uploadDataset(this, assignmentId,questionId,queryId, course_id,dataSets,tm);			
+	//	WriteFileAndUploadDatasets.uploadDataset(this, assignmentId,questionId,queryId, course_id,dataSets,tm);			
 
 		logger.log(Level.INFO,"\n***********************************************************************\n\n");
 		logger.log(Level.INFO,"DATASET FOR QUERY "+queryId+" ARE UPLOADED");
@@ -148,7 +148,7 @@ public class GenerateDataset_new {
 		String filePath="4";
 
 		String queryId = "A"+args[0]+"Q"+args[1]+"S"+args[2];
-		 
+		String coursePath = System.getProperty("file.separator");
 		GenerateDataset_new g=new GenerateDataset_new(filePath + "/" +args[3]+"/" + queryId);
 		
         try {
@@ -164,7 +164,7 @@ public class GenerateDataset_new {
 		int q_id = Integer.parseInt(question_id);
 		int query_id = Integer.parseInt(args[2]);
 		 String course_id = args[3];
-         try(Connection dbcon = MyConnection.getDatabaseConnection()){
+         /*try(Connection dbcon = MyConnection.getDatabaseConnection()){
 	    	if(dbcon!=null){
 	    	    	  logger.log(Level.INFO,"Connected successfullly");
 	    	    	  
@@ -182,7 +182,7 @@ public class GenerateDataset_new {
 					g.generateDatasetForQuery(assignment_id,q_id,query_id, course_id,"true", sql, "", assignment_id);
 				}
 			}
-	    }
+	    }*/
 	}
 	
 

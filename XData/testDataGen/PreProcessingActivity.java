@@ -160,8 +160,7 @@ public class PreProcessingActivity {
 		
 		right.setTablesOfOriginalQuery(left.getTablesOfOriginalQuery());
 		
-	}
-	
+	}	
 	
 	public static void preProcessingActivity(GenerateCVC1 cvc) throws Exception{
 
@@ -170,8 +169,6 @@ public class PreProcessingActivity {
 		//TODO: This is for application testing, a flag should be set
 		//for calling this function
 		RelatedToPreprocessing.uploadBranchQueriesDetails(cvc);
- 
-
 		/** To store input query string */
 		String queryString = "";
 		boolean isSetOp = false;
@@ -194,7 +191,7 @@ public class PreProcessingActivity {
 				cvc.initializeQueryDetails(cvc.getqParser() );
 				logger.log(Level.INFO," Query Parser output = "+ cvc.getqParser());
 				/**Delete data sets in the path*/
-				RelatedToPreprocessing.deleteDatasets(cvc.getFilePath());
+				//RelatedToPreprocessing.deleteDatasets(cvc.getFilePath());
 
 				logger.log(Level.INFO,"File path = "+cvc.getFilePath());
 				/**Check if the input query contains set operators */
@@ -257,8 +254,6 @@ public class PreProcessingActivity {
 
 			
 			//String setOp=cvc.getqParser().setOperator;
-			
-			
 			int count=0;
 			GenerateCVC1 cvcCopy;
 			

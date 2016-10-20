@@ -4,8 +4,6 @@ import java.sql.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import util.MyConnection;
-
 public class DataType {
 	
 	private static Logger logger = Logger.getLogger(DataType.class.getName());
@@ -100,7 +98,7 @@ public class DataType {
 		//Types type = new Types(); 
 		DataType d = new DataType();
 	        //connection = MyConnection.getExistingDatabaseConnection();
-	    	try(Connection connection = MyConnection.getDatabaseConnection()){
+	    	/*try(Connection connection = MyConnection.getDatabaseConnection()){
 		        DatabaseMetaData metadata = connection.getMetaData();
 		        try(ResultSet resultSet = metadata.getColumns(null, null, "rollhist", null)){
 			        while (resultSet.next()) {
@@ -125,10 +123,10 @@ public class DataType {
 			    	   }
 			       }
 		        }
-	    } catch (SQLException e) {
+	   } catch (SQLException e) {
 	    	logger.log(Level.SEVERE,e.getMessage(),e);
 	        e.printStackTrace();
-	    } 
+	    }  */
 		
 	}
 }

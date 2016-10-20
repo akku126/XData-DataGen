@@ -75,14 +75,12 @@ public class CountEstimationRelated {
 			cmdString = "#!/bin/bash\n";
 			cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc" +filePath + "/checkAggConstraints.cvc | grep -e 'Invalid' > isValid \n";
 			WriteFile.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints", cmdString);
-			String[] command = {"/bin/sh", "-c",  "sh "+Configuration.homeDir+"/temp_cvc" + filePath + "/checkAggConstraints"};
-			logger.log(Level.INFO, "sh "+ Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints");
-
+			
 			ProcessBuilder pb = new ProcessBuilder("/bin/bash", "checkAggConstraints");
 			pb.directory(new File(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath()));
 			Process myProcess = pb.start();
 			
-
+			
 			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(myProcess.getOutputStream()));
 			InputStreamReader myIStreamReader = new InputStreamReader(myProcess.getInputStream());
 			ExecutorService service = Executors.newSingleThreadExecutor();
@@ -90,6 +88,11 @@ public class CountEstimationRelated {
 				Callable<Integer> call = new CallableProcess(myProcess);
 				Future<Integer> future = service.submit(call);
 				int exitValue = future.get(60, TimeUnit.SECONDS);
+				
+				if(myProcess.exitValue() != 0){
+					logger.log(Level.SEVERE,"CountEstimationRelated.java: isAssignmentSatisfiable function :  Processing Aggregates failed.");
+				}
+				
 			} catch (ExecutionException e) {
 		        //throw new Exception("Process failed to execute", e);
 		    } catch (TimeoutException e) {
@@ -320,14 +323,16 @@ public class CountEstimationRelated {
 					cmdString +=Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc" + filePath + "/getCount.cvc | grep -e 'Invalid' > isValid \n";
 					cmdString += "grep -e 'COUNT = ' "+ Configuration.homeDir+"/temp_cvc" + filePath + "/COUNTCVC" +" | awk -F \" \" '{print $4}' | awk -F \")\" '{print $1}' > "+Configuration.homeDir+"/temp_cvc" +filePath + "/COUNT\n";
 					WriteFile.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/execCOUNT", cmdString);
-					String[] command = {"/bin/sh", "-c",  "sh "+Configuration.homeDir+"/temp_cvc" +filePath+ "/execCOUNT"};
-
-
+					
 					ProcessBuilder pb = new ProcessBuilder("/bin/bash", "execCOUNT");
 					pb.directory(new File(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath()));
 					Process myProcess = pb.start();
 					int exitVal = myProcess.waitFor();
-
+					
+					if(exitVal != 0 || myProcess.exitValue() != 0){
+						logger.log(Level.SEVERE,"CountEstimationRelated.java: estimateNoOfTuples Method :  Processing Aggregates failed.");
+					}
+					
 					BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(myProcess.getOutputStream()));
 					InputStreamReader myIStreamReader = new InputStreamReader(myProcess.getInputStream());
 
