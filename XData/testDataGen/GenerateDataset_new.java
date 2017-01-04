@@ -19,6 +19,7 @@ import util.TableMap;
  * @author mahesh
  *
  */
+@Deprecated
 public class GenerateDataset_new {
 
 	String filePath;
@@ -28,12 +29,12 @@ public class GenerateDataset_new {
 	public GenerateDataset_new(String filePath) throws Exception{		
 		this.filePath = filePath;
 	}
-	
+	@Deprecated
 	public void generateDatasetForQuery(int assignmentId, int questionId,int queryId, String course_id, String orderindependent, String query, String queryDesc) throws Exception {
 		this.generateDatasetForQuery(assignmentId,questionId,queryId,course_id, orderindependent, query, queryDesc,1);
 	}
 
-
+    @Deprecated
 	public void generateDatasetForQuery(int assignmentId, int  questionId, int queryId,String course_id, String orderindependent, String query, String queryDesc, int dummy) throws Exception{
 
 
@@ -79,7 +80,7 @@ public class GenerateDataset_new {
 			}
 		}
 	}
-
+    @Deprecated
 	public void generateDatasetForBranchQuery(int assignmentId,int questionId, int queryId, String course_id,String[] branchQuery,String[] branchResult, String query, String queryDesc) throws Exception
 	{
 		logger.log(Level.INFO,"------------------------------------------------------------------------------------------\n\n");
