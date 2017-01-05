@@ -34,7 +34,6 @@ public class TableMap implements Serializable{
     
 	private static Logger logger = Logger.getLogger(TableMap.class.getName());
 	private static final long serialVersionUID = 4802766539372778676L;
-	private static TableMap instance = null;
     private Map<String,Table> tables = null;
     private static Map<Integer,TableMap>  schemaTableMap = null;
     private static Map<String,Table>  indexMap = new HashMap<String,Table>();
@@ -53,8 +52,15 @@ public class TableMap implements Serializable{
     private transient Connection conn = null;
     public Graph<Table,ForeignKey> foreignKeyGraph = null;
     
+    
+    public static void clearAllInstances(){
+    	if(schemaTableMap!=null)
+    		schemaTableMap.clear();
+    }
+    
+    
     public static TableMap getInstances(Connection dbConn,int schemaId){
-    	
+    	TableMap instance=null;
     	if(schemaTableMap == null){
         	instance = new TableMap(dbConn);            
         	instance.createTableMap();    
@@ -64,8 +70,8 @@ public class TableMap implements Serializable{
     	else if(schemaTableMap != null && schemaTableMap.size() > 0){
 	    	TableMap t = schemaTableMap.get(schemaId);
 	    	
-	    	if(t !=null && TableMap.instance != null){
-	    		return TableMap.instance;
+	    	if(t !=null ){
+	    		return t;
 	    	}
 	    	else{
     			 instance = new TableMap(dbConn);            

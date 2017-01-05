@@ -25,8 +25,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.tools.ant.Project;
-import org.apache.tools.ant.taskdefs.SQLExec;
+
 
 import killMutations.GenerateDataForOriginalQuery;
 import killMutations.MutationsInFromSubQuery;

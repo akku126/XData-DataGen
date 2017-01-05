@@ -501,7 +501,7 @@ public class RelatedToPreprocessing {
 		for(int i=0;i<fileList.length;i++)
 		{
 			File f1=new File(Configuration.homeDir+"/temp_cvc" + gd.getFilePath() +"/"+fileListVector.get(i));	          
-			if(f1.isDirectory() && fileListVector.get(i).substring(0,2).equals("DS"))
+			if(f1.isDirectory() && fileListVector.get(i).startsWith("DS"))
 			{
 				datasets.add(fileListVector.get(i));
 			}
@@ -530,7 +530,7 @@ public class RelatedToPreprocessing {
 		for(int i=0;i<fileList.length;i++)
 		{
 			File f1=new File(Configuration.homeDir+"/temp_cvc" + gd.getFilePath() +"/"+fileListVector.get(i));	          
-			if(f1.isDirectory() && fileListVector.get(i).substring(0,2).equals("DS"))
+			if(f1.isDirectory() && fileListVector.get(i).startsWith("DS"))
 			{
 				datasets.add(fileListVector.get(i));
 			}
