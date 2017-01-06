@@ -67,7 +67,7 @@ public class TableMap implements Serializable{
         	schemaTableMap = new HashMap<Integer, TableMap>();
     		schemaTableMap.put(schemaId,instance);
     	}
-    	else if(schemaTableMap != null && schemaTableMap.size() > 0){
+    	else {
 	    	TableMap t = schemaTableMap.get(schemaId);
 	    	
 	    	if(t !=null ){
