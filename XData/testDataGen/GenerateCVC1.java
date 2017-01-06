@@ -272,6 +272,7 @@ public class GenerateCVC1 implements Serializable{
 		stringConstraints = new ArrayList<String>();
 		CVCStr = "";
 		typeOfMutation = "";
+		
 		try{
 			
 

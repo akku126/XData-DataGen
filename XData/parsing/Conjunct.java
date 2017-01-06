@@ -493,7 +493,13 @@ public class Conjunct implements Serializable{
 		if(n.getLeft().getType().equals(Node.getColRefType())/* */){
 			if(flag==1  && !n.getRight().getType().equals(Node.getValType()))
 				return false;
+			
+			//TODO:String mutation for parameters
+			if(n.getRight().getStrConst().startsWith("$0"))
+				return false;
+			
 			int i=n.getLeft().getColumn().getDataType();
+			
 			if(i== Types.VARCHAR || i==Types.CHAR || i==Types.LONGVARCHAR){
 				return true;
 			}

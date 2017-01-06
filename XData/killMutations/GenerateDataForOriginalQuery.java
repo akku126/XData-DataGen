@@ -37,6 +37,10 @@ public class GenerateDataForOriginalQuery {
 			if(GenerateCVC1.tupleAssignmentForQuery(cvc) == false)
 				return false;
 			
+			
+			//initializing once again after params are set up--- FIX once params are set properly
+			cvc.inititalizeForDataset();
+			
 			/**Get the null and database constraints - get the number of outout tuples
 			 * and generate other constraints  accordingly*/
 			 GenerateCommonConstraintsForQuery.generateNullandDBConstraints(cvc,false);

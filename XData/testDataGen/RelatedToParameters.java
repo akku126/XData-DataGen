@@ -82,6 +82,7 @@ public class RelatedToParameters {
 
 	public static HashMap<String, Node> removeParameterizedConstraints( QueryBlockDetails queryBlock, ArrayList<Node> pConstraints, String paramType){
 		HashMap<String, Node> retVal = new HashMap<String, Node>();
+		queryBlock.setParamCount(0);
 		for(int i=0;i<pConstraints.size();i++){
 			Node n = pConstraints.get(i);
 			if(isParameterized(n)){
