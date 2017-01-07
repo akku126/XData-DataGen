@@ -738,7 +738,11 @@ public class WhereClauseVectorJSQL {
 			//BinaryRelationalOperatorNode broNode = ((BinaryRelationalOperatorNode) clause);			
 			Node n = new Node();
 			n.setType(Node.getBroNodeType());
-			n.setOperator(QueryParser.cvcRelationalOperators[2]);
+			if(((NotEqualsTo) clause).isNot()){
+				n.setOperator("=");
+			} else {
+				n.setOperator(QueryParser.cvcRelationalOperators[2]);
+			}
 			n.setLeft(getWhereClauseVector(broNode.getLeftExpression(), exposedName, fle, isWhereClause, queryType,qParser));
 			n.setRight(getWhereClauseVector(broNode.getRightExpression(), exposedName, fle, isWhereClause, queryType,qParser));
 
@@ -771,7 +775,7 @@ public class WhereClauseVectorJSQL {
 			n.setType(Node.getIsNullNodeType());
 			n.setLeft(getWhereClauseVector(isNullNode.getLeftExpression(),exposedName, fle,isWhereClause, queryType,qParser));
 			if(((IsNullExpression) clause).isNot()){
-				n.setOperator("!=");
+				n.setOperator(QueryParser.cvcRelationalOperators[2]);
 			}else{
 				n.setOperator("=");
 			}
@@ -1117,6 +1121,9 @@ public class WhereClauseVectorJSQL {
 		} else if (clause instanceof EqualsTo){
 
 			BinaryExpression bne = (BinaryExpression)clause;
+			
+			
+			
 			Node n = new Node();
 			/*if(bne.getLeftExpression() instanceof ExtractExpression) {
 				return n;
@@ -1124,7 +1131,12 @@ public class WhereClauseVectorJSQL {
 				return n;
 			}*/
 			n.setType(Node.getBroNodeType());
-			n.setOperator("=");
+			
+			if(((EqualsTo) clause).isNot()){
+				n.setOperator("<>");
+			} else {
+				n.setOperator("=");
+			}
 			Node ndl = getWhereClauseVector(bne.getLeftExpression(), exposedName, fle, isWhereClause, queryType,qParser);
 			if(ndl != null){
 				n.setLeft(ndl);
@@ -1206,7 +1218,11 @@ public class WhereClauseVectorJSQL {
 			//BinaryRelationalOperatorNode broNode = ((BinaryRelationalOperatorNode) clause);			
 			Node n = new Node();
 			n.setType(Node.getBroNodeType());
-			n.setOperator(QueryParser.cvcRelationalOperators[3]);
+			if(((GreaterThan) clause).isNot()){
+				n.setOperator("<=");
+			} else {
+				n.setOperator(QueryParser.cvcRelationalOperators[3]);
+			}
 			n.setLeft(getWhereClauseVector(broNode.getLeftExpression(), exposedName, fle, isWhereClause, queryType,qParser));
 			n.setRight(getWhereClauseVector(broNode.getRightExpression(), exposedName, fle, isWhereClause, queryType,qParser));
 
@@ -1280,7 +1296,12 @@ public class WhereClauseVectorJSQL {
 			//BinaryRelationalOperatorNode broNode = ((BinaryRelationalOperatorNode) clause);			
 			Node n = new Node();
 			n.setType(Node.getBroNodeType());
-			n.setOperator(QueryParser.cvcRelationalOperators[4]);
+			
+			if(((GreaterThanEquals) clause).isNot()){
+				n.setOperator("<");
+			} else{
+				n.setOperator(QueryParser.cvcRelationalOperators[4]);
+			}
 			n.setLeft(getWhereClauseVector(broNode.getLeftExpression(), exposedName, fle, isWhereClause, queryType,qParser));
 			n.setRight(getWhereClauseVector(broNode.getRightExpression(), exposedName, fle, isWhereClause, queryType,qParser));
  
@@ -1354,7 +1375,12 @@ public class WhereClauseVectorJSQL {
 			}*/
 			Node n = new Node();
 			n.setType(Node.getBroNodeType());
-			n.setOperator("<");
+			
+			if( bne.isNot()){
+				n.setOperator(">=");
+			} else{
+				n.setOperator("<");
+			}
 			n.setLeft(getWhereClauseVector(bne.getLeftExpression(), exposedName, fle, isWhereClause, queryType,qParser));
 			n.setRight(getWhereClauseVector(bne.getRightExpression(), exposedName, fle, isWhereClause, queryType,qParser));
 
@@ -1423,7 +1449,13 @@ public class WhereClauseVectorJSQL {
 				return n;
 			}*/
 			n.setType(Node.getBroNodeType());
-			n.setOperator("<=");
+			
+			
+			if(bne.isNot()){
+				n.setOperator(">");
+			} else{
+				n.setOperator("<=");
+			}
 			n.setLeft(getWhereClauseVector(bne.getLeftExpression(), exposedName, fle, isWhereClause, queryType,qParser));
 			n.setRight(getWhereClauseVector(bne.getRightExpression(), exposedName, fle, isWhereClause, queryType,qParser));
 
