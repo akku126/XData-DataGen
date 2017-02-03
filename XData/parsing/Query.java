@@ -46,6 +46,9 @@ public class Query implements Serializable{
 	private HashMap<String,Integer> currentIndex;
 	private HashMap<String,String> baseRelation; /* Stores the base relation for each repeated occurrence of a relation */
 	private HashMap<String,String> aliasTableNameNo;
+	// Added by Shree to get the tableName corresponding to the single table alias name
+	private HashMap<String,String> aliasTableName;
+	
 	private HashMap<String,Integer> currentIndexCount; /*Maintains the increment for each repeated occurrence of a relation. For instance if R repeats twice as R1 and R2 then the currentIndexCount of R is 0, R1 is 1 and that of R2 is 2. */
 	private HashMap<String,Integer> repeatedRelationCount; /* For each relation maintains a count of how many times it repeats. Incides of a relation should be incremented by this number */
 	//private HashMap<String, int [] > tableNameToQuery;//keeps mapping from table name froom clause sub query index
@@ -74,6 +77,7 @@ public class Query implements Serializable{
 		currentIndex = new HashMap<String,Integer>();
 		baseRelation = new HashMap<String,String>();
 		aliasTableNameNo = new HashMap<String,String>();
+		aliasTableName  = new HashMap<String,String>();
 		currentIndexCount = new HashMap<String,Integer>();
 		repeatedRelationCount = new HashMap<String,Integer>();
 		aliasTables = new String[50][2];
@@ -238,7 +242,15 @@ public class Query implements Serializable{
 	public void putAliasTableNameNo(String aliasName,String tableNameno){
 		this.aliasTableNameNo.put(aliasName,tableNameno);
 	}
-	
+	//Added by Shree
+	public HashMap<String,String> getAliasTableName() {
+		return aliasTableName;
+	}
+
+	public void putAliasTableName(String aliasName, String tableName) {
+		this.aliasTableName.put(aliasName,tableName);
+	}
+	//Added By shree ends
 	
 	public void putCurrentIndexCount(String tableName, int index){
 		this.currentIndexCount.put(tableName, index);
@@ -323,4 +335,6 @@ public class Query implements Serializable{
 		}
 		return joinAttribute;
 	}*/
+
+
 }

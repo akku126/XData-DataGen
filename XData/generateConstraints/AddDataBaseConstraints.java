@@ -6,7 +6,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import parsing.Column;
-import parsing.Conjunct;
+//import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.ForeignKey;
 import parsing.Node;
 import parsing.Table;
@@ -302,22 +303,22 @@ public class AddDataBaseConstraints {
 			HashMap<String, Boolean> presentinJoin = new HashMap<String, Boolean>();
 	
 			/**if there are equi joins*/
-	//		if( equiJoins != null && equiJoins.size() != 0){
-	//
-	//			/**check of these equi joins conditions are between foreign key and primary key columns*/
-	//			presentinJoin = checkIfForeignKeysInvoledInJoins(foreignKey, equiJoins);
-	//
-	//			/**if any of these equi joins are between foreign key and primary key table, then no need to generate the constraints*/
-	//			for( String fkTableNo: presentinJoin.keySet()){
-	//
-	//				/**get the total count for this relation occurrence*/
-	//				int totalCount = getTotalNumberOfTuples(cvc, fkTableNo);
-	//
-	//				/**decrement count*/
-	//				fkCount[0] -= totalCount;
-	//			}
-	//		}
-	
+//			if( equiJoins != null && equiJoins.size() != 0){
+//	
+//				/**check of these equi joins conditions are between foreign key and primary key columns*/
+//				presentinJoin = checkIfForeignKeysInvoledInJoins(foreignKey, equiJoins);
+//	
+//				/**if any of these equi joins are between foreign key and primary key table, then no need to generate the constraints*/
+//				for( String fkTableNo: presentinJoin.keySet()){
+//	
+//					/**get the total count for this relation occurrence*/
+//					int totalCount = getTotalNumberOfTuples(cvc, fkTableNo);
+//	
+//					/**decrement count*/
+//					fkCount[0] -= totalCount;
+//				}
+//			}
+//	
 			String violate = "";
 			/**If there are tuples left out in the foreign key table
 			 * Get constraints for these extra tuples */
@@ -682,7 +683,7 @@ public class AddDataBaseConstraints {
 			Vector<Vector<Node>> eqClasses = new Vector< Vector<Node>>();
 	
 			/**FIXME: Adding equivalence classes across all conjuncts. But we should consider only one conjunct*/
-			for(Conjunct con: queryBlock.getConjuncts())
+			for(ConjunctQueryStructure con: queryBlock.getConjunctsQs())
 				eqClasses.addAll(con.getEquivalenceClasses());	
 	
 	
@@ -1003,7 +1004,7 @@ public class AddDataBaseConstraints {
 
 
 		Vector< Vector< Node >> eqClass = new Vector<Vector<Node>>();
-		for(Conjunct con: qbt.getConjuncts())
+		for(ConjunctQueryStructure con: qbt.getConjunctsQs())
 			for(Vector<Node> ec: con.getEquivalenceClasses() )
 				if( relatedToRelation(ec,pkTableName))
 					eqClass.add(ec);
@@ -1105,19 +1106,19 @@ public class AddDataBaseConstraints {
 
 		if( queryType == 1) /**if from clause nested sub query block*/
 
-			for(Conjunct con: cvc.getOuterBlock().getFromClauseSubQueries().get(queryIndex).getConjuncts())
+			for(ConjunctQueryStructure con: cvc.getOuterBlock().getFromClauseSubQueries().get(queryIndex).getConjunctsQs())
 
 				eqClass.addAll( con.getEquivalenceClasses()) ;
 
 		else if ( queryType == 2) /**if where clause sub query block*/
 
-			for(Conjunct con: cvc.getOuterBlock().getWhereClauseSubQueries().get(queryIndex).getConjuncts())
+			for(ConjunctQueryStructure con: cvc.getOuterBlock().getWhereClauseSubQueries().get(queryIndex).getConjunctsQs())
 
 				eqClass.addAll( con.getEquivalenceClasses()) ;
 
 		else
 
-			for(Conjunct con: cvc.getOuterBlock().getConjuncts())
+			for(ConjunctQueryStructure con: cvc.getOuterBlock().getConjunctsQs())
 
 				eqClass.addAll( con.getEquivalenceClasses()) ;
 

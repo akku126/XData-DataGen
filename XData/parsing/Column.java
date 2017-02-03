@@ -81,7 +81,7 @@ public class Column	implements Serializable{
 		this.isAutoIncrement = col.isAutoIncement();
 		this.minVal = col.getMinVal();
 		this.maxVal = col.getMaxVal();
-
+		this.dataType = col.getDataType();
 		if(col.getCvcDatatype() == null)
 			this.cvcDatatype = null;
 		else

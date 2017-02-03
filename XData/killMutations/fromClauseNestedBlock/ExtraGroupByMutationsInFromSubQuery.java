@@ -49,7 +49,7 @@ public class ExtraGroupByMutationsInFromSubQuery {
 				continue ;
 			
 			/** Initialize the data structures for generating the data to kill this mutation */
-			cvc.inititalizeForDataset();
+			cvc.inititalizeForDatasetQs();
 			
 
 			/**set the type of mutation we are trying to kill*/

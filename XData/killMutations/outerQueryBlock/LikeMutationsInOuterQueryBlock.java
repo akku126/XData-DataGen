@@ -11,7 +11,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
@@ -44,7 +44,7 @@ public class LikeMutationsInOuterQueryBlock {
 			QueryBlockDetails qbt = cvc.getOuterBlock();
 	
 			/**Kill the like clause mutations in each conjunct of this outer block of  query */
-			for(Conjunct conjunct: qbt.getConjuncts()){
+			for(ConjunctQueryStructure conjunct: qbt.getConjunctsQs()){
 	
 				logger.log(Level.INFO,"\n----------------------------------");
 				logger.log(Level.INFO,"NEW CONJUNCT IN LIKE CLAUSE MUTATIONS KILLING: " + conjunct);
@@ -78,7 +78,7 @@ public class LikeMutationsInOuterQueryBlock {
 							}
 	
 							/** Initialize the data structures for generating the data to kill this mutation */
-							cvc.inititalizeForDataset();
+							cvc.inititalizeForDatasetQs();
 	
 							/**set the type of mutation we are trying to kill*/
 							cvc.setTypeOfMutation( TagDatasets.MutationType.LIKE, TagDatasets.QueryBlock.OUTER_BLOCK );
@@ -103,7 +103,7 @@ public class LikeMutationsInOuterQueryBlock {
 	
 	
 							/** Add negative conditions for all other conjuncts of this query block*/
-							for(Conjunct inner: qbt.getConjuncts())
+							for(ConjunctQueryStructure inner: qbt.getConjunctsQs())
 								if(inner != conjunct)
 									cvc.getConstraints().add( GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, qbt, inner) );	
 	

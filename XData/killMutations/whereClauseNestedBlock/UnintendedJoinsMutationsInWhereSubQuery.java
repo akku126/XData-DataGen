@@ -11,7 +11,7 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import parsing.Table;
 import testDataGen.GenerateCVC1;
@@ -39,7 +39,7 @@ public class UnintendedJoinsMutationsInWhereSubQuery {
 		HashMap<String, Integer> noOfTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfTuples().clone();
 		HashMap<String, Integer[]> repeatedRelNextTuplePosOrig = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
 
-		cvc.inititalizeForDataset();
+		cvc.inititalizeForDatasetQs();
 
 		/** get the tuple assignment for this query
 		 * If no possible assignment then not possible to kill this mutation*/
@@ -47,7 +47,7 @@ public class UnintendedJoinsMutationsInWhereSubQuery {
 			return ;
 
 		/** we have to check if there are where clause sub queries in each conjunct of outer block of query */
-		for(Conjunct con: cvc.getOuterBlock().getConjuncts()){
+		for(ConjunctQueryStructure con: cvc.getOuterBlock().getConjunctsQs()){
 
 			/**For each where clause sub query blocks of this conjunct*/
 			/** Kill unintended join mutations in each where clause nested block of this query*/
@@ -60,7 +60,7 @@ public class UnintendedJoinsMutationsInWhereSubQuery {
 				QueryBlockDetails qbt = cvc.getOuterBlock().getWhereClauseSubQueries().get(index);
 
 				/** Kill unintended join mutations in each conjunct of this where clause nested block of this query*/
-				for(Conjunct conjunct: qbt.getConjuncts()){
+				for(ConjunctQueryStructure conjunct: qbt.getConjunctsQs()){
 
 					logger.log(Level.INFO,"\n----------------------------------");
 					logger.log(Level.INFO,"NEW CONJUNCT IN KILLING UNINTENDED JOIN MUTATION: \n");
@@ -103,7 +103,7 @@ public class UnintendedJoinsMutationsInWhereSubQuery {
 					
 					
 					/**add the negative constraints for all the other conjuncts of this query block */
-					for(Conjunct inner: qbt.getConjuncts())
+					for(ConjunctQueryStructure inner: qbt.getConjunctsQs())
 						if(inner != conjunct)
 							cvc.getConstraints().add( GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, qbt, inner) );
 					
@@ -113,7 +113,7 @@ public class UnintendedJoinsMutationsInWhereSubQuery {
 					cvc.getConstraints().add( GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, cvc.getOuterBlock(), con) );
 					
 					/**add the negative constraints for all the other conjuncts of outer query block */
-					for(Conjunct outer: cvc.getOuterBlock().getConjuncts())
+					for(ConjunctQueryStructure outer: cvc.getOuterBlock().getConjunctsQs())
 						if( !outer.equals(con))
 							cvc.getConstraints().add( GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, cvc.getOuterBlock(), outer) );
 						

@@ -12,7 +12,7 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Table;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
@@ -40,7 +40,7 @@ public class UnintendedJoinsInFromSubQuery {
 		HashMap<String, Integer> noOfTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfTuples().clone();
 		HashMap<String, Integer[]> repeatedRelNextTuplePosOrig = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
 
-		cvc.inititalizeForDataset();
+		cvc.inititalizeForDatasetQs();
 
 		/** get the tuple assignment for this query
 		 * If no possible assignment then not possible to kill this mutation*/
@@ -55,7 +55,7 @@ public class UnintendedJoinsInFromSubQuery {
 			logger.log(Level.INFO,"----------------------------------\n");
 			
 			/** we have to kill the mutations in each conjunct*/
-			for( Conjunct con: qbt.getConjuncts()){
+			for( ConjunctQueryStructure con: qbt.getConjunctsQs()){
 
 				logger.log(Level.INFO,"\n----------------------------------");
 				logger.log(Level.INFO,"NEW CONJUNCT IN KILLING UNINTENDED JOIN MUTATION: \n");
@@ -101,7 +101,7 @@ public class UnintendedJoinsInFromSubQuery {
 				}
 
 				/**add the negative constraints for all the other conjuncts of this query block */
-				for(Conjunct inner: qbt.getConjuncts())
+				for(ConjunctQueryStructure inner: qbt.getConjunctsQs())
 					if(inner != con)
 						cvc.getConstraints().add( GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, qbt, inner) );	
 

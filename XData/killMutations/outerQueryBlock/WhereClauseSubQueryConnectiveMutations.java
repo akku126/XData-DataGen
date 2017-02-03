@@ -14,7 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import killMutations.GenerateDataForOriginalQuery;
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import testDataGen.CountEstimationRelated;
 import testDataGen.GenerateCVC1;
@@ -41,7 +41,7 @@ public class WhereClauseSubQueryConnectiveMutations {
 		QueryBlockDetails qbt = cvc.getOuterBlock();
 		try{
 			/**Kill the where clause connective mutations in each conjunct of this outer block of  query */
-			for(Conjunct conjunct: qbt.getConjuncts()){
+			for(ConjunctQueryStructure conjunct: qbt.getConjunctsQs()){
 				
 				/**Get the where clause sub query connective conditions of this conjunct*/
 				Vector<Node > subQConnectives = conjunct.getAllSubQueryConds();
@@ -120,11 +120,11 @@ public class WhereClauseSubQueryConnectiveMutations {
 	 * @param conjunct
 	 * @param n
 	 */
-	public static void generateDataSetToKillInConnective(GenerateCVC1 cvc, 	QueryBlockDetails qbt, Conjunct conjunct, Node n) throws Exception{
+	public static void generateDataSetToKillInConnective(GenerateCVC1 cvc, 	QueryBlockDetails qbt, ConjunctQueryStructure conjunct, Node n) throws Exception{
 		
 		try{
 			/** Initialize the data structures for generating the data to kill this mutation */
-			cvc.inititalizeForDataset();
+			cvc.inititalizeForDatasetQs();
 			
 			/** get the tuple assignment for this query
 			 * If no possible assignment then not possible to kill this mutation*/
@@ -150,7 +150,7 @@ public class WhereClauseSubQueryConnectiveMutations {
 	
 	
 			/** Add negative conditions for all other conjuncts of this query block*/
-			for(Conjunct inner: qbt.getConjuncts())
+			for(ConjunctQueryStructure inner: qbt.getConjunctsQs())
 				if(inner != conjunct)
 					cvc.getConstraints().add( GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, qbt, inner) );	
 			
@@ -191,10 +191,10 @@ public class WhereClauseSubQueryConnectiveMutations {
 	 * @param n
 	 */
 	/**FIXME: Tuple assignment for this sub query node has to be changed*/
-	public static void generateDataSetToKillAllAnyMutations(GenerateCVC1 cvc, QueryBlockDetails qbt, Conjunct conjunct,	Node subQ) throws Exception{
+	public static void generateDataSetToKillAllAnyMutations(GenerateCVC1 cvc, QueryBlockDetails qbt, ConjunctQueryStructure conjunct,	Node subQ) throws Exception{
 		try{
 			/** Initialize the data structures for generating the data to kill this mutation */
-			cvc.inititalizeForDataset();		
+			cvc.inititalizeForDatasetQs();		
 			
 			/** get the index of this sub query node */
 			int index = UtilsRelatedToNode.getQueryIndexOfSubQNode(subQ);
@@ -275,7 +275,7 @@ public class WhereClauseSubQueryConnectiveMutations {
 			
 			
 			/** Add negative conditions for all other conjuncts of this query block*/
-			for(Conjunct inner: qbt.getConjuncts())
+			for(ConjunctQueryStructure inner: qbt.getConjunctsQs())
 				if(inner != conjunct)
 					cvc.getConstraints().add( GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, qbt, inner) );	
 			
@@ -344,7 +344,7 @@ public class WhereClauseSubQueryConnectiveMutations {
 	 * @param conjunct
 	 * @param subQ
 	 */
-	public static void generateDataSetToKillBroNodeSubQuery(GenerateCVC1 cvc, QueryBlockDetails qbt, Conjunct conjunct,	Node subQ) throws Exception{
+	public static void generateDataSetToKillBroNodeSubQuery(GenerateCVC1 cvc, QueryBlockDetails qbt, ConjunctQueryStructure conjunct,	Node subQ) throws Exception{
 
 		try{
 			/**create a copy of sub query connective*/
@@ -363,7 +363,7 @@ public class WhereClauseSubQueryConnectiveMutations {
 				
 				
 				/** Initialize the data structures for generating the data to kill this mutation */
-				cvc.inititalizeForDataset();
+				cvc.inititalizeForDatasetQs();
 				
 				/** get the tuple assignment for this query
 				 * If no possible assignment then not possible to kill this mutation*/
@@ -389,7 +389,7 @@ public class WhereClauseSubQueryConnectiveMutations {
 	
 	
 				/** Add negative conditions for all other conjuncts of this query block*/
-				for(Conjunct inner: qbt.getConjuncts())
+				for(ConjunctQueryStructure inner: qbt.getConjunctsQs())
 					if(inner != conjunct)
 						cvc.getConstraints().add( GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, qbt, inner) );	
 				

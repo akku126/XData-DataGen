@@ -16,7 +16,7 @@ public class Disjunct {
 	Vector<Vector<Node>> equivalenceClasses;
 	public Vector<Node> allSubQueryConds;
 	public Vector<Node> joinConds;
-	public Vector<Conjunct> conjuncts;
+	public Vector<Conjunct_ToDel> conjuncts;
 	
 	public Vector<Node> getAllConds() {
 		return allConds;
@@ -79,7 +79,7 @@ public class Disjunct {
 		Node temp;
 		Vector<Node> allCondsDuplicate = (Vector<Node>) orNode.leafNodes.clone();
 		allConds.addAll((Vector<Node>)orNode.leafNodes.clone());
-		conjuncts=new Vector<Conjunct>();
+		conjuncts=new Vector<Conjunct_ToDel>();
 		
 		for(Node n:allCondsDuplicate){
 			String type=n.getType();
@@ -146,7 +146,7 @@ public class Disjunct {
 		}
 		
 		for(ANDNode andNode: orNode.andNodes){
-			conjuncts.add(new Conjunct(andNode));
+			conjuncts.add(new Conjunct_ToDel(andNode));
 		}
 	}
 	
@@ -231,7 +231,7 @@ public class Disjunct {
 			ec.removeAllElements();
 		}
 		removeDuplicates(equivalenceClasses);
-		for(Conjunct conjunct:conjuncts){
+		for(Conjunct_ToDel conjunct:conjuncts){
 			conjunct.createEqClass();
 		}
 	}
@@ -310,7 +310,7 @@ public class Disjunct {
 			
 		}
 		
-		for(Conjunct conjunct:conjuncts){
+		for(Conjunct_ToDel conjunct:conjuncts){
 			conjunct.seggregateSelectionConds();
 		}
 	}
@@ -327,6 +327,9 @@ public class Disjunct {
 			
 			int i=n.getLeft().getColumn().getDataType();
 			if(i== Types.VARCHAR || i==Types.CHAR || i==Types.LONGVARCHAR){
+				if(flag ==0 && n.getRight().getType().equals(Node.getColRefType())){
+					return false;
+				}
 				return true;
 			}
 		}

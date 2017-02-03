@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
@@ -36,7 +36,7 @@ public class ConstrainedAggregationMutationsInWhereSubQuery {
 
 
 		/** we have to check if there are where clause subqueries in each conjunct of outer block of query */
-		for(Conjunct con: cvc.getOuterBlock().getConjuncts()){
+		for(ConjunctQueryStructure con: cvc.getOuterBlock().getConjunctsQs()){
 
 			/**For each where clause subquery blocks of this conjunct*/
 			/** Kill having clause  mutations in each where clause nested block of this query*/
@@ -86,7 +86,7 @@ public class ConstrainedAggregationMutationsInWhereSubQuery {
 							qbt.setHavingClause( havingMutants.get(k) );
 
 							/** Initialize the data structures for generating the data to kill this mutation */
-							cvc.inititalizeForDataset();
+							cvc.inititalizeForDatasetQs();
 							
 							/**set the type of mutation we are trying to kill*/
 							cvc.setTypeOfMutation( TagDatasets.MutationType.HAVING, TagDatasets.QueryBlock.WHERE_SUBQUERY );
@@ -111,7 +111,7 @@ public class ConstrainedAggregationMutationsInWhereSubQuery {
 							cvc.getConstraints().add( GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, cvc.getOuterBlock(), con) );
 							
 							/**add the negative constraints for all the other conjuncts of outer query block */
-							for(Conjunct outer: cvc.getOuterBlock().getConjuncts())
+							for(ConjunctQueryStructure outer: cvc.getOuterBlock().getConjunctsQs())
 								if( !outer.equals(con))
 									cvc.getConstraints().add( GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, cvc.getOuterBlock(), outer) );
 								

@@ -16,7 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import parsing.Column;
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.ForeignKey;
 import parsing.Node;
 import parsing.Query;
@@ -67,50 +67,7 @@ public class RelatedToPreprocessing {
 					FileOutputStream fos = null;
 					ArrayList<String> listOfQueries = null;
 					String[] inst = null;
-					/*if(assignmentConn != null){
 					
-						
-									dataBytes = cvc.getSchemaFile().getBytes();
-									tempFile = "/tmp/dummy";
-									fos = new FileOutputStream(tempFile);
-									fos.write(dataBytes);
-									fos.close();
-									
-									listOfQueries = Utilities.createQueries(tempFile);
-									inst = listOfQueries.toArray(new String[listOfQueries.size()]);
-									
-									for (int i = 0; i < inst.length; i++) {
-										// we ensure that there is no spaces before or after the request string  
-										// in order to not execute empty statements  
-										if (!inst[i].trim().equals("") && ! inst[i].trim().contains("drop table")) {
-											String temp = inst[i].replaceAll("(?i)^[ ]*create[ ]+table[ ]+", "create temporary table ");
-											try(PreparedStatement stmt2 = assignmentConn.prepareStatement(temp)){
-												stmt2.executeUpdate();	
-											}
-										}									
-									}
-						
-									dataBytes =cvc.getDataFile().getBytes();
-									fos = new FileOutputStream(tempFile);
-									fos.write(dataBytes);
-									fos.close();
-									
-									listOfQueries = Utilities.createQueries(tempFile);
-									inst = listOfQueries.toArray(new String[listOfQueries.size()]);
-										
-										for (int i = 0; i < inst.length; i++) {
-											// we ensure that there is no spaces before or after the request string  
-											// in order to not execute empty statements  
-											if (!inst[i].trim().equals("") && !inst[i].contains("drop table") && !inst[i].contains("delete from")) {
-												
-												try(PreparedStatement stmt2 = assignmentConn.prepareStatement(inst[i])){
-													stmt2.executeUpdate();		
-												}
-											}
-										}							
-					}*/
-				
-				
 				Query query = cvc.getQuery();
 				Query branchQuery[] = cvc.getBranchQueries().getBranchQuery();
 				ArrayList<String> branchResult[] = cvc.getBranchQueries().getBranchResultString();
@@ -145,8 +102,8 @@ public class RelatedToPreprocessing {
 					}
 				}
 		
-				cvc.setTablesOfOriginalQuery( new Vector<Table>() );
-				cvc.getTablesOfOriginalQuery().addAll( query.getFromTables().values() );
+				//cvc.setTablesOfOriginalQuery( new Vector<Table>() );
+				//cvc.getTablesOfOriginalQuery().addAll( query.getFromTables().values() );
 				
 				
 				Iterator iter1 = cvc.getTablesOfOriginalQuery().iterator();
@@ -177,8 +134,9 @@ public class RelatedToPreprocessing {
 				
 				while(t.hasNext()){
 					table = (Table)t.next();
-					
-					cvc.getResultsetTables().add(table);
+					if(!cvc.getResultsetTables().contains(table)){
+							cvc.getResultsetTables().add(table);
+				
 					
 					Collection columns = table.getColumns().values();
 					
@@ -242,6 +200,9 @@ public class RelatedToPreprocessing {
 						rs.close();
 						ps.close();
 					}
+					
+					}	
+					
 				}
 				}//try-with resource - Close assignmentConn obj
 
@@ -262,59 +223,7 @@ public class RelatedToPreprocessing {
 				
 				ArrayList<String> listOfQueries = null;
 				String[] inst = null;
-							
-				/*	if(assignmentConn != null){
-						
-							
-							// Process the result			
-							
-								dataBytes = cvc.getDataFile().getBytes();
-								
-								tempFile = "/tmp/dummy";
-								
-								try(FileOutputStream fos = new FileOutputStream(tempFile)){
-									fos.write(dataBytes);
-								}
-								
-								listOfQueries = Utilities.createQueries(tempFile);
-								inst = listOfQueries.toArray(new String[listOfQueries.size()]);
-								
-								for (int i = 0; i < inst.length; i++) {
-									// we ensure that there is no spaces before or after the request string  
-									// in order to not execute empty statements  
-									if (!inst[i].trim().equals("")) {
-										String temp = inst[i].replaceAll("(?i)^[ ]*create[ ]+table[ ]+", "create temporary table ");
-										try(PreparedStatement stmt2 = assignmentConn.prepareStatement(temp)){
-											stmt2.executeUpdate();	
-										}
-										
-									}
-								}
-							
-							
-						
-								dataBytes = cvc.getDataFile().getBytes();
-								try(FileOutputStream fos = new FileOutputStream(tempFile)){
-									fos.write(dataBytes);
-								}
-								
-								listOfQueries = Utilities.createQueries(tempFile);
-								inst = listOfQueries.toArray(new String[listOfQueries.size()]);
-								
-								for (int i = 0; i < inst.length; i++) {
-									// we ensure that there is no spaces before or after the request string  
-									// in order to not execute empty statements  
-									if (!inst[i].trim().equals("")) {
-										
-										try(PreparedStatement stmt2 = assignmentConn.prepareStatement(inst[i])){
-											stmt2.executeUpdate();
-										}
-									}
-								}
 				
-		   }
-		
-		*/
 				/**Gets the name of tables required for the query and the name columns of that query. 
 				 * Also checks for any foreign key reference and adds the referenced table to the list of tables being considered.*/
 		
@@ -403,7 +312,7 @@ public class RelatedToPreprocessing {
 	public static void segregateSelectionConditionsForQueryBlock(GenerateCVC1 cvc, QueryBlockDetails queryBlock) {
 
 		/** Segregate selection conditions of each conjunct of this query block */
-		for(Conjunct conjunct : queryBlock.getConjuncts()){
+		for(ConjunctQueryStructure conjunct : queryBlock.getConjunctsQs()){
 			conjunct.seggregateSelectionConds();
 		}
 
@@ -501,7 +410,7 @@ public class RelatedToPreprocessing {
 		for(int i=0;i<fileList.length;i++)
 		{
 			File f1=new File(Configuration.homeDir+"/temp_cvc" + gd.getFilePath() +"/"+fileListVector.get(i));	          
-			if(f1.isDirectory() && fileListVector.get(i).startsWith("DS"))
+			if(f1.isDirectory() && fileListVector.get(i).substring(0,2).equals("DS"))
 			{
 				datasets.add(fileListVector.get(i));
 			}
@@ -530,7 +439,7 @@ public class RelatedToPreprocessing {
 		for(int i=0;i<fileList.length;i++)
 		{
 			File f1=new File(Configuration.homeDir+"/temp_cvc" + gd.getFilePath() +"/"+fileListVector.get(i));	          
-			if(f1.isDirectory() && fileListVector.get(i).startsWith("DS"))
+			if(f1.isDirectory() && fileListVector.get(i).substring(0,2).equals("DS"))
 			{
 				datasets.add(fileListVector.get(i));
 			}
@@ -572,40 +481,43 @@ public class RelatedToPreprocessing {
 	 * This function finds the list of base relations occurred in each query block (The occurrence of each base relation)
 	 * @param generateCVC1_new
 	 */
-	public static void getRelationOccurredInEachQueryBlok(	GenerateCVC1 cvc) {
+	/**
+	 * Commented as it is not required for the new Query structure
+	 */
+	/*public static void getRelationOccurredInEachQueryBlok(	GenerateCVC1 cvc) {
 
-		/**It stores which occurrence of relation occurred in which block of the query, the value contains [queryType, queryIndex]*/
+		//It stores which occurrence of relation occurred in which block of the query, the value contains [queryType, queryIndex]
 		HashMap<String, Integer[]> tableNames = cvc.getTableNames();
 
-		/**Get iterator for this hash map*/
+		//Get iterator for this hash map
 		Iterator<String> it = tableNames.keySet().iterator();
 
-		/**if there are tables in the hash map*/
+		//if there are tables in the hash map
 		while(it.hasNext()){
 
-			/**get the table occurrence*/
+			//get the table occurrence
 			String relationOccurrence = it.next();
 
-			/**get the query type in which this relation occurred*/
+			//get the query type in which this relation occurred
 			int queryType = tableNames.get(relationOccurrence)[0];
 
-			/**get query index*/
+			//get query index
 			int queryIndex = tableNames.get(relationOccurrence)[1];
 
-			/**if it is from clause sub query, add this to the list of base relations of the from clause sub queries*/
+			//if it is from clause sub query, add this to the list of base relations of the from clause sub queries
 			if( queryType == 1)
 				cvc.getOuterBlock().getFromClauseSubQueries().get(queryIndex).getBaseRelations().add(relationOccurrence);
 
-			/**if it is where clause sub query, add this to the list of base relations of the where clause sub queries*/
+			//if it is where clause sub query, add this to the list of base relations of the where clause sub queries
 			else if( queryType == 2)
 				cvc.getOuterBlock().getWhereClauseSubQueries().get(queryIndex).getBaseRelations().add(relationOccurrence);
 
-			/**if it is outer block of query, add this to the list of base relations of outer block of query*/
+			//if it is outer block of query, add this to the list of base relations of outer block of query
 			else if( queryType == 0)
 				cvc.getOuterBlock().getBaseRelations().add(relationOccurrence);
 		}
 	}
-
+*/
 	/**
 	 * Store details about branch queries in the input
 	 * @param cvc
@@ -710,14 +622,14 @@ public class RelatedToPreprocessing {
 		{
 			Vector<Node> selectCondsClone = (Vector<Node>)cvc.getBranchQueries().getStringSelectionCondsForBranchQuery()[i].clone();
 			for(Node n: selectCondsClone){			
-				if( Conjunct.isStringSelection(n,1) ){
+				if( ConjunctQueryStructure.isStringSelection(n,1) ){
 					String str=n.getRight().getStrConst();
 					if(str!=null)
 						n.getRight().setStrConst("'"+str+"'");
 					cvc.getBranchQueries().getStringSelectionCondsForBranchQuery()[i].add(n);
 					cvc.getBranchQueries().getSelectionCondsForBranchQuery()[i].remove(n);
 				}
-				else if( Conjunct.isStringSelection(n,0) ){
+				else if( ConjunctQueryStructure.isStringSelection(n,0) ){
 					cvc.getBranchQueries().getStringSelectionCondsForBranchQuery()[i].add(n);
 					cvc.getBranchQueries().getSelectionCondsForBranchQuery()[i].remove(n);
 				}

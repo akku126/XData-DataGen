@@ -11,7 +11,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import testDataGen.CountEstimationRelated;
 import testDataGen.GenerateCVC1;
@@ -58,7 +58,7 @@ public class DistinctMutationsInOuterQueryBlock {
 				if(cvc.projectedCols.containsAll(cvc1.groupByNodes))
 					return;*/
 			/** Initialize the data structures for generating the data to kill this mutation */
-			cvc.inititalizeForDataset();
+			cvc.inititalizeForDatasetQs();
 	
 			/**set the type of mutation we are trying to kill*/
 			cvc.setTypeOfMutation( TagDatasets.MutationType.DISTINCT, TagDatasets.QueryBlock.OUTER_BLOCK );
@@ -96,7 +96,7 @@ public class DistinctMutationsInOuterQueryBlock {
 			
 			/**If this relation is involved in equi-joins then we can ensure multiple tuples at the output, even if this relation contains a single tuple 
 			 * FIXME: But what if all the relations in this equivalence class contains a single tuple*/
-			for(Conjunct con: qbt.getConjuncts())
+			for(ConjunctQueryStructure con: qbt.getConjunctsQs())
 				for(Vector<Node> ec: con.getEquivalenceClasses())
 					for(Node n2: ec)
 						if(n2.getTableNameNo().equalsIgnoreCase(tableNameNo))

@@ -13,7 +13,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Table;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
@@ -48,7 +48,7 @@ public class UnintendedJoinsMutationsInOuterQueryBlock {
 			/** Get outer query block of this query */
 			QueryBlockDetails qbt = cvc.getOuterBlock();
 	
-			cvc.inititalizeForDataset();
+			cvc.inititalizeForDatasetQs();
 			
 			/** get the tuple assignment for this query
 			 * If no possible assignment then not possible to kill this mutation*/
@@ -56,7 +56,7 @@ public class UnintendedJoinsMutationsInOuterQueryBlock {
 				return ;
 			
 			/** we have to kill the mutations in each conjunct*/
-			for( Conjunct con: qbt.getConjuncts()){
+			for( ConjunctQueryStructure con: qbt.getConjunctsQs()){
 	
 				logger.log(Level.INFO,"\n----------------------------------");
 				logger.log(Level.INFO,"NEW CONJUNCT IN KILLING UNINTENDED JOIN MUTATION: \n");
@@ -99,7 +99,7 @@ public class UnintendedJoinsMutationsInOuterQueryBlock {
 				
 				
 				/**add the negative constraints for all the other conjuncts of this query block */
-				for(Conjunct inner: qbt.getConjuncts())
+				for(ConjunctQueryStructure inner: qbt.getConjunctsQs())
 					if(inner != con)
 						cvc.getConstraints().add( GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, qbt, inner) );	
 	

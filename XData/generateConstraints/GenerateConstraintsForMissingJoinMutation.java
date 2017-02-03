@@ -7,7 +7,8 @@ import java.util.logging.Logger;
 
 import killMutations.outerQueryBlock.JoinMutationsInOuterQueryBlock;
 
-import parsing.Conjunct;
+//import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Disjunct;
 import parsing.JoinClauseInfo;
 import parsing.Node;
@@ -47,16 +48,16 @@ public class GenerateConstraintsForMissingJoinMutation {
 		/** get the additional Join node conditions **/
 	//	qbt.g.getEquivalenceClasses().addAll(additionalJoins);
 		//Vector<Vector<Node>> equivalenceClasses = (con.getEquivalenceClasses());
-		 if(cvc.getOuterBlock().getConjuncts() != null 
-				 && cvc.getOuterBlock().getConjuncts().size() > 0
-				 && cvc.getOuterBlock().getConjuncts().get(0).getEquivalenceClasses() != null){
+		 if(cvc.getOuterBlock().getConjunctsQs() != null 
+				 && cvc.getOuterBlock().getConjunctsQs().size() > 0
+				 && cvc.getOuterBlock().getConjunctsQs().get(0).getEquivalenceClasses() != null){
 			 
-			 cvc.getOuterBlock().getConjuncts().get(0).getEquivalenceClasses().addAll(additionalJoins);
+			 cvc.getOuterBlock().getConjunctsQs().get(0).getEquivalenceClasses().addAll(additionalJoins);
 		 }
 		 else {
 			 
-			 Conjunct.createConjunct(cvc.getqParser(),additionalJoins);
-			 qbt.getConjuncts().addAll(new ArrayList<Conjunct>(cvc.getqParser().getConjuncts()) );
+			 ConjunctQueryStructure.createConjunct(cvc.getqStructure(),additionalJoins);
+			 qbt.getConjunctsQs().addAll(new ArrayList<ConjunctQueryStructure>(cvc.getqStructure().getConjuncts()) );
 		 }
 		 
 		/** killing join predicate mutations in outer query blocks */
@@ -98,7 +99,7 @@ public class GenerateConstraintsForMissingJoinMutation {
 		// Now create equivalence classes from joinConds
 		Vector<Node> allJoinConds = new Vector<Node>();
 		//START -  GET FOREIGN KEY REFERENCES and if exists add those attributes to Join Conditions
-		Vector<Node> projCols = cvc.getqParser().getProjectedCols();
+		Vector<Node> projCols = cvc.getqStructure().getProjectedCols();
 		
 			//Add foreign key condition to join condition
 			/*for(int m=0;m<cvc.getTableMap().foreignKeyGraph.topSort().size();m++){
@@ -124,8 +125,8 @@ public class GenerateConstraintsForMissingJoinMutation {
 		for(int i = 0; i < tableNamesNo.size(); i++){
 			
 			String tableName = tableNamesNo.get(i).substring(0, tableNamesNo.get(i).length()-1);
-			for(int m=0;m<cvc.getqParser().getForeignKeyVectorOriginal().size();m++){
-				JoinClauseInfo  jnClause = cvc.getqParser().getForeignKeyVectorOriginal().get(m);
+			for(int m=0;m<cvc.getqStructure().getForeignKeyVectorOriginal().size();m++){
+				JoinClauseInfo  jnClause = cvc.getqStructure().getForeignKeyVectorOriginal().get(m);
 				if(jnClause.getJoinTable1().getTableName().equalsIgnoreCase(tableName)){
 					//Then foreign key reference exists for the table used in the query
 					//Add the relation to equivalence calsses

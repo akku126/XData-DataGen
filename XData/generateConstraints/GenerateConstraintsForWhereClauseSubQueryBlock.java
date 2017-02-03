@@ -4,7 +4,7 @@ import java.util.Vector;
 
 import parsing.AggregateFunction;
 import parsing.Column;
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
@@ -29,7 +29,7 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 	 * @param conjunct
 	 * @return
 	 */
-	public static String getConstraintsForWhereClauseSubQueryBlock(	GenerateCVC1 cvc, QueryBlockDetails queryBlock,	Conjunct conjunct) throws Exception{
+	public static String getConstraintsForWhereClauseSubQueryBlock(	GenerateCVC1 cvc, QueryBlockDetails queryBlock,	ConjunctQueryStructure conjunct) throws Exception{
 
 		String constraintString = "";
 		if(conjunct == null) return "";
@@ -140,7 +140,7 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 		if(subQuery != null){
 		/**Get the conditions of the subquery*/
 		/**FIXME: What should be done if inside is ORing of conditions*/
-		for(Conjunct con: subQuery.getConjuncts()){
+		for(ConjunctQueryStructure con: subQuery.getConjunctsQs()){
 			condsInSubQ.addAll(con.getStringSelectionConds());
 			condsInSubQ.addAll(con.getSelectionConds());
 			/** add equi joins*/
@@ -183,7 +183,7 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 		/**Depending on the type of connective generate the constraints */
 		if(subQ.getType().equals(Node.getNotExistsNodeType())){
 
-			for (Conjunct conjuct: subQuery.getConjuncts()){
+			for (ConjunctQueryStructure conjuct: subQuery.getConjunctsQs()){
 				constraintString += GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, subQuery, conjuct);
 			}
 
@@ -294,10 +294,11 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 
 		/**Get the conditions of the sub query except no equi joins*/
 		/**FIXME: What should be done if inside is ORing of conditions*/
-		for(Conjunct con: subQuery.getConjuncts()){
+		for(ConjunctQueryStructure con: subQuery.getConjunctsQs()){
 			condsInSubQ.addAll(con.getStringSelectionConds());
 			condsInSubQ.addAll(con.getSelectionConds());
-			condsInSubQ.addAll(con.getJoinConds());			
+			condsInSubQ.addAll(con.getJoinCondsAllOther());		
+			condsInSubQ.addAll(con.getJoinCondsForEquivalenceClasses());
 		}
 
 		return generateConstraintsForConditionsInWhereSubquery(cvc, subQ, condsInSubQ, subQuery);
@@ -317,14 +318,14 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 	public static String getConstraintsForWhereSubQueryConnective(GenerateCVC1 cvc, QueryBlockDetails queryBlock,	Node subQ) throws Exception{
 
 
-		String constraintString = "";		
+		String constraintString = "";
 
 		if(subQ.getType().equals(Node.getExistsNodeType()) || subQ.getType().equals(Node.getNotExistsNodeType()))
 			return constraintString;
 		
 		int index = UtilsRelatedToNode.getQueryIndexOfSubQNode(subQ);
 		
-		if(subQ.getLhsRhs().getType().equals(Node.getAggrNodeType())){
+		if(subQ.getLhsRhs() != null && subQ.getLhsRhs().getType().equals(Node.getAggrNodeType())){
 			String op = subQ.getOperator();
 			Node agg = null;
 			String outerTableNo = "";
@@ -368,27 +369,35 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 			}
 		}
 		else{
-			Node left = subQ.getLhsRhs().getLeft();
-			Node right = subQ.getLhsRhs().getRight();
-			String op = subQ.getLhsRhs().getOperator();
-			if(op.contains("<>")) op="/=";
-
-			String outerTableNo=left.getTableNameNo();
-			int offset1 = cvc.getRepeatedRelNextTuplePos().get(outerTableNo)[1];
-
-			String innerTableNo=right.getTableNameNo();
-			int offset2 = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
-			if(queryBlock.getWhereClauseSubQueries() != null
-					&& !queryBlock.getWhereClauseSubQueries().isEmpty()){
-			/**get sub query block*/
-			QueryBlockDetails subQuery = queryBlock.getWhereClauseSubQueries().get(index);
-			int finalCount = subQuery.getFinalCount();
-
-			for(int i=0; i < cvc.getNoOfTuples().get(outerTableNo);i++)
-
-				/**If there are multiple groups inside the where clause sub query, then this must be equal to aggregation value in each group*/
-				for(int j=0 ; j < subQuery.getNoOfGroups(); j++)
-					constraintString += getCVCForAggInSubQConstraint(cvc, subQuery, subQ.getLhsRhs(), finalCount, i+offset1, j);
+			if(subQ.getLhsRhs() !=null ){
+					Node left = subQ.getLhsRhs().getLeft();
+					Node right = subQ.getLhsRhs().getRight();
+					String op = subQ.getLhsRhs().getOperator();
+					if(op != null && op.contains("<>")) op="/=";
+		
+					if(left != null && left.getTableNameNo() != null){
+						String outerTableNo=left.getTableNameNo();
+						int offset1 = cvc.getRepeatedRelNextTuplePos().get(outerTableNo)[1];
+			
+						if(right.getNodeType() != Node.getAllNodeType()
+								&& right.getNodeType() != Node.getAnyNodeType()){
+							
+								String innerTableNo=right.getTableNameNo();
+								int offset2 = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
+								if(queryBlock.getWhereClauseSubQueries() != null
+										&& !queryBlock.getWhereClauseSubQueries().isEmpty()){
+								/**get sub query block*/
+								QueryBlockDetails subQuery = queryBlock.getWhereClauseSubQueries().get(index);
+								int finalCount = subQuery.getFinalCount();
+					
+								for(int i=0; i < cvc.getNoOfTuples().get(outerTableNo);i++)
+					
+									/**If there are multiple groups inside the where clause sub query, then this must be equal to aggregation value in each group*/
+									for(int j=0 ; j < subQuery.getNoOfGroups(); j++)
+										constraintString += getCVCForAggInSubQConstraint(cvc, subQuery, subQ.getLhsRhs(), finalCount, i+offset1, j);
+								}
+						}
+					}
 			}
 		}
 
@@ -415,7 +424,7 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 		String returnString="ASSERT NOT (";
 		int offset=0, count=0;
 		String tableNameNumber = null;
-		if(subQ.getType().equals(Node.getExistsNodeType()) || subQ.getType().equals(Node.getNotExistsNodeType()))
+		if(subQ.getType().equals(Node.getExistsNodeType()) || subQ.getType().equals(Node.getNotExistsNodeType()) )
 			return "";
 		/** Get the details about tuples of table this subquery node*/
 		if(subQ.getType().equals(Node.getBroNodeSubQType())){
@@ -431,7 +440,8 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 		else{
 			
 			if(subQ.getLhsRhs()!= null
-					&& subQ.getLhsRhs().getLeft().getType().equalsIgnoreCase(Node.getBaoNodeType())){
+					&& subQ.getLhsRhs().getLeft().getType().equalsIgnoreCase(Node.getBaoNodeType())
+					){
 				tableNameNumber = UtilsRelatedToNode.getTableNameNo(subQ.getLhsRhs().getLeft());
 			}else{
 				tableNameNumber = subQ.getLhsRhs().getLeft().getTableNameNo();
@@ -453,7 +463,7 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 
 			/**Get the selction conditions of the subquery*/
 			/**FIXME: What should be done if inside is ORing of conditions*/
-			for(Conjunct conjunct: queryBlock.getWhereClauseSubQueries().get(index).getConjuncts()){
+			for(ConjunctQueryStructure conjunct: queryBlock.getWhereClauseSubQueries().get(index).getConjunctsQs()){
 				subQConds.addAll(conjunct.getSelectionConds());
 				subQConds.addAll(conjunct.getStringSelectionConds());
 			}
@@ -826,7 +836,7 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 	 * @param except
 	 * @throws Exception
 	 */
-	public static void generateConstraintsForKillingMutationsInWhereSubqueryBlock( GenerateCVC1 cvc, QueryBlockDetails qbt, Conjunct con, Conjunct subqueryConjunct, Node subQCond, int except) throws Exception{
+	public static void generateConstraintsForKillingMutationsInWhereSubqueryBlock( GenerateCVC1 cvc, QueryBlockDetails qbt, ConjunctQueryStructure con, ConjunctQueryStructure subqueryConjunct, Node subQCond, int except) throws Exception{
 
 		/** Also Generates positive constraints for all the conditions of this sub query block conjunct*/
 		/** And we need to add the positive conditions for all other where clause sub query blocks in this conjunct*/

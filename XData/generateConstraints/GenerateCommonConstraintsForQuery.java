@@ -8,7 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import parsing.Column;
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.JoinTreeNode;
 import parsing.Node;
 import parsing.RelationHierarchyNode;
@@ -129,7 +129,10 @@ public class GenerateCommonConstraintsForQuery {
 			logger.log(Level.INFO,"cvc count =="+cvc.getCount());
 			WriteFile.writeFile(Configuration.homeDir + "/temp_cvc" + cvc.getFilePath() + "/cvc3_" + cvc.getCount() + ".cvc", CVCStr);
 			
-			Boolean success= new PopulateTestData().killedMutants("cvc3_" + cvc.getCount() + ".cvc", cvc.getQuery(), "DS" + cvc.getCount(), cvc.getQueryString(), cvc.getFilePath(), cvc.getNoOfOutputTuples(), cvc.getTableMap(), cvc.getResultsetColumns(), cvc.getAssignmentId(), cvc.getQuestionId(),cvc.getRepeatedRelationCount().keySet()) ;
+			Boolean success= new PopulateTestData().killedMutants("cvc3_" + cvc.getCount() 
+					+ ".cvc", cvc.getQuery(), 
+					"DS" + cvc.getCount(), cvc.getQueryString(), cvc.getFilePath(), cvc.getNoOfOutputTuples(), cvc.getTableMap(), 
+					cvc.getResultsetColumns(), cvc.getRepeatedRelationCount().keySet()) ;
 			cvc.setOutput( cvc.getOutput() + success);
 			cvc.setCount(cvc.getCount() + 1);
 	
@@ -148,14 +151,13 @@ public class GenerateCommonConstraintsForQuery {
 			ArrayList<String> newList = new ArrayList<String>();
 			newList.add("DS"+(cvc.getCount()-1));
 			logger.log(Level.INFO,"\n\n***********************************************************************\n");
-			logger.log(Level.INFO,"DATA SETS FOR QUERY "+cvc.getAssignmentId()+cvc.getQuestionId()+" ARE GENERATED");
+			if(cvc.getConcatenatedQueryId() != null){
+				logger.log(Level.INFO,"DATA SETS FOR QUERY "+cvc.getConcatenatedQueryId()+" ARE GENERATED");
+			}else{
+				logger.log(Level.INFO,"DATA SETS FOR QUERY ARE GENERATED");
+			}
 			logger.log(Level.INFO,"\n\n***********************************************************************\n");
 			GenerateDataset_new fp = new GenerateDataset_new( cvc.getFilePath());
-			/**Upload the data sets into the database */
-			
-			logger.log(Level.INFO,"\n***********************************************************************\n\n");
-			logger.log(Level.INFO,"DATASET FOR QUERY "+cvc.getAssignmentId()+cvc.getQuestionId()+" ARE UPLOADED");
-			logger.log(Level.INFO,"\n***********************************************************************\n\n");
 			
 			
 			return success;
@@ -231,7 +233,7 @@ public class GenerateCommonConstraintsForQuery {
 		try{
 			ArrayList< Node > isNullConds = new ArrayList<Node>();
 			/** Get constraints for each conjunct*/
-			for(Conjunct conjunct : queryBlock.getConjuncts()){
+			for(ConjunctQueryStructure conjunct : queryBlock.getConjunctsQs()){
 	
 				/**Get null conditions in this conjunct*/
 				isNullConds.addAll( new ArrayList<Node>(conjunct.getIsNullConds()));
@@ -277,7 +279,7 @@ public class GenerateCommonConstraintsForQuery {
 			// Selection conditions specific to each relation
 			for(String s : relations) {
 				selConds.put(s, new Vector<Node>());
-				for(Conjunct con : queryBlock.getConjuncts()){
+				for(ConjunctQueryStructure con : queryBlock.getConjunctsQs()){
 					if(con.getSelectionConds() != null) {
 						for(Node n : con.getSelectionConds()){
 							if(n.getLeft() != null 
@@ -308,7 +310,7 @@ public class GenerateCommonConstraintsForQuery {
 			
 			// Join conditions specific to each relation
 			for(String s : relations) {
-				for(Conjunct con : queryBlock.getConjuncts()){
+				for(ConjunctQueryStructure con : queryBlock.getConjunctsQs()){
 					if(!con.getEquivalenceClasses().isEmpty()){
 			
 						/**Get the equivalence classes*/

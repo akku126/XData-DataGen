@@ -172,7 +172,7 @@ public class TableMap implements Serializable{
             while (rs.next()) {                           
               String tableName = rs.getString("TABLE_NAME"); 
               rs1 = null;
-              rs1 = meta.getPrimaryKeys(database, null, tableName);
+              rs1 = meta.getPrimaryKeys(database, "", tableName);
             
            	  int size = rs1.getFetchSize();
            	  while(rs1.next()){
@@ -192,7 +192,7 @@ public class TableMap implements Serializable{
             	//get tablename from keyset using iterator
             	boolean listUniqueIndex = true;
             	String tname = (String)it.next();
-                ResultSet rset = meta.getIndexInfo(database,null, tname.toLowerCase(),listUniqueIndex, true);
+                ResultSet rset = meta.getIndexInfo(database,"", tname.toLowerCase(),listUniqueIndex, true);
                 while(rset.next()) { 
                     String indexName = rset.getString("INDEX_NAME");
                     //String table = rset.getString("TABLE_NAME");
@@ -214,7 +214,7 @@ public class TableMap implements Serializable{
             }
             foreignKeyGraph = new Graph<Table,ForeignKey>(true);
             // logger.log(Level.INFO,"Create Foreign Key Graph");
-            rs = meta.getExportedKeys(conn.getCatalog(), "", null);
+            rs = meta.getExportedKeys(conn.getCatalog(), "", "");
             while(rs.next()){
             	
             	String fkName = rs.getString("FK_NAME");
@@ -265,6 +265,7 @@ public class TableMap implements Serializable{
          //conn.close(); 
         }catch(Exception e){
         	logger.log(Level.SEVERE, "TableMap not created", e);
+        	
         	//e.printStackTrace();
         }
     }

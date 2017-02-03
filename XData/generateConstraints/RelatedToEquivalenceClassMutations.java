@@ -69,7 +69,7 @@ public class RelatedToEquivalenceClassMutations {
 		/** Form P = EC - S */
 		ArrayList<Node> P = new ArrayList<Node>();
 		for(int k=0; k<ec.size(); k++)						
-			if(cvc.getqParser().alreadyNotExistInEquivalenceClass(S, ec.get(k)))
+			if(cvc.getqStructure().alreadyNotExistInEquivalenceClass(S, ec.get(k)))
 				P.add(ec.get(k));
 		
 		

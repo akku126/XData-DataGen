@@ -11,7 +11,7 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
@@ -43,7 +43,7 @@ public static void generateDataForkillingStringSelectionMutationsInFromSubquery(
 			logger.log(Level.INFO,"----------------------------------\n");
 			
 			/**Kill the string selection clause mutations in each conjunct of this sub query query block*/
-			for(Conjunct conjunct: qbt.getConjuncts()){
+			for(ConjunctQueryStructure conjunct: qbt.getConjunctsQs()){
 				
 				logger.log(Level.INFO,"\n----------------------------------");
 				logger.log(Level.INFO,"NEW CONJUNCT IN SELCTION CLAUSE MUTATIONS KILLING: " + conjunct);
@@ -78,7 +78,7 @@ public static void generateDataForkillingStringSelectionMutationsInFromSubquery(
 							stringSelectionConds.set(i,scMutants.get(j) );	
 							
 							/** Initialize the data structures for generating the data to kill this mutation */
-							cvc.inititalizeForDataset();
+							cvc.inititalizeForDatasetQs();
 
 							/**set the type of mutation we are trying to kill*/
 							cvc.setTypeOfMutation( TagDatasets.MutationType.STRING, TagDatasets.QueryBlock.FROM_SUBQUERY );
@@ -106,7 +106,7 @@ public static void generateDataForkillingStringSelectionMutationsInFromSubquery(
 							cvc.getConstraints().add( GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, qbt, conjunct) );
 							
 							/** Add negative conditions for all other conjuncts of this subquery block*/
-							for(Conjunct inner: qbt.getConjuncts()){
+							for(ConjunctQueryStructure inner: qbt.getConjunctsQs()){
 								if(inner != conjunct){
 									cvc.getConstraints().add( GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, qbt, inner) );	
 								}

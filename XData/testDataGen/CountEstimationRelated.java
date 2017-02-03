@@ -28,7 +28,7 @@ import java.util.logging.Logger;
 
 import parsing.AggregateFunction;
 import parsing.Column;
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 
 import testDataGen.WriteFile;
@@ -87,7 +87,7 @@ public class CountEstimationRelated {
 			try{	
 				Callable<Integer> call = new CallableProcess(myProcess);
 				Future<Integer> future = service.submit(call);
-				int exitValue = future.get(60, TimeUnit.SECONDS);
+				int exitValue = future.get(180, TimeUnit.SECONDS);
 				
 				if(myProcess.exitValue() != 0){
 					logger.log(Level.SEVERE,"CountEstimationRelated.java: isAssignmentSatisfiable function :  Processing Aggregates failed.");
@@ -400,6 +400,7 @@ public class CountEstimationRelated {
 		queryBlock.setAggConstraints( new ArrayList<Node>());
 
 		Vector<Node> aggConstraints = new Vector<Node>();
+		
 		if(queryBlock.getHavingClause() != null)
 			Utilities.flattenConstraints( aggConstraints, queryBlock.getHavingClause());
 
@@ -407,7 +408,7 @@ public class CountEstimationRelated {
 		RelatedToParameters.setupDataStructuresForParamConstraints( queryBlock );
 
 		/**FIXME: Not sure whether this is needed or not*/
-		for(Conjunct conjunct: queryBlock.getConjuncts())
+		for(ConjunctQueryStructure conjunct: queryBlock.getConjunctsQs())
 			for(Node n: conjunct.getAllSubQueryConds())
 				if(n.getType().equals(Node.getBroNodeSubQType()) )
 					queryBlock.setConstrainedAggregation(true);

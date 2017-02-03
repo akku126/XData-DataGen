@@ -5,7 +5,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import parsing.Column;
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
@@ -36,7 +36,7 @@ public class GenerateConstraintsForPartialMultipleGroup {
 		
 		/** check in each conjunct of this query block*/
 		/**FIXME: what if this group node is present in the equivalence class of the query blocks in which this 'queryBlock' is nested (Eg: from clause nested block and outer block*/
-		for(Conjunct con: queryBlock.getConjuncts())
+		for(ConjunctQueryStructure con: queryBlock.getConjunctsQs())
 			for(Vector<Node> ec: con.getEquivalenceClasses())
 				if(ec.contains(groupByNode))
 					eqClassForGroupByNode.add( new ArrayList<Node>(ec));

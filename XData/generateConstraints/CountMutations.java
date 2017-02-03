@@ -6,7 +6,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import parsing.Column;
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
+//import parsing.Conjunct;
 import parsing.Table;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
@@ -91,7 +92,7 @@ public class CountMutations {
 
 		/**FIXME: How to handle ORing of conditions*/
 		/**if this column is involved in any selection or string selection or like conditions*/
-		for(Conjunct con: qbt.getConjuncts()){
+		for(ConjunctQueryStructure con: qbt.getConjunctsQs()){
 
 			/** check for non equi join conditions */
 			if( UtilsRelatedToNode.presentInConds(con.getAllConds(), col, relationNo))

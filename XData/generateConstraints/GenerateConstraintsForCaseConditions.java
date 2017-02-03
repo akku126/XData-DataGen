@@ -1,9 +1,12 @@
 package generateConstraints;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Vector;
 
 import parsing.CaseCondition;
+import parsing.CaseExpression;
+import parsing.Node;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
 
@@ -17,9 +20,9 @@ public class GenerateConstraintsForCaseConditions {
 		String tableNameNumber = null;
 		
 		
-		if(! cc.getCaseCondition().equals("else")){
+		if(cc.getWhenNode() != null && cc.getThenNode() != null){
 			
-		tableNameNumber = UtilsRelatedToNode.getTableNameNo(cc.getCaseConditionNode());
+		tableNameNumber = UtilsRelatedToNode.getTableNameNo(cc.getThenNode());
 				
 		offset = cvc.getRepeatedRelNextTuplePos().get(tableNameNumber)[1];
 		count = cvc.getNoOfTuples().get(tableNameNumber);
@@ -27,7 +30,13 @@ public class GenerateConstraintsForCaseConditions {
 		/** Get the index of this subquery node*/
 
 		constraints +="ASSERT (";
-		constraints += GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, cc.getCaseConditionNode(), 0+offset);
+		
+		if(cc.getWhenNode().getLeft() != null && cc.getWhenNode().getLeft().getType().equalsIgnoreCase(Node.getColRefType())){
+			constraints += GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt,cc.getWhenNode().getLeft(), 0+offset);
+		}else{
+			constraints += GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt,cc.getWhenNode().getRight(), 0+offset);
+		}
+		
 		if(caseConditonCompleted == null || (caseConditonCompleted != null && caseConditonCompleted.size()==0)){
 			
 			constraints +=");";
@@ -37,7 +46,7 @@ public class GenerateConstraintsForCaseConditions {
 			//constraints +="ASSERT (";
 			constraints +=") AND ( ";
 			//Generate constraint that holds these conditions as false and current condition alone as true
-			constraints += GenerateCVCConstraintForNode.genNegativeCondsForPred(qbt, ccCompleted.getCaseConditionNode(), 0+offset);
+			constraints += GenerateCVCConstraintForNode.genNegativeCondsForPred(qbt, ccCompleted.getWhenNode().getLeft(), 0+offset);
 			if(i == (caseConditonCompleted.size()-1)){
 				constraints +=");";
 			}else{
@@ -51,7 +60,7 @@ public class GenerateConstraintsForCaseConditions {
 			//Get table details from completed case nodes
 			if(caseConditonCompleted != null && caseConditonCompleted.size() > 0){
 				CaseCondition ccForTableInfo = caseConditonCompleted.get(0);
-				tableNameNumber = UtilsRelatedToNode.getTableNameNo(ccForTableInfo.getCaseConditionNode());
+				tableNameNumber = UtilsRelatedToNode.getTableNameNo(ccForTableInfo.getThenNode());
 			}
 			
 			offset = cvc.getRepeatedRelNextTuplePos().get(tableNameNumber)[1];
@@ -62,7 +71,7 @@ public class GenerateConstraintsForCaseConditions {
 				constraints +="ASSERT (";
 				//constraints +=") AND ( ";
 				//Generate constraint that holds these conditions as false and current condition alone as true
-				constraints += GenerateCVCConstraintForNode.genNegativeCondsForPred(qbt, ccCompleted.getCaseConditionNode(), 0+offset);
+				constraints += GenerateCVCConstraintForNode.genNegativeCondsForPred(qbt, ccCompleted.getWhenNode(), 0+offset);
 				if(i == (caseConditonCompleted.size()-1)){
 					constraints +=");";
 				}else{
@@ -83,13 +92,13 @@ public class GenerateConstraintsForCaseConditions {
 	 */
 	public static String getCaseConditionConstraints(GenerateCVC1 cvc, QueryBlockDetails qbt) throws Exception{
 		String constraintString = "ASSERT (";
-		HashMap<Integer,Vector<CaseCondition>> ccMap = cvc.getqParser().getCaseConditionMap();
+		HashMap<Integer,CaseExpression> ccMap = cvc.getqStructure().getCaseConditionMap();
 		Vector<CaseCondition> caseConditionCompleted = new Vector<CaseCondition>();
 		if(ccMap != null){
 			//Add constraints for CASE statements in Projected columns
 			if(ccMap.containsKey(2)){
-				Vector<CaseCondition> selectionConds = ccMap.get(2);
-				for(int i=0; i < (selectionConds.size()-1); i++){
+				ArrayList<CaseCondition> selectionConds = ((CaseExpression)ccMap.get(2)).getWhenConditionals();
+				for(int i=0; i < selectionConds.size(); i++){
 					
 					CaseCondition sc = selectionConds.get(i);
 					constraintString += getConstraintsInCaseStatement(cvc,qbt,sc,caseConditionCompleted);
@@ -97,20 +106,19 @@ public class GenerateConstraintsForCaseConditions {
 					caseConditionCompleted.add(sc);
 					constraintString += ") OR (";
 				}
-				if(selectionConds!= null 
-						&& selectionConds.size() >= 1
-						&&  selectionConds.get(selectionConds.size()-1) != null
-						&& selectionConds.get(selectionConds.size()-1).getCaseCondition().equals("else")){
-					CaseCondition sc = selectionConds.get(selectionConds.size()-1);
+				if((((CaseExpression)ccMap.get(2)).getElseConditional()) != null){
+				
+					CaseCondition sc = (((CaseExpression)ccMap.get(2)).getElseConditional());
 					constraintString += getConstraintsInCaseStatement(cvc,qbt,sc,caseConditionCompleted);
 					constraintString += ")";
 				}
+			}
 				else{
 					constraintString += ")";
 				}
 			}
 			
-		}
+		
 		return constraintString;
 	}
 	
@@ -123,39 +131,42 @@ public class GenerateConstraintsForCaseConditions {
 	 */
 	public static String getCaseConditionConstraintsForOriginalQuery(GenerateCVC1 cvc, QueryBlockDetails qbt) throws Exception{
 		String constraintString = " ((";//"ASSERT ((";
-		HashMap<Integer,Vector<CaseCondition>> ccMap = cvc.getqParser().getCaseConditionMap();
+		HashMap<Integer,CaseExpression> ccMap = cvc.getqStructure().getCaseConditionMap();
 		Vector<CaseCondition> caseConditionCompleted = new Vector<CaseCondition>();
 		int offset = 0;
 		int count=0;
 		if(ccMap != null){
 			//Add constraints for CASE statements in Projected columns
 			if(ccMap.containsKey(2)){
-				Vector<CaseCondition> selectionConds = ccMap.get(2);
-				for(int i=0; i < (selectionConds.size()-1); i++){
+			CaseExpression selectionConds = ccMap.get(2);
+				for(int i=0; i < selectionConds.getWhenConditionals().size(); i++){
 					
-					CaseCondition sc = selectionConds.get(i);
-					String tableNameNumber = UtilsRelatedToNode.getTableNameNo(sc.getCaseConditionNode());			
+					CaseCondition sc = selectionConds.getWhenConditionals().get(i);
+					String tableNameNumber = UtilsRelatedToNode.getTableNameNo(sc.getWhenNode());			
 					offset = cvc.getRepeatedRelNextTuplePos().get(tableNameNumber)[1];
 					count = cvc.getNoOfTuples().get(tableNameNumber);
-					constraintString += GenerateCVCConstraintForNode.genPositiveCondsForPred(cvc.getOuterBlock(), sc.getCaseConditionNode(), 0+offset);
-					if(sc.getColValueForConjunct() != null){
-					constraintString += " AND ("+ "O_"+GenerateCVCConstraintForNode.cvcMap(sc.getColValueForConjunct(), (0+offset)+"") +" "+ sc.getCaseOperator() +" "+//TODO REMOVE HARDCODING OF OPERATOR
-								sc.getConstantValue()+")";
+					constraintString += GenerateCVCConstraintForNode.genPositiveCondsForPred(cvc.getOuterBlock(), sc.getWhenNode(), 0+offset);
+					if(sc.getWhenNode() != null){
+						//if then node is colRef 
+						if(sc.getWhenNode().getLeft() != null && sc.getWhenNode().getLeft().getType().equalsIgnoreCase(Node.getColRefType())){
+							constraintString += " AND ("+ "O_"+GenerateCVCConstraintForNode.cvcMap(sc.getWhenNode().getLeft().getColumn(), (0+offset)+"") +" "+ sc.caseOperator +" "+//TODO REMOVE HARDCODING OF OPERATOR
+								sc.getWhenNode().getRight()+")";
+							
+						}else if(sc.getWhenNode().getRight() != null && sc.getWhenNode().getRight().getType().equalsIgnoreCase(Node.getColRefType())){
+							constraintString += " AND ("+ "O_"+GenerateCVCConstraintForNode.cvcMap(sc.getWhenNode().getRight().getColumn(), (0+offset)+"") +" "+ sc.caseOperator +" "+//TODO REMOVE HARDCODING OF OPERATOR
+									sc.getWhenNode().getLeft()+")";
+						}
 					constraintString += ") OR (";
 					//genPositiveCondsForPred( queryBlock, n.getRight(), index) +")"
 					}
 					
 				}
-				if(selectionConds!= null 
-						&& selectionConds.size() >= 1
-						&&  selectionConds.get(selectionConds.size()-1) != null
-						&& selectionConds.get(selectionConds.size()-1).getCaseCondition().equals("else")){
-					CaseCondition sc = selectionConds.get(selectionConds.size()-1);
-					//constraintString += getConstraintsInCaseStatement(cvc,sc,caseConditionCompleted);
-					if(sc.getColValueForConjunct() != null){
-						constraintString += "("+ "O_"+GenerateCVCConstraintForNode.cvcMap(sc.getColValueForConjunct(), (0+offset)+"") +" "+ "=" +" "+//TODO REMOVE HARDCODING OF OPERATOR
-								sc.getConstantValue()+")";
-					}
+				if(selectionConds!= null &&
+						selectionConds.getElseConditional() != null){
+				
+					//	constraintString += "("+ "O_"+GenerateCVCConstraintForNode.cvcMap(selectionConds.getElseConditional().getThenNode().getLeft(), (0+offset)+"") +" "+ "=" +" "+//TODO REMOVE HARDCODING OF OPERATOR
+							//	selectionConds.getElseConditional().getThenNode().getRight()+")";
+					
 					constraintString += ")";
 				}
 				else{

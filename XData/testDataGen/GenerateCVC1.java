@@ -4,46 +4,39 @@ package testDataGen;
 import generateConstraints.GetCVC3HeaderAndFooter;
 import generateConstraints.TupleRange;
 
-import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.io.Writer;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Vector;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-
 
 import killMutations.GenerateDataForOriginalQuery;
 import killMutations.MutationsInFromSubQuery;
 import killMutations.MutationsInOuterBlock;
 import killMutations.MutationsInWhereSubQuery;
 import parsing.Column;
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.ForeignKey;
 import parsing.Node;
 import parsing.Query;
-import parsing.QueryParser;
+import parsing.QueryStructure;
+import parsing.QueryStructureForDataGen;
 import parsing.Table;
-import testDataGen.PopulateTestData;
 import stringSolver.StringConstraintSolver;
-
 import util.TableMap;
 import util.TagDatasets;
-import util.Utilities;
 import util.TagDatasets.MutationType;
 import util.TagDatasets.QueryBlock;
 
@@ -61,8 +54,9 @@ public class GenerateCVC1 implements Serializable{
 	private Query topQuery;
 
 	/** The parser stores the details of the query after the input query is parsed	 */
-	private QueryParser qParser;
+	//private QueryParser qParser;
 
+	private QueryStructure qStructure;
 	/** Stores the base relation for each repeated occurrence of a relation  */
 
 	private HashMap<String,String> baseRelation; 
@@ -204,7 +198,7 @@ public class GenerateCVC1 implements Serializable{
 	 * This method initializes all the details about the given query whose details are stored in the query Parser
 	 * @param qParser
 	 */
-	public void initializeQueryDetails (QueryParser queryParser) throws Exception{
+	/*public void initializeQueryDetails (QueryParser queryParser) throws Exception{
 		try{
 			qParser = queryParser;
 			this.setFne(false);
@@ -215,21 +209,21 @@ public class GenerateCVC1 implements Serializable{
 			currentIndexCount = query.getCurrentIndexCount();
 			repeatedRelationCount = query.getRepeatedRelationCount();
 	
-			/** Initialize the foreign key details*/
+			//Initialize the foreign key details
 			foreignKeys = new ArrayList<Node>( qParser.getForeignKeys());
 			foreignKeysModified = new ArrayList<ForeignKey>( qParser.getForeignKeyVectorModified());		
 	
-			/** Initiliaze the outer query block*/
+			// Initiliaze the outer query block
 			outerBlock = QueryBlockDetails.intializeQueryBlockDetails(queryParser);
 				
-			/**It stores which occurrence of relation occurred in which block of the query, the value contains [queryType, queryIndex]*/
+			//It stores which occurrence of relation occurred in which block of the query, the value contains [queryType, queryIndex]
 			tableNames = qParser.getTableNames();
 	
-			/** Initialize each from clause nested sub query blocks */
+			//Initialize each from clause nested sub query blocks 
 			for(QueryParser qp: qParser.getFromClauseSubqueries())
 				outerBlock.getFromClauseSubQueries().add( QueryBlockDetails.intializeQueryBlockDetails(qp) );
 	
-			/** Initialize the where clause nested sub query blocks */
+			// Initialize the where clause nested sub query blocks 
 			for(QueryParser qp: qParser.getWhereClauseSubqueries())
 				outerBlock.getWhereClauseSubQueries().add( QueryBlockDetails.intializeQueryBlockDetails(qp) );
 		}catch(Exception e){
@@ -238,13 +232,94 @@ public class GenerateCVC1 implements Serializable{
 			throw e;
 		}
 	}
-
+*/
+	/** 
+	 * This method initializes all the details about the given query whose details are stored in the query Parser
+	 * @param qParser
+	 */
+	public void initializeQueryDetailsQStructure (QueryStructure queryStructure) throws Exception{
+		try{
+			qStructure = queryStructure;
+			
+			this.setFne(false);
+			query = queryStructure.getQuery();	
+			queryString = query.getQueryString();
+			//currentIndex = query.getCurrentIndex();
+			//baseRelation = query.getBaseRelation();
+			currentIndexCount = query.getCurrentIndexCount();
+			repeatedRelationCount = query.getRepeatedRelationCount();
+			
+			/**Update the foreign key details in qStructure along with tableNames, NoOfOutputTuples, NoOfTuples, etc.,*/
+			QueryStructureForDataGen qd = new QueryStructureForDataGen();
+			
+			qd.foreignKeyClosure(queryStructure);
+			for(QueryStructure qp: queryStructure.getFromClauseSubqueries()){				
+				qd.foreignKeyClosure(qp);
+			}
+			for(QueryStructure qp: queryStructure.getWhereClauseSubqueries()){
+				qd.foreignKeyClosure(qp);
+			}
+			baseRelation = query.getBaseRelation();
+			//query.getFromTables().put(queryStructure.getQuery().addFromTable(new Table ));
+			//qd.populateFromTables(queryStructure,this);
+			//Get lstRelationInstances (holds table name number), add them to table names map in CVC - with query index. Repeat same for subQ's
+			//QIndex 0 for outer block, 1 for from subQ's and 2 for WhereSubQ's
+			
+			/** Initialize the foreign key details*/
+			foreignKeys = new ArrayList<Node>( queryStructure.getForeignKeys());
+			foreignKeysModified = new ArrayList<ForeignKey>( queryStructure.getForeignKeyVectorModified());	
+			for(QueryStructure qp: queryStructure.getFromClauseSubqueries()){	
+				if(qp.getForeignKeyVectorModified() != null && !qp.getForeignKeyVectorModified().isEmpty()){
+					for(ForeignKey fk : qp.getForeignKeyVectorModified()){
+						if(!foreignKeysModified.contains(fk)){
+							foreignKeysModified.add(fk);
+						}
+					}
+				}
+			}
+			for(QueryStructure qp: queryStructure.getWhereClauseSubqueries()){
+				if(qp.getForeignKeyVectorModified() != null && !qp.getForeignKeyVectorModified().isEmpty()){
+					for(ForeignKey fk : qp.getForeignKeyVectorModified()){
+						if(!foreignKeysModified.contains(fk)){
+							foreignKeysModified.add(fk);
+						}
+					}
+				}
+			}
+			qd.updateBaseRelations(qStructure,this);
+			qd.updateTableNames(qStructure, this);
+			setTablesOfOriginalQuery( new Vector<Table>() );
+			qd.updateTableNamesOfOriginalQuery(qStructure, this);
+			/** Initiliaze the outer query block*/
+			outerBlock = QueryBlockDetails.intializeQueryBlockDetails(queryStructure);
+				 
+			/**It stores which occurrence of relation occurred in which block of the query, the value contains [queryType, queryIndex]*/
+			//tableNames = queryStructure.getTableNames();
+	
+			/** Initialize each from clause nested sub query blocks */
+			for(QueryStructure qp: queryStructure.getFromClauseSubqueries()){				
+				//qd.foreignKeyClosure(qp);
+				outerBlock.getFromClauseSubQueries().add( QueryBlockDetails.intializeQueryBlockDetails(qp) );
+			}
+			/** Initialize the where clause nested sub query blocks */
+			for(QueryStructure qp: queryStructure.getWhereClauseSubqueries()){
+				//qd.foreignKeyClosure(qp);
+				outerBlock.getWhereClauseSubQueries().add( QueryBlockDetails.intializeQueryBlockDetails(qp) );
+			}
+		}catch(Exception e){
+			logger.log(Level.SEVERE,e.getMessage(), e);
+			//e.printStackTrace();
+			throw e;
+		}
+	}
+	
 
 	public void initializeOtherDetails() throws Exception{
 
 		try{
 			/**Update the  base relations in each block of the query*/
-			RelatedToPreprocessing.getRelationOccurredInEachQueryBlok(this);
+			//commented as it is not required for the new query structure
+			//RelatedToPreprocessing.getRelationOccurredInEachQueryBlok(this);
 	
 			/**Sort the foreign keys based on topological sorting of foreign keys*/
 			RelatedToPreprocessing.sortForeignKeys(this);
@@ -266,13 +341,146 @@ public class GenerateCVC1 implements Serializable{
 	 * Call this function after the previous data generation has been done and 
 	 * constraints for the current data generation have not been added
 	 */
+	/*
 	public void inititalizeForDataset() throws Exception{
 
 		constraints = new ArrayList<String>();
 		stringConstraints = new ArrayList<String>();
 		CVCStr = "";
 		typeOfMutation = "";
+		try{
+			
+
+			//Add additional groupBy attributes if the relation of groupby attributes references to any other relation
+			// Make the referenced relation a join with existing relation
+			//Update no of output tuples, no of groups, repeated relation count, table occurrences to add additional
+			//datasets
+			
+			
+			//initialize the no of output tuples
+			noOfOutputTuples = (HashMap<String,Integer>)query.getRepeatedRelationCount().clone();
+	
+			//Merging noOfOutputTuples, if input query has set operations
+			if(qParser.setOperator!=null && qParser.setOperator.length()>0){  
+	
+				//Initialize the number of tuples in left side query of the set operation
+				noOfOutputTuples = (HashMap<String,Integer>)unionCVC.getGenCVCleft().query.getRepeatedRelationCount().clone();
+	
+				//Now get the no of tuples for each relation on right side query of the set operation and add to the data structure
+				HashMap<String,Integer> RightnoOfOutputTuples = (HashMap<String,Integer>)unionCVC.getGenCVCright().query.getRepeatedRelationCount().clone();
+	
+				//get iterator
+				Iterator rt=RightnoOfOutputTuples.entrySet().iterator();
+	
+				//while there are values in the hash map
+				while(rt.hasNext()){
+					Map.Entry pairs=(Entry) rt.next();
+	
+					//get table name
+					String table=(String) pairs.getKey();
+	
+					//get the number of tuples
+					int noOfTuples = (Integer) pairs.getValue();
+	
+					//Update the data structure
+					if(noOfOutputTuples.containsKey(table)&&noOfOutputTuples.get(table)<noOfTuples){
+						noOfOutputTuples.put(table, noOfTuples);
+					}
+					if(!noOfOutputTuples.containsKey(table)){
+						noOfOutputTuples.put(table, noOfTuples);
+					}
+				}
+			}else if(!qParser.getFromClauseSubqueries().isEmpty()
+					&& qParser.getFromClauseSubqueries().get(0) != null){
+				QueryParser qp = new QueryParser(qParser.getTableMap());
+				qp = qParser.getFromClauseSubqueries().get(0);
+				
+				if(qp.setOperator!=null && qp.setOperator.length()>0){
+					
+					//Initialize the number of tuples in left side query of the set operation
+					noOfOutputTuples = (HashMap<String,Integer>)qp.getLeftQuery().getQuery().getRepeatedRelationCount().clone();
 		
+					//Now get the no of tuples for each relation on right side query of the set operation and add to the data structure
+					HashMap<String,Integer> RightnoOfOutputTuples = (HashMap<String,Integer>)qp.getRightQuery().getQuery().getRepeatedRelationCount().clone();
+		
+					//get iterator
+					Iterator rt=RightnoOfOutputTuples.entrySet().iterator();
+		
+					//while there are values in the hash map
+					while(rt.hasNext()){
+						Map.Entry pairs=(Entry) rt.next();
+		
+						//get table name
+						String table=(String) pairs.getKey();
+		
+						//get the number of tuples
+						int noOfTuples = (Integer) pairs.getValue();
+		
+						//Update the data structure
+						if(noOfOutputTuples.containsKey(table)&&noOfOutputTuples.get(table)<noOfTuples){
+							noOfOutputTuples.put(table, noOfTuples);
+						}
+						if(!noOfOutputTuples.containsKey(table)){
+							noOfOutputTuples.put(table, noOfTuples);
+						}
+					}
+					
+				}
+			}
+			
+			else{		
+				this.noOfOutputTuples = (HashMap<String,Integer>)query.getRepeatedRelationCount().clone();
+			}
+			for(String tempTable : noOfOutputTuples.keySet())
+				if(noOfOutputTuples.get(tempTable) != null && noOfOutputTuples.get(tempTable) >= 1)
+					logger.log(Level.INFO,"START COUNT for " + tempTable + " = " + noOfOutputTuples.get(tempTable));
+	
+			repeatedRelNextTuplePos = new HashMap<String, Integer[]>();
+	
+			// Update repeated relation next position etc..
+			Iterator<String> itr = repeatedRelationCount.keySet().iterator();
+			while(itr.hasNext()){
+				String tableName = itr.next();
+				int c =  repeatedRelationCount.get(tableName);
+				for(int i=1;i<=c;i++){
+					Integer[] tuplePos = new Integer[32];
+					tuplePos[1] = i;//Meaning first tuple is at pos i
+					repeatedRelNextTuplePos.put(tableName+i, tuplePos);
+					noOfTuples.put(tableName+i, 1);
+					currentIndexCount.put(tableName+i, i);
+				}
+			}
+	
+			//Initializes the data structures that are used/updated by the tuple assignment method
+			initilizeDataStructuresForTupleAssignment(outerBlock);
+			for(QueryBlockDetails qbt: getOuterBlock().getFromClauseSubQueries())
+				initilizeDataStructuresForTupleAssignment(qbt);
+			for(QueryBlockDetails qbt: getOuterBlock().getWhereClauseSubQueries())
+				initilizeDataStructuresForTupleAssignment(qbt);
+			
+			//get the list of equi join conditions for each table in the query
+			GenerateCVC1.getListOfEquiJoinConditions( this );
+		}catch (TimeoutException e){
+			logger.log(Level.SEVERE,e.getMessage(),e);		
+			throw e;
+		}catch(Exception e){
+			logger.log(Level.SEVERE,e.getMessage(),e);		
+			throw new Exception("Internal Error", e);
+		}
+	}*/
+
+	//Start using QueryStructure
+	/**
+	 * Initializes the elements necessary for data generation
+	 * Call this function after the previous data generation has been done and 
+	 * constraints for the current data generation have not been added
+	 */
+	public void inititalizeForDatasetQs() throws Exception{
+
+		constraints = new ArrayList<String>();
+		stringConstraints = new ArrayList<String>();
+		CVCStr = "";
+		typeOfMutation = "";
 		try{
 			
 
@@ -286,7 +494,7 @@ public class GenerateCVC1 implements Serializable{
 			noOfOutputTuples = (HashMap<String,Integer>)query.getRepeatedRelationCount().clone();
 	
 			/**Merging noOfOutputTuples, if input query has set operations*/
-			if(qParser.setOperator!=null && qParser.setOperator.length()>0){  
+			if(qStructure.setOperator!=null && qStructure.setOperator.length()>0){  
 	
 				/**Initialize the number of tuples in left side query of the set operation*/
 				noOfOutputTuples = (HashMap<String,Integer>)unionCVC.getGenCVCleft().query.getRepeatedRelationCount().clone();
@@ -315,18 +523,18 @@ public class GenerateCVC1 implements Serializable{
 						noOfOutputTuples.put(table, noOfTuples);
 					}
 				}
-			}else if(!qParser.getFromClauseSubqueries().isEmpty()
-					&& qParser.getFromClauseSubqueries().get(0) != null){
-				QueryParser qp = new QueryParser(qParser.getTableMap());
-				qp = qParser.getFromClauseSubqueries().get(0);
+			}else if(!qStructure.getFromClauseSubqueries().isEmpty()
+					&& qStructure.getFromClauseSubqueries().get(0) != null){
+				QueryStructure qs = new QueryStructure(qStructure.getTableMap());
+				qs = qStructure.getFromClauseSubqueries().get(0);
 				
-				if(qp.setOperator!=null && qp.setOperator.length()>0){
+				if(qs.setOperator!=null && qs.setOperator.length()>0){
 					
 					/**Initialize the number of tuples in left side query of the set operation*/
-					noOfOutputTuples = (HashMap<String,Integer>)qp.getLeftQuery().getQuery().getRepeatedRelationCount().clone();
+					noOfOutputTuples = (HashMap<String,Integer>)qs.getLeftQuery().getQuery().getRepeatedRelationCount().clone();
 		
 					/**Now get the no of tuples for each relation on right side query of the set operation and add to the data structure*/
-					HashMap<String,Integer> RightnoOfOutputTuples = (HashMap<String,Integer>)qp.getRightQuery().getQuery().getRepeatedRelationCount().clone();
+					HashMap<String,Integer> RightnoOfOutputTuples = (HashMap<String,Integer>)qs.getRightQuery().getQuery().getRepeatedRelationCount().clone();
 		
 					/**get iterator*/
 					Iterator rt=RightnoOfOutputTuples.entrySet().iterator();
@@ -393,7 +601,7 @@ public class GenerateCVC1 implements Serializable{
 			throw new Exception("Internal Error", e);
 		}
 	}
-
+	//End of QStructure method
 	/**
 	 * This method initializes the data structures that are used by the tuple assignment method
 	 * @param queryBlock
@@ -543,7 +751,7 @@ public class GenerateCVC1 implements Serializable{
 	public static void getListOfEquiJoinConditionsInQueryBlock(	GenerateCVC1 cvc, QueryBlockDetails queryBlock) {
 
 		/**for each conjunct*/
-		for(Conjunct con: queryBlock.getConjuncts()){
+		for(ConjunctQueryStructure con: queryBlock.getConjunctsQs()){
 			
 			/**get the list of equi join conditions*/
 			Vector<Vector<Node>> eqClass = con.getEquivalenceClasses();
@@ -556,7 +764,7 @@ public class GenerateCVC1 implements Serializable{
 					
 					String key =  n.getTable().getTableName() ;
 					/**if this relation is present in the hash map*/
-					if( cvc.getEquiJoins().containsKey(key) ){
+					if( cvc.getEquiJoins() != null && cvc.getEquiJoins().containsKey(key) ){
 						
 						/**add this equivalence class to the list, if already not added*/
 						if( !cvc.getEquiJoins().get(key).contains(ec) ){
@@ -602,13 +810,13 @@ public class GenerateCVC1 implements Serializable{
 		this.topQuery = topQuery;
 	}
 
-	public QueryParser getqParser() {
+	/*public QueryParser getqParser() {
 		return qParser;
 	}
 
 	public void setqParser(QueryParser qParser) {
 		this.qParser = qParser;
-	}
+	}*/
 
 	public HashMap<String, String> getBaseRelation() {
 		return baseRelation;
@@ -1170,6 +1378,16 @@ public class GenerateCVC1 implements Serializable{
 
 	public void setConcatenatedQueryId(String concatenatedQueryId) {
 		this.concatenatedQueryId = concatenatedQueryId;
+	}
+
+
+	public QueryStructure getqStructure() {
+		return qStructure;
+	}
+
+
+	public void setqStructure(QueryStructure qStructure) {
+		this.qStructure = qStructure;
 	}
 }
 

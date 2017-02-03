@@ -107,7 +107,7 @@ public class PopulateTestData {
 			smtCommand[0] = Configuration.smtsolver;
 			smtCommand[1] = Configuration.homeDir+"/temp_cvc"+filePath+"/" + cvcFileName;
 			Process myProcess = r.exec(smtCommand);	
-
+ 
 			ExecutorService service = Executors.newSingleThreadExecutor();
 
 			try {
@@ -117,14 +117,16 @@ public class PopulateTestData {
 
 				//Writing output to .out file
 				BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+filePath+"/" + cvcFileName.substring(0,cvcFileName.lastIndexOf(".cvc")) + ".out"));
-				Callable<Integer> call = new CallableProcess(myProcess);
-				Future<Integer> future = service.submit(call);
-				int exitValue = future.get(60, TimeUnit.SECONDS);		    
-
+				
 				while ((ch = myIStreamReader.read()) != -1) 
 				{ 
 					out.write((char)ch); 
 				} 	
+				Callable<Integer> call = new CallableProcess(myProcess);
+				Future<Integer> future = service.submit(call);
+				int exitValue = future.get(300000L, TimeUnit.MILLISECONDS);		    
+
+				
 				Utilities.closeProcessStreams(myProcess);
 
 				out.close();
@@ -379,7 +381,7 @@ public class PopulateTestData {
 	 * @throws Exception 
 	 */
 	public boolean killedMutants(String cvcOutputFileName, Query query, String datasetName, String queryString, String filePath, 
-			HashMap<String, Integer> noOfOutputTuples, TableMap tableMap,Vector<Column> columns, int assignmentId, int questionId, Set existingTableNames) throws Exception{
+			HashMap<String, Integer> noOfOutputTuples, TableMap tableMap,Vector<Column> columns, Set existingTableNames) throws Exception{
 		String temp=""; 
 		Process proc=null;
 		boolean returnVal=false;
@@ -392,7 +394,8 @@ public class PopulateTestData {
 		}
 
 		String cutFile = cutRequiredOutput(test, filePath);
-		Vector<String> listOfCopyFiles = generateCopyFile(cutFile, filePath, noOfOutputTuples, tableMap,columns,existingTableNames);			
+		Vector<String> listOfCopyFiles = generateCopyFile(cutFile, filePath, noOfOutputTuples, 
+				tableMap,columns,existingTableNames);			
 		Vector<String> listOfFiles = (Vector<String>) listOfCopyFiles.clone();
 
 		File datasetDir = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+datasetName);

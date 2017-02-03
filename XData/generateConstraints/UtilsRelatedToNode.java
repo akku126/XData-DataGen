@@ -32,6 +32,9 @@ public class UtilsRelatedToNode {
 			
 			int i=n.getLeft().getColumn().getDataType();
 			if(i== Types.VARCHAR || i==Types.CHAR || i==Types.LONGVARCHAR){
+				if(flag ==0 && n.getRight().getType().equals(Node.getColRefType())){
+					return false;
+				}
 				return true;
 			}
 		}
@@ -71,7 +74,7 @@ public class UtilsRelatedToNode {
 	 */
 	public static int getQueryIndexOfSubQNode(Node n) {
 		if(n == null)
-			return -1;
+			return -1; 
 		int index;
 		/** get the index of this where clause subquery */
 		if(n.getType().equals(Node.getNotExistsNodeType()) || n.getType().equals(Node.getExistsNodeType())){
@@ -79,12 +82,25 @@ public class UtilsRelatedToNode {
 			if( n.getLhsRhs() != null)
 				index = n.getLhsRhs().getQueryIndex();
 			else
-				index = n.getSubQueryConds().firstElement().getRight().getQueryIndex();/**for NOT IN Type*/
+				if(n.getSubQueryConds() != null && n.getSubQueryConds().firstElement() != null 
+				&& n.getSubQueryConds().firstElement().getRight() != null){
+					
+					index = n.getSubQueryConds().firstElement().getRight().getQueryIndex();/**for NOT IN Type*/
+				}
+				else{
+					index = n.getQueryIndex();
+				}
 		}
-		else if(n.getLhsRhs().getType().equals(Node.getAggrNodeType()))
+		else if(n.getLhsRhs() != null && n.getLhsRhs().getType().equals(Node.getAggrNodeType()))
 			index = n.getLhsRhs().getQueryIndex();
+		else if(n.getType() != null && n.getType().equals(Node.getBroNodeSubQType()))
+			index = n.getQueryIndex();
 		else
-			index = n.getLhsRhs().getRight().getQueryIndex();
+			if(n.getLhsRhs() != null && n.getLhsRhs().getRight() != null){
+				index = n.getLhsRhs().getRight().getQueryIndex();
+			}else{
+				index = n.getLhsRhs().getQueryIndex();
+			}
 		return index;
 	}
 	
@@ -586,29 +602,29 @@ public class UtilsRelatedToNode {
 		
 		Vector<CaseCondition> scMutants = new Vector<CaseCondition>();
 		
-		CaseCondition scm = null;
-		if(scm.getCaseConditionNode().getOperator() != null){
+		CaseCondition scm = new CaseCondition();
+		if(scm.caseOperator != null){
 			scm = caseCond.clone();
-			(scm.getCaseConditionNode()).setOperator("=");					
+			scm.caseOperator = "=";					
+			scMutants.add(scm);
+		 
+			scm = caseCond.clone();
+			scm.caseOperator ="<";
 			scMutants.add(scm);
 		
 			scm = caseCond.clone();
-			(scm.getCaseConditionNode()).setOperator("<");
+			scm.caseOperator =">";
 			scMutants.add(scm);
 		
 			scm = caseCond.clone();
-			(scm.getCaseConditionNode()).setOperator(">");
-			scMutants.add(scm);
-		
-			scm = caseCond.clone();
-			(scm.getCaseConditionNode()).setOperator("/=");
+			scm.caseOperator = "/=";
 			scMutants.add(scm);
 			
 			scm = caseCond.clone();
-			(scm.getCaseConditionNode()).setOperator("=");
-			(scm.getCaseConditionNode()).setIsMutant(true);
-			Node right = (scm.getCaseConditionNode()).getRight();
-			Node left = (scm.getCaseConditionNode()).getLeft();
+			scm.caseOperator = "=";
+			//(scm.getCaseConditionNode()).setIsMutant(true);
+			Node right = scm.getWhenNode().getRight();
+			Node left = scm.getWhenNode().getLeft();
 			int scale = 0;
 			if(left.getType() != null && left.getType().equalsIgnoreCase(Node.getBaoNodeType())){
 				scale = getScale(left);
@@ -623,10 +639,10 @@ public class UtilsRelatedToNode {
 			scMutants.add(scm);
 			
 			scm = caseCond.clone();
-			(scm.getCaseConditionNode()).setOperator("=");
-			(scm.getCaseConditionNode()).setIsMutant(true);
-			right = (scm.getCaseConditionNode()).getRight();
-			left = (scm.getCaseConditionNode()).getLeft();
+			scm.caseOperator ="=";
+			//(scm.getCaseConditionNode()).setIsMutant(true);
+			right = (scm.getWhenNode()).getRight();
+			left = (scm.getWhenNode()).getLeft();
 			scale = 0;
 			if(left.getType() != null && left.getType().equalsIgnoreCase(Node.getBaoNodeType())){
 				scale = getScale(left);

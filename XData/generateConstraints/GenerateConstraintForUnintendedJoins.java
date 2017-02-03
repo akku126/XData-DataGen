@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Vector;
 
 import parsing.Column;
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import parsing.Table;
 import testDataGen.GenerateCVC1;
@@ -20,7 +20,7 @@ public class GenerateConstraintForUnintendedJoins {
 	 * @param con
 	 * @return
 	 */
-	public static String getConstraintsForUnintendedJoin(GenerateCVC1 cvc, QueryBlockDetails qbt, Conjunct con) throws Exception{
+	public static String getConstraintsForUnintendedJoin(GenerateCVC1 cvc, QueryBlockDetails qbt, ConjunctQueryStructure con) throws Exception{
 
 		/** Stores the constraint*/
 		String constraint = "";
@@ -68,7 +68,7 @@ public class GenerateConstraintForUnintendedJoins {
 	 * @param col2
 	 * @return
 	 */
-	public static boolean involvedInEquiJoins(QueryBlockDetails qbt, Conjunct conj, String tableName1, String tableName2, String col1, String col2) {
+	public static boolean involvedInEquiJoins(QueryBlockDetails qbt, ConjunctQueryStructure conj, String tableName1, String tableName2, String col1, String col2) {
 
 		/**for each equivalence class in this conjunct*/
 		for( Vector<Node> ec: conj.getEquivalenceClasses())
@@ -96,7 +96,7 @@ public class GenerateConstraintForUnintendedJoins {
 	 * @param conj TODO
 	 * @return
 	 */
-	public static ArrayList< ArrayList<Node> > getExtraColumnsWithCommonName(GenerateCVC1 cvc,  HashMap<String, Table> tablesList, QueryBlockDetails qbt, Conjunct conj) {
+	public static ArrayList< ArrayList<Node> > getExtraColumnsWithCommonName(GenerateCVC1 cvc,  HashMap<String, Table> tablesList, QueryBlockDetails qbt, ConjunctQueryStructure conj) {
 
 		/**stores list of tables in this query block*/
 		ArrayList< ArrayList<Node> > commCols = new ArrayList< ArrayList<Node> >();

@@ -14,7 +14,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import testDataGen.CountEstimationRelated;
 import testDataGen.GenerateCVC1;
@@ -63,7 +63,7 @@ public class PartialGroupByMutationsInOuterQueryBlock_case2 {
 				boolean noAggregation = false;
 	
 				/** Initialize the data structures for generating the data to kill this mutation */
-				cvc.inititalizeForDataset();
+				cvc.inititalizeForDatasetQs();
 	
 				/**set the type of mutation we are trying to kill*/
 				cvc.setTypeOfMutation( TagDatasets.MutationType.PARTIALGROUPBY2, TagDatasets.QueryBlock.OUTER_BLOCK );
@@ -76,7 +76,7 @@ public class PartialGroupByMutationsInOuterQueryBlock_case2 {
 				ArrayList<Node> removeList = new ArrayList<Node>();
 				removeList.add(tempgroupByNode);
 				
-				for(Conjunct con: outer.getConjuncts())
+				for(ConjunctQueryStructure con: outer.getConjunctsQs())
 					equivalence.addAll(con.getEquivalenceClasses());
 				
 				for(Vector<Node> ec: equivalence)
@@ -178,7 +178,7 @@ public class PartialGroupByMutationsInOuterQueryBlock_case2 {
 	
 				/** get constraints for this sub query block except group by clause constraints*/
 				/** Add the positive conditions for each conjunct of this query block */
-				for(Conjunct conjunct : outer.getConjuncts()){
+				for(ConjunctQueryStructure conjunct : outer.getConjunctsQs()){
 					cvc.getConstraints().add("\n%---------------------------------\n% CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------\n");
 					cvc.getConstraints().add( GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, outer, conjunct) );
 					cvc.getConstraints().add("\n%---------------------------------\n% END OF CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------\n");				
@@ -217,9 +217,9 @@ public class PartialGroupByMutationsInOuterQueryBlock_case2 {
 				equivalence = new Vector<Vector<Node>>();
 				for(QueryBlockDetails qbb: cvc.getOuterBlock().getFromClauseSubQueries())
 					if(!qbb.equals(outer))
-						for(Conjunct cn: qbb.getConjuncts())
+						for(ConjunctQueryStructure cn: qbb.getConjunctsQs())
 							equivalence.addAll(cn.getEquivalenceClasses());
-				for(Conjunct cn: cvc.getOuterBlock().getConjuncts())
+				for(ConjunctQueryStructure cn: cvc.getOuterBlock().getConjunctsQs())
 					equivalence.addAll(cn.getEquivalenceClasses());
 	
 				//FIXME: UNCOMMENT IT			cvc.getConstraints().add(GenerateConstraintsForPartialGroup_case2.adjustNoOfTuplesForiegnKeyTables(cvc, outer, tempgroupByNode, equivalence));	

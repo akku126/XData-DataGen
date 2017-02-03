@@ -15,7 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import parsing.Column;
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.ForeignKey;
 import parsing.Node;
 import parsing.Table;
@@ -71,7 +71,7 @@ public class PartialGroupByMutationsInOuterQueryBlock_case1 {
 				logger.log(Level.INFO,"\n----------------------------------\n");
 				
 				/** Initialize the data structures for generating the data to kill this mutation */
-				cvc.inititalizeForDataset();		
+				cvc.inititalizeForDatasetQs();		
 				//groupbyNodes = PartialGroupByMutationsInOuterQueryBlock_case1.updateGroupByNodes(cvc,groupbyNodesNew);
 				//getRepeatedRelNextTuplePosForPartialGroupBy(cvc,groupbyNodesNew);
 				/**set the type of mutation we are trying to kill*/
@@ -97,7 +97,7 @@ public class PartialGroupByMutationsInOuterQueryBlock_case1 {
 				
 				/** get constraints for this sub query block except group by clause constraints*/
 				/** Add the positive conditions for each conjunct of this query block */
-				for(Conjunct conjunct : outer.getConjuncts()){
+				for(ConjunctQueryStructure conjunct : outer.getConjunctsQs()){
 					cvc.getConstraints().add("\n%---------------------------------\n% CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------\n");
 					cvc.getConstraints().add( GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, outer, conjunct) );
 					cvc.getConstraints().add("\n%---------------------------------\n% END OF CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------\n");				

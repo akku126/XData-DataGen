@@ -2,15 +2,16 @@ package generateConstraints;
 
 import java.util.Vector;
 
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Disjunct;
+import parsing.DisjunctQueryStructure;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
 
 public class GenerateConstraintsForDisjunct {
 
-	public static Constraints getConstraintsForDisjuct(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Disjunct disjunct) throws Exception{
+	public static Constraints getConstraintsForDisjuct(GenerateCVC1 cvc, QueryBlockDetails queryBlock, DisjunctQueryStructure disjunct) throws Exception{
 		Constraints constraints=new Constraints();
 		//Vector<String> constraints=new Vector<String>();
 		String constraintString = "";
@@ -85,7 +86,7 @@ public class GenerateConstraintsForDisjunct {
 			stringConstraints = "";	
 		}
 		
-		for(Conjunct conjunct:disjunct.conjuncts){
+		for(ConjunctQueryStructure conjunct:disjunct.conjuncts){
 			constraints=Constraints.orConstraints(constraints,GenerateConstraintsForConjunct.getConstraintsInConjuct(cvc, queryBlock, conjunct));
 		}
 		

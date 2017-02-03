@@ -43,7 +43,7 @@ public class ConstrainedAggregationMutationsInFromSubQuery {
 			if(havingClause == null 
 					|| (havingClause != null && havingClause.getLeft()==null && havingClause.getRight()==null
 					&& havingClause.getAgg()== null && havingClause.getLhsRhs() == null 
-					&& havingClause.getCaseConjunctNode()==null && havingClause.getColumn()==null))
+					&& havingClause.getCaseExpression()==null && havingClause.getColumn()==null))
 				continue ;
 			
 			Node cloneHavingClause = havingClause.clone();

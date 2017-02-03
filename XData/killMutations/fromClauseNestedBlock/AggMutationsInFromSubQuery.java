@@ -55,7 +55,7 @@ public class AggMutationsInFromSubQuery {
 			for(int i=0; i< aggFunc.size(); i++){
 
 				/** Initialize the data structures for generating the data to kill this mutation */
-				cvc.inititalizeForDataset();
+				cvc.inititalizeForDatasetQs();
 
 				/**set the type of mutation we are trying to kill*/
 				cvc.setTypeOfMutation( TagDatasets.MutationType.AGG, TagDatasets.QueryBlock.FROM_SUBQUERY );

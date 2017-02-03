@@ -14,7 +14,7 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
@@ -42,7 +42,7 @@ public class PartialGroupByMutationsInWhereSubQuery_case2 {
 		HashMap<String, Integer[]> repeatedRelNextTuplePosOrig = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
 
 		/** we have to check if there are where clause sub queries in each conjunct of outer block of query */
-		for(Conjunct con: cvc.getOuterBlock().getConjuncts()){
+		for(ConjunctQueryStructure con: cvc.getOuterBlock().getConjunctsQs()){
 			
 			/**For each where clause sub query blocks of this conjunct*/
 			/** Kill partial group by  mutations in each where clause nested block of this query*/
@@ -70,7 +70,7 @@ public class PartialGroupByMutationsInWhereSubQuery_case2 {
 				
 					
 					/** Initialize the data structures for generating the data to kill this mutation */
-					cvc.inititalizeForDataset();
+					cvc.inititalizeForDatasetQs();
 
 					/**set the type of mutation we are trying to kill*/
 					cvc.setTypeOfMutation( TagDatasets.MutationType.PARTIALGROUPBY2, TagDatasets.QueryBlock.WHERE_SUBQUERY );
@@ -89,7 +89,7 @@ public class PartialGroupByMutationsInWhereSubQuery_case2 {
 					}
 					
 					/**add the negative constraints for all the other conjuncts of outer query block */
-					for(Conjunct outer: cvc.getOuterBlock().getConjuncts())
+					for(ConjunctQueryStructure outer: cvc.getOuterBlock().getConjunctsQs())
 						if( !outer.equals(con))
 							cvc.getConstraints().add( GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, cvc.getOuterBlock(), outer) );
 					
@@ -142,7 +142,7 @@ public class PartialGroupByMutationsInWhereSubQuery_case2 {
 					/** get the equivalence classes in which this group by node is present */
 					Vector<Vector<Node>> equivalenceClassGroupBy = new Vector<Vector<Node>>();
 					Vector<Vector<Node>> equivalence = new Vector<Vector<Node>>();
-					for(Conjunct conj: qbt.getConjuncts())
+					for(ConjunctQueryStructure conj: qbt.getConjunctsQs())
 						equivalence.addAll(conj.getEquivalenceClasses());
 					for(Vector<Node> ec: equivalence)
 						if(ec.contains(tempgroupByNode))
@@ -185,9 +185,9 @@ public class PartialGroupByMutationsInWhereSubQuery_case2 {
 					equivalence = new Vector<Vector<Node>>();
 					for(QueryBlockDetails qbb: cvc.getOuterBlock().getFromClauseSubQueries())
 						if(!qbb.equals(qbt))
-							for(Conjunct cn: qbb.getConjuncts())
+							for(ConjunctQueryStructure cn: qbb.getConjunctsQs())
 								equivalence.addAll(cn.getEquivalenceClasses());
-					for(Conjunct cn: cvc.getOuterBlock().getConjuncts())
+					for(ConjunctQueryStructure cn: cvc.getOuterBlock().getConjunctsQs())
 						equivalence.addAll(cn.getEquivalenceClasses());
 
 //FIXME: UNCOMMENT IT					cvc.getConstraints().add(GenerateConstraintsForPartialGroup_case2.adjustNoOfTuplesForiegnKeyTables(cvc, qbt, tempgroupByNode, equivalence));	

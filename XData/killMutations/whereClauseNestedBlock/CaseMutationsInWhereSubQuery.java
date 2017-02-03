@@ -4,6 +4,7 @@ import generateConstraints.Constraints;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GenerateConstraintsForCaseConditions;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
@@ -12,6 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import parsing.CaseCondition;
+import parsing.CaseExpression;
 
 
 import testDataGen.GenerateCVC1;
@@ -35,7 +37,7 @@ public class CaseMutationsInWhereSubQuery {
 	
 		for(QueryBlockDetails qbt: cvc.getOuterBlock().getWhereClauseSubQueries()){
 		/**Get the selection conditions of this conjunct*/
-		Map<Integer, Vector<CaseCondition>> ccMap = qbt.getCaseConditionMap();
+		Map<Integer, CaseExpression> ccMap = qbt.getCaseConditionMap();
 		
 		//If the Case condition is in projected cols, apply the constraints directly.Following code will do that.
 		if(ccMap != null){
@@ -63,10 +65,10 @@ public class CaseMutationsInWhereSubQuery {
 	
 		Vector<CaseCondition> caseConditionCompleted = new Vector<CaseCondition>();
 		Constraints localConstraints=new Constraints();
-		HashMap<Integer,Vector<CaseCondition>> ccMap = (HashMap)qbt.getCaseConditionMap();
+		HashMap<Integer,CaseExpression> ccMap = (HashMap)qbt.getCaseConditionMap();
 		
 		//1 is Key value for case stmnt in projected cols
-		Vector<CaseCondition> selectionConds = ccMap.get(1);
+		ArrayList<CaseCondition> selectionConds = ((CaseExpression)ccMap.get(1)).getWhenConditionals();
 		try{
 			/** Kill each selection condition of this conjunct*/
 			for(int i=0; i < (selectionConds.size()-1); i++){
@@ -80,7 +82,7 @@ public class CaseMutationsInWhereSubQuery {
 						/** Initialize the data structures for generating the data to kill this mutation */
 						//selectionConds.set(i,scMutants.get(j) );
 						
-						cvc.inititalizeForDataset();
+						cvc.inititalizeForDatasetQs();
 						 
 						/**set the type of mutation we are trying to kill*/
 						cvc.setTypeOfMutation( TagDatasets.MutationType.CASECONDITION, TagDatasets.QueryBlock.OUTER_BLOCK );
@@ -105,12 +107,9 @@ public class CaseMutationsInWhereSubQuery {
 						/*******Code from selection mutations code end******/
 			}//for each casecondition ends
 			//Else condition Part
-			if(selectionConds!= null 
-					&& selectionConds.size() >= 1
-					&&  selectionConds.get(selectionConds.size()-1) != null
-					&& selectionConds.get(selectionConds.size()-1).getCaseCondition().equals("else")){
+			if( ((CaseExpression)ccMap.get(1)) != null &&  ((CaseExpression)ccMap.get(1)).getElseConditional() != null){
 				
-				cvc.inititalizeForDataset();
+				cvc.inititalizeForDatasetQs();
 				CaseCondition sc = selectionConds.get(selectionConds.size()-1);
 				/**set the type of mutation we are trying to kill*/
 				cvc.setTypeOfMutation( TagDatasets.MutationType.CASECONDITION, TagDatasets.QueryBlock.OUTER_BLOCK );
@@ -157,14 +156,14 @@ public class CaseMutationsInWhereSubQuery {
 		/** Get outer query block of this query */
 		//QueryBlockDetails qbt = cvc.getOuterBlock();
 		Constraints localConstraints=new Constraints();
-		HashMap<Integer,Vector<CaseCondition>> ccMap = (HashMap)qbt.getCaseConditionMap();
+		HashMap<Integer,CaseExpression> ccMap = (HashMap)qbt.getCaseConditionMap();
 		
 		//1 is Key value for case stmnt in projected cols
-		Vector<CaseCondition> selectionConds = ccMap.get(2);
+		ArrayList<CaseCondition> selectionConds = ((CaseExpression)ccMap.get(2)).getWhenConditionals();
 		try{
 			/** Kill each selection condition of this conjunct*/
 			
-			cvc.inititalizeForDataset();
+			cvc.inititalizeForDatasetQs();
 			 
 			/**set the type of mutation we are trying to kill*/
 			cvc.setTypeOfMutation( TagDatasets.MutationType.CASECONDITION, TagDatasets.QueryBlock.FROM_SUBQUERY );

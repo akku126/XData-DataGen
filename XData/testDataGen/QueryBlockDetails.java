@@ -16,9 +16,12 @@ import java.util.logging.Logger;
 import parsing.AggregateFunction;
 import parsing.CaseCondition;
 import parsing.Column;
-import parsing.Conjunct;
+//import parsing.Conjunct;
+import parsing.CaseExpression;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import parsing.QueryParser;
+import parsing.QueryStructure;
 import parsing.RelationHierarchyNode;
 import parsing.Table;
 
@@ -53,7 +56,10 @@ public class QueryBlockDetails implements Serializable{
 	private ArrayList<AggregateFunction> aggFunc;
 
 	/** Stores details about the where clause of this query block */
-	private ArrayList<Conjunct> conjuncts;
+	private ArrayList<ConjunctQueryStructure> conjuncts;
+	
+	/** Stores details about the where clause of this query block from query structure*/
+	private ArrayList<ConjunctQueryStructure> conjunctsqs;
 
 
 	/** The group by nodes of this query block*/
@@ -80,6 +86,8 @@ public class QueryBlockDetails implements Serializable{
 	/** Stores details about each where clause subquery block */
 	private ArrayList<QueryBlockDetails> whereClauseSubQueries;
 
+	/** Stores the Case conditions if the query contains CASE statements*/
+	private Map<Integer,CaseExpression> caseConditionMap;
 
 	/** Used to store the attributes(can be a single attribute or multiple attributes) which must contain distinct values across multiples tuples of the relation
 	 * Examples include the attributes which form unique/primary key */
@@ -95,9 +103,6 @@ public class QueryBlockDetails implements Serializable{
 	/** To kill some mutations we might require some of the attributes to be single valued. These are stored here */
 
 	private Set<Node> singleValuedAttributesAdd;
-	
-	/** Stores the Case conditions if the query contains CASE statements*/
-	private Map<Integer,Vector<CaseCondition>> caseConditionMap;
 	
 	/** Stores the equivalence class that is being killed */
 	private ArrayList<Node> equivalenceClassesKilled;
@@ -138,7 +143,7 @@ public class QueryBlockDetails implements Serializable{
 	public QueryBlockDetails(){
 		projectedCols = new ArrayList<Node>();
 		aggFunc = new ArrayList<AggregateFunction>();
-		conjuncts = new ArrayList<Conjunct>();
+		conjuncts = new ArrayList<ConjunctQueryStructure>();
 		groupByNodes = new ArrayList<Node>();
 		isConstrainedAggregation = false;
 		havingClause = null;
@@ -159,7 +164,7 @@ public class QueryBlockDetails implements Serializable{
 		paramCount = 0;
 		pConstraintId = 0;
 		constraintsWithParameters = new HashMap<String, Node>();
-		setCaseConditionMap(new HashMap<Integer,Vector<CaseCondition>>());
+		//setCaseConditionMap(new HashMap<Integer,Vector<CaseCondition>>());
 	}
 
 
@@ -167,13 +172,13 @@ public class QueryBlockDetails implements Serializable{
 	 * This function initialize the query block details
 	 * @param qp
 	 */
-	public static QueryBlockDetails intializeQueryBlockDetails(QueryParser qp){
+	/*public static QueryBlockDetails intializeQueryBlockDetails(QueryParser qp){
 
 		QueryBlockDetails qbt = new QueryBlockDetails();
 		
 		qbt.setProjectedCols( new ArrayList<Node>(qp.getProjectedCols()) );
 		qbt.setAggFunc( new ArrayList<AggregateFunction>(qp.getAggFunc()) );
-		qbt.setConjuncts( new ArrayList<Conjunct>(qp.getConjuncts()) );
+		//qbt.setConjuncts( new ArrayList<Conjunct>(qp.getConjuncts()) );
 		qbt.setGroupByNodes( new ArrayList<Node>(qp.getGroupByNodes()) );
 		qbt.setCaseConditionMap(new HashMap<Integer,Vector<CaseCondition>> (qp.getCaseConditionMap()) );
 		qbt.setCaseConditionMap(new HashMap<Integer,Vector<CaseCondition>> (qp.getCaseConditionMap()) );
@@ -185,10 +190,39 @@ public class QueryBlockDetails implements Serializable{
 		qbt.setTopLevelRelation(qp.topLevelRelation);
 
 		return qbt;
+	}*/
+
+
+
+	/**
+	 * This function initialize the query block details
+	 * @param qp
+	 */
+	public static QueryBlockDetails intializeQueryBlockDetails(QueryStructure qs){
+
+		QueryBlockDetails qbt = new QueryBlockDetails();
+		
+		qbt.setProjectedCols( new ArrayList<Node>(qs.getProjectedCols()) );
+		qbt.setAggFunc( new ArrayList<AggregateFunction>(qs.getAggFunc()) );
+		qbt.setConjunctsQs( new ArrayList<ConjunctQueryStructure>(qs.getConjuncts()) );
+		qbt.setGroupByNodes( new ArrayList<Node>(qs.getGroupByNodes()) );
+		qbt.setNoOfGroups(qs.getGroupByNodes().size());
+		qbt.setBaseRelations(new ArrayList<String>(qs.getQuery().getBaseRelation().values()));
+		
+		qbt.setCaseConditionMap(new HashMap<Integer,CaseExpression> (qs.getCaseConditionMap()) );
+		qbt.setCaseConditionMap(new HashMap<Integer,CaseExpression> (qs.getCaseConditionMap()) );
+		
+		
+		qbt.setHavingClause(qs.getHavingClause());
+			if(qbt.getHavingClause() != null)
+				qbt.setConstrainedAggregation(true);
+		
+		qbt.setTopLevelRelation(qs.topLevelRelation);
+
+		return qbt;
 	}
 
-
-
+	
 
 	/**
 	 * This method translates the given final count into number of tuples per base relation
@@ -205,10 +239,14 @@ public class QueryBlockDetails implements Serializable{
 			/**TODO: Which conjunct should be consider for the tuple assignment
 			 * For now consider all the conjuncts, but incorrect
 			 */
-			for(Conjunct con: queryBlock.getConjuncts())
-				for(Node n: con.getJoinConds())
+			for(ConjunctQueryStructure con: queryBlock.getConjunctsQs())
+				for(Node n: con.getJoinCondsAllOther())
 					joinConds.add(new Node(n));
-	
+			
+			for(ConjunctQueryStructure con: queryBlock.getConjunctsQs())
+				for(Node n: con.getJoinCondsForEquivalenceClasses())
+					joinConds.add(new Node(n));
+			
 			/** If there are no join conditions or the final count is 1 , then we can directly assign the count to base relation*/
 			if(joinConds == null || joinConds.size() == 0 || queryBlock.getFinalCount() == 1)			
 				return GetTupleAssignmentForQueryBlock.getTupleAssignmentWithoutJoins(cvc, queryBlock);		
@@ -315,7 +353,7 @@ public class QueryBlockDetails implements Serializable{
 		constraints.stringConstraints.add("");
 		try{
 			/** Add the positive conditions for each conjunct of this query block */
-			for(Conjunct conjunct : qb.getConjuncts()){
+			for(ConjunctQueryStructure conjunct : qb.getConjunctsQs()){
 				constraintString += "\n%---------------------------------\n% CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------\n";
 				//constraintString += GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, qb, conjunct);
 				constraints=Constraints.orConstraints(constraints, GenerateConstraintsForConjunct.getConstraintsInConjuct(cvc, qb, conjunct));
@@ -357,7 +395,7 @@ public class QueryBlockDetails implements Serializable{
 		constraints.stringConstraints.add("");
 		try{
 			/** Add the positive conditions for each conjunct of this query block */
-			for(Conjunct conjunct : qb.getConjuncts()){
+			for(ConjunctQueryStructure conjunct : qb.getConjunctsQs()){
 				constraintString += "\n%---------------------------------\n% CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------\n";
 				//constraintString += GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, qb, conjunct);
 				constraints=Constraints.orConstraints(constraints, GenerateConstraintsForConjunct.getConstraintsInConjuct(cvc, qb, conjunct));
@@ -550,13 +588,22 @@ public class QueryBlockDetails implements Serializable{
 		this.aggFunc = aggFunc;
 	}
 
-	public ArrayList<Conjunct> getConjuncts() {
+	/*public ArrayList<Conjunct> getConjuncts() {
 		return conjuncts;
 	}
 
 	public void setConjuncts(ArrayList<Conjunct> conjuncts) {
 		this.conjuncts = conjuncts;
+	}*/
+	
+	public ArrayList<ConjunctQueryStructure> getConjunctsQs() {
+		return conjunctsqs;
 	}
+
+	public void setConjunctsQs(ArrayList<ConjunctQueryStructure> conjuncts) {
+		this.conjunctsqs = conjuncts;
+	}
+	
 
 	public ArrayList<Node> getGroupByNodes() {
 		return groupByNodes;
@@ -744,11 +791,10 @@ public class QueryBlockDetails implements Serializable{
 		this.constraintsWithParameters = constraintsWithParameters;
 	}
 
-
 	/**
 	 * @return the caseConditionMap
 	 */
-	public Map<Integer,Vector<CaseCondition>> getCaseConditionMap() {
+	public Map<Integer,CaseExpression> getCaseConditionMap() {
 		return caseConditionMap;
 	}
 
@@ -756,12 +802,8 @@ public class QueryBlockDetails implements Serializable{
 	/**
 	 * @param caseConditionMap the caseConditionMap to set
 	 */
-	public void setCaseConditionMap(Map<Integer,Vector<CaseCondition>> caseConditionMap) {
+	public void setCaseConditionMap(Map<Integer,CaseExpression> caseConditionMap) {
 		this.caseConditionMap = caseConditionMap;
 	}
-
-
-
-
 
 }

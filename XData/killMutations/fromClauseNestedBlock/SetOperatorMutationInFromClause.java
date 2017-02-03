@@ -3,6 +3,7 @@ package killMutations.fromClauseNestedBlock;
 import java.util.logging.Logger;
 
 import parsing.QueryParser;
+import parsing.QueryStructure;
 
 import testDataGen.GenerateCVC1;
 
@@ -25,8 +26,8 @@ public class SetOperatorMutationInFromClause {
 		
 		GenerateCVC1 genSetOpCvc = new GenerateCVC1();
 		//Initialize CVC with subquery qparser Setoperator query data and then call data generation for SetOperator.
-		for(int i=0;i<cvc.getqParser().getFromClauseSubqueries().size();i++){
-			QueryParser qpFrom = cvc.getqParser().getFromClauseSubqueries().get(i);
+		for(int i=0;i<cvc.getqStructure().getFromClauseSubqueries().size();i++){
+			QueryStructure qpFrom = cvc.getqStructure().getFromClauseSubqueries().get(i);
 			if(qpFrom.setOperator!=null && qpFrom.setOperator.length()>0){
 				
 					//qpFrom.setQuery(cvc.getqParser().getQuery());

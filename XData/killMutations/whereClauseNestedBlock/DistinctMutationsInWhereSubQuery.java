@@ -12,7 +12,7 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import testDataGen.CountEstimationRelated;
 import testDataGen.GenerateCVC1;
@@ -42,7 +42,7 @@ public class DistinctMutationsInWhereSubQuery {
 		HashMap<String, Integer[]> repeatedRelNextTuplePosOrig = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
 
 		/** we have to check if there are where clause subqueries in each conjunct of outer block of query */
-		for(Conjunct con: cvc.getOuterBlock().getConjuncts()){
+		for(ConjunctQueryStructure con: cvc.getOuterBlock().getConjunctsQs()){
 
 			/**For each where clause subquery blocks of this conjunct*/
 			/** Kill distinct clause mutations in each where clause nested block of this query*/
@@ -66,7 +66,7 @@ public class DistinctMutationsInWhereSubQuery {
 
 				
 				/** Initialize the data structures for generating the data to kill this mutation */
-				cvc.inititalizeForDataset();
+				cvc.inititalizeForDatasetQs();
 
 
 				/**set the type of mutation we are trying to kill*/
@@ -105,7 +105,7 @@ public class DistinctMutationsInWhereSubQuery {
 				cvc.getConstraints().add( GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, cvc.getOuterBlock(), con) );
 				
 				/**add the negative constraints for all the other conjuncts of outer query block */
-				for(Conjunct outer: cvc.getOuterBlock().getConjuncts())
+				for(ConjunctQueryStructure outer: cvc.getOuterBlock().getConjunctsQs())
 					if( !outer.equals(con))
 						cvc.getConstraints().add( GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, cvc.getOuterBlock(), outer) );
 					

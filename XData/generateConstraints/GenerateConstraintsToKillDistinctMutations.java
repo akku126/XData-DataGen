@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Vector;
 
 import parsing.Column;
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
@@ -96,7 +96,7 @@ public class GenerateConstraintsToKillDistinctMutations {
 	public static Column getNonUniqueMemberInEquivalenceClassOf(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Column col){
 		
 		/**check equivalence classes in each conjunct of this query block */
-		for(Conjunct con: queryBlock.getConjuncts()){
+		for(ConjunctQueryStructure con: queryBlock.getConjunctsQs()){
 			
 			/**Check each equivalence class of this conjunct*/
 			Vector<Vector<Node>> equivalenceClasses = con.getEquivalenceClasses();

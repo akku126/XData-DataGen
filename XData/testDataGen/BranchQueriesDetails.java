@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 import parsing.Node;
 import parsing.Query;
 import parsing.QueryParser;
+import parsing.QueryStructure;
 import parsing.Table;
 
 /**
@@ -32,6 +33,7 @@ public class BranchQueriesDetails implements Serializable{
 	private ArrayList<String>[] branchResultString;
 	private ArrayList<String>[] branchOperators;
 	private QueryParser qParser1[];
+	private QueryStructure qStructure1[];
 	private Query branchQuery[] = null;
 	private ArrayList<Node> allCondsForBranchQuery[];
 	private ArrayList<Node> selectionCondsForBranchQuery[];
@@ -43,7 +45,7 @@ public class BranchQueriesDetails implements Serializable{
 	
 	public void intitializeDetails(GenerateCVC1 cvc) throws Exception{
 		
-		qParser1 = new QueryParser[noOfBranchQueries];
+		/*qParser1 = new QueryParser[noOfBranchQueries];
 		
 		branchQuery = new Query[noOfBranchQueries];
 		
@@ -51,6 +53,39 @@ public class BranchQueriesDetails implements Serializable{
 		
 		selectionCondsForBranchQuery = new ArrayList[noOfBranchQueries];
 		
+		likeCondsForBranchQuery = new ArrayList[noOfBranchQueries];
+		for(int i = 0; i < noOfBranchQueries; i++)
+		{
+			allCondsForBranchQuery[i] = new ArrayList<Node>();
+			
+			selectionCondsForBranchQuery[i] = new ArrayList<Node>();
+			
+			likeCondsForBranchQuery[i] = new ArrayList<Node>();
+			
+			if(branchQueryString[i] != null && !branchQueryString[i].equals(""))
+			{
+				qParser1[i] = new QueryParser( cvc.getTableMap() );
+				
+				qParser1[i].parseQuery("q1" + i, branchQueryString[i]);
+				
+				branchQuery[i] = qParser1[i].getQuery();
+				
+				allCondsForBranchQuery[i].addAll(qParser1[i].getAllConds());
+				
+				selectionCondsForBranchQuery[i].addAll(qParser1[i].getSelectionConds());
+				
+				likeCondsForBranchQuery[i].addAll(qParser1[i].getLikeConds());
+			}
+		}*/
+		
+		qStructure1 = new QueryStructure[noOfBranchQueries];
+		
+		branchQuery = new Query[noOfBranchQueries];
+		
+		allCondsForBranchQuery = new ArrayList[noOfBranchQueries];
+		
+		selectionCondsForBranchQuery = new ArrayList[noOfBranchQueries];
+		 
 		likeCondsForBranchQuery = new ArrayList[noOfBranchQueries];
 		for(int i = 0; i < noOfBranchQueries; i++)
 		{
@@ -121,6 +156,15 @@ public class BranchQueriesDetails implements Serializable{
 
 	public void setqParser1(QueryParser[] qParser1) {
 		this.qParser1 = qParser1;
+	}
+
+	public QueryStructure[] getqStructure1() {
+		return qStructure1;
+	}
+
+
+	public void setqStructure1(QueryStructure[] qStructure1) {
+		this.qStructure1 = qStructure1;
 	}
 
 

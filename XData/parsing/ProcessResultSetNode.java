@@ -28,7 +28,7 @@ import org.apache.derby.impl.sql.compile.SubqueryNode;
 import org.apache.derby.impl.sql.compile.ValueNode;
 
 import parsing.QueryParser;
-import parsing.Conjunct;
+import parsing.Conjunct_ToDel;
 import parsing.FromListElement;
 import parsing.JoinTreeNode;
 import parsing.Node;
@@ -235,21 +235,21 @@ public class ProcessResultSetNode {
 						
 		QueryParser.flattenAndSeparateAllConds(qParser);
 		
-		for(Conjunct conjunct:qParser.conjuncts)			
+		for(Conjunct_ToDel conjunct:qParser.conjuncts)			
 			conjunct.createEqClass();
 		
 		
 		for(parsing.QueryParser qp: qParser.getFromClauseSubqueries()){//For From clause subqueries
 			
 			QueryParser.flattenAndSeparateAllConds(qp);
-			for(Conjunct conjunct:qp.conjuncts){
+			for(Conjunct_ToDel conjunct:qp.conjuncts){
 				conjunct.createEqClass();
 			}
 		}
 		for(parsing.QueryParser qp: qParser.getWhereClauseSubqueries()){//For Where clause subqueries
 			
 			QueryParser.flattenAndSeparateAllConds(qp);
-			for(Conjunct conjunct:qp.conjuncts){
+			for(Conjunct_ToDel conjunct:qp.conjuncts){
 				conjunct.createEqClass();
 			}
 		}
@@ -330,18 +330,17 @@ public class ProcessResultSetNode {
 						
 						CaseCondition cC = new CaseCondition();
 						Node n = WhereClauseVectorJSQL.getWhereClauseVector(((WhenClause)((CaseExpression) exp).getWhenClauses().get(i)).getWhenExpression(),exposedName, qParser.queryAliases,false,0,qParser);
-						cC.setCaseConditionNode(n);
-						cC.setCaseCondition(n.toString());
-					    cC.setConstantValue(((WhenClause)((CaseExpression) exp).getWhenClauses().get(i)).getThenExpression().toString());
+						//cC.setCaseConditionNode(n);
+						//cC.setCaseCondition(n.toString());
+					    //cC.setConstantValue(((WhenClause)((CaseExpression) exp).getWhenClauses().get(i)).getThenExpression().toString());
 					    caseConditionsVector.add(cC);
 					   // qParser.getCaseConditions().add(cC);
 					 }
 					 //Add the else clause if present as the last item
 					 if(((CaseExpression) exp).getElseExpression() != null){
 						CaseCondition cC = new CaseCondition();
-						//cC.setCaseConditionNode(n);
-						cC.setCaseCondition("else");
-					    cC.setConstantValue(((CaseExpression) exp).getElseExpression().toString());
+						//cC.setCaseCondition("else");
+					    //cC.setConstantValue(((CaseExpression) exp).getElseExpression().toString());
 					    caseConditionsVector.add(cC);
 					 }
 					 //Add Case conditions to queryparser
@@ -468,20 +467,20 @@ public class ProcessResultSetNode {
 		//EquivalenceClass.makeEquivalenceClasses(qParser);//Method to get equivalence classes for outer query block and each sub query
 
 		QueryParser.flattenAndSeparateAllConds(qParser);
-		for(Conjunct conjunct:qParser.conjuncts){
+		for(Conjunct_ToDel conjunct:qParser.conjuncts){
 			conjunct.createEqClass();
 		}
 		for(parsing.QueryParser qp: qParser.getFromClauseSubqueries()){//For From clause subqueries
 			
 			QueryParser.flattenAndSeparateAllConds(qp);
-			for(Conjunct conjunct:qp.conjuncts){
+			for(Conjunct_ToDel conjunct:qp.conjuncts){
 				conjunct.createEqClass();
 			}
 		}
 		for(parsing.QueryParser qp: qParser.getWhereClauseSubqueries()){//For Where clause subqueries
 			
 			QueryParser.flattenAndSeparateAllConds(qp);
-			for(Conjunct conjunct:qp.conjuncts){
+			for(Conjunct_ToDel conjunct:qp.conjuncts){
 				conjunct.createEqClass();
 			}
 		}
@@ -560,14 +559,14 @@ public class ProcessResultSetNode {
 				
 				CaseCondition cC = new CaseCondition();
 				Node n = WhereClauseVectorJSQL.getWhereClauseVector(((WhenClause)((CaseExpression) whereClause).getWhenClauses().get(i)).getWhenExpression(),null, qParser.queryAliases,true,0,qParser);
-				cC.setCaseConditionNode(n);
-				cC.setCaseCondition(n.toString());
-			    cC.setConstantValue(((WhenClause)((CaseExpression) whereClause).getWhenClauses().get(i)).getThenExpression().toString());
+				//cC.setCaseConditionNode(n);
+				//cC.setCaseCondition(n.toString());
+			   // cC.setConstantValue(((WhenClause)((CaseExpression) whereClause).getWhenClauses().get(i)).getThenExpression().toString());
 			    if(colExpression!= null && colExpression instanceof Column){
 			    	Node n1 = ((WhereClauseVectorJSQL.getWhereClauseVector((colExpression),null, qParser.queryAliases,true,0,qParser)));
-			    	cC.setColValueForConjunct(UtilsRelatedToNode.getColumn(n1));
+			    //	cC.setColValueForConjunct(UtilsRelatedToNode.getColumn(n1));
 			    	nodeColumnValue = UtilsRelatedToNode.getColumn(n1);
-			    	cC.setCaseOperator("=");
+			    //	cC.setCaseOperator("=");
 			    }
 			    /*if(cC.getColValueForConjunct() == null){
 			    	
@@ -585,17 +584,13 @@ public class ProcessResultSetNode {
 			 //Add the else clause if present as the last item
 			 if(((CaseExpression) whereClause).getElseExpression() != null){
 				CaseCondition cC = new CaseCondition();
-				//cC.setCaseConditionNode(n);
-				cC.setCaseCondition("else");
-			    cC.setConstantValue(((CaseExpression) whereClause).getElseExpression().toString());
+				//cC.setCaseCondition("else");
+			   // cC.setConstantValue(((CaseExpression) whereClause).getElseExpression().toString());
 			    if(colExpression != null && colExpression instanceof Column){
 			    	Node n1 = ((WhereClauseVectorJSQL.getWhereClauseVector((colExpression),null, qParser.queryAliases,true,0,qParser)));
-			    	cC.setColValueForConjunct(UtilsRelatedToNode.getColumn(n1));
+			    	//cC.setColValueForConjunct(UtilsRelatedToNode.getColumn(n1));
 			    }
-			   /* if(cC.getColValueForConjunct() == null){
-			    	
-			    	cC.setColValueForConjunct(nodeColumnValue);
-			    }*/
+			  
 			    caseConditionsVector.add(cC);
 			 }
 			 //Add Case conditions to queryparser

@@ -1581,7 +1581,7 @@ public class WhereClauseVectorJSQL {
 				}
 			}
 			//@author mathew on 28 June 2016, the following line added for enabling recursive parsing of subqueries 
-			qParser.getWhereClauseSubqueries().get(qParser.getWhereClauseSubqueries().size()-1).parseQuery("q1", sbod.toString());
+			//qParser.getWhereClauseSubqueries().get(qParser.getWhereClauseSubqueries().size()-1).parseQuery("q1", sbod.toString());
 			return rhs;
 		}
 		else if (clause instanceof AnyComparisonExpression){
@@ -1622,7 +1622,7 @@ public class WhereClauseVectorJSQL {
 				}
 			}
 			//@author mathew on 28 June 2016, the following line added for enabling recursive parsing of subqueries 
-			qParser.getWhereClauseSubqueries().get(qParser.getWhereClauseSubqueries().size()-1).parseQuery("q1", sbod.toString());
+			//qParser.getWhereClauseSubqueries().get(qParser.getWhereClauseSubqueries().size()-1).parseQuery("q1", sbod.toString());
 			return rhs;
 		}
 		else if(clause instanceof ExtractExpression){
@@ -2308,7 +2308,7 @@ public class WhereClauseVectorJSQL {
 							}
 							if(selExpItem.getAlias()!=null){
 								if(n.getColumn().getColumnName().equalsIgnoreCase(selExpItem.getAlias().getName())){
-									n =ProcessSelectClause.processJoinExpression(e,qParser.fromListElements, qParser,plainSelect);
+									//n =ProcessSelectClause.processJoinExpression(e,qParser.fromListElements, qParser,plainSelect);
 									break;
 								}
 							}
@@ -2549,7 +2549,7 @@ public class WhereClauseVectorJSQL {
 				}
 				QueryParser subQueryParser=new QueryParser(qParser.getTableMap());
 				rhs.setSubQueryParser(subQueryParser);	
-				ProcessSelectClause.processWhereSubSelect(subS,subQueryParser,qParser);
+				//ProcessSelectClause.processWhereSubSelect(subS,subQueryParser,qParser);
 				
 								 
 				Node lhs = processWhereClauseVector(sqn. getLeftExpression(), fle, qParser,plainSelect);
@@ -2578,7 +2578,7 @@ public class WhereClauseVectorJSQL {
 				existsNode.setSubQueryParser(subQueryParser);
 				existsNode.setType(Node.getExistsNodeType());
 				existsNode.setSubQueryConds(null);
-				ProcessSelectClause.processWhereSubSelect(subS,subQueryParser,qParser);
+				//ProcessSelectClause.processWhereSubSelect(subS,subQueryParser,qParser);
 								
 				
 				Node notNode = new Node();				   
@@ -2601,7 +2601,7 @@ public class WhereClauseVectorJSQL {
 				Node node=new Node();
 				node.setSubQueryParser(subQueryParser);
 				node.setType(Node.getBroNodeSubQType());
-				ProcessSelectClause.processWhereSubSelect(sqn,subQueryParser,qParser);
+				//ProcessSelectClause.processWhereSubSelect(sqn,subQueryParser,qParser);
 								
 
 				
@@ -2992,7 +2992,7 @@ public class WhereClauseVectorJSQL {
 				Node allNode=new Node();
 				allNode.setSubQueryParser(subQueryParser);
 				allNode.setType(Node.getAllNodeType());
-				ProcessSelectClause.processWhereSubSelect(ss,subQueryParser,qParser);
+				//ProcessSelectClause.processWhereSubSelect(ss,subQueryParser,qParser);
 				
 				return allNode;				
 
@@ -3005,7 +3005,7 @@ public class WhereClauseVectorJSQL {
 				Node anyNode=new Node();
 				anyNode.setSubQueryParser(subQueryParser);
 				anyNode.setType(Node.getAnyNodeType());
-				ProcessSelectClause.processWhereSubSelect(ss,subQueryParser,qParser);
+				//ProcessSelectClause.processWhereSubSelect(ss,subQueryParser,qParser);
 				
 				return anyNode;
 			}

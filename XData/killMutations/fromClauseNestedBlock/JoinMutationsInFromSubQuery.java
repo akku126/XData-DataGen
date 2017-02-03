@@ -14,7 +14,7 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import parsing.Table;
 import testDataGen.GenerateCVC1;
@@ -49,7 +49,7 @@ public class JoinMutationsInFromSubQuery {
 			logger.log(Level.INFO,"\n----------------------------------");
 			
 			/**Kill the non equi-join clause mutations in each conjunct of this sub query query block*/
-			for(Conjunct conjunct: qbt.getConjuncts()){
+			for(ConjunctQueryStructure conjunct: qbt.getConjunctsQs()){
 				
 				logger.log(Level.INFO,"\n----------------------------------");
 				logger.log(Level.INFO,"NEW CONJUNCT IN NEC KILLING: " + conjunct);
@@ -118,7 +118,7 @@ public class JoinMutationsInFromSubQuery {
 						
 						
 						/** Add negative conditions for all other conjuncts of this subquery block */
-						for(Conjunct inner: qbt.getConjuncts())
+						for(ConjunctQueryStructure inner: qbt.getConjunctsQs())
 							if(inner != conjunct)
 								cvc.getConstraints().add( GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, qbt, inner) );							
 						

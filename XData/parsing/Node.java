@@ -1,13 +1,19 @@
 package parsing;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Vector;
 
+import parsing.AggregateFunction;
+import parsing.CaseCondition;
+import parsing.Column;
 import parsing.Table;
+import parsing.QueryStructure;
 import util.*;
 
-public class Node implements Cloneable, Serializable{
+public class Node implements Cloneable, Serializable, NodeInterface{
 	
 	private static final long serialVersionUID = -7192918525557389737L;
 	private static String valType = "VALUE";
@@ -32,6 +38,7 @@ public class Node implements Cloneable, Serializable{
 	private static String stringFuncType= "STRING FUNCTION NODE";
 	private static String extractFuncType ="EXTRACT NODE";
 	private static String caseNodeType ="CASE NODE";
+	private static String compositeNodeType=" COMPOSITE NODE";
 	
 	AggregateFunction agg;
 
@@ -46,23 +53,24 @@ public class Node implements Cloneable, Serializable{
 	String joinType;
 	boolean isDistinct = false; //has value if colRefType in projection list
 	Boolean isMutant;
-	
+	public boolean isCorrelated=false;
+	public boolean isInNode = false;
 	
 	Node lhsRhs; 	//has value if IN NODE
 	Vector<Node> subQueryConds; //has value if any sub query node: IN NODE, EXISTS NODE etc.
-	CaseCondition CaseConditionNode;
+	CaseCondition caseCondition;
 	
 	/**
 	 * @return the ccNode
 	 */
-	public CaseCondition getCaseConjunctNode() {
-		return CaseConditionNode;
+	public CaseCondition getCaseCondition() {
+		return caseCondition;
 	}
 	/**
 	 * @param ccNode the ccNode to set
 	 */
-	public void setCcNode(CaseCondition CaseConditionNode) {
-		this.CaseConditionNode = CaseConditionNode;
+	public void setCaseCondition(CaseCondition cCondition) {
+		this.caseCondition = cCondition;
 	}
 	Node left;
 	Node right;
@@ -75,12 +83,37 @@ public class Node implements Cloneable, Serializable{
 		queryType=-1;
 		queryIndex=-1;
 		isMutant = false;
-		subQueryParser=null;
+		subQueryStructure=null;
+		caseCondition=null;
 		aliasName=null;
+		caseExpression=null;
+	    subQueryParser=null;
+	}
+
+ //the following lines added by mathew on 1st october 2016
+
+	public Node(boolean composite){
+		type = null;
+		queryType=-1;
+		queryIndex=-1;
+		isMutant = false;
+		subQueryStructure=null;
+		caseCondition=null;
+		aliasName=null;
+		if(composite){
+			this.componentNodes=new ArrayList<Node>();
+		}
+		caseExpression=null;
 	}
 	
-	//the following line added by mathew on 1st october 2016
-		QueryParser subQueryParser;
+		QueryStructure subQueryStructure;
+		
+		public QueryStructure getSubQueryStructure(){
+			return subQueryStructure;
+		}
+
+
+	QueryParser subQueryParser;
 		
 		public QueryParser getSubQueryParser(){
 			return subQueryParser;
@@ -88,6 +121,12 @@ public class Node implements Cloneable, Serializable{
 		
 		public void setSubQueryParser(QueryParser subQP){
 			this.subQueryParser=subQP;
+		}
+		
+
+		
+		public void setSubQueryStructure(QueryStructure subQP){
+			this.subQueryStructure=subQP;
 		}
 		
 		private String aliasName;
@@ -98,6 +137,36 @@ public class Node implements Cloneable, Serializable{
 		
 		public void setAliasName(String aName){
 			this.aliasName=aName;
+		}
+		
+		public boolean isComposite;
+		private List<Node> componentNodes;
+		
+		public List<Node> getComponentNodes(){
+			return componentNodes;
+		}
+		
+		public void setComponentNodes(List<Node> nodes){
+			componentNodes=nodes;
+		}
+		
+		public void addComponentNode(Node n){
+			componentNodes.add(n);
+		}
+		
+		CaseExpression caseExpression;
+		
+		/**
+		 * @return the ccNode
+		 */
+		public CaseExpression getCaseExpression() {
+			return caseExpression;
+		}
+		/**
+		 * @param ccNode the ccNode to set
+		 */
+		public void setCaseExpression(CaseExpression cExpression) {
+			this.caseExpression = cExpression;
 		}
 	
 	/**
@@ -144,11 +213,26 @@ public class Node implements Cloneable, Serializable{
 			this.tableNameNo =null;
 		else
 			this.tableNameNo = new String(n.getTableNameNo());
+
 		if(n.getJoinType() == null)
 			this.joinType = null;
 		else
 			this.joinType = new String(n.getJoinType());
+		
 		this.isDistinct = n.isDistinct;
+		
+		if(n.getCaseExpression()==null){
+			this.caseExpression=null;
+		}
+		else{
+			this.setCaseExpression(n.getCaseExpression());
+		}
+		
+		if(n.getCaseCondition()==null)
+			this.caseCondition=null;
+			else{
+				
+			}
 		if(n.getLhsRhs() == null)
 			this.lhsRhs = null;
 		else
@@ -161,6 +245,9 @@ public class Node implements Cloneable, Serializable{
 			for(Node n2: n.getSubQueryConds())
 				this.subQueryConds.add(new Node(n2));
 		}
+		
+		
+		
 		if(n.getLeft() == null)
 			this.left =null;
 		else
@@ -278,6 +365,7 @@ public class Node implements Cloneable, Serializable{
 			right=this.getRight().clone();
 		((Node)obj).setLeft(left);
 		((Node)obj).setRight(right);
+		
 		return (Node)obj;
 	}
 
@@ -328,6 +416,10 @@ public class Node implements Cloneable, Serializable{
 //		return allAnyNodeType;
 //	}
 	
+	public static String getCompositeNodeType(){
+		return compositeNodeType;
+	}
+	
 	public static String getAllNodeType() {
 		return allNodeType;
 	}
@@ -362,7 +454,7 @@ public class Node implements Cloneable, Serializable{
 	}
 	
 	public void setDistinct(boolean isDistinct){
-		this.isDistinct = this.isDistinct;
+		this.isDistinct = isDistinct;
 	}
 	
 	public static String getAggrNodeType() {
@@ -389,6 +481,7 @@ public class Node implements Cloneable, Serializable{
 	public void setColumn(Column column) {
 		this.column = column;
 	}
+
 	public Node getLeft() {
 		return left;
 	}
@@ -405,7 +498,7 @@ public class Node implements Cloneable, Serializable{
 		return right;
 	}
 	public void setRight(Node right) {
-		this.right = right;
+		this.right = (Node)right;
 	}
 	public String getStrConst() {
 		return strConst;
@@ -530,6 +623,65 @@ public class Node implements Cloneable, Serializable{
 			}
 			return retString;
 		}
+
+		 else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getInNodeType())){
+				if(this.getLeft()!=null){
+					retString+=" "+this.getLeft();
+				}
+				if(this.getRight()!=null&&this.getRight().getSubQueryStructure()!=null){
+				retString+="("+this.getRight().getSubQueryStructure().getQuery().getQueryString()+")";;
+			}
+			return retString;
+		}
+		else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getNotInNodeType())){
+			if(this.getLeft()!=null){
+				retString+=" "+this.getLeft();
+			}
+			retString+=" "+Node.getNotInNodeType()+" ";
+			
+			if(this.getRight()!=null&&this.getRight().getSubQueryStructure()!=null){
+				retString+="("+this.getRight().getSubQueryStructure().getQuery().getQueryString()+")";;
+			}
+			return retString;
+		}
+		else if(this.getType()!=null&& this.getType().equalsIgnoreCase(Node.getAnyNodeType())){
+			retString+=" "+Node.getAnyNodeType()+" ";
+			if(this.getSubQueryStructure()!=null){
+				retString+="("+this.getSubQueryStructure().getQuery().getQueryString()+")";
+			}
+			return retString;
+		}
+		else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getAllNodeType())){
+			retString+=" "+Node.getAllNodeType()+" ";
+			if(this.getSubQueryStructure()!=null){
+				retString+="("+this.getSubQueryStructure().getQuery().getQueryString()+")";
+			}
+			return retString;
+		}
+		 else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getExistsNodeType())){
+			retString+=" "+Node.getExistsNodeType()+" ";
+			if(this.getSubQueryStructure()!=null){
+				retString+="("+this.getSubQueryStructure().getQuery().getQueryString()+")";
+			}
+			return retString;
+		}
+		 else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getNotExistsNodeType())){
+			retString+=" "+Node.getNotExistsNodeType()+" ";
+			if(this.getSubQueryStructure()!=null){
+				retString+="("+this.getSubQueryStructure().getQuery().getQueryString()+")";
+			}
+			return retString;
+		}
+		 else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getCaseNodeType())){
+			 return this.getCaseExpression().toString();
+		 }
+		 else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getExtractFuncType())){
+			 retString=" Extract("+this.getStrConst()+" FROM ";
+					 if(this.getLeft()!=null)
+						 retString+=this.getLeft();
+					 retString+=")";
+			 		return retString;
+		 }
 		if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getValType())){
 			return this.getStrConst();
 		}
@@ -543,8 +695,21 @@ public class Node implements Cloneable, Serializable{
 		else if (this.getLeft()!=null&&this.getRight()!=null){
 			return "(" + this.getLeft().toString()  + this.getOperator() + this.getRight().toString() + ")";
 		}
+		else if(this.getSubQueryStructure()!=null){
+			return "("+this.getSubQueryStructure().getQuery().getQueryString()+")";
+		}
 		else if(this.getOperator()!=null) {
 			return this.getOperator();
+		}
+		else if(this.isComposite){
+			retString+="[";
+			int i;
+			for(i=0;i<componentNodes.size()-1;i++){
+				Node n=componentNodes.get(i);
+				retString+=n.toString()+", ";
+			}
+			retString+=(componentNodes.get(i)+"]");
+			return retString;
 		}
 		else {
 			return "";

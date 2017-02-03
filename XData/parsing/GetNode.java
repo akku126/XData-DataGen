@@ -9,7 +9,7 @@ public class GetNode {
 	/*
 	 * Get Selection Nodes in a separate vector selectionConds
 	 */
-	public static boolean getSelectionNode(Conjunct con, Node temp) {
+	public static boolean getSelectionNode(ConjunctQueryStructure con, Node temp) {
 		if (temp.containsConstant()) {
 			con.selectionConds.add(temp);
 			return true;
@@ -41,7 +41,7 @@ public class GetNode {
 	 * @return Whether the node has like or not
 	 */
 	//function is same as the previous one but we may need to modify this later
-	public static boolean getLikeNode(Conjunct con, Node temp){
+	public static boolean getLikeNode(ConjunctQueryStructure con, Node temp){
 		if(temp.getType().equalsIgnoreCase(Node.getLikeNodeType())){//CharConstantNode
 			con.likeConds.add(temp);
 			return true;
@@ -61,7 +61,7 @@ public class GetNode {
 	/*
 	 * Get SubQueryNodes in a separate vector subQueryConds
 	 */
-	public static boolean getSubQueryNode(Conjunct con, Node temp) {
+	public static boolean getSubQueryNode(ConjunctQueryStructure con, Node temp) {
 		if (temp.getType().equalsIgnoreCase(Node.getInNodeType())) {
 			con.allSubQueryConds.add(temp);
 			return true;
@@ -73,7 +73,7 @@ public class GetNode {
 	 * Get joinNodes in a separate vector joinConds
 	 */
 	//FIXME: Mahesh modify this method to handle suub queries also
-	public static boolean getJoinNodesForEC(Conjunct con, Node temp) {
+	public static boolean getJoinNodesForEC(ConjunctQueryStructure con, Node temp) {
 		if (temp.getType().equalsIgnoreCase(Node.getBroNodeType())
 				&& temp.getOperator().equalsIgnoreCase("=")) {
 			if (temp.getLeft()!=null && temp.getRight()!=null &&temp.getLeft().getType().equalsIgnoreCase(Node.getColRefType())
@@ -82,7 +82,7 @@ public class GetNode {
 					outer join conditions in the formation of equivalence classes */
 					(temp.joinType==null  || temp.joinType.equals(JoinClauseInfo.innerJoin))) 
 				{
-				con.joinConds.add(temp);
+				con.joinCondsAllOther.add(temp);
 				return true;
 			}
 		}

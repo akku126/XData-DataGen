@@ -24,7 +24,7 @@ public class KillCountMutations {
 	public static void killCountMutations(GenerateCVC1 cvc,	QueryBlockDetails qbt) throws Exception {
 		
 		/** Initialize the data structures for generating the data to kill this mutation */
-		cvc.inititalizeForDataset();
+		cvc.inititalizeForDatasetQs();
 	
 		/**set the type of mutation we are trying to kill*/
 		cvc.setTypeOfMutation( TagDatasets.MutationType.COUNT, TagDatasets.QueryBlock.OUTER_BLOCK );

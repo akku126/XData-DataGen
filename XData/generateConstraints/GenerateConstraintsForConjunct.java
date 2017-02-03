@@ -5,8 +5,9 @@ import java.util.HashMap;
 import java.util.Vector;
 
 import parsing.Column;
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Disjunct;
+import parsing.DisjunctQueryStructure;
 import parsing.Node;
 import parsing.Table;
 import testDataGen.GenerateCVC1;
@@ -28,7 +29,7 @@ public class GenerateConstraintsForConjunct {
 	 * @return
 	 * @throws Exception
 	 */
-	public static String getConstraintsForConjuct(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Conjunct conjunct) throws Exception {
+	public static String getConstraintsForConjuct(GenerateCVC1 cvc, QueryBlockDetails queryBlock, ConjunctQueryStructure conjunct) throws Exception {
 
 		String constraintString = "";
 
@@ -86,7 +87,8 @@ public class GenerateConstraintsForConjunct {
 		constraintString += "\n%---------------------------------\n% ALL CLASS CONSTRAINTS\n%---------------------------------\n";
 
 		/** Get the constraints for the non equi-join conditions */
-		Vector<Node> allConds = conjunct.getAllConds();
+		//Vector<Node> allConds = conjunct.getAllConds();
+		Vector<Node> allConds = conjunct.getJoinCondsAllOther();
 		for(int k=0; k<allConds.size(); k++)
 			constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds) +"\n";
 
@@ -146,7 +148,7 @@ public class GenerateConstraintsForConjunct {
 		Constraints finalConstraints=new Constraints();
 		finalConstraints.constraints.add("");
 		finalConstraints.stringConstraints.add("");
-		for(Disjunct disjunct:conjunct.disjuncts){
+		for(DisjunctQueryStructure disjunct:conjunct.disjuncts){
 			Constraints constraints=GenerateConstraintsForDisjunct.getConstraintsForDisjuct(cvc, queryBlock, disjunct);
 			finalConstraints=Constraints.mergeConstraints(finalConstraints,constraints);
 		}
@@ -158,7 +160,7 @@ public class GenerateConstraintsForConjunct {
 		return constraintString;
 	}
 
-	public static Constraints getConstraintsInConjuct(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Conjunct conjunct) throws Exception {
+	public static Constraints getConstraintsInConjuct(GenerateCVC1 cvc, QueryBlockDetails queryBlock, ConjunctQueryStructure conjunct) throws Exception {
 		Constraints constraints= new Constraints();
 		String constraintString="";
 		Vector<Vector<Node>> equivalenceClasses = conjunct.getEquivalenceClasses();
@@ -193,6 +195,9 @@ public class GenerateConstraintsForConjunct {
 				else{
 				tableNo =  selectionConds.get(k).getLeft().getTableNameNo();
 			}
+			if(tableNo == null || tableNo.isEmpty()){
+				tableNo =  selectionConds.get(k).getLeft().getTableNameNo();
+			}
 			int offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
 
 			int count = cvc.getNoOfTuples().get(tableNo) * queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */
@@ -201,7 +206,7 @@ public class GenerateConstraintsForConjunct {
 		}
 		
 		//FOR CASE CONDITION IN WHERE CLAUSE - ADD CONSTRAINTS APPENDING AND HERE
-				if(cvc.getqParser().getCaseConditionMap() != null && !cvc.getqParser().getCaseConditionMap().isEmpty()){
+				if(cvc.getqStructure().getCaseConditionMap() != null && !cvc.getqStructure().getCaseConditionMap().isEmpty()){
 					/*if(!constraints.constraints.isEmpty()){
 						constraintString = constraints.constraints.toString();
 						if(!constraintString.equalsIgnoreCase("") && constraintString.length() > 7)
@@ -213,7 +218,8 @@ public class GenerateConstraintsForConjunct {
 				
 				 
 		//End OF CASE CONDITION		
-		Vector<Node> allConds = conjunct.getAllConds();
+		//Vector<Node> allConds = conjunct.getAllConds();
+		Vector<Node> allConds = conjunct.getJoinCondsAllOther();
 		for(int k=0; k<allConds.size(); k++) {
 			String nonEquiJoinConstraint = GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds);
 			
@@ -294,7 +300,7 @@ public class GenerateConstraintsForConjunct {
 		}
 		constraints.stringConstraints.add(stringConstraint);
 		
-		for(Disjunct disjunct:conjunct.disjuncts){
+		for(DisjunctQueryStructure disjunct:conjunct.disjuncts){
 			constraints = Constraints.mergeConstraints(constraints,GenerateConstraintsForDisjunct.getConstraintsForDisjuct(cvc, queryBlock, disjunct));
 		}
 		
@@ -308,7 +314,7 @@ public class GenerateConstraintsForConjunct {
 	 * @return
 	 * @throws Exception
 	 */
-	public static String getConstraintsForConjuctExceptNonEquiJoins(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Conjunct conjunct) throws Exception {
+	public static String getConstraintsForConjuctExceptNonEquiJoins(GenerateCVC1 cvc, QueryBlockDetails queryBlock, ConjunctQueryStructure conjunct) throws Exception {
 
 		String constraintString = "";
 
@@ -423,7 +429,7 @@ public class GenerateConstraintsForConjunct {
 	 * @return
 	 * @throws Exception
 	 */
-	public static String getConstraintsForConjuctExceptSelectionConds(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Conjunct conjunct) throws Exception {
+	public static String getConstraintsForConjuctExceptSelectionConds(GenerateCVC1 cvc, QueryBlockDetails queryBlock, ConjunctQueryStructure conjunct) throws Exception {
 
 		String constraintString = "";
 
@@ -448,7 +454,8 @@ public class GenerateConstraintsForConjunct {
 		constraintString += "\n%---------------------------------\n% ALL CLASS CONSTRAINTS\n%---------------------------------\n";
 
 		/** Get the constraints for the non equi-join conditions */
-		Vector<Node> allConds = conjunct.getAllConds();
+		//Vector<Node> allConds = conjunct.getAllConds();
+		Vector<Node> allConds = conjunct.getJoinCondsAllOther();
 		for(int k=0; k<allConds.size(); k++)
 			constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds) +"\n";
 
@@ -515,7 +522,7 @@ public class GenerateConstraintsForConjunct {
 	 * @return
 	 * @throws Exception
 	 */
-	public static String getConstraintsForConjuctExceptStringSelectionConds(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Conjunct conjunct) throws Exception {
+	public static String getConstraintsForConjuctExceptStringSelectionConds(GenerateCVC1 cvc, QueryBlockDetails queryBlock, ConjunctQueryStructure conjunct) throws Exception {
 
 		String constraintString = "";
 
@@ -572,7 +579,8 @@ public class GenerateConstraintsForConjunct {
 		constraintString += "\n%---------------------------------\n% ALL CLASS CONSTRAINTS\n%---------------------------------\n";
 
 		/** Get the constraints for the non equi-join conditions */
-		Vector<Node> allConds = conjunct.getAllConds();
+		//Vector<Node> allConds = conjunct.getAllConds();
+		Vector<Node> allConds = conjunct.getJoinCondsAllOther();
 		for(int k=0; k<allConds.size(); k++)
 			constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds) +"\n";
 
@@ -608,7 +616,7 @@ public class GenerateConstraintsForConjunct {
 	 * @return
 	 * @throws Exception
 	 */
-	public static String getConstraintsForConjuctExceptLikeConds(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Conjunct conjunct) throws Exception {
+	public static String getConstraintsForConjuctExceptLikeConds(GenerateCVC1 cvc, QueryBlockDetails queryBlock, ConjunctQueryStructure conjunct) throws Exception {
 
 		String constraintString = "";
 
@@ -665,7 +673,8 @@ public class GenerateConstraintsForConjunct {
 		constraintString += "\n%---------------------------------\n% ALL CLASS CONSTRAINTS\n%---------------------------------\n";
 
 		/** Get the constraints for the non equi-join conditions */
-		Vector<Node> allConds = conjunct.getAllConds();
+		//Vector<Node> allConds = conjunct.getAllConds();
+		Vector<Node> allConds = conjunct.getJoinCondsAllOther();
 		for(int k=0; k<allConds.size(); k++)
 			constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds) +"\n";
 
@@ -718,7 +727,7 @@ public class GenerateConstraintsForConjunct {
 	 * @return
 	 * @throws Exception
 	 */
-	public static String getConstraintsForConjuctExceptWhereClauseSubQueryBlock(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Conjunct conjunct) throws Exception {
+	public static String getConstraintsForConjuctExceptWhereClauseSubQueryBlock(GenerateCVC1 cvc, QueryBlockDetails queryBlock, ConjunctQueryStructure conjunct) throws Exception {
 
 		String constraintString = "";
 
@@ -775,7 +784,8 @@ public class GenerateConstraintsForConjunct {
 		constraintString += "\n%---------------------------------\n% ALL CLASS CONSTRAINTS\n%---------------------------------\n";
 
 		/** Get the constraints for the non equi-join conditions */
-		Vector<Node> allConds = conjunct.getAllConds();
+		//Vector<Node> allConds = conjunct.getAllConds();
+		Vector<Node> allConds = conjunct.getJoinCondsAllOther();
 		for(int k=0; k<allConds.size(); k++)
 			constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds) +"\n";
 
@@ -789,20 +799,20 @@ public class GenerateConstraintsForConjunct {
 
 			//String tableNo = stringSelectionConds.get(k).getLeft().getTableNameNo();
 			String tableNo = "";
-			if(selectionConds.get(k).getType().equalsIgnoreCase(Node.getBaoNodeType())){
-				tableNo = getTableNameNoForBAONode(selectionConds.get(k));
+			if(stringSelectionConds.get(k).getType().equalsIgnoreCase(Node.getBaoNodeType())){
+				tableNo = getTableNameNoForBAONode(stringSelectionConds.get(k));
 			}
-			else if((selectionConds.get(k).getLeft() != null && 
-					selectionConds.get(k).getLeft().getType().equalsIgnoreCase(Node.getBaoNodeType()))){
+			else if((stringSelectionConds.get(k).getLeft() != null && 
+					stringSelectionConds.get(k).getLeft().getType().equalsIgnoreCase(Node.getBaoNodeType()))){
 				
-				tableNo = getTableNameNoForBAONode(selectionConds.get(k).getLeft());
+				tableNo = getTableNameNoForBAONode(stringSelectionConds.get(k).getLeft());
 				}
-			else if(selectionConds.get(k).getRight() != null && 
-					selectionConds.get(k).getRight().getType().equalsIgnoreCase(Node.getBaoNodeType())){
-				tableNo = getTableNameNoForBAONode(selectionConds.get(k).getRight());
+			else if(stringSelectionConds.get(k).getRight() != null && 
+					stringSelectionConds.get(k).getRight().getType().equalsIgnoreCase(Node.getBaoNodeType())){
+				tableNo = getTableNameNoForBAONode(stringSelectionConds.get(k).getRight());
 			}
 				else{
-				tableNo =  selectionConds.get(k).getLeft().getTableNameNo();
+				tableNo =  stringSelectionConds.get(k).getLeft().getTableNameNo();
 			}
 			
 			int offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
@@ -830,11 +840,11 @@ public class GenerateConstraintsForConjunct {
 		return constraintString;
 	}
 	
-	public static String generateJoinConditionConstraintsForNotExists(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Conjunct conjunct){
+	public static String generateJoinConditionConstraintsForNotExists(GenerateCVC1 cvc, QueryBlockDetails queryBlock, ConjunctQueryStructure conjunct){
 		String constraintString = "";
 		
 		Vector<String> OrConstraints=new Vector<String>();		
-		Vector<Node> joinConds = conjunct.getJoinConds();
+		Vector<Node> joinConds = conjunct.getJoinCondsAllOther();
 		
 		for(Node n : joinConds){
 			Node left = n.getLeft();
@@ -854,7 +864,7 @@ public class GenerateConstraintsForConjunct {
 		return constraintString.trim();
 	}
 	
-	public static String generateConstraintsNotExists(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Conjunct conjunct, String relation) throws Exception {
+	public static String generateConstraintsNotExists(GenerateCVC1 cvc, QueryBlockDetails queryBlock, ConjunctQueryStructure conjunct, String relation) throws Exception {
 		
 		String constraintString = "";
 		
@@ -866,10 +876,10 @@ public class GenerateConstraintsForConjunct {
 			//System.out.print(k);
 			
 			/** Generate negative constraint for correlation condition.*/
-			if(!conjunct.joinConds.isEmpty()){
+			if(!conjunct.joinCondsAllOther.isEmpty()){
 
 				/**Get the correlation variables*/
-				Vector<Node> joinConds = conjunct.getJoinConds();
+				Vector<Node> joinConds = conjunct.getJoinCondsAllOther();
 
 				for(Node n : joinConds){
 
@@ -890,6 +900,29 @@ public class GenerateConstraintsForConjunct {
 						OrConstraints.add(GenerateJoinPredicateConstraints.genNegativeCondsEqClass(cvc, queryBlock, other, node, k));
 					}					
 				}
+				
+				joinConds = conjunct.getJoinCondsForEquivalenceClasses();
+
+				for(Node n : joinConds){
+
+					Node node = null;
+					Node other = null;
+					Node left = n.getLeft();
+					Node right = n.getRight();
+					
+					if(left.getTable().getTableName().endsWith(relation)){
+						node = left;
+						other = right;
+					} else if(right.getTable().getTableName().endsWith(relation)){
+						node = right;
+						other = left;
+					}
+
+					if(node != null) {
+						OrConstraints.add(GenerateJoinPredicateConstraints.genNegativeCondsEqClass(cvc, queryBlock, other, node, k));
+					}					
+				}
+				
 			}
 			
 			/** Now generate Negative constraints for selection conditions */
@@ -976,7 +1009,7 @@ public class GenerateConstraintsForConjunct {
 	 * @return
 	 * @throws Exception
 	 */
-	public static String generateNegativeConstraintsConjunct(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Conjunct conjunct) throws Exception {
+	public static String generateNegativeConstraintsConjunct(GenerateCVC1 cvc, QueryBlockDetails queryBlock, ConjunctQueryStructure conjunct) throws Exception {
 
 		
 		String constraintString = "";
@@ -1060,7 +1093,7 @@ public class GenerateConstraintsForConjunct {
 					/** Form P = EC - S */
 					Vector<Node> P = new Vector<Node>();
 					for(int k=0; k<ec.size(); k++)						
-						if( cvc.getqParser().alreadyNotExistInEquivalenceClass(S, ec.get(k)))
+						if( cvc.getqStructure().alreadyNotExistInEquivalenceClass(S, ec.get(k)))
 							P.add(ec.get(k));
 
 
@@ -1094,7 +1127,7 @@ public class GenerateConstraintsForConjunct {
 					/**Shree changed it for the following reason:
 					//If Not Exists holds any one primary key relation as a condition
 					//Ex:Not Exists(takes.year=section.year and section.year='2009')
-					//In this example, P will hold 2 values and constraint is to be added for
+					//In this example, P will hold 2 values and reverse constraint is to be added for
 					//(O_SECTION[1].3 /= O_TAKES[1].4)  OR  (O_TAKES[1].4 /= O_SECTION[1].3) */
 					
 					if(P!= null && P.size() == 1){
@@ -1104,7 +1137,9 @@ public class GenerateConstraintsForConjunct {
 						for(int k=0;k<P.size(); k++){
 							OrConstraints.add( GenerateJoinPredicateConstraints.genNegativeConds( cvc, queryBlock, colNulled, P.get(k)));
 						}
-					}
+					} 
+					
+					
 					
 				}
 			}
@@ -1114,8 +1149,8 @@ public class GenerateConstraintsForConjunct {
 
 		/**Now generate Positive conditions for each of the non equi join conditions 
 		 * that were not considered when building equivalence classes*/
-		Vector<Node> allConds = conjunct.getAllConds();
-		
+		//Vector<Node> allConds = conjunct.getAllConds();
+		Vector<Node> allConds = conjunct.getJoinCondsAllOther();
 		/**get constraint*/
 		String constraint = GenerateJoinPredicateConstraints.getNegativeConstraintsForNonEquiJoins(cvc, queryBlock, allConds) ;
 
@@ -1201,7 +1236,7 @@ public class GenerateConstraintsForConjunct {
 				/**if this sub query is of EXISTS Type*/
 				if(subQ.getType().equals(Node.getExistsNodeType()) ){
 					
-					for (Conjunct con: subQuery.getConjuncts())
+					for (ConjunctQueryStructure con: subQuery.getConjunctsQs())
 						negativeConstraint += generateNegativeConstraintsConjunct(cvc, subQuery, con);
 				}
 				
@@ -1209,7 +1244,7 @@ public class GenerateConstraintsForConjunct {
 				/**We need to get positive constraints for this sub query*/
 				else if (  subQ.getType().equals(Node.getNotExistsNodeType() ) ){
 					
-					for (Conjunct con: subQuery.getConjuncts())
+					for (ConjunctQueryStructure con: subQuery.getConjunctsQs())
 						negativeConstraint += getConstraintsForConjuct(cvc, queryBlock, con);
 				}
 				else{
@@ -1240,7 +1275,7 @@ public class GenerateConstraintsForConjunct {
 		return constraintString;
 	}
 
-	public static Constraints generateNegativeConstraintsForConjunct(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Conjunct conjunct) throws Exception{
+	public static Constraints generateNegativeConstraintsForConjunct(GenerateCVC1 cvc, QueryBlockDetails queryBlock, ConjunctQueryStructure conjunct) throws Exception{
 		Constraints constraints=new Constraints();
 		
 		String constraintString = "";
@@ -1252,8 +1287,8 @@ public class GenerateConstraintsForConjunct {
 
 		/**Now generate Positive conditions for each of the non equi join conditions 
 		 * that were not considered when building equivalence classes*/
-		Vector<Node> allConds = conjunct.getAllConds();
-		
+		//Vector<Node> allConds = conjunct.getAllConds();
+		Vector<Node> allConds = conjunct.getJoinCondsAllOther();
 		/**get constraint*/
 		String constraint = GenerateJoinPredicateConstraints.getNegativeConstraintsForNonEquiJoins(cvc, queryBlock, allConds) ;
 
@@ -1359,7 +1394,7 @@ public class GenerateConstraintsForConjunct {
 				/**if this sub query is of EXISTS Type*/
 				if(subQ.getType().equals(Node.getExistsNodeType()) ){
 					
-					for (Conjunct con: subQuery.getConjuncts())
+					for (ConjunctQueryStructure con: subQuery.getConjunctsQs())
 						negativeConstraint += generateNegativeConstraintsConjunct(cvc, subQuery, con);
 				}
 				
@@ -1367,7 +1402,7 @@ public class GenerateConstraintsForConjunct {
 				/**We need to get positive constraints for this sub query*/
 				else if (  subQ.getType().equals(Node.getNotExistsNodeType() ) ){
 					
-					for (Conjunct con: subQuery.getConjuncts())
+					for (ConjunctQueryStructure con: subQuery.getConjunctsQs())
 						negativeConstraint += getConstraintsForConjuct(cvc, queryBlock, con);
 				}
 				else{

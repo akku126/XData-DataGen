@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import testDataGen.GetTupleAssignment;
 import util.JoinGraphNode;
@@ -27,10 +27,14 @@ public class GetTupleAssignmentForQueryBlock {
 		/**TODO: Which conjunct should be consider for the tuple assignment
 		 * For now consider all the conjuncts, but incorrect
 		 */
-		for(Conjunct con: queryBlock.getConjuncts())
-			for(Node n: con.getJoinConds())
+		for(ConjunctQueryStructure con: queryBlock.getConjunctsQs())
+			for(Node n: con.getJoinCondsAllOther())
 				joinConds.add(new Node(n));
-
+		
+		for(ConjunctQueryStructure con: queryBlock.getConjunctsQs())
+			for(Node n: con.getJoinCondsForEquivalenceClasses())
+				joinConds.add(new Node(n));
+		
 		if(joinConds != null && joinConds.size()!=0){
 			GetTupleAssignment gta = new GetTupleAssignment(rootTableName, cvc.getFilePath());
 
@@ -47,7 +51,7 @@ public class GetTupleAssignmentForQueryBlock {
 
 			/**Update the equivalence classes of this query block*/
 			ArrayList<ArrayList<Node>> eqClas = new ArrayList<ArrayList<Node>>();
-			for(Conjunct con: queryBlock.getConjuncts()){
+			for(ConjunctQueryStructure con: queryBlock.getConjunctsQs()){
 				ArrayList<ArrayList<Node>> ec = new ArrayList<ArrayList<Node>>(); 
 				for(Vector<Node> e:	con.getEquivalenceClasses())
 					ec.add(new ArrayList(e));
@@ -62,7 +66,7 @@ public class GetTupleAssignmentForQueryBlock {
 			/** Update selection conditions*/
 			ArrayList< Node > selectionConds = new ArrayList<Node>();
 			ArrayList< Node > stringSelectionConds = new ArrayList<Node>();
-			for(Conjunct conjunct: queryBlock.getConjuncts()){
+			for(ConjunctQueryStructure conjunct: queryBlock.getConjunctsQs()){
 				/** get selection conditions*/
 				selectionConds.addAll(conjunct.getSelectionConds());
 
@@ -211,7 +215,7 @@ public class GetTupleAssignmentForQueryBlock {
 
 		logger.log(Level.INFO," \n Total No of output Tuples for each relation  assigned:\n"+ cvc.getNoOfOutputTuples().toString());
 
-		gta.getOriginalColumnNames(cvc.getqParser().getTableMap());
+		gta.getOriginalColumnNames(cvc.getqStructure().getTableMap());
 
 		/** Update the elements that are to be unique and single valued. These are used for generating the constraints
 		 * We are removing the group by nodes of the sub queries from the list of unique elements, because these are to be unique across multiple groups and this is ensured while generating 

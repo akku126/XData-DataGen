@@ -52,7 +52,7 @@ public class DistinctMutationsInFromSubQuery {
 					return;*/
 			
 			/** Initialize the data structures for generating the data to kill this mutation */
-			cvc.inititalizeForDataset();
+			cvc.inititalizeForDatasetQs();
 
 			/**set the type of mutation we are trying to kill*/
 			cvc.setTypeOfMutation( TagDatasets.MutationType.DISTINCT, TagDatasets.QueryBlock.FROM_SUBQUERY );

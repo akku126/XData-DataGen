@@ -27,7 +27,7 @@ public class GenerateDataForOriginalQuery {
 		logger.log(Level.INFO,"---------------------------------\n");
 		try{
 			/** Initialize the data structures for generating the data to kill this mutation */
-			cvc.inititalizeForDataset();
+			cvc.inititalizeForDatasetQs();
 		 
 			/**set the type of mutation we are trying to kill*/
 			cvc.setTypeOfMutation(mutationType);
@@ -39,13 +39,13 @@ public class GenerateDataForOriginalQuery {
 			
 			
 			//initializing once again after params are set up--- FIX once params are set properly
-			cvc.inititalizeForDataset();
+		//	cvc.inititalizeForDataset();
 			
 			/**Get the null and database constraints - get the number of outout tuples
 			 * and generate other constraints  accordingly*/
 			 GenerateCommonConstraintsForQuery.generateNullandDBConstraints(cvc,false);
 			 
-			/**Get the constraints for all the blocks of the query -Shree commented */
+			/**Get the constraints for all the blocks of the query  */
 			cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlock(cvc) );
 			
 			/** Call the method for the data generation*/

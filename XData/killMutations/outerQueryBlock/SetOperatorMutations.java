@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Vector;
 
 import killMutations.GenerateDataForOriginalQuery;
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.ForeignKey;
 import parsing.Node;
 import parsing.Table;
@@ -41,7 +41,7 @@ public class SetOperatorMutations {
 		cvcNotExists.setForeignKeys(cvc.getGenCVC().getForeignKeys());
 		cvcNotExists.setForeignKeysModified(cvc.getGenCVC().getForeignKeysModified());
 		cvcNotExists.setUnionCVC(cvc);
-		cvcNotExists.inititalizeForDataset();
+		cvcNotExists.inititalizeForDatasetQs();
 		cvcNotExists.setCount(cvc.getGenCVC().getCount());
 		//cvcNotExists.initializeQueryDetails(cvcNotExists.getqParser());
 		
@@ -73,7 +73,7 @@ public class SetOperatorMutations {
 		cvcNotExists.setForeignKeys(cvc.getGenCVC().getForeignKeys());
 		cvcNotExists.setForeignKeysModified(cvc.getGenCVC().getForeignKeysModified());
 		cvcNotExists.setUnionCVC(cvc);
-		cvcNotExists.inititalizeForDataset();
+		cvcNotExists.inititalizeForDatasetQs();
 		cvcNotExists.setCount(cvc.getGenCVC().getCount());
 		//cvcNotExists.initializeQueryDetails(cvcNotExists.getqParser());
 
@@ -94,7 +94,7 @@ public class SetOperatorMutations {
 		cvcNotExists.setForeignKeys(cvc.getGenCVC().getForeignKeys());
 		cvcNotExists.setForeignKeysModified(cvc.getGenCVC().getForeignKeysModified());
 		cvcNotExists.setUnionCVC(cvc);
-		cvcNotExists.inititalizeForDataset();
+		cvcNotExists.inititalizeForDatasetQs();
 		cvcNotExists.setCount(cvc.getGenCVC().getCount());
 		//cvcNotExists.initializeQueryDetails(cvcNotExists.getqParser());
 		
@@ -136,7 +136,7 @@ public class SetOperatorMutations {
 		
 		/**If this relation is involved in equi-joins then we can ensure multiple tuples at the output, even if this relation contains a single tuple 
 		 * FIXME: But what if all the relations in this equivalence class contains a single tuple*/
-		for(Conjunct con: qbt.getConjuncts())
+		for(ConjunctQueryStructure con: qbt.getConjunctsQs())
 			for(Vector<Node> ec: con.getEquivalenceClasses())
 				for(Node n2: ec)
 					if(n2.getTableNameNo().equalsIgnoreCase(tableNameNo))
@@ -177,7 +177,7 @@ public class SetOperatorMutations {
 		PreProcessingActivity.setOriginalTablesForSetQuery(left, right);
 			
 		//initialize for data generation
-		left.inititalizeForDataset();
+		left.inititalizeForDatasetQs();
 		left.setCount(cvc.getGenCVC().getCount());
 	
 		/** Get outer query block of this query */
@@ -218,7 +218,7 @@ public class SetOperatorMutations {
 		
 		/**If this relation is involved in equi-joins then we can ensure multiple tuples at the output, even if this relation contains a single tuple 
 		 * FIXME: But what if all the relations in this equivalence class contains a single tuple*/
-		for(Conjunct con: qbt.getConjuncts())
+		for(ConjunctQueryStructure con: qbt.getConjunctsQs())
 			for(Vector<Node> ec: con.getEquivalenceClasses())
 				for(Node n2: ec)
 					if(n2.getTableNameNo().equalsIgnoreCase(tableNameNo))
@@ -254,7 +254,7 @@ public class SetOperatorMutations {
 		PreProcessingActivity.setOriginalTablesForSetQuery(left, right);
 	
 		//initialize for data generation
-		right.inititalizeForDataset();
+		right.inititalizeForDatasetQs();
 		right.setCount(cvc.getGenCVC().getCount());
 	
 		/** Get outer query block of this query */
@@ -295,7 +295,7 @@ public class SetOperatorMutations {
 		
 		/**If this relation is involved in equi-joins then we can ensure multiple tuples at the output, even if this relation contains a single tuple 
 		 * FIXME: But what if all the relations in this equivalence class contains a single tuple*/
-		for(Conjunct con: qbt.getConjuncts())
+		for(ConjunctQueryStructure con: qbt.getConjunctsQs())
 			for(Vector<Node> ec: con.getEquivalenceClasses())
 				for(Node n2: ec)
 					if(n2.getTableNameNo().equalsIgnoreCase(tableNameNo))
@@ -337,8 +337,8 @@ public class SetOperatorMutations {
 		PreProcessingActivity.setOriginalTablesForSetQuery(left, right);
 		
 
-		left.inititalizeForDataset();
-		right.inititalizeForDataset();
+		left.inititalizeForDatasetQs();
+		right.inititalizeForDatasetQs();
 				
 		//set type of mutation to be killed
 		left.setTypeOfMutation(TagDatasets.MutationType.SETOP, TagDatasets.QueryBlock.OUTER_BLOCK);
@@ -378,7 +378,7 @@ public class SetOperatorMutations {
 		
 		/**If this relation is involved in equi-joins then we can ensure multiple tuples at the output, even if this relation contains a single tuple 
 		 * FIXME: But what if all the relations in this equivalence class contains a single tuple*/
-		for(Conjunct con: qbtLeft.getConjuncts())
+		for(ConjunctQueryStructure con: qbtLeft.getConjunctsQs())
 			for(Vector<Node> ec: con.getEquivalenceClasses())
 				for(Node n2: ec)
 					if(n2.getTableNameNo().equalsIgnoreCase(tableNameNoLeft))
@@ -431,7 +431,7 @@ public class SetOperatorMutations {
 		
 		/**If this relation is involved in equi-joins then we can ensure multiple tuples at the output, even if this relation contains a single tuple 
 		 * FIXME: But what if all the relations in this equivalence class contains a single tuple*/
-		for(Conjunct con: qbtRight.getConjuncts())
+		for(ConjunctQueryStructure con: qbtRight.getConjunctsQs())
 			for(Vector<Node> ec: con.getEquivalenceClasses())
 				for(Node n4: ec)
 					if(n4.getTableNameNo().equalsIgnoreCase(tableNameNoRight))
@@ -534,7 +534,7 @@ public class SetOperatorMutations {
 		
 		PreProcessingActivity.setOriginalTablesForSetQuery(left, right);
 
-		left.inititalizeForDataset();
+		left.inititalizeForDatasetQs();
 		
 		/**set the type of mutation we are trying to kill*/
 		left.setTypeOfMutation(TagDatasets.MutationType.SETOP, TagDatasets.QueryBlock.OUTER_BLOCK);
@@ -623,7 +623,7 @@ public class SetOperatorMutations {
 		
 		PreProcessingActivity.setOriginalTablesForSetQuery(left, right);
 		
-		left.inititalizeForDataset();
+		left.inititalizeForDatasetQs();
 		
 		/** Get outer query block of this query */
 		QueryBlockDetails qbt = left.getOuterBlock();
@@ -663,7 +663,7 @@ public class SetOperatorMutations {
 		
 		/**If this relation is involved in equi-joins then we can ensure multiple tuples at the output, even if this relation contains a single tuple 
 		 * FIXME: But what if all the relations in this equivalence class contains a single tuple*/
-		for(Conjunct con: qbt.getConjuncts())
+		for(ConjunctQueryStructure con: qbt.getConjunctsQs())
 			for(Vector<Node> ec: con.getEquivalenceClasses())
 				for(Node n2: ec)
 					if(n2.getTableNameNo().equalsIgnoreCase(tableNameNo))

@@ -13,7 +13,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.JoinClauseInfo;
 import parsing.Node;
 import parsing.Table;
@@ -44,10 +44,10 @@ public class MissingJoinMutations {
 		HashMap<String, Integer> repeatedRelationCountOrig = (HashMap<String, Integer>) cvc.getRepeatedRelationCount().clone();
 		HashMap<String, Integer[]> tableNameOrig =(HashMap<String, Integer[]>) cvc.getTableNames().clone();
 		//ArrayList <Conjunct> conOriginal =new ArrayList<Conjunct>(cvc.getOuterBlock().getConjuncts());
-		ArrayList <Conjunct> conOriginal = cloneListOfConjuncts(cvc.getOuterBlock().getConjuncts());
+		ArrayList <ConjunctQueryStructure> conOriginal = cloneListOfConjuncts(cvc.getOuterBlock().getConjunctsQs());
 		
 		//Vector<Conjunct> parserConjucts = new Vector<Conjunct>(cvc.getqParser().getConjuncts());
-		Vector<Conjunct> parserConjucts = cloneConjuncts(cvc.getqParser().getConjuncts());
+		Vector<ConjunctQueryStructure> parserConjucts = cloneConjunctsQs(cvc.getqStructure().getConjuncts());
 		
 		 
 		logger.log(Level.INFO,"\n----------------------------------");
@@ -58,8 +58,8 @@ public class MissingJoinMutations {
 				
 		
 				//ADD JOIN CONDITION IF REFERENCE ATTRIBUTES are there in projected cols or selection condition or having clause
-			if(cvc.getqParser()!= null && !(cvc.getqParser().setOperator !=null)){
-				cvc.inititalizeForDataset();
+			if(cvc.getqStructure()!= null && !(cvc.getqStructure().setOperator !=null)){
+				cvc.inititalizeForDatasetQs();
 				
 				//Update the conjunct with additional Missing join conditions
 				updateCVCForMissingJoins(cvc,noOfTuplesOrig,noOfOutputTuplesOrig,repeatedRelNextTuplePosOrig,repeatedRelationCountOrig);
@@ -76,7 +76,7 @@ public class MissingJoinMutations {
 				/** we have to kill the mutations in each conjunct*/
 		
 				/**Kill the non equi-join clause mutations in each conjunct of this outer block of  query */
-				for(Conjunct conjunct: qbt.getConjuncts()){
+				for(ConjunctQueryStructure conjunct: qbt.getConjunctsQs()){
 		
 					Vector<Vector<Node>> equivalenceClassesOrig = (Vector<Vector<Node>>)conjunct.getEquivalenceClasses().clone();
 					 
@@ -118,7 +118,7 @@ public class MissingJoinMutations {
 						qbt.setEquivalenceClassesKilled( new ArrayList<Node>(ec) ); 
 		
 						/** Initialize the data structures for generating the data to kill this mutation */
-						cvc.inititalizeForDataset();
+						cvc.inititalizeForDatasetQs();
 		
 						/**set the type of mutation we are trying to kill*/
 						cvc.setTypeOfMutation( TagDatasets.MutationType.MISSINGJOINS,TagDatasets.QueryBlock.OUTER_BLOCK);
@@ -173,7 +173,7 @@ public class MissingJoinMutations {
 							
 							
 							/** Add negative conditions for all other conjuncts of this query block*/
-							for(Conjunct inner: qbt.getConjuncts())
+							for(ConjunctQueryStructure inner: qbt.getConjunctsQs())
 								if(inner != conjunct)
 									cvc.getConstraints().add( GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, qbt, inner) );	
 								
@@ -203,8 +203,8 @@ public class MissingJoinMutations {
 					//		cvc.setNoOfOutputTuples( (HashMap<String, Integer>) noOfOutputTuplesOrig.clone() );
 							
 				} 
-				cvc.getqParser().setConjuncts(new Vector(parserConjucts));
-				cvc.getOuterBlock().setConjuncts( new ArrayList(conOriginal));
+				cvc.getqStructure().setConjuncts(new Vector(parserConjucts));
+				cvc.getOuterBlock().setConjunctsQs( new ArrayList(conOriginal));
 				// Revert back to the old assignment 
 				cvc.setNoOfTuples( (HashMap<String, Integer>) noOfTuplesOrig.clone() );
 		//		cvc.setNoOfOutputTuples( (HashMap<String, Integer>) noOfOutputTuplesOrig.clone() );
@@ -253,16 +253,16 @@ public class MissingJoinMutations {
 				 ((Conjunct)qbt.getConjuncts().get(0)).getEquivalenceClasses().addAll(additionalJoins);
 			 }
 		}*/
-		 if(qbt.getConjuncts() != null 
-				 && qbt.getConjuncts().size() > 0
+		 if(qbt.getConjunctsQs() != null 
+				 && qbt.getConjunctsQs().size() > 0
 				 && additionalJoins != null && additionalJoins.size() > 0){
 				 for(int k = 0; k < additionalJoins.size(); k++){
-					 if(!(qbt.getConjuncts().get(0).getEquivalenceClasses().contains(additionalJoins.get(k)))){
+					 if(!(qbt.getConjunctsQs().get(0).getEquivalenceClasses().contains(additionalJoins.get(k)))){
 						 additionalEqvClasses.add(additionalJoins.get(k));
 						 eqClassNotExists = true;
 					 }
 					 
-				 }qbt.getConjuncts().get(0).getEquivalenceClasses().addAll(additionalJoins);
+				 }qbt.getConjunctsQs().get(0).getEquivalenceClasses().addAll(additionalJoins);
 				 
 				 }
 	}
@@ -285,10 +285,10 @@ public class MissingJoinMutations {
 		String tableName = tableNamesNo.get(i).substring(0, tableNamesNo.get(i).length()-1);
 		int getTableNameNo = Integer.parseInt(tableNamesNo.get(i).substring(tableNamesNo.get(i).length()-1, tableNamesNo.get(i).length())); /*To be changed for tablenameno >= 10*/
 		
-		for(int m=0;m<cvc.getqParser().getForeignKeyVectorOriginal().size();m++){
+		for(int m=0;m<cvc.getqStructure().getForeignKeyVectorOriginal().size();m++){
 			
 		
-			JoinClauseInfo  jnClause = cvc.getqParser().getForeignKeyVectorOriginal().get(m);
+			JoinClauseInfo  jnClause = cvc.getqStructure().getForeignKeyVectorOriginal().get(m);
 			if(!(existingRelation.contains(jnClause.getJoinTable1().getTableName()+jnClause.getJoinTable2().getTableName()+jnClause.getJoinAttribute1().getColumnName()))
 					&& jnClause.getJoinAttribute1().getColumnName().equals(jnClause.getJoinAttribute2().getColumnName())){
 				
@@ -430,10 +430,10 @@ public class MissingJoinMutations {
 		
 	}
 	//Add the equivalence classes to the conjuncts also
-	 Conjunct.createConjunct(cvc.getqParser(),addConditions);
-     for(int k = 0 ; k < cvc.getqParser().getConjuncts().size();k++){
-		 if(! qbt.getConjuncts().containsAll(cvc.getqParser().getConjuncts())){
-			 qbt.setConjuncts(new ArrayList<Conjunct>(cvc.getqParser().getConjuncts()));
+	ConjunctQueryStructure.createConjunct(cvc.getqStructure(),addConditions);
+     for(int k = 0 ; k < cvc.getqStructure().getConjuncts().size();k++){
+		 if(! qbt.getConjunctsQs().containsAll(cvc.getqStructure().getConjuncts())){
+			 qbt.setConjunctsQs(new ArrayList<ConjunctQueryStructure>(cvc.getqStructure().getConjuncts()));
 		 } 
      }
 	
@@ -448,17 +448,48 @@ public class MissingJoinMutations {
 	 * @param existingConjuncts
 	 * @return
 	 */
-	public static Vector cloneConjuncts(Vector<Conjunct> existingConjuncts){
+	public static Vector cloneConjuncts(Vector<ConjunctQueryStructure> existingConjuncts){
 		
-		Vector<Conjunct> newConjunct = new Vector<Conjunct>();
+		Vector<ConjunctQueryStructure> newConjunct = new Vector<ConjunctQueryStructure>();
 		for(int i = 0;i< existingConjuncts.size(); i++){
 			
-			Conjunct newCon = new Conjunct(existingConjuncts.get(i).getAllConds());
+			ConjunctQueryStructure newCon = new ConjunctQueryStructure(existingConjuncts.get(i).getAllConds());
 			newCon.setAllConds((Vector<Node>)existingConjuncts.get(i).getAllConds().clone());
 			newCon.setAllSubQueryConds((Vector<Node>)existingConjuncts.get(i).getAllSubQueryConds().clone());
 			newCon.setEquivalenceClasses((Vector<Vector<Node>>)existingConjuncts.get(i).getEquivalenceClasses().clone());
 			newCon.setIsNullConds((Vector<Node>)existingConjuncts.get(i).getIsNullConds().clone());
-			newCon.setJoinConds((Vector<Node>)existingConjuncts.get(i).getJoinConds().clone());
+			newCon.setJoinCondsAllOther((Vector<Node>)existingConjuncts.get(i).getJoinCondsAllOther().clone());
+			newCon.setJoinCondsForEquivalenceClasses((Vector<Node>)existingConjuncts.get(i).getJoinCondsForEquivalenceClasses().clone());
+			newCon.setLikeConds((Vector<Node>)existingConjuncts.get(i).getLikeConds().clone());
+			newCon.setSelectionConds((Vector<Node>)existingConjuncts.get(i).getSelectionConds().clone());
+			newCon.setStringSelectionConds((Vector<Node>)existingConjuncts.get(i).getStringSelectionConds().clone());
+		
+		
+			newConjunct.add(newCon); 
+			
+		}
+		return newConjunct;
+
+	}
+	
+	/**
+	 * This method clones the original conjunct values that are used for restoring the conjuncts later
+	 * after data generation for this part is done and returns Vector of Conjuncts
+	 * 
+	 * @param existingConjuncts
+	 * @return
+	 */
+	public static Vector cloneConjunctsQs(Vector<ConjunctQueryStructure> existingConjuncts){
+		
+		Vector<ConjunctQueryStructure> newConjunct = new Vector<ConjunctQueryStructure>();
+		for(int i = 0;i< existingConjuncts.size(); i++){
+			
+			ConjunctQueryStructure newCon = new ConjunctQueryStructure(existingConjuncts.get(i).getAllConds());
+			newCon.setAllConds((Vector<Node>)existingConjuncts.get(i).getAllConds().clone());
+			newCon.setAllSubQueryConds((Vector<Node>)existingConjuncts.get(i).getAllSubQueryConds().clone());
+			newCon.setEquivalenceClasses((Vector<Vector<Node>>)existingConjuncts.get(i).getEquivalenceClasses().clone());
+			newCon.setIsNullConds((Vector<Node>)existingConjuncts.get(i).getIsNullConds().clone());
+			//newCon.setJoinConds((Vector<Node>)existingConjuncts.get(i).getJoinConds().clone());
 			newCon.setLikeConds((Vector<Node>)existingConjuncts.get(i).getLikeConds().clone());
 			newCon.setSelectionConds((Vector<Node>)existingConjuncts.get(i).getSelectionConds().clone());
 			newCon.setStringSelectionConds((Vector<Node>)existingConjuncts.get(i).getStringSelectionConds().clone());
@@ -478,17 +509,47 @@ public class MissingJoinMutations {
 	 * @param existingConjuncts
 	 * @return
 	 */
-	public static ArrayList cloneListOfConjuncts(ArrayList<Conjunct> existingConjuncts){
+	public static ArrayList cloneListOfConjuncts(ArrayList<ConjunctQueryStructure> existingConjuncts){
 		
-		ArrayList<Conjunct> newConjunct = new ArrayList<Conjunct>();
+		ArrayList<ConjunctQueryStructure> newConjunct = new ArrayList<ConjunctQueryStructure>();
 		for(int i = 0;i< existingConjuncts.size(); i++){
 			
-			Conjunct newCon = new Conjunct(existingConjuncts.get(i).getAllConds());
+			ConjunctQueryStructure newCon = new ConjunctQueryStructure(existingConjuncts.get(i).getAllConds());
 			newCon.setAllConds((Vector<Node>)existingConjuncts.get(i).getAllConds().clone());
 			newCon.setAllSubQueryConds((Vector<Node>)existingConjuncts.get(i).getAllSubQueryConds().clone());
 			newCon.setEquivalenceClasses((Vector<Vector<Node>>)existingConjuncts.get(i).getEquivalenceClasses().clone());
 			newCon.setIsNullConds((Vector<Node>)existingConjuncts.get(i).getIsNullConds().clone());
-			newCon.setJoinConds((Vector<Node>)existingConjuncts.get(i).getJoinConds().clone());
+			newCon.setJoinCondsAllOther((Vector<Node>)existingConjuncts.get(i).getJoinCondsAllOther().clone());
+			newCon.setJoinCondsForEquivalenceClasses((Vector<Node>)existingConjuncts.get(i).getJoinCondsForEquivalenceClasses().clone());
+			newCon.setLikeConds((Vector<Node>)existingConjuncts.get(i).getLikeConds().clone());
+			newCon.setSelectionConds((Vector<Node>)existingConjuncts.get(i).getSelectionConds().clone());
+			newCon.setStringSelectionConds((Vector<Node>)existingConjuncts.get(i).getStringSelectionConds().clone());
+			
+			newConjunct.add(newCon); 
+			
+		}
+		return newConjunct;
+
+	}
+	
+	/**
+	 * This method clones the original conjunct values that are used for restoring the conjuncts later
+	 * after data generation for this part is done and returns ArrayList of Conjuncts
+	 * 
+	 * @param existingConjuncts
+	 * @return
+	 */
+	public static ArrayList cloneListOfConjunctsQs(ArrayList<ConjunctQueryStructure> existingConjuncts){
+		
+		ArrayList<ConjunctQueryStructure> newConjunct = new ArrayList<ConjunctQueryStructure>();
+		for(int i = 0;i< existingConjuncts.size(); i++){
+			
+			ConjunctQueryStructure newCon = new ConjunctQueryStructure(existingConjuncts.get(i).getAllConds());
+			newCon.setAllConds((Vector<Node>)existingConjuncts.get(i).getAllConds().clone());
+			newCon.setAllSubQueryConds((Vector<Node>)existingConjuncts.get(i).getAllSubQueryConds().clone());
+			newCon.setEquivalenceClasses((Vector<Vector<Node>>)existingConjuncts.get(i).getEquivalenceClasses().clone());
+			newCon.setIsNullConds((Vector<Node>)existingConjuncts.get(i).getIsNullConds().clone());
+			//newCon.setJoinConds((Vector<Node>)existingConjuncts.get(i).getJoinConds().clone());
 			newCon.setLikeConds((Vector<Node>)existingConjuncts.get(i).getLikeConds().clone());
 			newCon.setSelectionConds((Vector<Node>)existingConjuncts.get(i).getSelectionConds().clone());
 			newCon.setStringSelectionConds((Vector<Node>)existingConjuncts.get(i).getStringSelectionConds().clone());

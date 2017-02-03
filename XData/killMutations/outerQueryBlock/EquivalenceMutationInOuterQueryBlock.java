@@ -11,7 +11,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import parsing.Table;
 import testDataGen.GenerateCVC1;
@@ -47,7 +47,7 @@ public class EquivalenceMutationInOuterQueryBlock {
 		QueryBlockDetails qbt = cvc.getOuterBlock();
 		try{
 			/**Kill the equivalence clause mutations in each conjunct of this outer block of  query */
-			for(Conjunct conjunct: qbt.getConjuncts()){
+			for(ConjunctQueryStructure conjunct: qbt.getConjunctsQs()){
 				
 				logger.log(Level.INFO,"\n----------------------------------");
 				logger.log(Level.INFO,"NEW CONJUNCT IN EC KILLING: " + conjunct);
@@ -74,7 +74,7 @@ public class EquivalenceMutationInOuterQueryBlock {
 					qbt.setEquivalenceClassesKilled( new ArrayList<Node>(ec) ); 
 	
 					/** Initialize the data structures for generating the data to kill this mutation */
-					cvc.inititalizeForDataset();
+					cvc.inititalizeForDatasetQs();
 	
 					/**set the type of mutation we are trying to kill*/
 					cvc.setTypeOfMutation( TagDatasets.MutationType.EQUIVALENCE, TagDatasets.QueryBlock.OUTER_BLOCK );
@@ -134,7 +134,7 @@ public class EquivalenceMutationInOuterQueryBlock {
 						
 						
 						/** Add negative conditions for all other conjuncts of this query block*/
-						for(Conjunct inner: qbt.getConjuncts())
+						for(ConjunctQueryStructure inner: qbt.getConjunctsQs())
 							if(inner != conjunct)
 								cvc.getConstraints().add( GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, qbt, inner) );	
 							

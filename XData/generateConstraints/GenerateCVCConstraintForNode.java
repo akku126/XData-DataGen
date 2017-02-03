@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 
 import parsing.AggregateFunction;
 import parsing.Column;
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import parsing.Table;
 import testDataGen.DataType;
@@ -320,7 +320,7 @@ public class GenerateCVCConstraintForNode {
 	
 				if((dt.getDataType(c.getDataType())==1 || dt.getDataType(c.getDataType())==2) && c.getMinVal() != -1){
 					Vector< Node > selectionConds = new Vector<Node>();
-					for(Conjunct conjunct : queryBlock.getConjuncts())
+					for(ConjunctQueryStructure conjunct : queryBlock.getConjunctsQs())
 						selectionConds.addAll(conjunct.getSelectionConds());
 		
 					/** if there is a selection condition on c that limits the min val of c */
@@ -332,7 +332,7 @@ public class GenerateCVCConstraintForNode {
 				if((dt.getDataType(c.getDataType())==1 || dt.getDataType(c.getDataType())==2) && c.getMaxVal() != -1){
 		
 					Vector< Node > selectionConds = new Vector<Node>();
-					for(Conjunct conjunct : queryBlock.getConjuncts())
+					for(ConjunctQueryStructure conjunct : queryBlock.getConjunctsQs())
 						selectionConds.addAll(conjunct.getSelectionConds());
 		
 					/**if there is a selection condition on c that limits the max val of c*/

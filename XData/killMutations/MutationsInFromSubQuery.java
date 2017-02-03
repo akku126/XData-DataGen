@@ -4,6 +4,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import parsing.QueryParser;
+import parsing.QueryStructure;
 
 import killMutations.fromClauseNestedBlock.*;
 import testDataGen.GenerateCVC1;
@@ -22,8 +23,8 @@ public class MutationsInFromSubQuery {
 		logger.log(Level.INFO,"FROM SUBQUERY MUTANTS  IN FROM CLAUSE NESTED SUBQUERY BLOCK QUERY");
 		logger.log(Level.INFO,"---------------------------------\n");
 		boolean hasSetOperator = false;
-		for(int i=0;i<cvc.getqParser().getFromClauseSubqueries().size();i++){
-			QueryParser qpFrom = cvc.getqParser().getFromClauseSubqueries().get(i);
+		for(int i=0;i<cvc.getqStructure().getFromClauseSubqueries().size();i++){
+			QueryStructure qpFrom = cvc.getqStructure().getFromClauseSubqueries().get(i);
 			if(qpFrom.setOperator!=null && qpFrom.setOperator.length()>0){
 				hasSetOperator = true;
 				/** Killing Set Operator Mutation in SubQuery **/

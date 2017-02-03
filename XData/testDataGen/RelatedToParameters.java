@@ -10,7 +10,7 @@ import java.util.Vector;
 import java.util.logging.Logger;
 
 import parsing.Column;
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 
 /**
@@ -183,7 +183,7 @@ public class RelatedToParameters {
 			//These constraints have to be put into CVC with new variables for the (unsatisfiable) constants/parameters.
 		}
 
-		for(Conjunct con: queryBlock.getConjuncts()){
+		for(ConjunctQueryStructure con: queryBlock.getConjunctsQs()){
 			
 			if( con.getSelectionConds() != null && con.getSelectionConds().size() != 0)			//Selection conds are already flattened
 				queryBlock.getConstraintsWithParameters().putAll(removeParameterizedConstraints(queryBlock, new ArrayList( con.getSelectionConds() ), "SEL"));

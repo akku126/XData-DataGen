@@ -250,7 +250,7 @@ public class GenerateConstraintsRelatedToBranchQuery {
 		/** Adding constraints so that group by column is different from primary query */
 		temp += "\n%---------------------------------\n% BRANCH QUERY CONSTRAINTS FOR DIFFERENT GROUP BY COLUMN FROM PRIMARY QUERY\n%---------------------------------\n";
 
-		Vector<Node> tempGroupByNodes = cvc.getqParser().getGroupByNodes();
+		Vector<Node> tempGroupByNodes = cvc.getqStructure().getGroupByNodes();
 
 		if(tempGroupByNodes != null && tempGroupByNodes.size() > 0)
 		{

@@ -15,10 +15,11 @@ import killMutations.GenerateDataForOriginalQuery;
 import killMutations.MutationsInOuterBlock;
 import killMutations.outerQueryBlock.SetOperatorMutations;
 //import killMutations.outerQueryBlock.SetOperatorMutations;
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.ForeignKey;
 import parsing.Node;
 import parsing.QueryParser;
+import parsing.QueryStructure;
 import parsing.RelationHierarchyNode;
 import parsing.Table;
 import util.Configuration;
@@ -46,11 +47,11 @@ public class PreProcessingActivity {
 			Vector<Node> v=new Vector<Node>();
 			v.add(leftIter.next());
 			v.add(rightIter.next());
-			List<Conjunct> rightConjuncts=right.getOuterBlock().getConjuncts();
+			List<ConjunctQueryStructure> rightConjuncts=right.getOuterBlock().getConjunctsQs();
 			if(rightConjuncts ==null || rightConjuncts.isEmpty()) {
 				
-				Conjunct c=new Conjunct(new Vector<Node>());
-				right.getOuterBlock().getConjuncts().add(c);
+				ConjunctQueryStructure c=new ConjunctQueryStructure(new Vector<Node>());
+				right.getOuterBlock().getConjunctsQs().add(c);
 			}
 			
 			rightConjuncts.get(0).getEquivalenceClasses().add(v);
@@ -65,11 +66,11 @@ public class PreProcessingActivity {
 		subQnode.setQueryType(2);
 		
 		n.setLhsRhs(subQnode);
-		List<Conjunct> leftConjuncts=left.getOuterBlock().getConjuncts();
+		List<ConjunctQueryStructure> leftConjuncts=left.getOuterBlock().getConjunctsQs();
 		if(leftConjuncts ==null || leftConjuncts.isEmpty()) {
 			
-			Conjunct c=new Conjunct(new Vector<Node>());
-			left.getOuterBlock().getConjuncts().add(c);
+			ConjunctQueryStructure c=new ConjunctQueryStructure(new Vector<Node>());
+			left.getOuterBlock().getConjunctsQs().add(c);
 		}
 		
 		n.setQueryIndex(leftConjuncts.get(0).allSubQueryConds.size());
@@ -119,8 +120,8 @@ public class PreProcessingActivity {
 		cvcSetop.getOuterBlock().getWhereClauseSubQueries().get(0).setTopLevelRelation(null);
 		//cvcSetop.getOuterBlock().setBaseRelations(left.getOuterBlock().getBaseRelations());
 		//temp
-		cvcSetop.getOuterBlock().getConjuncts().get(0).getAllSubQueryConds().get(0).getLhsRhs().setQueryIndex(0);
-		cvcSetop.getOuterBlock().getConjuncts().get(0).getAllSubQueryConds().get(0).setQueryIndex(-1);
+		cvcSetop.getOuterBlock().getConjunctsQs().get(0).getAllSubQueryConds().get(0).getLhsRhs().setQueryIndex(0);
+		cvcSetop.getOuterBlock().getConjunctsQs().get(0).getAllSubQueryConds().get(0).setQueryIndex(-1);
 		//Conjunct c=new Conjunct(new Vector<Node>());
 		//ArrayList<Conjunct> conjList = new ArrayList<Conjunct>();
 		//cvcSetop.getOuterBlock().getWhereClauseSubQueries().get(0).setConjuncts(conjList);
@@ -128,7 +129,7 @@ public class PreProcessingActivity {
 		cvcSetop.getColNullValuesMap().putAll(right.getColNullValuesMap());
 		
 		//Also works for other set operator queries, only not null required
-		cvcSetop.getqParser().setOperator = "UNION";
+		cvcSetop.getqStructure().setOperator = "UNION";
 		
 		return cvcSetop;
 	}
@@ -181,24 +182,29 @@ public class PreProcessingActivity {
 				queryStr.append(queryString);
 			}
 			if(queryStr != null){
-				/**Create a new query parser*/
-				cvc.setqParser( new QueryParser(cvc.getTableMap()));
-
-				/** Parse the query */
-				cvc.getqParser().parseQuery("q1", queryStr.toString());
-
-				/**Initialize the query details to the object*/
-				cvc.initializeQueryDetails(cvc.getqParser() );
-				logger.log(Level.INFO," Query Parser output = "+ cvc.getqParser());
+				/**Create a new query parser
+			cvc.setqParser( new QueryParser(cvc.getTableMap()));
+			cvc.getqParser().parseQuery("q1", queryStr.toString());
+			*/
+				//Trying with new query structure
+				QueryStructure qStructure=new QueryStructure(cvc.getTableMap());
+				qStructure.buildQueryStructure("q1", queryStr.toString());
+				cvc.setqStructure(qStructure);
+				
+				
+			cvc.initializeQueryDetailsQStructure(cvc.getqStructure() );
+			
+				logger.log(Level.INFO," Query Parser output = "+ cvc.getqStructure());
 				/**Delete data sets in the path*/
 				//RelatedToPreprocessing.deleteDatasets(cvc.getFilePath());
 
 				logger.log(Level.INFO,"File path = "+cvc.getFilePath());
 				/**Check if the input query contains set operators */
-				logger.log(Level.INFO,"cvc.getqParser().setOperator = " + cvc.getqParser().setOperator);
-				if(cvc.getqParser().setOperator!=null && cvc.getqParser().setOperator.length()>0){
+				logger.log(Level.INFO,"cvc.getqParser().setOperator = " + cvc.getqStructure().setOperator);
+				if(cvc.getqStructure().setOperator!=null && cvc.getqStructure().setOperator.length()>0){
 					isSetOp = true;
-					genDataForSetOp(cvc,cvc.getqParser().setOperator);
+					genDataForSetOp(cvc,cvc.getqStructure().setOperator);
+					
 				}
 				/*else if(cvc.getqParser() != null && (cvc.getqParser().getFromClauseSubqueries() != null 
 						|| cvc.getqParser().getWhereClauseSubqueries() != null) ){
@@ -238,6 +244,7 @@ public class PreProcessingActivity {
 					/** Call the method for generating the data sets */
 					cvc.generateDatasetsToKillMutations();
 				}
+				cvc.closeConn();
 			}
 		}catch(Exception e){
 			logger.log(Level.SEVERE,""+e.getStackTrace(),e);
@@ -245,6 +252,9 @@ public class PreProcessingActivity {
 			throw e;
 		} 
 		finally {
+			if(cvc != null &&  cvc.getConnection() != null && ! cvc.getConnection().isClosed()){
+				cvc.closeConn();
+			}
 			if(input != null)
 			input.close();
 		}
@@ -260,9 +270,9 @@ public class PreProcessingActivity {
 			if(setOp.equalsIgnoreCase("UNION")) {
 				
 				cvcCopy= cvc.copy();
-				
+				cvcCopy.setConnection(cvc.getConnection());
 				//**create object for handling set operations
-				GenerateUnionCVC unionCVC= new GenerateUnionCVC(cvcCopy, cvcCopy.getqParser());
+				GenerateUnionCVC unionCVC= new GenerateUnionCVC(cvcCopy, cvcCopy.getqStructure());
 
 				
 				/*RelatedToPreprocessing.populateData(cvc);
@@ -291,7 +301,8 @@ public class PreProcessingActivity {
 				//killing mutations in subqueries of set operators
 				
 				cvcCopy=cvc.copy();
-				unionCVC= new GenerateUnionCVC(cvcCopy, cvcCopy.getqParser());
+				cvcCopy.setConnection(cvc.getConnection());
+				unionCVC= new GenerateUnionCVC(cvcCopy, cvcCopy.getqStructure());
 				
 				GenerateCVC1 cvcUnion= convertSetQuerytoSubquery(unionCVC.genCVCleft,unionCVC.genCVCright, Node.getNotExistsNodeType());
 				cvcUnion.setRepeatedRelationCount(unionCVC.getGenCVC().getRepeatedRelationCount());
@@ -308,7 +319,8 @@ public class PreProcessingActivity {
 				count=cvcUnion.getCount();
 				
 				cvcCopy=cvc.copy();
-				unionCVC= new GenerateUnionCVC(cvcCopy, cvcCopy.getqParser());
+				cvcCopy.setConnection(cvc.getConnection());
+				unionCVC= new GenerateUnionCVC(cvcCopy, cvcCopy.getqStructure());
 				
 				//unionCVC= new GenerateUnionCVC(cvc, cvc.getqParser());
 				cvcUnion= convertSetQuerytoSubquery(unionCVC.genCVCright,unionCVC.genCVCleft, Node.getNotExistsNodeType());
@@ -332,7 +344,8 @@ public class PreProcessingActivity {
 				
 			} else if (setOp.equalsIgnoreCase("INTERSECT")) {
 				cvcCopy = cvc.copy();
-				GenerateUnionCVC unionCVC= new GenerateUnionCVC(cvcCopy, cvcCopy.getqParser());
+				cvcCopy.setConnection(cvc.getConnection());
+				GenerateUnionCVC unionCVC= new GenerateUnionCVC(cvcCopy, cvcCopy.getqStructure());
 				GenerateCVC1 cvcIntersect= convertSetQuerytoSubquery(unionCVC.genCVCleft,unionCVC.genCVCright, Node.getExistsNodeType());
 				cvcIntersect.setRepeatedRelationCount(unionCVC.getGenCVC().getRepeatedRelationCount());
 				cvcIntersect.setRepeatedRelNextTuplePos(unionCVC.getGenCVC().getRepeatedRelNextTuplePos());
@@ -347,7 +360,8 @@ public class PreProcessingActivity {
 				
 			} else if (setOp.equalsIgnoreCase("EXCEPT")) {
 				cvcCopy = cvc.copy();
-				GenerateUnionCVC unionCVC= new GenerateUnionCVC(cvcCopy, cvcCopy.getqParser());
+				cvcCopy.setConnection(cvc.getConnection());
+				GenerateUnionCVC unionCVC= new GenerateUnionCVC(cvcCopy, cvcCopy.getqStructure());
 				GenerateCVC1 cvcExcept= convertSetQuerytoSubquery(unionCVC.genCVCleft,unionCVC.genCVCright, Node.getNotExistsNodeType());
 				cvcExcept.setRepeatedRelationCount(unionCVC.getGenCVC().getRepeatedRelationCount());
 				cvcExcept.setRepeatedRelNextTuplePos(unionCVC.getGenCVC().getRepeatedRelNextTuplePos());
@@ -363,8 +377,9 @@ public class PreProcessingActivity {
 			
 			//Data generation for SETOP
 			cvcCopy=cvc.copy();
+			cvcCopy.setConnection(cvc.getConnection());
 			cvcCopy.setCount(count);
-			GenerateUnionCVC unionCVC = new GenerateUnionCVC(cvcCopy, cvcCopy.getqParser());
+			GenerateUnionCVC unionCVC = new GenerateUnionCVC(cvcCopy, cvcCopy.getqStructure());
 			unionCVC.getGenCVC().setCount(count);
 			SetOperatorMutations.generateDataToKillSetOperatorMutations(unionCVC);
 			

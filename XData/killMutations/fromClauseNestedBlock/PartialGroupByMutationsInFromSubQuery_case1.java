@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import testDataGen.CountEstimationRelated;
 import testDataGen.GenerateCVC1;
@@ -55,7 +55,7 @@ public class PartialGroupByMutationsInFromSubQuery_case1 {
 				logger.log(Level.INFO,"\n----------------------------------");
 				
 				/** Initialize the data structures for generating the data to kill this mutation */
-				cvc.inititalizeForDataset();
+				cvc.inititalizeForDatasetQs();
 
 				/**set the type of mutation we are trying to kill*/
 				cvc.setTypeOfMutation( TagDatasets.MutationType.PARTIALGROUPBY1, TagDatasets.QueryBlock.FROM_SUBQUERY );
@@ -119,7 +119,7 @@ public class PartialGroupByMutationsInFromSubQuery_case1 {
 				
 				/** get constraints for this sub query block except group by clause constraints*/
 				/** Add the positive conditions for each conjunct of this query block */
-				for(Conjunct conjunct : qbt.getConjuncts()){
+				for(ConjunctQueryStructure conjunct : qbt.getConjunctsQs()){
 					cvc.getConstraints().add("\n%---------------------------------\n% CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------\n");
 					cvc.getConstraints().add( GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, qbt, conjunct) );
 					cvc.getConstraints().add("\n%---------------------------------\n% END OF CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------\n");		

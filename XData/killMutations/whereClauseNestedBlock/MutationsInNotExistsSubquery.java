@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import parsing.RelationHierarchyNode;
 import testDataGen.GenerateCVC1;
@@ -44,7 +44,7 @@ public class MutationsInNotExistsSubquery {
 		
 		QueryBlockDetails topQbt = cvc.getOuterBlock();
 		
-		cvc.inititalizeForDataset();
+		cvc.inititalizeForDatasetQs();
 		
 		/**set the type of mutation we are trying to kill*/
 		cvc.setTypeOfMutation( TagDatasets.MutationType.NOTEXISTS, TagDatasets.QueryBlock.WHERE_SUBQUERY);
@@ -57,7 +57,7 @@ public class MutationsInNotExistsSubquery {
 		cvc.setRepeatedRelNextTuplePos( (HashMap<String, Integer[]>)repeatedRelNextTuplePosOrig.clone() );
 		
 		/** we have to check if there are where clause sub queries in each conjunct of outer block of query */
-		for(Conjunct con: cvc.getOuterBlock().getConjuncts()){
+		for(ConjunctQueryStructure con: cvc.getOuterBlock().getConjunctsQs()){
 
 			/**For each where clause sub query blocks of this conjunct*/
 			for(Node subQCond: con.getAllSubQueryConds()){
@@ -88,11 +88,11 @@ public class MutationsInNotExistsSubquery {
 		String constraint = "";
 		
 		if(node.getNodeType().equals("_RELATION_")){
-			ArrayList<Conjunct> conjuncts = qbt.getConjuncts();
+			ArrayList<ConjunctQueryStructure> conjuncts = qbt.getConjunctsQs();
 			Vector<String> orConstraints = new Vector<String>();
 			
 			// Would need modification if there are disjuncts or more than one conjunct
-			for(Conjunct c:conjuncts){				
+			for(ConjunctQueryStructure c:conjuncts){				
 				 orConstraints.add(GenerateConstraintsForConjunct.generateConstraintsNotExists(cvc, qbt, c, node.getTableName()));
 			}
 			
@@ -106,7 +106,7 @@ public class MutationsInNotExistsSubquery {
 		}
 		else if(node.getNodeType().equals("_JOIN_")){
 			Vector<String> OrConstraints=new Vector<String>();
-			for(Conjunct c: qbt.getConjuncts()){
+			for(ConjunctQueryStructure c: qbt.getConjunctsQs()){
 				OrConstraints.add(GenerateConstraintsForConjunct.generateJoinConditionConstraintsForNotExists(cvc, qbt, c));
 			}
 			

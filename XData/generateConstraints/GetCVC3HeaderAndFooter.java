@@ -8,7 +8,7 @@ import java.sql.Timestamp;
 import java.util.*;
 
 import parsing.Column;
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import parsing.Table;
 import testDataGen.DataType;
@@ -71,15 +71,15 @@ public class GetCVC3HeaderAndFooter {
 		}
 		
 		Vector<Vector<Node>>  equivalenceClasses1 = new Vector<Vector<Node>>();
-		for(Conjunct con: cvc.getOuterBlock().getConjuncts())
+		for(ConjunctQueryStructure con: cvc.getOuterBlock().getConjunctsQs())
 			equivalenceClasses1.addAll(con.getEquivalenceClasses());
 		
 		for(QueryBlockDetails qb: cvc.getOuterBlock().getFromClauseSubQueries())
-			for(Conjunct con: qb.getConjuncts())
+			for(ConjunctQueryStructure con: qb.getConjunctsQs())
 				equivalenceClasses1.addAll(con.getEquivalenceClasses());
 		
 		for(QueryBlockDetails qb: cvc.getOuterBlock().getWhereClauseSubQueries())
-			for(Conjunct con: qb.getConjuncts())
+			for(ConjunctQueryStructure con: qb.getConjunctsQs())
 				equivalenceClasses1.addAll(con.getEquivalenceClasses());
 		
 		Vector<Column> eqColsVector = new Vector<Column>();
@@ -448,15 +448,15 @@ public class GetCVC3HeaderAndFooter {
 
 		/**FIXME: ISSUES WITH EQUIVALENCE CLASSES */
 		Vector<Vector<Node>>  equivalenceClasses = new Vector<Vector<Node>>();
-		for(Conjunct con: cvc.getOuterBlock().getConjuncts())
+		for(ConjunctQueryStructure con: cvc.getOuterBlock().getConjunctsQs())
 			equivalenceClasses.addAll(con.getEquivalenceClasses());
 		
 		for(QueryBlockDetails qb: cvc.getOuterBlock().getFromClauseSubQueries())
-			for(Conjunct con: qb.getConjuncts())
+			for(ConjunctQueryStructure con: qb.getConjunctsQs())
 				equivalenceClasses.addAll(con.getEquivalenceClasses());
 		
 		for(QueryBlockDetails qb: cvc.getOuterBlock().getWhereClauseSubQueries())
-			for(Conjunct con: qb.getConjuncts())
+			for(ConjunctQueryStructure con: qb.getConjunctsQs())
 				equivalenceClasses.addAll(con.getEquivalenceClasses());
 		
 		//This is for setting column name as CVC type for equivalence classes - Shree start

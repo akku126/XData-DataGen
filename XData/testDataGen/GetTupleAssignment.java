@@ -1054,7 +1054,8 @@ public class GetTupleAssignment {
 			n1.setTableNameNo(tabName);
 			n1.getColumn().setColumnName(col +Integer.toString(colNumber));
 			n1.setTable(newTable);
-
+			n1.setQueryIndex(subQueryNumber);
+			
 			//groupbyNodes.add(n);
 			ArrayList<Node> joinconds = new ArrayList<Node>();
 			joinconds.addAll((ArrayList<Node>)joinConds.clone());

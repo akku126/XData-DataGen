@@ -10,7 +10,7 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
@@ -36,7 +36,7 @@ public class SelectionMutationsInWhereSubquery {
 		HashMap<String, Integer[]> repeatedRelNextTuplePosOrig = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
 
 		/** we have to check if there are where clause subqueries in each conjunct of outer block of query */
-		for(Conjunct con: cvc.getOuterBlock().getConjuncts()){
+		for(ConjunctQueryStructure con: cvc.getOuterBlock().getConjunctsQs()){
 
 			/**For each where clause subquery blocks of this conjunct*/
 			/** Kill selection clause  mutations in each where clause nested block of this query*/
@@ -49,7 +49,7 @@ public class SelectionMutationsInWhereSubquery {
 				QueryBlockDetails qbt = cvc.getOuterBlock().getWhereClauseSubQueries().get(index);
 
 				/** Kill selection clause mutations in each conjunct of this where clause nested block of this query*/
-				for(Conjunct conjunct: qbt.getConjuncts()){
+				for(ConjunctQueryStructure conjunct: qbt.getConjunctsQs()){
 
 					logger.log(Level.INFO,"\n----------------------------------");
 					logger.log(Level.INFO,"NEW CONJUNCT IN SELCTION CLAUSE MUTATIONS KILLING: " + conjunct);
@@ -84,7 +84,7 @@ public class SelectionMutationsInWhereSubquery {
 								selectionConds.set(i,scMutants.get(j) );	
 
 								/** Initialize the data structures for generating the data to kill this mutation */
-								cvc.inititalizeForDataset();
+								cvc.inititalizeForDatasetQs();
 
 								/**set the type of mutation we are trying to kill*/
 								cvc.setTypeOfMutation( TagDatasets.MutationType.SELCTION, TagDatasets.QueryBlock.WHERE_SUBQUERY );
@@ -106,7 +106,7 @@ public class SelectionMutationsInWhereSubquery {
 
 								
 								/** Add negative conditions for all other conjuncts of this subquery block*/
-								for(Conjunct inner: qbt.getConjuncts()){
+								for(ConjunctQueryStructure inner: qbt.getConjunctsQs()){
 									if(inner != conjunct){
 										cvc.getConstraints().add( GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, qbt, inner) );	
 									}
@@ -120,7 +120,7 @@ public class SelectionMutationsInWhereSubquery {
 								GenerateConstraintsForWhereClauseSubQueryBlock.generateConstraintsForKillingMutationsInWhereSubqueryBlock(cvc, qbt, con, conjunct, subQCond, 0);
 
 								/**add the negative constraints for all the other conjuncts of outer query block */
-								for(Conjunct outer: cvc.getOuterBlock().getConjuncts())
+								for(ConjunctQueryStructure outer: cvc.getOuterBlock().getConjunctsQs())
 									if( !outer.equals(con))
 										cvc.getConstraints().add( GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, cvc.getOuterBlock(), outer) );
 

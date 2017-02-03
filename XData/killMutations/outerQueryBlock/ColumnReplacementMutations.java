@@ -1,7 +1,7 @@
 package killMutations.outerQueryBlock;
 
 import parsing.Column;
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import parsing.Table;
 import generateConstraints.GenerateCVCConstraintForNode;
@@ -27,7 +27,7 @@ public class ColumnReplacementMutations {
 			System.out.println("----------------------------------\n");
 	*/
 			/** Initialize the data structures for generating the data to kill this mutation */
-			cvc.inititalizeForDataset();
+			cvc.inititalizeForDatasetQs();
 		
 			/**set the type of mutation we are trying to kill*/
 			cvc.setTypeOfMutation(MutationType.COLUMNREPLACEMENT, QueryBlock.NONE);
@@ -40,7 +40,7 @@ public class ColumnReplacementMutations {
 			/**Get the constraints for all the blocks of the query */
 			cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlock(cvc));
 			
-			Vector<Node> projectedColumns = cvc.getqParser().getProjectedCols();
+			Vector<Node> projectedColumns = cvc.getqStructure().getProjectedCols();
 			
 			Map<Node, ArrayList<Column>> compatibleNodes = new HashMap<Node, ArrayList<Column>>();
 			
@@ -180,7 +180,7 @@ public class ColumnReplacementMutations {
 								if(isPartOfEqClass)
 									continue;
 	
-								for(Conjunct con: cvc.getOuterBlock().getConjuncts())
+								for(ConjunctQueryStructure con: cvc.getOuterBlock().getConjunctsQs())
 									eqClasses.addAll(con.getEquivalenceClasses());
 								
 								String cond = ""; 

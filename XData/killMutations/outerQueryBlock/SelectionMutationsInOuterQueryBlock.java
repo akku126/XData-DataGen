@@ -15,8 +15,9 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Disjunct;
+import parsing.DisjunctQueryStructure;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
@@ -49,9 +50,9 @@ public class SelectionMutationsInOuterQueryBlock {
 		QueryBlockDetails qbt = cvc.getOuterBlock();
 		try{
 			/**Kill the selection clause mutations in each conjunct of this outer block of  query */
-			for(Conjunct conjunct: qbt.getConjuncts()){
+			for(ConjunctQueryStructure conjunct: qbt.getConjunctsQs()){
 				Constraints constraints=new Constraints();
-				for(Conjunct innerConjunct:qbt.getConjuncts()){
+				for(ConjunctQueryStructure innerConjunct:qbt.getConjunctsQs()){
 					if(conjunct!=innerConjunct){
 						constraints = Constraints.mergeConstraints(constraints, GenerateConstraintsForConjunct.generateNegativeConstraintsForConjunct(cvc, qbt, innerConjunct));
 					}
@@ -161,7 +162,7 @@ public class SelectionMutationsInOuterQueryBlock {
 		}
 	}
 	
-	public static void killSelectionMutationsInConjunct(GenerateCVC1 cvc,Conjunct conjunct,Constraints constraints) throws Exception{
+	public static void killSelectionMutationsInConjunct(GenerateCVC1 cvc,ConjunctQueryStructure conjunct,Constraints constraints) throws Exception{
 		
 		Constraints localConstraints=new Constraints();
 		/** Get outer query block of this query */
@@ -189,7 +190,7 @@ public class SelectionMutationsInOuterQueryBlock {
 						/** Initialize the data structures for generating the data to kill this mutation */
 						selectionConds.set(i,scMutants.get(j) );
 						
-						cvc.inititalizeForDataset();
+						cvc.inititalizeForDatasetQs();
 						 
 						/**set the type of mutation we are trying to kill*/
 						cvc.setTypeOfMutation( TagDatasets.MutationType.SELCTION, TagDatasets.QueryBlock.OUTER_BLOCK );
@@ -216,7 +217,7 @@ public class SelectionMutationsInOuterQueryBlock {
 				selectionConds.set(i,sc);
 			}
 			
-			for(Disjunct disjunct:conjunct.disjuncts){
+			for(DisjunctQueryStructure disjunct:conjunct.disjuncts){
 				String constraintString="";
 				
 				localConstraints.constraints.removeAllElements();
@@ -285,8 +286,8 @@ public class SelectionMutationsInOuterQueryBlock {
 				
 				localConstraints=Constraints.mergeConstraints(localConstraints, constraints);
 				
-				Disjunct killDisjunct = null;
-				for(Disjunct innerDisjunct:conjunct.disjuncts){
+				DisjunctQueryStructure killDisjunct = null;
+				for(DisjunctQueryStructure innerDisjunct:conjunct.disjuncts){
 					if(innerDisjunct.equals(disjunct))
 						killDisjunct=innerDisjunct;
 					else{
@@ -306,7 +307,7 @@ public class SelectionMutationsInOuterQueryBlock {
 		}
 	}
 	
-	public static void killSelectionMutationsInDisjunct(GenerateCVC1 cvc,Disjunct disjunct,Constraints constraints) throws Exception{
+	public static void killSelectionMutationsInDisjunct(GenerateCVC1 cvc,DisjunctQueryStructure disjunct,Constraints constraints) throws Exception{
 		Constraints localConstraints=new Constraints();
 		
 		Vector<Node > selectionConds = disjunct.getSelectionConds();
@@ -330,7 +331,7 @@ public class SelectionMutationsInOuterQueryBlock {
 						
 						
 						/** Initialize the data structures for generating the data to kill this mutation */
-						cvc.inititalizeForDataset();
+						cvc.inititalizeForDatasetQs();
 						/**set the type of mutation we are trying to kill*/
 						cvc.setTypeOfMutation( TagDatasets.MutationType.SELCTION, TagDatasets.QueryBlock.OUTER_BLOCK );
 						
@@ -433,7 +434,7 @@ public class SelectionMutationsInOuterQueryBlock {
 						
 						localConstraints = Constraints.mergeConstraints(localConstraints, constraints);
 						
-						for(Conjunct conjunct:disjunct.conjuncts){
+						for(ConjunctQueryStructure conjunct:disjunct.conjuncts){
 							localConstraints=Constraints.mergeConstraints(localConstraints,GenerateConstraintsForConjunct.generateNegativeConstraintsForConjunct(cvc, cvc.getOuterBlock(), conjunct));
 						}
 	
@@ -444,7 +445,7 @@ public class SelectionMutationsInOuterQueryBlock {
 				}
 			}
 			
-			for(Conjunct conjunct:disjunct.conjuncts){
+			for(ConjunctQueryStructure conjunct:disjunct.conjuncts){
 				String constraintString="";
 				localConstraints.constraints.removeAllElements();
 				localConstraints.stringConstraints.removeAllElements();
@@ -538,7 +539,7 @@ public class SelectionMutationsInOuterQueryBlock {
 				localConstraints.stringConstraints.add(stringConstraint);
 				
 				localConstraints = Constraints.mergeConstraints(localConstraints, constraints);
-				for(Conjunct innerConjunct:disjunct.conjuncts){
+				for(ConjunctQueryStructure innerConjunct:disjunct.conjuncts){
 					if(innerConjunct!=conjunct){
 						localConstraints = Constraints.mergeConstraints(localConstraints, GenerateConstraintsForConjunct.generateNegativeConstraintsForConjunct(cvc, qbt, innerConjunct));
 					}

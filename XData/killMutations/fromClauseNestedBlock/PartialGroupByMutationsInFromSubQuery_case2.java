@@ -12,7 +12,7 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.Conjunct;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
@@ -57,7 +57,7 @@ public class PartialGroupByMutationsInFromSubQuery_case2 {
 				logger.log(Level.INFO,"----------------------------------\n");
 				
 				/** Initialize the data structures for generating the data to kill this mutation */
-				cvc.inititalizeForDataset();
+				cvc.inititalizeForDatasetQs();
 
 				/**set the type of mutation we are trying to kill*/
 				cvc.setTypeOfMutation( TagDatasets.MutationType.PARTIALGROUPBY2, TagDatasets.QueryBlock.FROM_SUBQUERY );
@@ -87,7 +87,7 @@ public class PartialGroupByMutationsInFromSubQuery_case2 {
 
 				/** get constraints for this sub query block except group by clause constraints*/
 				/** Add the positive conditions for each conjunct of this query block */
-				for(Conjunct conjunct : qbt.getConjuncts()){
+				for(ConjunctQueryStructure conjunct : qbt.getConjunctsQs()){
 					cvc.getConstraints().add("\n%---------------------------------\n% CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------\n");
 					cvc.getConstraints().add( GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, qbt, conjunct) );
 					cvc.getConstraints().add("\n%---------------------------------\n% END OF CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------\n");
@@ -115,11 +115,11 @@ public class PartialGroupByMutationsInFromSubQuery_case2 {
 
 
 				/**It may have involved in joins with other from clause/ outer block*/							
-				for(Conjunct con: qbt.getConjuncts())
+				for(ConjunctQueryStructure con: qbt.getConjunctsQs())
 					equivalence.addAll(con.getEquivalenceClasses());
 
 				/**get equivalence classes from other from the outer query block*/
-				for(Conjunct con: cvc.getOuterBlock().getConjuncts())
+				for(ConjunctQueryStructure con: cvc.getOuterBlock().getConjunctsQs())
 					equivalence.addAll(con.getEquivalenceClasses());				
 
 
@@ -161,9 +161,9 @@ public class PartialGroupByMutationsInFromSubQuery_case2 {
 				equivalence = new Vector<Vector<Node>>();
 				for(QueryBlockDetails qbb: cvc.getOuterBlock().getFromClauseSubQueries())
 					if(!qbb.equals(qbt))
-						for(Conjunct cn: qbb.getConjuncts())
+						for(ConjunctQueryStructure cn: qbb.getConjunctsQs())
 							equivalence.addAll(cn.getEquivalenceClasses());
-				for(Conjunct cn: cvc.getOuterBlock().getConjuncts())
+				for(ConjunctQueryStructure cn: cvc.getOuterBlock().getConjunctsQs())
 					equivalence.addAll(cn.getEquivalenceClasses());
 
 				cvc.getConstraints().add(GenerateConstraintsForPartialGroup_case2.adjustNoOfTuplesForiegnKeyTables(cvc, qbt, tempgroupByNode, equivalence));	

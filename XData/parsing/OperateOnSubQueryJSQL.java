@@ -348,19 +348,19 @@ public class OperateOnSubQueryJSQL {
 							
 							CaseCondition cC = new CaseCondition();
 							Node n = WhereClauseVectorJSQL.getWhereClauseVector(((WhenClause)((CaseExpression) exp).getWhenClauses().get(i)).getWhenExpression(),exposedName, sqa,false,queryType,qParser);
-							cC.setCaseConditionNode(n);
-							cC.setCaseCondition(n.toString());
-						    cC.setConstantValue(((WhenClause)((CaseExpression) exp).getWhenClauses().get(i)).getThenExpression().toString());
-						    caseConditionsVector.add(cC);
+							//cC.setCaseConditionNode(n);
+							//cC.setCaseCondition(n.toString());
+						   // cC.setConstantValue(((WhenClause)((CaseExpression) exp).getWhenClauses().get(i)).getThenExpression().toString());
+						    //caseConditionsVector.add(cC);
 						   // qParser.getCaseConditions().add(cC);
 						 }
 						 //Add the else clause if present as the last item
 						 if(((CaseExpression) exp).getElseExpression() != null){
 							CaseCondition cC = new CaseCondition();
-							//cC.setCaseConditionNode(n);
-							cC.setCaseCondition("else");
-						    cC.setConstantValue(((CaseExpression) exp).getElseExpression().toString());
-						    caseConditionsVector.add(cC);
+							
+							//cC.setCaseCondition("else");
+						   // cC.setConstantValue(((CaseExpression) exp).getElseExpression().toString());
+						   // caseConditionsVector.add(cC);
 						 }
 						 //Add Case conditions to queryparser
 						 fromClause.getCaseConditionMap().put(1,caseConditionsVector);
@@ -465,13 +465,13 @@ public class OperateOnSubQueryJSQL {
 				
 				CaseCondition cC = new CaseCondition();
 				Node n = WhereClauseVectorJSQL.getWhereClauseVector(((WhenClause)((CaseExpression) whereClause).getWhenClauses().get(i)).getWhenExpression(),null, qParser.queryAliases,true,0,qParser);
-				cC.setCaseConditionNode(n);
-				cC.setCaseCondition(n.toString());
-			    cC.setConstantValue(((WhenClause)((CaseExpression) whereClause).getWhenClauses().get(i)).getThenExpression().toString());
+				//cC.setCaseConditionNode(n);
+				//cC.setCaseCondition(n.toString());
+			   // cC.setConstantValue(((WhenClause)((CaseExpression) whereClause).getWhenClauses().get(i)).getThenExpression().toString());
 			    if(colExpression!= null && colExpression instanceof Column){
 			    	Node n1 = ((WhereClauseVectorJSQL.getWhereClauseVector((colExpression),null, qParser.queryAliases,true,0,qParser)));
-			    	cC.setColValueForConjunct(n1.getColumn());
-			    	cC.setCaseOperator("=");
+			    	//cC.setColValueForConjunct(n1.getColumn());
+			    //	cC.setCaseOperator("=");
 			    }
 			    caseConditionsVector.add(cC);
 			   // qParser.getCaseConditions().add(cC);
@@ -480,12 +480,11 @@ public class OperateOnSubQueryJSQL {
 			 //Add the else clause if present as the last item
 			 if(((CaseExpression) whereClause).getElseExpression() != null){
 				CaseCondition cC = new CaseCondition();
-				//cC.setCaseConditionNode(n);
-				cC.setCaseCondition("else");
-			    cC.setConstantValue(((CaseExpression) whereClause).getElseExpression().toString());
+				//cC.setCaseCondition("else");
+			   // cC.setConstantValue(((CaseExpression) whereClause).getElseExpression().toString());
 			    if(colExpression != null && colExpression instanceof Column){
 			    	Node n1 = ((WhereClauseVectorJSQL.getWhereClauseVector((colExpression),null, qParser.queryAliases,true,0,qParser)));
-			    	cC.setColValueForConjunct(n1.getColumn());
+			    	//cC.setColValueForConjunct(n1.getColumn());
 			    }
 			    caseConditionsVector.add(cC);
 			 }

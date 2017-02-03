@@ -51,7 +51,7 @@ import org.apache.derby.impl.sql.compile.StatementNode;
 import org.apache.derby.impl.sql.compile.UnionNode;
 import org.apache.derby.impl.sql.compile.UpdateNode;
 import parsing.AggregateFunction;
-import parsing.Conjunct;
+import parsing.Conjunct_ToDel;
 import parsing.ForeignKey;
 import parsing.FromListElement;
 import parsing.JoinClauseInfo;
@@ -175,7 +175,7 @@ public class QueryParser implements Serializable{
 	int paramCount;
 	// private Node whereClausePred;
 
-	Vector<Conjunct> conjuncts;
+	Vector<Conjunct_ToDel> conjuncts;
 	Vector<Vector<Node>> allDnfSelCond;
 	Vector<Vector<Node>> dnfLikeConds;
 	Vector<Vector<Node>> dnfIsNullConds;
@@ -203,6 +203,8 @@ public class QueryParser implements Serializable{
 								/*&& added by mathew on 1st Aug 2016.*/
 
 	public FromListElement queryAliases;
+	
+	public FromListElement newQueryAliases;
 	
 	public RelationHierarchyNode topLevelRelation;
 	
@@ -333,11 +335,11 @@ public class QueryParser implements Serializable{
 
 
 
-	public Vector<Conjunct> getConjuncts() {
+	public Vector<Conjunct_ToDel> getConjuncts() {
 		return conjuncts;
 	}
 
-	public void setConjuncts(Vector<Conjunct> conjuncts) {
+	public void setConjuncts(Vector<Conjunct_ToDel> conjuncts) {
 		this.conjuncts = conjuncts;
 	}
 
@@ -520,7 +522,7 @@ public class QueryParser implements Serializable{
 		this.selectionClauseVector = new Vector<JoinClauseInfo>();
 		this.foreignKeyVector = new Vector<JoinClauseInfo>();
 		orNode = new ORNode();
-		this.conjuncts = new Vector<Conjunct>();
+		this.conjuncts = new Vector<Conjunct_ToDel>();
 		dnfCond = new Vector<Vector<Node>>();
 		dnfJoinCond = new Vector<Vector<Node>>();
 		dnfLikeConds = new Vector<Vector<Node>>();
@@ -1796,7 +1798,7 @@ public class QueryParser implements Serializable{
 
 		}
 
-		Conjunct.createConjuncts(qParser);
+		Conjunct_ToDel.createConjuncts(qParser);
 
 		allCondsDuplicate.removeAllElements();
 		allCondsDuplicate = (Vector<Node>) qParser.allConds.clone();
@@ -1886,9 +1888,9 @@ public class QueryParser implements Serializable{
 		for (int i = 0; i < allCondsDuplicate.size(); i++) {
 			temp = allCondsDuplicate.get(i);
 
-			Conjunct con = new Conjunct( new Vector<Node>());
+			Conjunct_ToDel con = new Conjunct_ToDel( new Vector<Node>());
 
-			boolean isJoinNodeForEC = GetNode.getJoinNodesForEC(con, temp);
+			boolean isJoinNodeForEC =false;// GetNode.getJoinNodesForEC(con, temp);
 			// Remove that object from allConds. Because that will now be a part
 			// of some or the other equivalence class and be handeled
 			if (isJoinNodeForEC) {
@@ -1925,9 +1927,9 @@ public class QueryParser implements Serializable{
 		for (int i = 0; i < allCondsDuplicate.size(); i++) {
 			temp = allCondsDuplicate.get(i);
 
-			Conjunct con = new Conjunct( new Vector<Node>());
+			Conjunct_ToDel con = new Conjunct_ToDel( new Vector<Node>());
 
-			boolean isSelection = GetNode.getSelectionNode(con,temp);
+			boolean isSelection = false;//GetNode.getSelectionNode(con,temp);
 			if (isSelection) {
 				isSelection = false;
 				// remove it from allConds as it is added to selection
@@ -1966,8 +1968,8 @@ public class QueryParser implements Serializable{
 		for(int i=0;i<allCondsDuplicate.size();i++){
 			temp = allCondsDuplicate.get(i);
 
-			Conjunct con = new Conjunct( new Vector<Node>());
-			boolean isLikeType = GetNode.getLikeNode(con,temp);
+			Conjunct_ToDel con = new Conjunct_ToDel( new Vector<Node>());
+			boolean isLikeType = false;//GetNode.getLikeNode(con,temp);
 			if(isLikeType){
 				isLikeType = false;
 				//remove it from allConds as it is added to like conditions
