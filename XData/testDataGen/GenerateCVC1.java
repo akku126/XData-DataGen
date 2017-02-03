@@ -31,6 +31,7 @@ import parsing.ConjunctQueryStructure;
 import parsing.ForeignKey;
 import parsing.Node;
 import parsing.Query;
+import parsing.QueryParser;
 import parsing.QueryStructure;
 import parsing.QueryStructureForDataGen;
 import parsing.Table;
@@ -54,7 +55,7 @@ public class GenerateCVC1 implements Serializable{
 	private Query topQuery;
 
 	/** The parser stores the details of the query after the input query is parsed	 */
-	//private QueryParser qParser;
+	private QueryParser qParser;
 
 	private QueryStructure qStructure;
 	/** Stores the base relation for each repeated occurrence of a relation  */
@@ -233,6 +234,138 @@ public class GenerateCVC1 implements Serializable{
 		}
 	}
 */
+
+	/**
+	 * Initializes the elements necessary for data generation
+	 * Call this function after the previous data generation has been done and 
+	 * constraints for the current data generation have not been added
+	 */
+	public void inititalizeForDataset() throws Exception{
+		constraints = new ArrayList<String>();
+		stringConstraints = new ArrayList<String>();
+		CVCStr = "";
+		typeOfMutation = "";
+		
+		try{
+			
+			/** Add additional groupBy attributes if the relation of groupby attributes references to any other relation**/
+			// Make the referenced relation a join with existing relation
+			//Update no of output tuples, no of groups, repeated relation count, table occurrences to add additional
+			//datasets
+			
+			
+			/** initialize the no of output tuples*/
+			noOfOutputTuples = (HashMap<String,Integer>)query.getRepeatedRelationCount().clone();
+	
+			/**Merging noOfOutputTuples, if input query has set operations*/
+			if(qParser.setOperator!=null && qParser.setOperator.length()>0){  
+	
+				/**Initialize the number of tuples in left side query of the set operation*/
+				noOfOutputTuples = (HashMap<String,Integer>)unionCVC.getGenCVCleft().query.getRepeatedRelationCount().clone();
+	
+				/**Now get the no of tuples for each relation on right side query of the set operation and add to the data structure*/
+				HashMap<String,Integer> RightnoOfOutputTuples = (HashMap<String,Integer>)unionCVC.getGenCVCright().query.getRepeatedRelationCount().clone();
+	
+				/**get iterator*/
+				Iterator rt=RightnoOfOutputTuples.entrySet().iterator();
+	
+				/**while there are values in the hash map*/
+				while(rt.hasNext()){
+					Map.Entry pairs=(Entry) rt.next();
+	
+					/**get table name*/
+					String table=(String) pairs.getKey();
+	
+					/**get the number of tuples*/
+					int noOfTuples = (Integer) pairs.getValue();
+	
+					/**Update the data structure*/
+					if(noOfOutputTuples.containsKey(table)&&noOfOutputTuples.get(table)<noOfTuples){
+						noOfOutputTuples.put(table, noOfTuples);
+					}
+					if(!noOfOutputTuples.containsKey(table)){
+						noOfOutputTuples.put(table, noOfTuples);
+					}
+				}
+			}else if(!qParser.getFromClauseSubqueries().isEmpty()
+					&& qParser.getFromClauseSubqueries().get(0) != null){
+				QueryParser qp = new QueryParser(qParser.getTableMap());
+				qp = qParser.getFromClauseSubqueries().get(0);
+				
+				if(qp.setOperator!=null && qp.setOperator.length()>0){
+					
+					/**Initialize the number of tuples in left side query of the set operation*/
+					noOfOutputTuples = (HashMap<String,Integer>)qp.getLeftQuery().getQuery().getRepeatedRelationCount().clone();
+		
+					/**Now get the no of tuples for each relation on right side query of the set operation and add to the data structure*/
+					HashMap<String,Integer> RightnoOfOutputTuples = (HashMap<String,Integer>)qp.getRightQuery().getQuery().getRepeatedRelationCount().clone();
+		
+					/**get iterator*/
+					Iterator rt=RightnoOfOutputTuples.entrySet().iterator();
+		
+					/**while there are values in the hash map*/
+					while(rt.hasNext()){
+						Map.Entry pairs=(Entry) rt.next();
+		
+						/**get table name*/
+						String table=(String) pairs.getKey();
+		
+						/**get the number of tuples*/
+						int noOfTuples = (Integer) pairs.getValue();
+		
+						/**Update the data structure*/
+						if(noOfOutputTuples.containsKey(table)&&noOfOutputTuples.get(table)<noOfTuples){
+							noOfOutputTuples.put(table, noOfTuples);
+						}
+						if(!noOfOutputTuples.containsKey(table)){
+							noOfOutputTuples.put(table, noOfTuples);
+						}
+					}
+					
+				}
+			}
+			
+			else{		
+				this.noOfOutputTuples = (HashMap<String,Integer>)query.getRepeatedRelationCount().clone();
+			}
+			for(String tempTable : noOfOutputTuples.keySet())
+				if(noOfOutputTuples.get(tempTable) != null && noOfOutputTuples.get(tempTable) >= 1)
+					logger.log(Level.INFO,"START COUNT for " + tempTable + " = " + noOfOutputTuples.get(tempTable));
+	
+			repeatedRelNextTuplePos = new HashMap<String, Integer[]>();
+	
+			/** Update repeated relation next position etc..*/
+			Iterator<String> itr = repeatedRelationCount.keySet().iterator();
+			while(itr.hasNext()){
+				String tableName = itr.next();
+				int c =  repeatedRelationCount.get(tableName);
+				for(int i=1;i<=c;i++){
+					Integer[] tuplePos = new Integer[32];
+					tuplePos[1] = i;//Meaning first tuple is at pos i
+					repeatedRelNextTuplePos.put(tableName+i, tuplePos);
+					noOfTuples.put(tableName+i, 1);
+					currentIndexCount.put(tableName+i, i);
+				}
+			}
+	
+			/** Initializes the data structures that are used/updated by the tuple assignment method*/
+			initilizeDataStructuresForTupleAssignment(outerBlock);
+			for(QueryBlockDetails qbt: getOuterBlock().getFromClauseSubQueries())
+				initilizeDataStructuresForTupleAssignment(qbt);
+			for(QueryBlockDetails qbt: getOuterBlock().getWhereClauseSubQueries())
+				initilizeDataStructuresForTupleAssignment(qbt);
+			
+			/**get the list of equi join conditions for each table in the query*/
+			GenerateCVC1.getListOfEquiJoinConditions( this );
+		}catch (TimeoutException e){
+			logger.log(Level.SEVERE,e.getMessage(),e);		
+			throw e;
+		}catch(Exception e){
+			logger.log(Level.SEVERE,e.getMessage(),e);		
+			throw new Exception("Internal Error", e);
+		}
+	}
+	
 	/** 
 	 * This method initializes all the details about the given query whose details are stored in the query Parser
 	 * @param qParser
