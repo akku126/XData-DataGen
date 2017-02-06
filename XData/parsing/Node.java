@@ -1084,5 +1084,16 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 	public static void setCaseNodeType(String caseNodeType) {
 		Node.caseNodeType = caseNodeType;
 	}
+	
+	/**@author mathew on 2 Feb 2017 
+	 * 
+	 * For enabling sorting of a list of nodes in ascending order of their
+	 * string representation
+	 */
+	@Override
+	public int compareTo(NodeInterface o) {
+		// TODO Auto-generated method stub
+		return this.toString().compareTo(o.toString());
+	}
 
 }

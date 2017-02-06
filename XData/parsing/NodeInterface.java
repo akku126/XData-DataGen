@@ -7,7 +7,7 @@ package parsing;
  * @author mathew
  *
  */
-public interface NodeInterface {
+public interface NodeInterface extends Comparable<NodeInterface>{
 	
 	public String getAliasName();
 	public void setAliasName(String aName);
