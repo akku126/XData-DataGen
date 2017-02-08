@@ -75,6 +75,9 @@ public class GenerateConstraintsForConjunct {
 				tableNo =  selectionConds.get(k).getLeft().getTableNameNo();
 			}
 			
+			if(tableNo == null || tableNo.isEmpty()){
+				tableNo =  selectionConds.get(k).getLeft().getTableNameNo();
+			}
 			int offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
 
 			int count = cvc.getNoOfTuples().get(tableNo) * queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */
@@ -117,7 +120,9 @@ public class GenerateConstraintsForConjunct {
 				else{
 				tableNo =  stringSelectionConds.get(k).getLeft().getTableNameNo();
 			}
-			
+			if(tableNo == null || tableNo.isEmpty()){
+				tableNo =  selectionConds.get(k).getLeft().getTableNameNo();
+			}
 			int offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
 
 			int count = cvc.getNoOfTuples().get(tableNo) * queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;
@@ -1495,7 +1500,8 @@ public class GenerateConstraintsForConjunct {
 		/**If any of these conditions is violated then its ok*/
 		for(String constraint: OrConstraints)
 			if( constraint.length() != 0)
-				str += constraint.substring(6,constraint.length()-1)+" OR ";
+				
+				str += constraint.trim().substring(6,constraint.trim().length()-1)+" OR ";
 
 		str = str.substring(0,str.length()-4);
 		str+=";";

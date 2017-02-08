@@ -244,7 +244,7 @@ public class GenerateCVC1 implements Serializable{
 		constraints = new ArrayList<String>();
 		stringConstraints = new ArrayList<String>();
 		CVCStr = "";
-		typeOfMutation = "";
+		//typeOfMutation = "";
 		
 		try{
 			
@@ -258,7 +258,7 @@ public class GenerateCVC1 implements Serializable{
 			noOfOutputTuples = (HashMap<String,Integer>)query.getRepeatedRelationCount().clone();
 	
 			/**Merging noOfOutputTuples, if input query has set operations*/
-			if(qParser.setOperator!=null && qParser.setOperator.length()>0){  
+			if(qParser != null && qParser.setOperator!=null && qParser.setOperator.length()>0){  
 	
 				/**Initialize the number of tuples in left side query of the set operation*/
 				noOfOutputTuples = (HashMap<String,Integer>)unionCVC.getGenCVCleft().query.getRepeatedRelationCount().clone();
@@ -287,7 +287,7 @@ public class GenerateCVC1 implements Serializable{
 						noOfOutputTuples.put(table, noOfTuples);
 					}
 				}
-			}else if(!qParser.getFromClauseSubqueries().isEmpty()
+			}else if(qParser != null && !qParser.getFromClauseSubqueries().isEmpty()
 					&& qParser.getFromClauseSubqueries().get(0) != null){
 				QueryParser qp = new QueryParser(qParser.getTableMap());
 				qp = qParser.getFromClauseSubqueries().get(0);

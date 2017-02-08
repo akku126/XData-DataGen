@@ -29,8 +29,7 @@ public class GenerateDataForOriginalQuery {
 			/** Initialize the data structures for generating the data to kill this mutation */
 			cvc.inititalizeForDatasetQs();
 		 
-			/**set the type of mutation we are trying to kill*/
-			cvc.setTypeOfMutation(mutationType);
+			
 	
 			/** get the tuple assignment for this query
 			 * If no possible assignment then not possible to kill this mutation*/
@@ -40,6 +39,9 @@ public class GenerateDataForOriginalQuery {
 			
 			//initializing once again after params are set up--- FIX once params are set properly
 			cvc.inititalizeForDataset();
+			
+			/**set the type of mutation we are trying to kill*/
+			cvc.setTypeOfMutation(mutationType);
 			
 			/**Get the null and database constraints - get the number of outout tuples
 			 * and generate other constraints  accordingly*/

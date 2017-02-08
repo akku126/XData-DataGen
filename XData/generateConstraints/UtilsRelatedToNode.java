@@ -608,25 +608,25 @@ public class UtilsRelatedToNode {
 		Vector<CaseCondition> scMutants = new Vector<CaseCondition>();
 		
 		CaseCondition scm = new CaseCondition();
-		if(scm.caseOperator != null){
+		
 			scm = caseCond.clone();
-			scm.caseOperator = "=";					
+			scm.getWhenNode().setOperator("=");					
 			scMutants.add(scm);
 		 
 			scm = caseCond.clone();
-			scm.caseOperator ="<";
+			scm.getWhenNode().setOperator("<");
 			scMutants.add(scm);
 		
 			scm = caseCond.clone();
-			scm.caseOperator =">";
+			scm.getWhenNode().setOperator(">");
 			scMutants.add(scm);
 		
 			scm = caseCond.clone();
-			scm.caseOperator = "/=";
+			scm.getWhenNode().setOperator("/=");
 			scMutants.add(scm);
 			
 			scm = caseCond.clone();
-			scm.caseOperator = "=";
+			scm.getWhenNode().setOperator("=");
 			//(scm.getCaseConditionNode()).setIsMutant(true);
 			Node right = scm.getWhenNode().getRight();
 			Node left = scm.getWhenNode().getLeft();
@@ -644,7 +644,7 @@ public class UtilsRelatedToNode {
 			scMutants.add(scm);
 			
 			scm = caseCond.clone();
-			scm.caseOperator ="=";
+			scm.getWhenNode().setOperator("=");
 			//(scm.getCaseConditionNode()).setIsMutant(true);
 			right = (scm.getWhenNode()).getRight();
 			left = (scm.getWhenNode()).getLeft();
@@ -659,7 +659,7 @@ public class UtilsRelatedToNode {
 			strConst = "(" + strConst + " - 1/" + epsilon + ")";
 			right.setStrConst(strConst);
 			scMutants.add(scm);
-		}
+		
 		return scMutants;
 	}
 

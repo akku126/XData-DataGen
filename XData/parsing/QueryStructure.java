@@ -352,7 +352,13 @@ import util.TableMap;
 //						}else if(this.isInSubQ && n.getNodeType().equals(Node.getNotExistsNodeType())){
 //								this.lstSubQConnectives.add(Node.getNotInNodeType());	
 //						}else{
-							this.lstSubQConnectives.add(n.getNodeType());	
+						if(n.getNodeType().equals(Node.getExistsNodeType()) && n.isInNode){
+							this.lstSubQConnectives.add(Node.getInNodeType());
+						}else if(n.getNodeType().equals(Node.getNotExistsNodeType()) && n.isInNode){
+							this.lstSubQConnectives.add(Node.getNotInNodeType());
+						}else {
+							this.lstSubQConnectives.add(n.getNodeType());
+						}
 //						}
 					}
 				}

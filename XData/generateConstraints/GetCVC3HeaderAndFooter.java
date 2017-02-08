@@ -218,7 +218,7 @@ public class GetCVC3HeaderAndFooter {
 
 				if(columnValue.size()>0){
 					if(!unique || !uniqueValues.contains(columnValue.get(0))){
-						colValue =  Utilities.escapeCharacters(columnName)+"__"+Utilities.escapeCharacters(columnValue.get(0).trim());
+						colValue =  Utilities.escapeCharacters(columnName)+"__"+Utilities.escapeCharacters(columnValue.get(0));//.trim());
 						cvc_datatype += "_"+colValue;
 						isNullMembers += "ASSERT NOT ISNULL_"+columnName+"(_"+colValue+");\n";
 						uniqueValues.add(columnValue.get(0));

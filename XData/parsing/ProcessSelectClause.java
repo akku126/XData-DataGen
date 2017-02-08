@@ -716,14 +716,13 @@ public class ProcessSelectClause {
 						if(switchExpression!=null){
 							Node tempNode=new Node();
 							tempNode.setType(Node.getBroNodeType());
-							tempNode.setOperator(switchExpressionNode.getOperator());
+							tempNode.setOperator(QueryStructure.cvcRelationalOperators[1]);
 							tempNode.setLeft(switchExpressionNode);
 							tempNode.setRight(antecedentNode);
 							antecedentNode=tempNode;
 						}
 						CaseCondition cC=new CaseCondition();
 						cC.setWhenNode(antecedentNode);
-						cC.caseOperator = antecedentNode.getOperator();
 						cC.setThenNode(consequentNode);
 						whenConditionals.add(cC);
 						
@@ -1507,8 +1506,40 @@ public class ProcessSelectClause {
 				
 				return n;
 			} else if (clause instanceof InExpression){ 
+				
 				//handles NOT and NOT IN both
 				InExpression sqn = (InExpression)clause;
+				SubSelect subS=null;
+				Node inNode=new Node();
+				inNode.setType(Node.getInNodeType());
+				Node notNode = new Node();				   
+				Node rhs = new Node();
+				if (sqn. getLeftItemsList() instanceof SubSelect){
+					subS=(SubSelect)sqn.getLeftItemsList();
+				}
+				else if(sqn. getRightItemsList() instanceof SubSelect){ 
+					subS=(SubSelect)sqn.getRightItemsList();
+				}
+				QueryStructure subQueryParser=new QueryStructure(qStruct.getTableMap());
+				rhs.setSubQueryStructure(subQueryParser);	
+				processWhereSubSelect(subS,subQueryParser,qStruct);
+				Node lhs = processExpression(sqn. getLeftExpression(), fle, qStruct,plainSelect,joinType);
+				inNode.setLeft(lhs);
+				inNode.setRight(rhs);
+				if(!sqn.isNot()){					
+					return inNode;
+				}else{
+					notNode.setType(Node.getNotNodeType());
+					notNode.setRight(null);
+					notNode.setLeft(inNode);
+					return notNode;
+				}
+
+				
+				//Shree commented all code changes done- reverting back - Start
+				
+				//handles NOT and NOT IN both
+				/*InExpression sqn = (InExpression)clause;
 				SubSelect subS=null;
 				Node inNode=new Node();
 				inNode.setType(Node.getBroNodeType());
@@ -1610,10 +1641,31 @@ public class ProcessSelectClause {
 					notNode.setQueryType(2);
 					//setQueryTypeAndIndex(notNode,qStruct);
 					return notNode;
+				}*/
+				//Shree commented all code changes done- reverting back - End
+				
+			} else if (clause instanceof ExistsExpression){
+				
+				ExistsExpression sqn = (ExistsExpression)clause;
+				SubSelect subS = (SubSelect)sqn.getRightExpression();
+				QueryStructure subQueryParser=new QueryStructure(qStruct.getTableMap());
+				Node existsNode=new Node();
+				existsNode.setSubQueryStructure(subQueryParser);
+				existsNode.setType(Node.getExistsNodeType());
+				existsNode.setSubQueryConds(null);
+				processWhereSubSelect(subS,subQueryParser,qStruct);
+				Node notNode = new Node();				   
+				if(!((ExistsExpression) clause).isNot()){					
+					return existsNode;
+				}else{
+					notNode.setType(Node.getNotNodeType());
+					notNode.setRight(null);
+					notNode.setLeft(existsNode);
+					return notNode;
 				}
 
-			} else if (clause instanceof ExistsExpression){
-
+				//Shree commenting all changes done - reverting - Start
+				/*
 				ExistsExpression sqn = (ExistsExpression)clause;
 				SubSelect subS = (SubSelect)sqn.getRightExpression();
 
@@ -1651,6 +1703,9 @@ public class ProcessSelectClause {
 					return notNode;
 
 				}
+				*/
+				//Shree commented all changes done - reverting - End
+				
 
 			}
 			else if (clause instanceof SubSelect) {
@@ -1675,8 +1730,9 @@ public class ProcessSelectClause {
 				node.setType(Node.getColRefType());
 				
 				if(rc.getExpression() instanceof Function){ 
-					//return node;
-					Function an = (Function)rc.getExpression();
+					return node;
+				}
+					/*Function an = (Function)rc.getExpression();
 					String aggName = an.getName();
 					ExpressionList expL = an.getParameters();
 					AggregateFunction af = new AggregateFunction();
@@ -1730,7 +1786,7 @@ public class ProcessSelectClause {
 							sqNode.setLhsRhs(rhs);
 							return sqNode;
 					}
-				}
+				}*/
 				else if(rc.getExpression() instanceof Parenthesis && (((Parenthesis)rc.getExpression()).getExpression()) instanceof Column){
 					//the result of subquery must be a single tuple
 					logger.log(Level.WARNING,"the result of subquery must be a single tuple");
@@ -2051,14 +2107,13 @@ public class ProcessSelectClause {
 					if(switchExpression!=null){
 						Node tempNode=new Node();
 						tempNode.setType(Node.getBroNodeType());
-						tempNode.setOperator(switchExpressionNode.getOperator());
+						tempNode.setOperator(QueryStructure.cvcRelationalOperators[1]);
 						tempNode.setLeft(switchExpressionNode);
 						tempNode.setRight(antecedentNode);
 						antecedentNode=tempNode;
 					}
 					CaseCondition cC=new CaseCondition();
 					cC.setWhenNode(antecedentNode);
-					cC.caseOperator = antecedentNode.getOperator();
 					cC.setThenNode(consequentNode);
 					whenConditionals.add(cC);
 					

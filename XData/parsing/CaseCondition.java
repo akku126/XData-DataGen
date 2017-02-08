@@ -17,7 +17,7 @@
 		//This holds the case condition that needs to be satisfied for getting constantValue
 		Node whenNode;
 		Node thenNode;
-		public String caseOperator = "";
+		
 		/**
 		 * @return the caseConditionNode
 		 */

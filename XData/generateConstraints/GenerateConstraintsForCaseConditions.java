@@ -149,11 +149,11 @@ public class GenerateConstraintsForCaseConditions {
 					if(sc.getWhenNode() != null){
 						//if then node is colRef 
 						if(sc.getWhenNode().getLeft() != null && sc.getWhenNode().getLeft().getType().equalsIgnoreCase(Node.getColRefType())){
-							constraintString += " AND ("+ "O_"+GenerateCVCConstraintForNode.cvcMap(sc.getWhenNode().getLeft().getColumn(), (0+offset)+"") +" "+ sc.caseOperator +" "+//TODO REMOVE HARDCODING OF OPERATOR
+							constraintString += " AND ("+ "O_"+GenerateCVCConstraintForNode.cvcMap(sc.getWhenNode().getLeft().getColumn(), (0+offset)+"") +" "+ sc.getWhenNode().getOperator() +" "+//TODO REMOVE HARDCODING OF OPERATOR
 								sc.getWhenNode().getRight()+")";
 							
 						}else if(sc.getWhenNode().getRight() != null && sc.getWhenNode().getRight().getType().equalsIgnoreCase(Node.getColRefType())){
-							constraintString += " AND ("+ "O_"+GenerateCVCConstraintForNode.cvcMap(sc.getWhenNode().getRight().getColumn(), (0+offset)+"") +" "+ sc.caseOperator +" "+//TODO REMOVE HARDCODING OF OPERATOR
+							constraintString += " AND ("+ "O_"+GenerateCVCConstraintForNode.cvcMap(sc.getWhenNode().getRight().getColumn(), (0+offset)+"") +" "+ sc.getWhenNode().getOperator() +" "+//TODO REMOVE HARDCODING OF OPERATOR
 									sc.getWhenNode().getLeft()+")";
 						}
 					constraintString += ") OR (";
