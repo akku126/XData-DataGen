@@ -591,77 +591,51 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 			}
 			return retString;
 		}
-		else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getInNodeType())){
-			if(this.getLeft()!=null){
-				retString+=" "+this.getLeft();
-			}
-			retString+=" "+Node.getInNodeType()+" ";
-			
-			if(this.getRight()!=null&&this.getRight().getSubQueryParser()!=null){
-				retString+="("+this.getRight().getSubQueryParser().getQuery().getQueryString()+")";;
-			}
-			return retString;
-		}
-		else if(this.getType()!=null&& this.getType().equalsIgnoreCase(Node.getAnyNodeType())){
-			retString+=" "+Node.getAnyNodeType()+" ";
-			if(this.getSubQueryParser()!=null){
-				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
-			}
-			return retString;
-		}
-		else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getAllNodeType())){
-			retString+=" "+Node.getAllNodeType()+" ";
-			if(this.getSubQueryParser()!=null){
-				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
-			}
-			return retString;
-		}
-		 else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getExistsNodeType())){
-			retString+=" "+Node.getExistsNodeType()+" ";
-			if(this.getSubQueryParser()!=null){
-				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
-			}
-			return retString;
-		}
-
 		 else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getInNodeType())){
+			 if(this.getLeft()!=null){
+				 retString+=" "+this.getLeft();
+			 }
+				retString+=" "+Node.getInNodeType()+" ";
+			 if(this.getRight()!=null&&this.getRight().getSubQueryStructure()!=null){
+				 retString+="("+this.getRight().getSubQueryStructure().getQuery().getQueryString()+")";;
+			 }
+			 else if(this.getRight()!=null&&this.getRight().isComposite){
+				 retString+=this.getRight().toString();
+			 }
+			return retString;
+		}
+		 else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getNotInNodeType())){
 				if(this.getLeft()!=null){
 					retString+=" "+this.getLeft();
 				}
+				retString+=" "+Node.getNotInNodeType()+" ";
+				
 				if(this.getRight()!=null&&this.getRight().getSubQueryStructure()!=null){
-				retString+="("+this.getRight().getSubQueryStructure().getQuery().getQueryString()+")";;
+					retString+="("+this.getRight().getSubQueryStructure().getQuery().getQueryString()+")";;
+				}
+				else if(this.getRight()!=null&&this.getRight().isComposite){
+					retString+=this.getRight().toString();
+				}
+				return retString;
 			}
-			return retString;
-		}
-		else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getNotInNodeType())){
-			if(this.getLeft()!=null){
-				retString+=" "+this.getLeft();
-			}
-			retString+=" "+Node.getNotInNodeType()+" ";
-			
-			if(this.getRight()!=null&&this.getRight().getSubQueryStructure()!=null){
-				retString+="("+this.getRight().getSubQueryStructure().getQuery().getQueryString()+")";;
-			}
-			return retString;
-		}
 		else if(this.getType()!=null&& this.getType().equalsIgnoreCase(Node.getAnyNodeType())){
 			retString+=" "+Node.getAnyNodeType()+" ";
-			if(this.getSubQueryStructure()!=null){
-				retString+="("+this.getSubQueryStructure().getQuery().getQueryString()+")";
+			if(this.getSubQueryParser()!=null){
+				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
 			}
 			return retString;
 		}
 		else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getAllNodeType())){
 			retString+=" "+Node.getAllNodeType()+" ";
-			if(this.getSubQueryStructure()!=null){
-				retString+="("+this.getSubQueryStructure().getQuery().getQueryString()+")";
+			if(this.getSubQueryParser()!=null){
+				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
 			}
 			return retString;
 		}
 		 else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getExistsNodeType())){
 			retString+=" "+Node.getExistsNodeType()+" ";
-			if(this.getSubQueryStructure()!=null){
-				retString+="("+this.getSubQueryStructure().getQuery().getQueryString()+")";
+			if(this.getSubQueryParser()!=null){
+				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
 			}
 			return retString;
 		}
