@@ -1084,7 +1084,7 @@ public class Util {
 				n.setType(Node.getBroNodeSubQType());
 				n.setSubQueryConds(n.getRight().getSubQueryConds());
 				n.getRight().setSubQueryConds(null);
-				n.getRight().setAgg(n.getRight().getLhsRhs().getAgg());//added by mahesh
+				//n.getRight().setAgg(n.getRight().getLhsRhs().getAgg());//added by mahesh
 				n.setLhsRhs(n.getRight().getLhsRhs());
 				n.getRight().setLhsRhs(null);
 				n.getRight().setType(Node.getAggrNodeType());
