@@ -2060,7 +2060,20 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 					logger.info("alias Name Found in ancestor"+n);
 					return n;
 				}
-				// case when there is table name of n does not match with table/alias name of fle
+				else if( !n.getTableNameNo().isEmpty() && fle.getAliasName().equalsIgnoreCase(n.getTableNameNo())){
+					n.setTableNameNo(fle.getTableNameNo());
+					Table table=qStruct.getTableMap().getTable(fle.getTableName());
+					if(table!=null){
+						n.setTable(table);
+						//Set isCorrelated to true if the subquery holds tables that are correlated.
+						n.isCorrelated = true;
+						//n.setColumn(new parsing.Column(n.getColumn().getColumnName(),table));
+						n.setColumn(table.getColumn(n.getColumn().getColumnName()));
+					}
+					logger.info("alias Name Found in ancestor"+n);
+					return n;
+				}
+				// case when there is table name of n that does not match with table/alias name of fle
 				// in which case fle's columns are searched for a column whose name is n's, if yes
 				// then fle's table and table name is copied to n's
 				else if(aliasNameFound){
