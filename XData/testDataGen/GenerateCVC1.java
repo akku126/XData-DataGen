@@ -33,7 +33,7 @@ import parsing.Node;
 import parsing.Query;
 import parsing.QueryParser;
 import parsing.QueryStructure;
-import parsing.QueryStructureForDataGen;
+import parsing.QueryStructureDatagen;
 import parsing.Table;
 import stringSolver.StringConstraintSolver;
 import util.TableMap;
@@ -383,14 +383,13 @@ public class GenerateCVC1 implements Serializable{
 			repeatedRelationCount = query.getRepeatedRelationCount();
 			
 			/**Update the foreign key details in qStructure along with tableNames, NoOfOutputTuples, NoOfTuples, etc.,*/
-			QueryStructureForDataGen qd = new QueryStructureForDataGen();
 			
-			qd.foreignKeyClosure(queryStructure);
+			QueryStructureDatagen.foreignKeyClosure(queryStructure);
 			for(QueryStructure qp: queryStructure.getFromClauseSubqueries()){				
-				qd.foreignKeyClosure(qp);
+				QueryStructureDatagen.foreignKeyClosure(qp);
 			}
 			for(QueryStructure qp: queryStructure.getWhereClauseSubqueries()){
-				qd.foreignKeyClosure(qp);
+				QueryStructureDatagen.foreignKeyClosure(qp);
 			}
 			baseRelation = query.getBaseRelation();
 			//query.getFromTables().put(queryStructure.getQuery().addFromTable(new Table ));
@@ -419,10 +418,10 @@ public class GenerateCVC1 implements Serializable{
 					}
 				}
 			}
-			qd.updateBaseRelations(qStructure,this);
-			qd.updateTableNames(qStructure, this);
+			QueryStructureDatagen.updateBaseRelations(qStructure,this);
+			QueryStructureDatagen.updateTableNames(qStructure, this);
 			setTablesOfOriginalQuery( new Vector<Table>() );
-			qd.updateTableNamesOfOriginalQuery(qStructure, this);
+			QueryStructureDatagen.updateTableNamesOfOriginalQuery(qStructure, this);
 			/** Initiliaze the outer query block*/
 			outerBlock = QueryBlockDetails.intializeQueryBlockDetails(queryStructure);
 				 

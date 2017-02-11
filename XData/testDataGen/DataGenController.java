@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 
 import parsing.QueryParser;
 import parsing.QueryStructure;
-import parsing.QueryStructureForDataGen;
 
 import util.Configuration;
 import util.TableMap;

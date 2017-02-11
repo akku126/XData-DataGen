@@ -120,7 +120,7 @@ import util.TableMap;
 		// aggregation
 		Vector<AggregateFunction> aggFunc;
 		Vector<Node> groupByNodes;
-		Vector<Node> lsthavingClauses;
+		Vector<Node> havingClauses;
 		Node havingClause;
 
 		JoinTreeNode root;//currently not used
@@ -243,7 +243,7 @@ import util.TableMap;
 
 				
 
-				this.lstHavingConditions.addAll(this.getlstHavingClauses());
+				this.lstHavingConditions.addAll(this.getHavingClauses());
 
 				this.lstProjectedCols.addAll(this.getProjectedCols());
 
@@ -334,11 +334,6 @@ import util.TableMap;
 				
 				Vector <Node> subQConds = con.getAllSubQueryConds();
 				for(Node n : subQConds){
-					/* the expression: n.getType().equalsIgnoreCase(Node.getAllAnyNodeType()) 
-					 * from the If condition below removed, and 
-					 * All node, Any node type in the following condition added by mathew on 27 June 2016
-					 */
-
 					if(n.getNodeType().equals(Node.getAllNodeType())
 							||n.getNodeType().equals(Node.getAnyNodeType())
 							||n.getNodeType().equals(Node.getExistsNodeType())
@@ -346,20 +341,7 @@ import util.TableMap;
 							||n.getNodeType().equals(Node.getInNodeType())
 							||n.getNodeType().equals(Node.getNotInNodeType())){
 
-						// commented by mathew on 18 oct 2016
-//						if(this.isInSubQ && n.getNodeType().equals(Node.getExistsNodeType())){
-//							this.lstSubQConnectives.add(Node.getInNodeType());
-//						}else if(this.isInSubQ && n.getNodeType().equals(Node.getNotExistsNodeType())){
-//								this.lstSubQConnectives.add(Node.getNotInNodeType());	
-//						}else{
-						if(n.getNodeType().equals(Node.getExistsNodeType()) && n.isInNode){
-							this.lstSubQConnectives.add(Node.getInNodeType());
-						}else if(n.getNodeType().equals(Node.getNotExistsNodeType()) && n.isInNode){
-							this.lstSubQConnectives.add(Node.getNotInNodeType());
-						}else {
-							this.lstSubQConnectives.add(n.getNodeType());
-						}
-//						}
+						this.lstSubQConnectives.add(n.getNodeType());
 					}
 				}
 
@@ -560,7 +542,7 @@ import util.TableMap;
 			for(Node n:this.groupByNodes)
 				retString+=" "+n;
 			retString+="\n Having \n";
-			for(Node n:this.lsthavingClauses)
+			for(Node n:this.havingClauses)
 				retString+=" "+n;
 			retString+="\n Order By \n";
 			for(Node n:this.orderByNodes)
@@ -721,21 +703,21 @@ import util.TableMap;
 			return havingClause;
 		}
 		
-		public Node setHavingClause(Node n) {
-			return n;
+		public void setHavingClause(Node n) {
+			this.havingClause=n;
 		}
 		
-		public Vector<Node> getlstHavingClauses() {
-			return lsthavingClauses;
+		public Vector<Node> getHavingClauses() {
+			return havingClauses;
 		}
 
-		public void setlstHavingClauses(Node n) {		
+		public void setHavingClauses(Node n) {		
 			
 				if(n != null && n.getNodeType()!=null&& !n.getNodeType().equals(Node.getAndNodeType()) && n.getNodeType().equals(Node.getBroNodeType())){
-					this.getlstHavingClauses().add(n);
+					this.getHavingClauses().add(n);
 				}else if(n != null && n.getNodeType()!=null && n.getNodeType().equals(Node.getAndNodeType())){
-					this.setlstHavingClauses(n.getLeft());
-					this.setlstHavingClauses(n.getRight());
+					this.setHavingClauses(n.getLeft());
+					this.setHavingClauses(n.getRight());
 				}	
 		}
 		
@@ -806,6 +788,10 @@ import util.TableMap;
 		public Vector<QueryStructure> getWhereClauseSubqueries(){
 			return this.WhereClauseSubqueries;
 		}
+		
+		private QueryStructure(){
+			
+		}
 
 		public QueryStructure(TableMap tableMap) {
 			this.tableMap = tableMap;
@@ -839,7 +825,7 @@ import util.TableMap;
 			groupByNodes = new Vector<Node>();
 			//following line added by mathew on 25 June 2016
 			this.orderByNodes=new Vector<Node>();
-			lsthavingClauses = new Vector<Node>();
+			havingClauses = new Vector<Node>();
 			allSubQueryConds = new Vector<Node>();
 			allCondsExceptSubQuery = new Vector<Node>();
 
@@ -1000,7 +986,7 @@ import util.TableMap;
 							((Select)stmt).getWithItemsList() == null){						
 						 plainSelect = (PlainSelect)((Select) stmt).getSelectBody();
 //						ProcessResultSetNode.processResultSetNodeJSQL(plainSelect, debug, this);
-						ProcessSelectClause.ProcessSelect(plainSelect, debug, this);
+						ProcessSelectClause.getInstance().ProcessSelect(plainSelect, debug, this);
 					}
 					
 					//Check if query contains WithItem list - then Query is of the form  WITH S AS ()
@@ -1014,7 +1000,7 @@ import util.TableMap;
 						logger.info("transformed query after substitution of Witt aliases\n"+ alteredWithQuery);
 		
 						//ProcessResultSetNode.processResultSetNodeJSQL((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
-						ProcessSelectClause.ProcessSelect((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
+						ProcessSelectClause.getInstance().ProcessSelect((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
 					}
 					
 					//If it is instance of SetOperationList - UNION,EXCEPT OR INTERSECT
@@ -1447,7 +1433,7 @@ import util.TableMap;
 							leftQuery.query.setQueryString(left.toString());
 						
 						//ProcessResultSetNode.processResultSetNodeJSQL(left, debug, leftQuery);
-						ProcessSelectClause.ProcessSelect(left, debug, leftQuery);
+						ProcessSelectClause.getInstance().ProcessSelect(left, debug, leftQuery);
 						this.projectedCols.addAll(leftQuery.projectedCols);
 					}
 					else if(nxtElement instanceof SetOperationList){
@@ -1465,7 +1451,7 @@ import util.TableMap;
 							rightQuery.query.setQueryString(right.toString());
 						
 						//ProcessResultSetNode.processResultSetNodeJSQL(right, debug, rightQuery);			
-						ProcessSelectClause.ProcessSelect(right, debug, rightQuery);
+						ProcessSelectClause.getInstance().ProcessSelect(right, debug, rightQuery);
 						if(projectedCols.isEmpty())
 							this.projectedCols.addAll(rightQuery.projectedCols);
 						}
@@ -2428,12 +2414,7 @@ import util.TableMap;
 							type.equalsIgnoreCase(Node.getExistsNodeType()) || type.equalsIgnoreCase(Node.getBroNodeSubQType())
 							||type.equalsIgnoreCase(Node.getNotInNodeType())//added by mathew on 17 oct 2016
 							||type.equalsIgnoreCase(Node.getNotExistsNodeType())){
-						if(n.getSubQueryConds() != null){
-						subCond.addAll(n.getSubQueryConds());
-						}
-						else{
-							subCond.add(n);
-						}
+						subCond.add(n);
 						temp1.remove(n);
 					}
 				}

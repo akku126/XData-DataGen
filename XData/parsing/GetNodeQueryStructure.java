@@ -127,7 +127,8 @@ public class GetNodeQueryStructure {
 		if (temp!=null&&temp.getLeft()!=null && temp.getRight()!=null
 				&&temp.getLeft().getType()!=null && temp.getRight().getType()!=null
 				&& temp.getLeft().getTable() != null && temp.getRight().getTable() != null 
-				&& !temp.getLeft().getTable().getTableName().equalsIgnoreCase(temp.getRight().getTable().getTableName())
+//				&& !temp.getLeft().getTable().getTableName().equalsIgnoreCase(temp.getRight().getTable().getTableName()) 
+//				above line newly added by Shree, commented by mathew temporarily 
 				&& temp.getLeft().getType().equalsIgnoreCase(Node.getColRefType())
 				&& temp.getRight().getType().equalsIgnoreCase(Node.getColRefType()) 
 				&& temp.getType().equalsIgnoreCase(Node.getBroNodeType())){
