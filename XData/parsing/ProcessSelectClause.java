@@ -13,7 +13,7 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
+import net.sf.jsqlparser.expression.AliasWithArgs;
 import net.sf.jsqlparser.expression.AllComparisonExpression;
 import net.sf.jsqlparser.expression.AnyComparisonExpression;
 import net.sf.jsqlparser.expression.BinaryExpression;
@@ -431,6 +431,29 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 			}
 			qStruct.fromListElements.addElement(leftFLE);					
 			ProcessSelectClause.getInstance().processFromListSubSelect(subSelect,subQueryParser,qStruct);
+			/* The following if block enables resolvement of subquery aliases with projection list arguments.
+			 * eg: (Select col1, col2, .. from ... ) as subQAlias( alias1, alias2, ..). While the complex alias
+			 * is processed, the arugment aliasi is set as the alias name for the corresponding projected column coli
+			 */
+			if(subSelect.getAlias()!=null && (subSelect.getAlias() instanceof AliasWithArgs)){
+				AliasWithArgs aliasWithArgs= (AliasWithArgs)subSelect.getAlias();
+				List<String> aliasNames=aliasWithArgs.getColNames();
+				if(aliasNames.size()>0){
+					Vector<Node> subQueryProjColumns=subQueryParser.getProjectedCols();
+					if(aliasNames.size()!= subQueryProjColumns.size()){
+						logger.info(" Number of Aliass' Arguments does not match the number of subquery projected columns, "
+								+ "exception thrown, query: "+plainSelect.toString());
+						throw new Exception(" Number of Alias Arguments does not match the number of subquery projected columns"
+								+ ", exception thrown");
+					}
+					else{
+						for(int i=0;i<aliasNames.size();i++){
+							String alName=aliasNames.get(i);
+							subQueryProjColumns.get(i).setAliasName(alName);
+						}
+					}
+				}
+			}
 
 		}
 

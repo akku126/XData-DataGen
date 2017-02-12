@@ -1102,7 +1102,7 @@ import util.TableMap;
 
 		PlainSelect transformPlainSelectForWithAs(WithItem srcWithItem, PlainSelect tarSelectClause){
 			// Starts by dealing with from items, a from item can be a Table name, a subselect statement, or a subjoin statement
-			FromItem tarFromItem=tarSelectClause.getFromItem();
+			FromItem tarFromItem=tarSelectClause.getFromItem();			
 			// if fromitem is a Table then check if its name is equal to the name of the input withitem, if yes substitutes its occurence
 			// by its definition
 			if(tarFromItem instanceof net.sf.jsqlparser.schema.Table){
@@ -1174,7 +1174,7 @@ import util.TableMap;
 		private void transformJoinsForWithAs(WithItem srcWithItem, List<Join> joinList){
 			for(int k=0; k < joinList.size(); k++){
 				Join jcl = joinList.get(k);	
-				FromItem tarJoinFromItem=jcl.getRightItem();				
+				FromItem tarJoinFromItem=jcl.getRightItem();
 				//if the join item is a table, then call the corresponding method that handles it
 				if(tarJoinFromItem instanceof net.sf.jsqlparser.schema.Table){
 					net.sf.jsqlparser.schema.Table tarTable= (net.sf.jsqlparser.schema.Table)tarJoinFromItem;
