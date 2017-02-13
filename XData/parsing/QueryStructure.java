@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -840,6 +841,8 @@ import util.TableMap;
 			this.lstRelationInstances=new ArrayList<String>();
 
 		}
+		
+
 		
 		/** @author mathew
 		 * @param input
@@ -2049,8 +2052,8 @@ import util.TableMap;
 					
 					if(n.getJoinType()!=null &&(n.getJoinType().equals(JoinClauseInfo.leftOuterJoin)||n.getJoinType().equals(JoinClauseInfo.rightOuterJoin)))
 						continue;
-					if(QueryData.isMemberOf(n.getLeft().getTableNameNo(), lstRedundantRelations)
-						||QueryData.isMemberOf(n.getRight().getTableNameNo(),lstRedundantRelations)){
+					if(Util.isMemberOf(n.getLeft().getTableNameNo(), lstRedundantRelations)
+						||Util.isMemberOf(n.getRight().getTableNameNo(),lstRedundantRelations)){
 						Node eqNode=getAlternateEquivalentBinaryNode(n);
 						if(eqNode==null){
 							binaryConds.remove(n);
@@ -2277,7 +2280,7 @@ import util.TableMap;
 			Node leftNodeNew=n.getLeft();
 			
 			if(leftNode!=null&&!leftNode.getNodeType().equals(Node.getValType())){
-				if(QueryData.isMemberOf(leftNode.getTableNameNo(),lstRedundantRelations)){
+				if(Util.isMemberOf(leftNode.getTableNameNo(),lstRedundantRelations)){
 					leftNodeNew=getAlternateEquivalentColumnNode(leftNode);
 					if(leftNodeNew==null)
 						return null;
@@ -2289,7 +2292,7 @@ import util.TableMap;
 			Node rightNode=n.getRight();
 			Node rightNodeNew=n.getRight();
 			if(rightNode!=null&& !rightNode.getNodeType().equals(Node.getValType())){
-				if(QueryData.isMemberOf(rightNode.getTableNameNo(),lstRedundantRelations)){
+				if(Util.isMemberOf(rightNode.getTableNameNo(),lstRedundantRelations)){
 					rightNodeNew=getAlternateEquivalentColumnNode(rightNode);
 				}
 				if(rightNodeNew==null)

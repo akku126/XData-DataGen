@@ -1,6 +1,7 @@
 package parsing;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,6 +40,120 @@ import util.Graph;
 public class Util {
 
 	private static Logger logger = Logger.getLogger(Util.class.getName()); 
+	
+	/*
+	 * Returns the foreign key with referencing table relation1 and referenced table relation 2
+	 * from the set of foreign keys foreignKeys
+	 */	
+	public static ForeignKey getForeignKey(String relation1, String relation2, ArrayList<ForeignKey> foreignKeys){
+		for(ForeignKey fk : foreignKeys){
+			if((fk.getFKTablename().equalsIgnoreCase(relation1) && fk.getReferenceTable().getTableName().equalsIgnoreCase(relation2))){
+				return fk;
+			}
+		}				
+		return null;
+	}
+	
+	/* Returns the set of relations R s.t. key attributes
+	 * in R are referred to by foreign keys of another table R'  and the corresponding attributes 
+	 * of referencing table R' and referenced table R are part of the equivalence
+	 * relation induced by the query. Also it is made sure that R does not contain foreignkey 
+	 * references to relations in baseTables (which are the set of non eliminated tables so far)
+	 */
+
+	public static ArrayList<String> getReferencedRelations(Set<String> baseTables, ArrayList<String> eliminateRelations, ArrayList<ForeignKey> foreignKeys, Map<String, HashMap<String, ArrayList<Pair>>> relationToRelationEqNodes){	
+
+		Boolean isReferenced = false;
+		ArrayList<String> referencedRelations = new ArrayList<String>();
+
+		for(String cand: baseTables){
+
+			HashMap<String, ArrayList<Pair>> data = relationToRelationEqNodes.get(cand);
+			isReferenced = false;
+
+			if(data == null)
+				continue;
+
+			for(Entry<String, ArrayList<Pair>> entry: data.entrySet()){
+				String key = entry.getKey();
+
+				/*
+				 * Make sure that the table under consideration is not an eliminated relation  
+				 */
+				if(eliminateRelations!=null && eliminateRelations.contains(key))
+					continue;
+
+				ArrayList<Pair> values = entry.getValue();
+				
+
+				/* assumes that tableNameNos are of the form tableNamei, where i is between 0 to 9,
+				 */
+				String candTableName=cand.substring(0, cand.length()-1);
+				String keyTableName=key.substring(0, key.length()-1);
+				/*
+				 * Make sure that any referenced table does not refer to another table 
+				 * via a foreign key relation
+				 */
+				ForeignKey fk= getForeignKey(candTableName, keyTableName, foreignKeys);
+
+				if(fk != null){
+					isReferenced = false;
+					break;
+				}
+
+				fk = getForeignKey(keyTableName, candTableName, foreignKeys);
+
+				if(fk == null){
+					isReferenced = false;
+					continue;
+				}
+
+				Vector<Column> candKeys = fk.getReferenceKeyColumns();
+				Vector<Column> otherKeys = fk.getFKeyColumns();
+
+				isReferenced = true;
+				for(int i = 0; i < candKeys.size(); i++){
+					Column canCol = candKeys.get(i);
+					Column othCol = otherKeys.get(i);
+					Boolean found = false;
+					for(Pair v : values){
+						if(v.first.getColumn().getColumnName().equalsIgnoreCase(canCol.getColumnName()) && v.second.getColumn().getColumnName().equalsIgnoreCase(othCol.getColumnName())){
+							found = true;
+							break;
+						} 
+					}
+
+					if(!found){
+						isReferenced = false;
+						break;
+					}
+				}
+
+				if(!isReferenced)
+					break;
+			}
+
+			if(isReferenced){
+				referencedRelations.add(cand);
+			}
+		}
+		return referencedRelations;
+	}
+	
+	/**
+	 * @author mathew on Sep 11 2016
+	 * returns true iff the first arugment string is a member of the second argument, which is a list
+	 * 
+	 */
+	public static boolean isMemberOf(String element, List<String> list){
+		if(element==null)
+			return false;
+		for(String s:list){
+			if(element.equalsIgnoreCase(s))
+				return true;
+		}
+		return false;
+	}
 	
 	/**
 	 * 
