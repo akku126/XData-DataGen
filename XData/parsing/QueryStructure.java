@@ -2091,16 +2091,18 @@ import util.TableMap;
 		public void reAdjustJoins() {
 			// TODO Auto-generated method stub
 			ArrayList<Node> tempSelectionConds=new ArrayList<Node>();
-			tempSelectionConds.addAll(lstSelectionConds);
-			for(Node n:lstSelectionConds){
-				if(n.getLeft().getType().equals(Node.getColRefType())&&n.getRight().getType().equals(Node.getColRefType())){
-					if(!lstJoinConditions.contains(n))
-						lstJoinConditions.add(n);
-					tempSelectionConds.remove(n);
-				}			
+			if(lstSelectionConds!=null){
+				tempSelectionConds.addAll(lstSelectionConds);
+				for(Node n:lstSelectionConds){
+					if(n.getLeft().getType().equals(Node.getColRefType())&&n.getRight().getType().equals(Node.getColRefType())){
+						if(!lstJoinConditions.contains(n))
+							lstJoinConditions.add(n);
+						tempSelectionConds.remove(n);
+					}			
+				}
+				lstSelectionConds.clear();
+				lstSelectionConds.addAll(tempSelectionConds);
 			}
-			lstSelectionConds.clear();
-			lstSelectionConds.addAll(tempSelectionConds);
 
 		}
 		
