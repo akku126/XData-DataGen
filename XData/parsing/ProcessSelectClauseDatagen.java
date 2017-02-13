@@ -16,6 +16,7 @@ import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.expression.Parenthesis;
 import net.sf.jsqlparser.expression.WhenClause;
 import net.sf.jsqlparser.expression.operators.relational.ExistsExpression;
+import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.schema.Column;
@@ -45,7 +46,6 @@ public class ProcessSelectClauseDatagen extends ProcessSelectClause{
 
 	//invisible constructor for prevention of creating objects using new operator
 	private ProcessSelectClauseDatagen(){
-
 	}
 
 	@Override
@@ -82,36 +82,7 @@ public class ProcessSelectClauseDatagen extends ProcessSelectClause{
 					qStruct.getCaseConditionMap().put(2,n.getCaseExpression());
 					isCaseExists = true;
 				}
-			
-/*					cC.setCaseConditionNode(n);
-					cC.setCaseCondition(n.toString());
-					cC.setConstantValue(((WhenClause)((CaseExpression) whereClause).getWhenClauses().get(i)).getThenExpression().toString());
-					if(colExpression!= null && colExpression instanceof Column){
-						Node n1 = ((processExpression((colExpression), qStruct.fromListElements,qStruct,plainSelect,null)));
-						cC.setColValueForConjunct(UtilsRelatedToNode.getColumn(n1));
-						nodeColumnValue = UtilsRelatedToNode.getColumn(n1);
-						cC.setCaseOperator("=");
-					}
-					
-					caseConditionsVector.add(cC);
-					
-				}
-				isCaseExpr = true;
-				//Add the else clause if present as the last item
-				if(((CaseExpression) whereClause).getElseExpression() != null){
-					CaseCondition cC = new CaseCondition();
-					cC.setCaseConditionNode(n);
-					cC.setCaseCondition("else");
-					cC.setConstantValue(((CaseExpression) whereClause).getElseExpression().toString());
-					if(colExpression != null && colExpression instanceof Column){
-						Node n1 = ((processExpression((colExpression), qStruct.fromListElements,qStruct,plainSelect,null)));
-					}
-					
-					caseConditionsVector.add(cC);
-					
-				}*/
-				//Add Case conditions to queryparser
-				
+
 				return isCaseExists;
 			}
 			else if(whereClause instanceof BinaryExpression){
@@ -363,15 +334,7 @@ public class ProcessSelectClauseDatagen extends ProcessSelectClause{
 	@Override
 	public Node processExpressionForGreaterThan(GreaterThan broNode, Vector<FromClauseElement> fle,
 			QueryStructure qStruct, PlainSelect plainSelect, String joinType) throws Exception{
-		/*if(broNode.getLeftExpression() instanceof ExtractExpression) {
-			//type new_name = (type) ;
-			Node n = new Node();
-			return n;
-		}else if(broNode.getRightExpression() instanceof ExtractExpression){
-			Node n = new Node();
-			return n;
-		}*/
-		//BinaryRelationalOperatorNode broNode = ((BinaryRelationalOperatorNode) clause);			
+				
 		Node n = new Node();
 		n.setType(Node.getBroNodeType());
 		n.setOperator(QueryStructure.cvcRelationalOperators[3]);
@@ -451,9 +414,7 @@ public class ProcessSelectClauseDatagen extends ProcessSelectClause{
 		node.setType(Node.getColRefType());
 		
 		if(rc.getExpression() instanceof Function){ 
-			return node;
-		}
-			/*Function an = (Function)rc.getExpression();
+			Function an = (Function)rc.getExpression();
 			String aggName = an.getName();
 			ExpressionList expL = an.getParameters();
 			AggregateFunction af = new AggregateFunction();
@@ -507,7 +468,7 @@ public class ProcessSelectClauseDatagen extends ProcessSelectClause{
 					sqNode.setLhsRhs(rhs);
 					return sqNode;
 			}
-		}*/
+		}
 		else if(rc.getExpression() instanceof Parenthesis && (((Parenthesis)rc.getExpression()).getExpression()) instanceof Column){
 			//the result of subquery must be a single tuple
 			logger.log(Level.WARNING,"the result of subquery must be a single tuple");
@@ -555,26 +516,8 @@ public class ProcessSelectClauseDatagen extends ProcessSelectClause{
 	@Override
 	public Node ProcessExpressionForExists(ExistsExpression sqn, Vector<FromClauseElement> fle, QueryStructure qStruct,
 			PlainSelect plainSelect, String joinType) throws Exception{
-		SubSelect subS = (SubSelect)sqn.getRightExpression();
-		QueryStructure subQueryParser=new QueryStructure(qStruct.getTableMap());
-		Node existsNode=new Node();
-		existsNode.setSubQueryStructure(subQueryParser);
-		existsNode.setType(Node.getExistsNodeType());
-		existsNode.setSubQueryConds(null);
-		processWhereSubSelect(subS,subQueryParser,qStruct);
-		Node notNode = new Node();				   
-		if(!sqn.isNot()){					
-			return existsNode;
-		}else{
-			notNode.setType(Node.getNotNodeType());
-			notNode.setRight(null);
-			notNode.setLeft(existsNode);
-			return notNode;
-		}
-
-		//Shree commenting all changes done - reverting - Start
-		/*
-		ExistsExpression sqn = (ExistsExpression)clause;
+	
+	
 		SubSelect subS = (SubSelect)sqn.getRightExpression();
 
 
@@ -600,7 +543,7 @@ public class ProcessSelectClauseDatagen extends ProcessSelectClause{
 		existsNode.setQueryType(2);
 		existsNode.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);				
 		
-		if(!((ExistsExpression) clause).isNot()){					
+		if(!((ExistsExpression) sqn).isNot()){					
 			return existsNode;
 		}else{
 			notNode.setType(Node.getNotNodeType());
@@ -611,45 +554,12 @@ public class ProcessSelectClauseDatagen extends ProcessSelectClause{
 			return notNode;
 
 		}
-		*/
-		//Shree commented all changes done - reverting - End
 	}
 	
 	@Override
 	public Node ProcessExpressionForIn(InExpression sqn, Vector<FromClauseElement> fle, QueryStructure qStruct,
 			PlainSelect plainSelect, String joinType) throws Exception{
-		//handles NOT and NOT IN both
-		SubSelect subS=null;
-		Node inNode=new Node();
-		inNode.setType(Node.getInNodeType());
-		Node notNode = new Node();				   
-		Node rhs = new Node();
-		if (sqn. getLeftItemsList() instanceof SubSelect){
-			subS=(SubSelect)sqn.getLeftItemsList();
-		}
-		else if(sqn. getRightItemsList() instanceof SubSelect){ 
-			subS=(SubSelect)sqn.getRightItemsList();
-		}
-		QueryStructure subQueryParser=new QueryStructure(qStruct.getTableMap());
-		rhs.setSubQueryStructure(subQueryParser);	
-		processWhereSubSelect(subS,subQueryParser,qStruct);
-		Node lhs = processExpression(sqn. getLeftExpression(), fle, qStruct,plainSelect,joinType);
-		inNode.setLeft(lhs);
-		inNode.setRight(rhs);
-		if(!sqn.isNot()){					
-			return inNode;
-		}else{
-			notNode.setType(Node.getNotNodeType());
-			notNode.setRight(null);
-			notNode.setLeft(inNode);
-			return notNode;
-		}
-
-		
-		//Shree commented all code changes done- reverting back - Start
-		
-		//handles NOT and NOT IN both
-		/*InExpression sqn = (InExpression)clause;
+	
 		SubSelect subS=null;
 		Node inNode=new Node();
 		inNode.setType(Node.getBroNodeType());
@@ -751,8 +661,7 @@ public class ProcessSelectClauseDatagen extends ProcessSelectClause{
 			notNode.setQueryType(2);
 			//setQueryTypeAndIndex(notNode,qStruct);
 			return notNode;
-		}*/
-		//Shree commented all code changes done- reverting back - End
+		}
 		
 	}
 

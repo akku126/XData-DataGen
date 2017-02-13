@@ -192,7 +192,7 @@ public class PreProcessingActivity {
 				cvc.setqStructure(qStructure);
 				
 				
-			cvc.initializeQueryDetailsQStructure(cvc.getqStructure() );
+				cvc.initializeQueryDetailsQStructure(cvc.getqStructure() );
 			
 				logger.log(Level.INFO," Query Parser output = "+ cvc.getqStructure());
 				/**Delete data sets in the path*/
@@ -275,9 +275,9 @@ public class PreProcessingActivity {
 				GenerateUnionCVC unionCVC= new GenerateUnionCVC(cvcCopy, cvcCopy.getqStructure());
 
 				
-				/*RelatedToPreprocessing.populateData(cvc);
+				//RelatedToPreprocessing.populateData(cvc);
 
-				//**Generate CVC3 Header, This is need to initialize the CVC3 Data Type field of each column of each table 
+				/*Generate CVC3 Header, This is need to initialize the CVC3 Data Type field of each column of each table 
 				cvc.setCVC3_HEADER( GetCVC3HeaderAndFooter.generateCVC3_Header( cvc ) );
 
 				cvc.getUnionCVC().generateDataForApp();

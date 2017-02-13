@@ -341,7 +341,7 @@ public class GenerateUnionCVC implements Serializable{
 			if(SelCond==null){
 				dnfSelConds.add(leftSelConds);
 			}
-			
+			*/
 		//End transfered
 		
 		
@@ -397,7 +397,7 @@ public class GenerateUnionCVC implements Serializable{
 /*		for(Conjunct conjunct : genCVCright.outerBlock.getConjuncts()){
 			conjunct.seggregateSelectionConds();
 		}*/
-		//RelatedToPreprocessing.segregateSelectionConditions(genCVCright);
+		RelatedToPreprocessing.segregateSelectionConditions(genCVCright);
 		/*Create New CVC Object with combined Constraints*/
 //		cvc.initializeQueryDetails(qParser);
 //		cvc.setQuery(cvc.getqParser().getQuery());

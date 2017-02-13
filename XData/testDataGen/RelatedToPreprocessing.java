@@ -254,7 +254,9 @@ public class RelatedToPreprocessing {
 				cvc.getResultsetColumns().add(new Column("dummy","dummy"));
 				while(t.hasNext()){
 					table = (Table)t.next();
-					cvc.getResultsetTables().add(table);
+					if(!cvc.getResultsetTables().contains(table)){
+						cvc.getResultsetTables().add(table);
+					}
 					Collection columns = table.getColumns().values();
 					Iterator c = columns.iterator();
 					while(c.hasNext()){
