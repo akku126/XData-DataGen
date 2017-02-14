@@ -13,15 +13,6 @@ public class FromListElement implements Serializable{
 	public String tableNameNo;
 	Vector<FromListElement> tabs=new Vector<FromListElement>();
 	//the following line added by mathew on 1st october 2016
-	QueryParser subQueryParser;
-	
-	public QueryParser getSubQueryParser(){
-		return subQueryParser;
-	}
-	
-	public void setSubQueryParser(QueryParser subQP){
-		this.subQueryParser=subQP;
-	}
 	
 	public void addTabs(FromListElement fle){
 		this.tabs.addElement(fle);
@@ -54,8 +45,6 @@ public class FromListElement implements Serializable{
 		String retString= " aliasName: "+this.getAliasName() +
 				" tableName: "+this.getTableName()+
 				" tableNameNo: "+this.getTableNameNo();
-		if(this.getSubQueryParser()!=null)
-			retString+= " subQuery ";
 		return retString;
 	}
 }

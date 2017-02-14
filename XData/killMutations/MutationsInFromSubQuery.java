@@ -3,7 +3,6 @@ package killMutations;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.QueryParser;
 import parsing.QueryStructure;
 
 import killMutations.fromClauseNestedBlock.*;

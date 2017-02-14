@@ -503,23 +503,6 @@ public class Conjunct_ToDel implements Serializable{
 		return false;
 	}
 	
-	public static void createConjunct(QueryParser qParser, Vector<Vector<Node>> dnfCond2){
-		for(Vector<Node> conjunct: dnfCond2){
-		//	qParser.conjuncts.add(new Conjunct(conjunct));		
-		}
-	}
-	
-	public static void createConjuncts(QueryParser qParser){
-		if(qParser.orNode != null) {
-			for(ANDNode andNode:qParser.orNode.andNodes){
-				//qParser.conjuncts.add(new Conjunct(andNode));
-			}
-			if(!qParser.orNode.leafNodes.isEmpty()){
-				//qParser.conjuncts.add(new Conjunct(qParser.orNode.leafNodes));
-			}
-		}
-		
-	}
 	
 	
 	public static void createConjunct(QueryStructure qStructure, Vector<Vector<Node>> dnfCond2){

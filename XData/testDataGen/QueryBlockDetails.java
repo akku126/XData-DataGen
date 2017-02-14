@@ -20,7 +20,6 @@ import parsing.Column;
 import parsing.CaseExpression;
 import parsing.ConjunctQueryStructure;
 import parsing.Node;
-import parsing.QueryParser;
 import parsing.QueryStructure;
 import parsing.RelationHierarchyNode;
 import parsing.Table;

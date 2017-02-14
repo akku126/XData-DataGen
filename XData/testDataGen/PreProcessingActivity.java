@@ -18,7 +18,6 @@ import killMutations.outerQueryBlock.SetOperatorMutations;
 import parsing.ConjunctQueryStructure;
 import parsing.ForeignKey;
 import parsing.Node;
-import parsing.QueryParser;
 import parsing.QueryStructure;
 import parsing.RelationHierarchyNode;
 import parsing.Table;
@@ -229,7 +228,7 @@ public class PreProcessingActivity {
 					
 				else{
 
-					cvc.getBranchQueries().intitializeDetails(cvc);
+					//cvc.getBranchQueries().intitializeDetails(cvc);
 
 					/**Populate the values from the data base 
 					 * Needed so that the generated values looks realistic */	

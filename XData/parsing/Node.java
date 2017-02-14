@@ -87,7 +87,6 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 		caseCondition=null;
 		aliasName=null;
 		caseExpression=null;
-	    subQueryParser=null;
 	}
 
  //the following lines added by mathew on 1st october 2016
@@ -113,16 +112,6 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 		}
 
 
-	QueryParser subQueryParser;
-		
-		public QueryParser getSubQueryParser(){
-			return subQueryParser;
-		}
-		
-		public void setSubQueryParser(QueryParser subQP){
-			this.subQueryParser=subQP;
-		}
-		
 
 		
 		public void setSubQueryStructure(QueryStructure subQP){
@@ -620,22 +609,22 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 			}
 		else if(this.getType()!=null&& this.getType().equalsIgnoreCase(Node.getAnyNodeType())){
 			retString+=" "+Node.getAnyNodeType()+" ";
-			if(this.getSubQueryParser()!=null){
-				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
+			if(this.getSubQueryStructure()!=null){
+				retString+="("+this.getSubQueryStructure().getQuery().getQueryString()+")";
 			}
 			return retString;
 		}
 		else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getAllNodeType())){
 			retString+=" "+Node.getAllNodeType()+" ";
-			if(this.getSubQueryParser()!=null){
-				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
+			if(this.getSubQueryStructure()!=null){
+				retString+="("+this.getSubQueryStructure().getQuery().getQueryString()+")";
 			}
 			return retString;
 		}
 		 else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getExistsNodeType())){
 			retString+=" "+Node.getExistsNodeType()+" ";
-			if(this.getSubQueryParser()!=null){
-				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
+			if(this.getSubQueryStructure()!=null){
+				retString+="("+this.getSubQueryStructure().getQuery().getQueryString()+")";
 			}
 			return retString;
 		}

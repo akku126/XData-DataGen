@@ -188,7 +188,7 @@ public class RelatedToPreprocessing {
 						}*/
 						for(int i = 0; i < noOfBranchQueries; i++)
 						{
-							Vector<Node> tempColNode = cvc.getBranchQueries().getqParser1()[i].getProjectedCols();
+							Vector<Node> tempColNode = cvc.getBranchQueries().getqStructure1()[1].getProjectedCols();
 							for(int j = 0; j < tempColNode.size(); j++)
 								if(tempColNode.get(j).getColumn().equals(column))
 								{

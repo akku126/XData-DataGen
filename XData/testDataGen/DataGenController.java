@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import parsing.QueryParser;
 import parsing.QueryStructure;
 
 import util.Configuration;
@@ -98,7 +97,7 @@ public class DataGenController{
 				
 				else{
 
-					cvc.getBranchQueries().intitializeDetails(cvc);
+					//cvc.getBranchQueries().intitializ(cvc);
 
 					/**Populate the values from the data base 
 					 * Needed so that the generated values looks realistic */	

@@ -67,11 +67,9 @@ import parsing.AggregateFunction;
 import parsing.CaseCondition;
 import parsing.JoinClauseInfo;
 import parsing.Node;
-import parsing.ProcessResultSetNode;
 import parsing.Query;
 import parsing.Table;
 import parsing.Util;
-import parsing.WhereClauseVectorJSQL;
 
 public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 	private  Logger logger = Logger.getLogger(ProcessSelectClause.class.getName());
@@ -88,6 +86,8 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 	protected ProcessSelectClause(){
 		
 	}
+	
+
 
 	/** @author mathew on 1st october 2016 
 	 * 
@@ -128,7 +128,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 				Vector<Node> allCondsDups=(Vector<Node>) qStruct.allConds.clone();
 				Node NewCond = new Node();
 				NewCond.setType(Node.getAndNodeType());
-				NewCond.setLeft(ProcessResultSetNode.getHierarchyOfJoinNode(joinConditions));
+				NewCond.setLeft(Util.getHierarchyOfJoinNode(joinConditions));
 
 				NewCond.setRight(qStruct.allConds.remove(0));
 				qStruct.allConds.add(NewCond);
@@ -1291,7 +1291,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 		n.setOperator("+");
 		n.setLeft(processExpression(baoNode.getLeftExpression(), fle, qStruct,plainSelect,joinType));
 		n.setRight(processExpression(baoNode.getRightExpression(),fle, qStruct,plainSelect,joinType));
-		n=WhereClauseVectorJSQL.getTableDetailsForArithmeticExpressions(n);
+		n=Util.getTableDetailsForArithmeticExpressions(n);
 		return n;
 	}
 
@@ -1302,7 +1302,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 		n.setOperator("-");
 		n.setLeft(processExpression(baoNode.getLeftExpression(), fle,qStruct,plainSelect,joinType));
 		n.setRight(processExpression(baoNode.getRightExpression(), fle, qStruct,plainSelect,joinType));
-		n=WhereClauseVectorJSQL.getTableDetailsForArithmeticExpressions(n);
+		n=Util.getTableDetailsForArithmeticExpressions(n);
 		return n;
 	}
 
@@ -1313,7 +1313,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 		n.setOperator("*");
 		n.setLeft(processExpression(baoNode.getLeftExpression(), fle, qStruct,plainSelect,joinType));
 		n.setRight(processExpression(baoNode.getRightExpression(),fle, qStruct,plainSelect,joinType));
-		n=WhereClauseVectorJSQL.getTableDetailsForArithmeticExpressions(n);
+		n=Util.getTableDetailsForArithmeticExpressions(n);
 		return n;
 	}
 
@@ -1324,7 +1324,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 		n.setOperator("/");
 		n.setLeft(processExpression(baoNode.getLeftExpression(),fle, qStruct,plainSelect,joinType));
 		n.setRight(processExpression(baoNode.getRightExpression(),fle, qStruct,plainSelect,joinType));
-		n=WhereClauseVectorJSQL.getTableDetailsForArithmeticExpressions(n);
+		n=Util.getTableDetailsForArithmeticExpressions(n);
 		return n;
 	}
 
