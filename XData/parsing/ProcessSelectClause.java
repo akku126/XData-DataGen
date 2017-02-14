@@ -103,7 +103,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 	 * 
 	 */
 
-	public void ProcessSelect(PlainSelect plainSelect, boolean debug, QueryStructure qStruct) throws Exception {
+	public void ProcessSelect(PlainSelect plainSelect, QueryStructure qStruct) throws Exception {
 		logger.info("processing select query"+plainSelect.toString());
 		Vector<Node> joinConditions=new Vector<Node>();		
 		/* processes the from clause and extracts the join conditions, also the components such as tables,
@@ -1902,9 +1902,9 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 
 		parentQueryParser.getFromClauseSubqueries().add(subQueryParser);
 		subQueryParser.parentQueryParser=parentQueryParser;
-		subQueryParser.setQuery(new Query("q2",subSelect.getSelectBody().toString()));
+		subQueryParser.setQuery(new Query(subSelect.getSelectBody().toString()));
 		subQueryParser.getQuery().setRepeatedRelationCount(parentQueryParser.getQuery().getRepeatedRelationCount());
-		subQueryParser.buildQueryStructureJSQL("q2", subSelect.getSelectBody().toString(), true);
+		subQueryParser.buildQueryStructureJSQL( subSelect.getSelectBody().toString());
 
 	}
 
@@ -1924,9 +1924,9 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 
 		parentQueryParser.getWhereClauseSubqueries().add(subQueryParser);
 		subQueryParser.parentQueryParser=parentQueryParser;
-		subQueryParser.setQuery(new Query("q2",subSelect.getSelectBody().toString()));
+		subQueryParser.setQuery(new Query(subSelect.getSelectBody().toString()));
 		subQueryParser.getQuery().setRepeatedRelationCount(parentQueryParser.getQuery().getRepeatedRelationCount());
-		subQueryParser.buildQueryStructureJSQL("q2", subSelect.getSelectBody().toString(), true);
+		subQueryParser.buildQueryStructureJSQL(subSelect.getSelectBody().toString());
 
 	}
 	

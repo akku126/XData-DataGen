@@ -80,7 +80,7 @@ public class DataGenController{
 				cvc.initializeQueryDetails(cvc.getqParser() );*/
 				
 				QueryStructure qStructure = new QueryStructure(tableMap);
-				qStructure.buildQueryStructureJSQL(String.valueOf(cvc.getQueryId()), queryStr.toString(),false);
+				qStructure.buildQueryStructureJSQL(queryStr.toString());
 				cvc.setqStructure(qStructure);
 				
 				cvc.initializeQueryDetailsQStructure(qStructure);

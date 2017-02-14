@@ -49,8 +49,8 @@ public class ProcessSelectClauseDatagen extends ProcessSelectClause{
 	}
 
 	@Override
-	public void ProcessSelect(PlainSelect plainSelect, boolean debug, QueryStructure qStruct) throws Exception {
-		super.ProcessSelect(plainSelect, debug, qStruct);
+	public void ProcessSelect(PlainSelect plainSelect, QueryStructure qStruct) throws Exception {
+		super.ProcessSelect(plainSelect, qStruct);
 		qStruct.topLevelRelation = generateRelationHierarchyJSQL(plainSelect);		
 	}
 

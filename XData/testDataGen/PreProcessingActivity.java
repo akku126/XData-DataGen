@@ -187,7 +187,7 @@ public class PreProcessingActivity {
 			*/
 				//Trying with new query structure
 				QueryStructure qStructure=new QueryStructure(cvc.getTableMap());
-				qStructure.buildQueryStructure("q1", queryStr.toString());
+				qStructure.buildQueryStructure(queryStr.toString());
 				cvc.setqStructure(qStructure);
 				
 				

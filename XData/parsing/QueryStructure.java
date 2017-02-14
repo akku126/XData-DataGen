@@ -924,7 +924,7 @@ import util.TableMap;
 	    /* rename of old method parseQuery
 	     *       
 	     */
-		public void buildQueryStructure(String queryId, String queryString) throws Exception {
+		public void buildQueryStructure(String queryString) throws Exception {
 			
 			try{
 				queryString=queryString.trim().replaceAll("\n+", " ");
@@ -947,7 +947,7 @@ import util.TableMap;
 				queryString = replaceFormatForRowLists(queryString);
 				queryString = replaceFormatForGroupBy(queryString);
 
-				buildQueryStructureJSQL(queryId, queryString, true);
+				buildQueryStructureJSQL(queryString);
 
 			}catch(ParseException ex){
 				
@@ -969,12 +969,12 @@ import util.TableMap;
 	    /* rename of old method parseQueryJSQL
 	     *       
 	     */
-		public void buildQueryStructureJSQL(String queryId, String queryString, boolean debug)
+		public void buildQueryStructureJSQL(String queryString)
 				throws Exception {
 			logger.info("beginning to parse query");
 			try{
 				if(this.query==null)
-					this.query = new Query(queryId, queryString);
+					this.query = new Query(queryString);
 				else
 					this.query.setQueryString(queryString);
 				
@@ -989,7 +989,7 @@ import util.TableMap;
 							((Select)stmt).getWithItemsList() == null){						
 						 plainSelect = (PlainSelect)((Select) stmt).getSelectBody();
 //						ProcessResultSetNode.processResultSetNodeJSQL(plainSelect, debug, this);
-						ProcessSelectClause.getInstance().ProcessSelect(plainSelect, debug, this);
+						ProcessSelectClause.getInstance().ProcessSelect(plainSelect, this);
 					}
 					
 					//Check if query contains WithItem list - then Query is of the form  WITH S AS ()
@@ -1002,8 +1002,7 @@ import util.TableMap;
 						String alteredWithQuery=((Select)stmt).getSelectBody().toString();
 						logger.info("transformed query after substitution of Witt aliases\n"+ alteredWithQuery);
 		
-						//ProcessResultSetNode.processResultSetNodeJSQL((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
-						ProcessSelectClause.getInstance().ProcessSelect((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
+						ProcessSelectClause.getInstance().ProcessSelect((PlainSelect)((Select) stmt).getSelectBody(), this);
 					}
 					
 					//If it is instance of SetOperationList - UNION,EXCEPT OR INTERSECT
@@ -1017,7 +1016,7 @@ import util.TableMap;
 									
 							//Test in different scenarios - joins in SET  Op and test
 							//Get the select list to check it has select statement or nested SET operation
-							processQueriesForSetOp(setOpList,debug); 
+							processQueriesForSetOp(setOpList); 
 						} 
 					}
 				}catch (ParseException e){
@@ -1408,7 +1407,7 @@ import util.TableMap;
 		 * @param setOpList
 		 * @throws Exception
 		 */
-		public void processQueriesForSetOp(SetOperationList setOpList, boolean debug) throws Exception {
+		public void processQueriesForSetOp(SetOperationList setOpList) throws Exception {
 			
 			logger.info(" set operation List"+setOpList.toString());
 			SetOperation setOperation =  setOpList.getOperations().get(0);
@@ -1431,16 +1430,15 @@ import util.TableMap;
 						PlainSelect left= (PlainSelect)nxtElement;
 						
 						if(leftQuery.query==null)
-							leftQuery.query= new Query("q2", left.toString());
+							leftQuery.query= new Query(left.toString());
 						else
 							leftQuery.query.setQueryString(left.toString());
 						
-						//ProcessResultSetNode.processResultSetNodeJSQL(left, debug, leftQuery);
-						ProcessSelectClause.getInstance().ProcessSelect(left, debug, leftQuery);
+						ProcessSelectClause.getInstance().ProcessSelect(left, leftQuery);
 						this.projectedCols.addAll(leftQuery.projectedCols);
 					}
 					else if(nxtElement instanceof SetOperationList){
-						leftQuery.buildQueryStructureJSQL("q2",((SetOperationList)nxtElement).toString(),debug);
+						leftQuery.buildQueryStructureJSQL(((SetOperationList)nxtElement).toString());
 					}
 				}if(selectList.size()==2&&selectListIt.hasNext()){
 					Object nxtElement = selectListIt.next();
@@ -1449,17 +1447,17 @@ import util.TableMap;
 					if(nxtElement instanceof PlainSelect){
 						PlainSelect right=(PlainSelect) nxtElement;
 						if(rightQuery.query==null)
-							rightQuery.query=new Query("q3",right.toString());
+							rightQuery.query=new Query(right.toString());
 						else
 							rightQuery.query.setQueryString(right.toString());
 						
 						//ProcessResultSetNode.processResultSetNodeJSQL(right, debug, rightQuery);			
-						ProcessSelectClause.getInstance().ProcessSelect(right, debug, rightQuery);
+						ProcessSelectClause.getInstance().ProcessSelect(right, rightQuery);
 						if(projectedCols.isEmpty())
 							this.projectedCols.addAll(rightQuery.projectedCols);
 						}
 					else if(nxtElement instanceof SetOperationList){
-						rightQuery.buildQueryStructureJSQL("q3",((SetOperationList)nxtElement).toString(),debug);
+						rightQuery.buildQueryStructureJSQL(((SetOperationList)nxtElement).toString());
 					}
 				}
 				/*The following else added by mathew on  22 August 2016
@@ -1481,7 +1479,7 @@ import util.TableMap;
 					for(int i=1;i<setOpList.getSelects().size();i++)
 						tempListSelectBodies.add(setOpList.getSelects().get(i));
 					tempSetOpList.setBracketsOpsAndSelects(tempBrackets, tempListSelectBodies, tempListOperations);
-					rightQuery.buildQueryStructureJSQL("q3",tempSetOpList.toString(),debug);
+					rightQuery.buildQueryStructureJSQL(tempSetOpList.toString());
 				}
 			}
 			this.initializeQueryListStructures();

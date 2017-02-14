@@ -24,7 +24,6 @@ public class Query implements Serializable{
 	
 	private static Logger logger = Logger.getLogger(Query.class.getName());
 	private static final long serialVersionUID = 4162569452627702020L;
-	private String queryId;
 	private String queryString;
 	private String modifiedQuery;
 	private String queryForGroupBy;
@@ -61,9 +60,8 @@ public class Query implements Serializable{
 
 	transient Connection conn ;
 	
-	public Query(String queryId,String query){
+	public Query(String query){
 		this.queryString = query;
-		this.queryId = queryId;
 		joinTables = new Vector<Table>();
 		fromTables = new LinkedHashMap<String, Table>();
 		projectedColumns = new Vector<Column>();
@@ -116,12 +114,6 @@ public class Query implements Serializable{
 		return queryForGroupBy;
 	}
 	
-	public String getQueryId() {
-		return queryId;
-	}
-	public void setQueryId(String queryId) {
-		this.queryId = queryId;
-	}
 	
 	public String getQueryString() {
 		return queryString;

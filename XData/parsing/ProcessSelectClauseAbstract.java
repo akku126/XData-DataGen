@@ -70,7 +70,7 @@ public abstract class ProcessSelectClauseAbstract {
 	}
 	
 	// list of abstract methods that is to be implemented by a child
-	public abstract void ProcessSelect(PlainSelect plainSelect, boolean debug, QueryStructure qStruct) throws Exception;
+	public abstract void ProcessSelect(PlainSelect plainSelect, QueryStructure qStruct) throws Exception;
 	public abstract  boolean caseInWhereClause(Expression whereClause, Expression colExpression, QueryStructure qStruct, PlainSelect plainSelect) throws Exception;
 	public abstract void processWhereClause(PlainSelect plainSelect, QueryStructure qStruct) throws Exception;
 	public abstract void processGroupByList(PlainSelect plainSelect, QueryStructure qStruct) throws Exception;
