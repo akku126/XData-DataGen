@@ -6,7 +6,6 @@ import java.util.Vector;
 
 import parsing.Column;
 import parsing.ConjunctQueryStructure;
-import parsing.Disjunct;
 import parsing.DisjunctQueryStructure;
 import parsing.Node;
 import parsing.Table;

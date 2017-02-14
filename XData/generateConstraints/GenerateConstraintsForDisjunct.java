@@ -3,7 +3,6 @@ package generateConstraints;
 import java.util.Vector;
 
 import parsing.ConjunctQueryStructure;
-import parsing.Disjunct;
 import parsing.DisjunctQueryStructure;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
@@ -15,7 +14,6 @@ public class GenerateConstraintsForDisjunct {
 		Constraints constraints=new Constraints();
 		//Vector<String> constraints=new Vector<String>();
 		String constraintString = "";
-		Vector<String> temp=new Vector<String>();
 		Vector<Vector<Node>> equivalenceClasses = disjunct.getEquivalenceClasses();
 		for(int k=0; k<equivalenceClasses.size(); k++){
 			Vector<Node> ec = equivalenceClasses.get(k);
@@ -93,7 +91,7 @@ public class GenerateConstraintsForDisjunct {
 		return constraints;
 	}
 		
-	public Constraints generateNegativeConstraintsForDisjunct(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Disjunct disjunct) throws Exception{
+	public Constraints generateNegativeConstraintsForDisjunct(GenerateCVC1 cvc, QueryBlockDetails queryBlock, DisjunctQueryStructure disjunct) throws Exception{
 		Constraints constraints=new Constraints();
 		/**Now generate Positive conditions for each of the non equi join conditions 
 		 * that were not considered when building equivalence classes*/
