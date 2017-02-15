@@ -22,6 +22,7 @@ public interface QueryStructureInterface {
 		public void setForeignKeyVectorModified(
 				Vector<ForeignKey> foreignKeyVectorModified);
 		
+		@Override
 		public String toString();	
 	}
 

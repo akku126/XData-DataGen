@@ -141,14 +141,14 @@ public class PreProcessingActivity {
 		Iterator<Table> iter1 = left.getTablesOfOriginalQuery().iterator();
 		while(iter1.hasNext())
 		{
-			Table t = (Table)iter1.next();
+			Table t = iter1.next();
 			if(t.hasForeignKey())
 			{
 				Map<String, ForeignKey> fks = t.getForeignKeys();
 				Iterator<ForeignKey> iter2 = fks.values().iterator();
 				while(iter2.hasNext())
 				{
-					ForeignKey fk = (ForeignKey)iter2.next();
+					ForeignKey fk = iter2.next();
 					if(!left.getTablesOfOriginalQuery().contains(fk.getReferenceTable()))
 					{
 						left.getTablesOfOriginalQuery().add(fk.getReferenceTable());

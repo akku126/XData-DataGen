@@ -15,5 +15,6 @@ public interface NodeInterface extends Comparable<NodeInterface>{
 	public NodeInterface clone() throws CloneNotSupportedException;
 
 	
+	@Override
 	public String toString();
 }

@@ -1,6 +1,5 @@
 package parsing;
 
-import java.sql.Types;
 import java.util.Vector;
 
 import parsing.ANDNode;

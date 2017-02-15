@@ -32,15 +32,11 @@ public class Query implements Serializable{
 	private Graph<Table,JoinClauseInfo> joinGraph;//Info
 	private Vector<Table> joinTables;
 	private Vector<JoinClauseInfo> joinClauses;
-	private Vector<WhereClause> whereClauses;
+	//private Vector<WhereClause> whereClauses;
 	public Vector<Column> projectedColumns;
 	private Vector<Column> groupByColumns;
 	// added by sandeep & suhas
 	private Vector<JoinClauseNew> joinClausesNew;
-	private TreeNode root;
-	private TreeNode karyRoot;
-	private Vector<TreeNode> inOrderList;
-	private Vector<TreeNode> KaryInOrderList;
 	private AggregateClause aggregateClause;
 	private HashMap<String,Integer> currentIndex;
 	private HashMap<String,String> baseRelation; /* Stores the base relation for each repeated occurrence of a relation */
@@ -69,7 +65,7 @@ public class Query implements Serializable{
 		joinGraph = new Graph<Table,JoinClauseInfo>(false);
 		//joinClauses = new Vector<JoinClause>();
 		//joinClausesNew = new Vector<JoinClauseNew>();
-		whereClauses = new Vector<WhereClause>();
+		//whereClauses = new Vector<WhereClause>();
 		groupByColumns = new Vector<Column>();
 		aggregateClause = new AggregateClause();
 		currentIndex = new HashMap<String,Integer>();
@@ -150,9 +146,6 @@ public class Query implements Serializable{
 		return joinClausesNew;
 	}
 	
-	public Vector<WhereClause> getAllWhereClauses(){
-		return whereClauses;
-	}
 	//Info
 	public void addToJoinGraph(Table table1, Table table2, JoinClauseInfo joinClauseInfo){
 		joinGraph.add(table1, table2, joinClauseInfo);
@@ -163,37 +156,7 @@ public class Query implements Serializable{
 		joinClausesNew.add(joinClauseNew);
 	}
 	
-	public void setRootNode(TreeNode node){
-		this.root = node;
-	}
-	
-	public TreeNode getRootNode(){
-		return this.root;
-	}
-	
-	public void setKaryRootNode(TreeNode node){
-		this.karyRoot = node;
-	}
-	
-	public TreeNode getKaryRootNode(){
-		return this.karyRoot;
-	}
-	
-	public void setInOrderList(Vector<TreeNode> inOrderList){
-		this.inOrderList = inOrderList;
-	}
-	
-	public Vector<TreeNode> getInOrderList(){
-		return this.inOrderList;
-	}
-	
-	public void setKaryInOrderList(Vector<TreeNode> KaryInOrderList){
-		this.KaryInOrderList = KaryInOrderList;
-	}
-	
-	public Vector<TreeNode> getKaryInOrderList(){
-		return this.KaryInOrderList;
-	}
+
 	
 	public void addFromTable(Table table){
 		logger.log(Level.INFO,"addFromTable : Table Name "+table);

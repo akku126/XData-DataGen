@@ -6,7 +6,6 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import generateConstraints.UtilsRelatedToNode;
 import net.sf.jsqlparser.expression.AllComparisonExpression;
 import net.sf.jsqlparser.expression.AnyComparisonExpression;
 import net.sf.jsqlparser.expression.BinaryExpression;
@@ -66,6 +65,7 @@ public class ProcessSelectClauseDatagen extends ProcessSelectClause{
 	 * @return
 	 * @throws Exception
 	 */
+	@Override
 	public  boolean caseInWhereClause(Expression whereClause, Expression colExpression, QueryStructure qStruct, PlainSelect plainSelect) throws Exception{
 
 		Vector<CaseCondition> caseConditionsVector = new Vector<CaseCondition>();
@@ -543,7 +543,7 @@ public class ProcessSelectClauseDatagen extends ProcessSelectClause{
 		existsNode.setQueryType(2);
 		existsNode.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);				
 		
-		if(!((ExistsExpression) sqn).isNot()){					
+		if(!sqn.isNot()){					
 			return existsNode;
 		}else{
 			notNode.setType(Node.getNotNodeType());

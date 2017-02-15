@@ -120,10 +120,12 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 		
 		private String aliasName;
 		
+		@Override
 		public String getAliasName(){
 			return aliasName;
 		}
 		
+		@Override
 		public void setAliasName(String aName){
 			this.aliasName=aName;
 		}
@@ -487,7 +489,7 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 		return right;
 	}
 	public void setRight(Node right) {
-		this.right = (Node)right;
+		this.right = right;
 	}
 	public String getStrConst() {
 		return strConst;

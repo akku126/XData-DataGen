@@ -41,6 +41,7 @@ public class FromListElement implements Serializable{
 	public void setTabs(Vector<FromListElement> tabs) {
 		this.tabs = tabs;
 	}
+	@Override
 	public String toString(){
 		String retString= " aliasName: "+this.getAliasName() +
 				" tableName: "+this.getTableName()+

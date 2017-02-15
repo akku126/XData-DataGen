@@ -5,14 +5,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Vector;
 
 import killMutations.GenerateDataForOriginalQuery;
 import parsing.ConjunctQueryStructure;
-import parsing.ForeignKey;
 import parsing.Node;
-import parsing.Table;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GenerateConstraintsToKillDistinctMutations;
 import generateConstraints.GenerateConstraintsToKillSetOperatorMutations;

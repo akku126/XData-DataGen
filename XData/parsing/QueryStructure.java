@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -31,7 +30,6 @@ import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import net.sf.jsqlparser.parser.ParseException;
 import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.select.AllColumns;
 import net.sf.jsqlparser.statement.select.ExceptOp;
 import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.IntersectOp;
@@ -58,7 +56,6 @@ import parsing.JoinTreeNode;
 import parsing.ORNode;
 import parsing.Query;
 import parsing.RelationHierarchyNode;
-import parsing.TreeNode;
 import parsing.Node;
 import parsing.CaseExpression;
 import parsing.ProcessSelectClause;
@@ -74,7 +71,6 @@ import util.TableMap;
 		private Query query;
 		private TableMap tableMap;
 
-		private Vector<TreeNode> inOrderList;
 
 		private Vector<JoinClauseInfo> foreignKeyVector;
 
@@ -588,10 +584,12 @@ import util.TableMap;
 		}
 
 
+		@Override
 		public TableMap getTableMap() {
 			return tableMap;
 		}
 
+		@Override
 		public void setTableMap(TableMap tableMap) {
 			this.tableMap = tableMap;
 		}
@@ -796,7 +794,6 @@ import util.TableMap;
 
 		public QueryStructure(TableMap tableMap) {
 			this.tableMap = tableMap;
-			this.inOrderList = new Vector<TreeNode>();
 			this.foreignKeyVector = new Vector<JoinClauseInfo>();
 			orNode = new ORNode();
 			this.conjuncts = new Vector<ConjunctQueryStructure>();
@@ -969,6 +966,7 @@ import util.TableMap;
 	    /* rename of old method parseQueryJSQL
 	     *       
 	     */
+		@Override
 		public void buildQueryStructureJSQL(String queryString)
 				throws Exception {
 			logger.info("beginning to parse query");
@@ -1554,13 +1552,6 @@ import util.TableMap;
 			return newquery;		
 		}
 
-		public Vector<TreeNode> getInOrderList() {
-			return inOrderList;
-		}
-
-		public void setInOrderList(Vector<TreeNode> inOrderList) {
-			this.inOrderList = inOrderList;
-		}
 
 
 		public Vector<JoinClauseInfo> getForeignKeyVector() {
@@ -1571,10 +1562,12 @@ import util.TableMap;
 			this.foreignKeyVector = foreignKeyVector;
 		}
 
+		@Override
 		public Vector<ForeignKey> getForeignKeyVectorModified() {
 			return foreignKeyVectorModified;
 		}
 
+		@Override
 		public void setForeignKeyVectorModified(
 				Vector<ForeignKey> foreignKeyVectorModified) {
 			this.foreignKeyVectorModified = foreignKeyVectorModified;

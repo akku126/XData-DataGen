@@ -8,7 +8,6 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -103,6 +102,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 	 * 
 	 */
 
+	@Override
 	public void ProcessSelect(PlainSelect plainSelect, QueryStructure qStruct) throws Exception {
 		logger.info("processing select query"+plainSelect.toString());
 		Vector<Node> joinConditions=new Vector<Node>();		
@@ -138,7 +138,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 			}
 		}
 
-		ProcessSelectClause.modifyTreeForCompareSubQ(qStruct);		
+		ProcessSelectClauseAbstract.modifyTreeForCompareSubQ(qStruct);		
 		
 		/* takes the possibly complex expression of nodes stored in qStruct.allConds, splits it into atomic conditions, 
 		 * disjunct of atomic conditions, separates selection conditions, join conditions, is null conditions, subQuery conditions,
@@ -178,6 +178,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 	 * @return
 	 * @throws Exception
 	 */
+	@Override
 	public  boolean caseInWhereClause(Expression whereClause, Expression colExpression, QueryStructure qStruct, PlainSelect plainSelect) throws Exception{
 		return false;
 	}
@@ -188,6 +189,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 	 * and stores it in qStruct.allConds
 	 */
 
+	@Override
 	public void processWhereClause(PlainSelect plainSelect, QueryStructure qStruct) throws Exception{
 		// TODO Auto-generated method stub
 		Expression whereClauseExpression = plainSelect.getWhere();
@@ -233,6 +235,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 	 * 
 	 */
 
+	@Override
 	public void processGroupByList(PlainSelect plainSelect, QueryStructure qStruct) throws Exception{
 		// TODO Auto-generated method stub
 		if (plainSelect.getGroupByColumnReferences() == null||plainSelect.getGroupByColumnReferences().isEmpty()) 
@@ -329,6 +332,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 	 * 
 	 */
 
+	@Override
 	public void processOrderByList(PlainSelect plainSelect, QueryStructure qStruct) throws Exception {
 		if (plainSelect.getOrderByElements() == null||plainSelect.getOrderByElements().isEmpty()) 
 			return;
@@ -394,6 +398,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 	 * extracted and stored in the 3rd argument, joinConditions
 	 * 
 	 */
+	@Override
 	public void processFromClause(PlainSelect plainSelect, QueryStructure qStruct, Vector<Node> joinConditions) throws Exception{
 		// TODO Auto-generated method stub
 		FromItem firstFromItem=plainSelect.getFromItem();
@@ -595,6 +600,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 	 * in which case the parser's case condition map is updated with the respective objects from the case condition
 	 * 
 	 */
+	@Override
 	public void processProjectionList(PlainSelect plainSelect, QueryStructure qStruct) throws Exception{
 		// TODO Auto-generated method stub
 
@@ -711,6 +717,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 	 * the frmListElement argument is used to encode its details  
 	 * 
 	 */
+	@Override
 	public void processFromListTable(net.sf.jsqlparser.schema.Table jsqlTable, FromClauseElement frmListElement, QueryStructure qStruct){
 		String tableName = jsqlTable.getFullyQualifiedName().toUpperCase();// getWholeTableName();
 		String aliasName = "";
@@ -748,6 +755,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 	 * the visitedFromListElements argument is used to encode details of it and its components, 
 	 * join conditions if any are extracted in joinConditions argument
 	 */
+	@Override
 	public void processFromListSubJoin(SubJoin subJoin, Vector<FromClauseElement> visitedFromListElements, Vector<Node> joinConditions,
 			QueryStructure qStruct, PlainSelect plainSelect) throws Exception{
 		logger.info("processing subjoin"+ subJoin.toString());
@@ -878,6 +886,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 	 * @throws Exception
 	 */
 
+	@Override
 	public Node processExpression(Object clause, Vector<FromClauseElement> fle,
 			QueryStructure qStruct, PlainSelect plainSelect, String joinType) throws Exception {
 		try{
@@ -1894,6 +1903,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 	 * 
 	 * deals with the case when a subquery is encountered while processing the from clause 
 	 */
+	@Override
 	public void processFromListSubSelect(SubSelect subSelect, QueryStructure subQueryParser,QueryStructure parentQueryParser) throws Exception {
 		// TODO Auto-generated method stub
 		logger.info(" Processing subselect, selbody:"+subSelect.getSelectBody().toString());
@@ -1917,6 +1927,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
  * 
  * deals with the case when a subquery is encountered while processing the where clause
  */
+	@Override
 	public  void processWhereSubSelect(SubSelect subSelect, QueryStructure subQueryParser,QueryStructure parentQueryParser) throws Exception {
 		// TODO Auto-generated method stub
 
@@ -1944,6 +1955,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 	 * takes a node n (1st argument) for whose either table name is an alias or absent, resolves the alias/determines the table t
 	 * to which the column belongs to  returns a node whose table, table name etc. are set with the respective values of t
 	 */
+	@Override
 	public Node transformToAbsoluteTableNames(Node n, Vector<FromClauseElement> fleList, boolean aliasNameFound, QueryStructure qStruct) throws Exception {
 		// note that for any FromListElement object its tableName ==null iff it represents a subjoin or a subSelect
 		String oldTableNameNo=n.getTableNameNo();
@@ -2056,6 +2068,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 		return n;
 	}
 
+	@Override
 	public  Node traverseAncestorsForAbsoluteNameTransformations(Node n,
 			Vector<FromClauseElement> fleList, boolean aliasNameFound, QueryStructure qStruct) {
 		// TODO Auto-generated method stub
@@ -2154,6 +2167,7 @@ public class ProcessSelectClause extends ProcessSelectClauseAbstract{
 	
 }
 
+	@Override
 	public Node transformToAbsoluteNamesForAliasNameFoundSubquery(Node n,QueryStructure subQueryStructure){
 		logger.info(" subQueryParser: checking projected cols");
 

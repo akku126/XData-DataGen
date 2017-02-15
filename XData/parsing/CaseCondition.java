@@ -1,8 +1,6 @@
 
 	package parsing;
 	import java.io.Serializable;
-	import java.util.Vector;
-	import parsing.Column;
 	/**
 	 * @author shree, 
 	 * modified by Mathew on 26 Jan 2017
@@ -51,10 +49,10 @@
 			Node right= new Node();
 			
 			if(this.getWhenNode() !=null)
-				left=(Node)this.getWhenNode().clone(); 
+				left=this.getWhenNode().clone(); 
 			
 			if(this.getThenNode()!=null)
-				right=(Node)this.getThenNode().clone();
+				right=this.getThenNode().clone();
 			
 			((CaseCondition)obj).setWhenNode(left);
 			((CaseCondition)obj).setThenNode(right);

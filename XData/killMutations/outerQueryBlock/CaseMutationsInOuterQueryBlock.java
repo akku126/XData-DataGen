@@ -4,7 +4,6 @@ import generateConstraints.Constraints;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GenerateConstraintsForCaseConditions;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Vector;
@@ -74,7 +73,7 @@ public class CaseMutationsInOuterQueryBlock {
 		HashMap<Integer,CaseExpression> ccMap = cvc.getqStructure().getCaseConditionMap();
 		
 		//1 is Key value for case stmnt in projected cols
-		ArrayList<CaseCondition> selectionConds = ((CaseExpression)ccMap.get(1)).getWhenConditionals();
+		ArrayList<CaseCondition> selectionConds = ccMap.get(1).getWhenConditionals();
 		try{
 			/** Kill each selection condition of this conjunct*/
 			for(int i=0; i < (selectionConds.size()-1); i++){
@@ -113,7 +112,7 @@ public class CaseMutationsInOuterQueryBlock {
 						/*******Code from selection mutations code end******/
 			}//for each casecondition ends
 			//Else condition Part
-			if( ((CaseExpression)ccMap.get(1)) != null &&  ((CaseExpression)ccMap.get(1)).getElseConditional() != null){
+			if( (ccMap.get(1)) != null &&  ccMap.get(1).getElseConditional() != null){
 				
 				cvc.inititalizeForDatasetQs();
 				CaseCondition sc = selectionConds.get(selectionConds.size()-1);
@@ -170,7 +169,7 @@ public class CaseMutationsInOuterQueryBlock {
 		HashMap<Integer,CaseExpression> ccMap = cvc.getqStructure().getCaseConditionMap();
 		
 		//1 is Key value for case stmnt in projected cols
-		ArrayList<CaseCondition> selectionConds = ((CaseExpression)ccMap.get(2)).getWhenConditionals();
+		ArrayList<CaseCondition> selectionConds = ccMap.get(2).getWhenConditionals();
 		try{
 			/** Kill each selection condition of this conjunct*/
 			
