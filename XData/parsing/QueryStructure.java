@@ -238,6 +238,17 @@ import util.TableMap;
 				lstJoinConditions.clear();
 				lstJoinConditions.addAll(Util.toSetOfNodes(tempLst));
 
+				/* initialize number of inner and outer joins
+				 */
+				for(Node n:lstJoinConditions){
+					if(n.getJoinType()!=null&&(n.getJoinType().equals(JoinClauseInfo.leftOuterJoin)
+							||n.getJoinType().equals(JoinClauseInfo.rightOuterJoin)
+							||n.getJoinType().equals(JoinClauseInfo.fullOuterJoin))){
+						this.numberOfOuterJoins++;
+					}
+					else
+						this.numberOfInnerJoins++;
+				}
 				
 
 				this.lstHavingConditions.addAll(this.getHavingClauses());
