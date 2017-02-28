@@ -1730,7 +1730,6 @@ import util.TableMap;
 		 */
 		public void reviseAfterFindingRedundantRelations(){
 			reviseRelations();
-			reviseJoinTables();
 			reviseProjectedColumns();
 			reviseGroupByColumns();
 			reviseSelectionConditions();
@@ -1865,6 +1864,7 @@ import util.TableMap;
 			}
 			
 		   lstRelationInstances.removeAll(lstRedundantRelations);
+		   this.setNumberOfInnerJoins(numberOfInnerJoins-lstRedundantRelations.size());
 		}
 		
 		
@@ -1872,6 +1872,7 @@ import util.TableMap;
 		 *  The following method, to be called after redundant (eliminatable)
 		 *    relations are derived, to update join tables
 		 */
+		@Deprecated
 		public void reviseJoinTables(){
 			ArrayList<String> temp=new ArrayList<String>();
 			for(String table:this.lstJoinTables){
