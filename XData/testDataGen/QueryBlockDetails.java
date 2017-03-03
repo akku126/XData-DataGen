@@ -14,11 +14,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import parsing.AggregateFunction;
+import parsing.CaseCondition;
 import parsing.Column;
 //import parsing.Conjunct;
 import parsing.CaseExpression;
 import parsing.ConjunctQueryStructure;
 import parsing.Node;
+import parsing.QueryParser;
 import parsing.QueryStructure;
 import parsing.RelationHierarchyNode;
 import parsing.Table;
@@ -211,11 +213,11 @@ public class QueryBlockDetails implements Serializable{
 		qbt.setCaseConditionMap(new HashMap<Integer,CaseExpression> (qs.getCaseConditionMap()) );
 		
 		
-		qbt.setHavingClause(qs.getHavingClause());
+			qbt.setHavingClause(qs.getHavingClause());
 			if(qbt.getHavingClause() != null)
 				qbt.setConstrainedAggregation(true);
 		
-		qbt.setTopLevelRelation(qs.topLevelRelation);
+			qbt.setTopLevelRelation(qs.topLevelRelation);
 
 		return qbt;
 	}

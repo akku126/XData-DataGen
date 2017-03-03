@@ -1,5 +1,6 @@
 package parsing;
 
+import java.sql.Types;
 import java.util.Vector;
 
 import parsing.ANDNode;
@@ -126,8 +127,7 @@ public class GetNodeQueryStructure {
 		if (temp!=null&&temp.getLeft()!=null && temp.getRight()!=null
 				&&temp.getLeft().getType()!=null && temp.getRight().getType()!=null
 				&& temp.getLeft().getTable() != null && temp.getRight().getTable() != null 
-//				&& !temp.getLeft().getTable().getTableName().equalsIgnoreCase(temp.getRight().getTable().getTableName()) 
-//				above line newly added by Shree, commented by mathew temporarily 
+				&& !temp.getLeft().getTable().getTableName().equalsIgnoreCase(temp.getRight().getTable().getTableName())
 				&& temp.getLeft().getType().equalsIgnoreCase(Node.getColRefType())
 				&& temp.getRight().getType().equalsIgnoreCase(Node.getColRefType()) 
 				&& temp.getType().equalsIgnoreCase(Node.getBroNodeType())){
@@ -281,7 +281,7 @@ public class GetNodeQueryStructure {
 				flattenedNodes.addAll(flattenNode(qStructure, node.getRight()));
 			} else if (node.getType().equalsIgnoreCase(Node.getInNodeType())){
 
-				if(node.getLhsRhs()!=null){
+				/*if(node.getLhsRhs()!=null){
 					Node lhsrhs = node.getLhsRhs();
 					int queryIndex = lhsrhs.getRight().getQueryIndex();
 					updateSubQueryConditions(queryIndex,lhsrhs,qStructure);
@@ -291,7 +291,7 @@ public class GetNodeQueryStructure {
 					node.setLhsRhs(newNode);
 					node.setType(Node.getExistsNodeType());	
 					flattenedNodes.add(node);
-				}			
+				}*/			
 				flattenedNodes.add(node);//added by mathew on 17 oct 2016
 
 			}

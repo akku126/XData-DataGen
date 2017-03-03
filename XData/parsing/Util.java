@@ -1,7 +1,6 @@
 package parsing;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -9,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,8 +17,18 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Types;
 
+import net.sf.jsqlparser.statement.select.FromItem;
+import net.sf.jsqlparser.statement.select.Join;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.SubSelect;
+
+import org.apache.derby.impl.sql.compile.FromBaseTable;
+import org.apache.derby.impl.sql.compile.FromSubquery;
+import org.apache.derby.impl.sql.compile.JoinNode;
+import org.apache.derby.impl.sql.compile.QueryTreeNode;
 import parsing.ForeignKey;
 import parsing.JoinClauseInfo;
+import parsing.QueryAliasMap;
 import parsing.Table;
 import parsing.Column;
 import parsing.FromListElement;
@@ -32,186 +40,558 @@ public class Util {
 	private static Logger logger = Logger.getLogger(Util.class.getName()); 
 	
 	/**
-	 * If node contains expression, set the table name in node as any column and table name in the expression.
-	 * To be tested - currently any column inside expression will be returned.
-	 * FIXME is that correct?
 	 * 
-	 * @param n
+	 * @param colName
+	 * @param tabName
+	 * @param f
+	 * @param x
+	 * @param qParser
 	 * @return
 	 */
-	public static Node getTableDetailsForArithmeticExpressions(Node n){
-		
-		if(n!= null && n.getColumn() == null && n.getLeft() != null && n.getLeft().getColumn() != null && n.getLeft().getTable() != null){
-			n.setColumn(n.getLeft().getColumn());
-			n.setTable(n.getLeft().getTable());
-			n.setTableNameNo(n.getLeft().getTableNameNo());
-		}else if(n!= null && n.getLeft() != null){
-			n.setLeft(getTableDetailsForArithmeticExpressions(n.getLeft()));
-		}
-		
-		if(n!= null && n.getColumn() == null && n.getRight() != null && n.getRight().getColumn() != null && n.getRight().getTable() != null){
-			n.setColumn(n.getRight().getColumn());
-			n.setTable(n.getRight().getTable());
-			n.setTableNameNo(n.getRight().getTableNameNo());
-		}else if(n != null && n.getRight()!= null){
-			n.setRight(getTableDetailsForArithmeticExpressions(n.getRight()));
-		}
+	public static Node getColumnFromOccurenceInJC(String colName, String tabName,
+			FromListElement f, int x, QueryParser qParser) {
 
-		return n;
-		
-	}
-	
-	
-	/**
-	 * This method returns a Node with join conditions as node inside node for sending to conjuncts
-	 * for conversion
-	 * 
-	 * @param joinNodeList
-	 * @return
-	 * @throws Exception
-	 */
-	public static Node getHierarchyOfJoinNode(Vector<Node> joinNodeList) throws Exception{
-		Node nd = new Node();
-		nd.setType(Node.getAndNodeType());
-		if(joinNodeList != null &&  joinNodeList.size() > 0 && !joinNodeList.isEmpty()){
-		 nd.setLeft(joinNodeList.get(0));
-		}else
-			nd.setLeft(null);
-		Vector<Node> newList = new Vector<Node>();
-		for(int i = 1 ; i < joinNodeList.size() ; i ++){
-			newList.add(joinNodeList.get(i));
-		}
-		if(newList != null && newList.size()>0 && !newList.isEmpty()){
-			nd.setRight(getHierarchyOfJoinNode(newList));
-		}else{
-			nd.setRight(null);
-		}
-		return nd;
-		
-	}
-	
-	/*
-	 * Returns the foreign key with referencing table relation1 and referenced table relation 2
-	 * from the set of foreign keys foreignKeys
-	 */	
-	public static ForeignKey getForeignKey(String relation1, String relation2, ArrayList<ForeignKey> foreignKeys){
-		for(ForeignKey fk : foreignKeys){
-			if((fk.getFKTablename().equalsIgnoreCase(relation1) && fk.getReferenceTable().getTableName().equalsIgnoreCase(relation2))){
-				return fk;
-			}
-		}				
-		return null;
-	}
-	
-	/* Returns the set of relations R s.t. key attributes
-	 * in R are referred to by foreign keys of another table R'  and the corresponding attributes 
-	 * of referencing table R' and referenced table R are part of the equivalence
-	 * relation induced by the query. Also it is made sure that R does not contain foreignkey 
-	 * references to relations in baseTables (which are the set of non eliminated tables so far)
-	 */
+		Column col = null;
+		String columnName = colName; // Column name will be exact. Tablename can
+		// be an alias.
+		if (f.getTableName() != null) { // FromListElement is a base table. Take
+			// the column directly.
+			String fromTableName = f.getTableName();
+			if (qParser.getQuery().getFromTables().get(fromTableName.toUpperCase()) != null) {
 
-	public static ArrayList<String> getReferencedRelations(Set<String> baseTables, ArrayList<String> eliminateRelations, ArrayList<ForeignKey> foreignKeys, Map<String, HashMap<String, ArrayList<Pair>>> relationToRelationEqNodes){	
-
-		Boolean isReferenced = false;
-		ArrayList<String> referencedRelations = new ArrayList<String>();
-
-		for(String cand: baseTables){
-
-			HashMap<String, ArrayList<Pair>> data = relationToRelationEqNodes.get(cand);
-			isReferenced = false;
-
-			if(data == null)
-				continue;
-
-			for(Entry<String, ArrayList<Pair>> entry: data.entrySet()){
-				String key = entry.getKey();
-
-				/*
-				 * Make sure that the table under consideration is not an eliminated relation  
-				 */
-				if(eliminateRelations!=null && eliminateRelations.contains(key))
-					continue;
-
-				ArrayList<Pair> values = entry.getValue();
+				Table t = qParser.getQuery().getFromTables().get(fromTableName.toUpperCase());				
 				
-
-				/* assumes that tableNameNos are of the form tableNamei, where i is between 0 to 9,
+				/*@author mathew on 20 June 2016
+				 *  the following if condition added to extract relative name of
+				 *  the column name
 				 */
-				String candTableName=cand.substring(0, cand.length()-1);
-				String keyTableName=key.substring(0, key.length()-1);
-				/*
-				 * Make sure that any referenced table does not refer to another table 
-				 * via a foreign key relation
-				 */
-				ForeignKey fk= getForeignKey(candTableName, keyTableName, foreignKeys);
-
-				if(fk != null){
-					isReferenced = false;
-					break;
+				if(columnName.contains(".")){
+					columnName=columnName.substring(colName.indexOf('.')+1).toUpperCase();
 				}
 
-				fk = getForeignKey(keyTableName, candTableName, foreignKeys);
-
-				if(fk == null){
-					isReferenced = false;
-					continue;
+				col = t.getColumn(columnName.toUpperCase());
+				if(col==null){					
+					return null;
 				}
-
-				Vector<Column> candKeys = fk.getReferenceKeyColumns();
-				Vector<Column> otherKeys = fk.getFKeyColumns();
-
-				isReferenced = true;
-				for(int i = 0; i < candKeys.size(); i++){
-					Column canCol = candKeys.get(i);
-					Column othCol = otherKeys.get(i);
-					Boolean found = false;
-					for(Pair v : values){
-						if(v.first.getColumn().getColumnName().equalsIgnoreCase(canCol.getColumnName()) && v.second.getColumn().getColumnName().equalsIgnoreCase(othCol.getColumnName())){
+				Node n = new Node();
+				n.setColumn(col);
+				n.setTable(col.getTable());
+				//FIXME: mahesh set table aias
+				if(f.getTableNameNo() != null && ! f.getTableNameNo().isEmpty()){
+					n.setTableNameNo(f.getTableNameNo());
+					}//This may not be correct - FIXME Test and fix
+					else{
+						n.setTableNameNo(f.getTableName()+"1");
+					}
+					n.setType(Node.getColRefType());
+				return n;
+			} else
+				return null;
+		}
+		/*
+		 * If baseTable is null then it is either Join Node or Sub query
+		 * Difference is only that a join node will have an array of
+		 * FromListElement of 2 elements while a subquery node may have a longer
+		 * array
+		 */
+		else {
+			Boolean found = false;
+			FromListElement temp = null;
+			if (tabName != null && !tabName.isEmpty()) {
+				for (int i = 0; i < f.getTabs().size(); i++) { 
+					temp = f.getTabs().get(i);
+					if (temp.getAliasName() != null) {
+						if (temp.getAliasName().equalsIgnoreCase(tabName)) {							
 							found = true;
 							break;
-						} 
-					}
+						}
 
-					if(!found){
-						isReferenced = false;
-						break;
+					}
+					if (temp.getTableName() != null) {
+						if (temp.getTableName().equalsIgnoreCase(tabName)) {							
+							found = true;
+							break;
+						}
+					} else {
+						found = false;
 					}
 				}
-
-				if(!isReferenced)
-					break;
+				if (found) {					
+					Node n = getColumnFromOccurenceInJC(colName, tabName, temp,
+							1,qParser);
+					if (n != null) {
+						return n;
+					}
+				} else {
+					for (int i = 0; i < f.getTabs().size(); i++) {
+						temp = f.getTabs().get(i);
+						if (temp.getTableName() == null) {
+							Node n = getColumnFromOccurenceInJC(colName,
+									tabName, temp, qParser);
+							if (n != null) {
+								return n;
+							}
+						}
+					}
+				}
+			} else {
+				for (int i = 0; i < f.getTabs().size(); i++) {
+					Node n = getColumnFromOccurenceInJC(colName, tabName, f
+							.getTabs().get(i), 1, qParser);
+					if (n != null) {
+						return n;
+					}
+				}
 			}
+			return null;
+		}
+		
+	
+	}
+	
+	public static Node getColumnFromOccurenceInJC(String colName, String tabName,
+			FromListElement f, QueryParser qParser) {
+		Column col = null;
+		String columnName = colName; // Column name will be exact. Tablename can
+		// be an alias.
 
-			if(isReferenced){
-				referencedRelations.add(cand);
+ 
+			if (f.getTableName() != null && !f.getTableName().isEmpty()) { // FromListElement is a base table. Take
+			// the column directly.
+			if (f.getAliasName()!= null && !f.getAliasName().isEmpty() && tabName != null) {
+				if (!f.getAliasName().equalsIgnoreCase(tabName)) {
+					return null;
+				} 
+			} 
+
+			 else if (f.getTableName() != null && !f.getTableName().isEmpty() && tabName != null && f.getTableNameNo() != null && ! f.getTableNameNo().isEmpty()) {
+				if (!f.getTableName().equalsIgnoreCase(tabName) ) {
+					return null; 
+				}
+			}
+			String fromTableName = f.getTableName();
+			if (qParser.getQuery().getFromTables().get(fromTableName.toUpperCase()) != null && f.getTableNameNo()!= null &&!f.getTableNameNo().isEmpty()) {
+				Table t = qParser.getQuery().getFromTables().get(fromTableName.toUpperCase());
+				col = t.getColumn(columnName.toUpperCase());
+				if (col == null)
+					return null;
+ 
+				Node n = new Node();
+				n.setColumn(col);
+				if(f.getTableNameNo() != null && ! f.getTableNameNo().isEmpty()){
+				n.setTableNameNo(f.getTableNameNo());
+				}//This may not be correct - FIXME Test and fix
+				else{
+					n.setTableNameNo(f.getTableName()+"1");
+				}
+				n.setType(Node.getColRefType());
+				
+				return n;
+			} else
+				return null;
+				
+		}
+		/*
+		 * If baseTable is null then it is either Join Node or Sub query
+		 * Difference is only that a join node will have an array of
+		 * FromListElement of 2 elements while a subquery node may have a longer
+		 * array
+		 */
+		else { // Subquery Node or joinNode;
+			Boolean found = false;
+			FromListElement temp = null;
+			if (tabName != null && !tabName.isEmpty()) {
+				for (int i = 0; i < f.getTabs().size(); i++) {
+					temp = f.getTabs().get(i);
+					if (temp.getAliasName() != null && !temp.getAliasName().isEmpty()) {
+						if (temp.getAliasName().equalsIgnoreCase(tabName)) {							
+							found = true;
+							break;
+						}
+
+					} 
+					if (temp.getTableName() != null && !temp.getTableName().isEmpty()) {
+						if (temp.getTableName().equalsIgnoreCase(tabName)) {							
+							found = true;
+							break;
+						}
+					} else {
+						found = false;
+					}
+				}
+				if (found) {					
+					Node n = getColumnFromOccurenceInJC(colName, tabName, temp,
+							1,qParser);
+					if (n != null) {
+						return n;
+					}
+				} else {
+					for (int i = 0; i < f.getTabs().size(); i++) {
+						temp = f.getTabs().get(i);
+						if (temp.getTableName() == null) {
+							Node n = getColumnFromOccurenceInJC(colName,
+									tabName, temp, qParser);
+							if (n != null) {
+								return n;
+							}
+						}
+					}
+				}
+			} else {
+				for (int i = 0; i < f.getTabs().size(); i++) {
+					Node n = getColumnFromOccurenceInJC(colName, tabName, f
+							.getTabs().get(i), 1, qParser);
+					if (n != null) {
+						return n;
+					}
+				}
+			}
+			return null;
+		}
+	
+	}
+	
+	public static Node getNodeForCount(Vector<FromListElement> fle, QueryParser qParser) {
+		
+		for(FromListElement f:fle){
+			String fromTableName = f.getTableName();
+			if (fromTableName != null && f.getTableNameNo()!= null &&!f.getTableNameNo().isEmpty()) {
+				Table t=qParser.getTableMap().getTable(fromTableName);
+				Column col = t.getColumn(0);
+				if (col == null)
+					return null;
+
+				Node n = new Node();
+				n.setTable(t);
+				n.setTableAlias(t.getAliasName());
+				n.setColumn(col);
+				if(f.getTableNameNo() != null && ! f.getTableNameNo().isEmpty()){
+					n.setTableNameNo(f.getTableNameNo());
+				}//This may not be correct - FIXME Test and fix
+				else{
+					n.setTableNameNo(f.getTableName()+"1");
+				}
+				n.setType(Node.getColRefType());
+				return n;
+			} else if (f.getTabs()!=null && !f.getTabs().isEmpty()){
+				for (int i = 0; i < f.getTabs().size(); i++) {
+					Node n = getNodeForCount(f.getTabs().get(i), qParser);
+					n.setType(Node.getColRefType());
+					if (n != null) {
+						return n;
+					}
+				}
+			}
+			else if(f.getSubQueryParser()!=null){
+				Node n=getNodeForCount(f.getSubQueryParser().fromListElements,f.getSubQueryParser());
+				if(n!=null){
+					n.setType(Node.getColRefType());
+					return n;
+				}
 			}
 		}
-		return referencedRelations;
+		return null;
+}
+	
+	public static Node getNodeForCount(FromListElement f, QueryParser qParser) {
+		
+			String fromTableName = f.getTableName();
+			if (fromTableName != null && qParser.getQuery().getFromTables().get(fromTableName.toUpperCase()) != null 
+					&& f.getTableNameNo()!= null &&!f.getTableNameNo().isEmpty()) {
+				
+				Table t = qParser.getQuery().getFromTables().get(fromTableName.toUpperCase());
+				Column col = t.getColumn(0);
+				if (col == null)
+					return null;
+ 
+				Node n = new Node();
+				n.setTable(t);
+				n.setTableAlias(t.getAliasName());
+				n.setColumn(col);
+				if(f.getTableNameNo() != null && ! f.getTableNameNo().isEmpty()){
+					n.setTableNameNo(f.getTableNameNo());
+				}//This may not be correct - FIXME Test and fix
+				else{
+					n.setTableNameNo(f.getTableName()+"1");
+				}
+				n.setType(Node.getColRefType());
+				return n;
+			} else{
+			for (int i = 0; i < f.getTabs().size(); i++) {
+					Node n = getNodeForCount(f.getTabs().get(i), qParser);
+					n.setType(Node.getColRefType());
+					if (n != null) {
+						return n;
+					}
+				}
+			}
+			return null;
+	}
+	//Added by Biplab to return ColumnList. Required if the group by column is same as the joining column. Then two columns with same name must be added to the groupByList
+	public static Vector<Node> getColumnListFromOccurenceInJC(String colName, String tabName, FromListElement f, int x, QueryParser qParser) {
+		Vector<Node> nList = new Vector<Node>();
+		Column col = null;
+		String columnName = colName; // Column name will be exact. Table name can
+		// be an alias.
+		if (f.getTableName() != null && !f.getTableName().isEmpty()) { // FromListElement is a base table. Take
+			// the column directly.
+			if(f.getAliasName() != null && tabName.equals(f.getAliasName())){
+				
+				String fromTableName = f.getTableName();
+				if (qParser.getQuery().getFromTables().get(fromTableName.toUpperCase()) != null) {
+	
+					Table t = qParser.getQuery().getFromTables().get(fromTableName.toUpperCase());				
+					col = t.getColumn(columnName.toUpperCase());
+					if(col==null){					
+						return nList;
+					}
+					Node n = new Node();
+					n.setColumn(col);
+					n.setTable(col.getTable());
+					if(f.getTableNameNo() != null && ! f.getTableNameNo().isEmpty()){
+						n.setTableNameNo(f.getTableNameNo());
+						}//This may not be correct - FIXME Test and fix
+						else{
+							n.setTableNameNo(f.getTableName()+"1");
+						}
+					//mahesh: added this
+					n.setType(Node.getColRefType());
+					nList.add(n);
+				} 
+			}
+			else if(f.getAliasName() == null || (f.getAliasName() != null && f.getAliasName().equals(f.getTableName()))){
+				
+				String fromTableName = f.getTableName();
+				if (qParser.getQuery().getFromTables().get(fromTableName.toUpperCase()) != null) {
+	
+					Table t = qParser.getQuery().getFromTables().get(fromTableName.toUpperCase());				
+					col = t.getColumn(columnName.toUpperCase());
+					if(col==null){					
+						return nList;
+					}
+					Node n = new Node();
+					n.setColumn(col);
+					n.setTable(col.getTable());
+					if(f.getTableNameNo() != null && ! f.getTableNameNo().isEmpty()){
+						n.setTableNameNo(f.getTableNameNo());
+						}//This may not be correct - FIXME Test and fix
+						else{
+							n.setTableNameNo(f.getTableName()+"1");
+						}
+					//mahesh: added this
+					n.setType(Node.getColRefType());
+					nList.add(n);
+				} 
+				
+			}else{
+				return nList;
+			}
+		}
+		else
+		{
+			for (int i = 0; i < f.getTabs().size(); i++) {
+				Vector<Node> n = getColumnListFromOccurenceInJC(colName, tabName, f
+						.getTabs().get(i), 1,qParser);
+				if (n.size() != 0) {
+					for(Node nSingle : n)
+					{
+						logger.log(Level.INFO,"n2 " + nSingle.getTable());
+									nList.add(nSingle);
+					}
+				}
+			}
+		}
+		return nList;
+	}
+	
+	//FIXME: This method and addToSubquery have bugs
+	public static Node modifyNode(Node whereClausePred,QueryParser qParser) {
+		if(whereClausePred == null )
+			return null;
+		if (whereClausePred.getType().equalsIgnoreCase(Node.getAndNodeType()) 
+				|| whereClausePred.getType().equalsIgnoreCase(Node.getOrNodeType())){ //If AND or OR Node then traverse left and right children	
+
+			String Op = whereClausePred.getOperator();
+			String type = whereClausePred.getType();
+			Node left = modifyNode(whereClausePred.getLeft(),qParser);
+			Node right = modifyNode(whereClausePred.getRight(),qParser);
+			//return the updated node 
+			if(left == null)
+				return right;
+			if(right == null)
+				return left;
+
+			Node n = new Node();
+			n.setType(type);
+			n.setOperator(Op);
+			n.setLeft(left);
+			n.setRight(right);
+			return n;
+		}
+		
+		/**get the query block in which the relation occurrence of this condition exists
+		 * Depending on this add the condition to sub query*/
+		
+		//once above is done remove the below code
+		//FIXME: Below two  conditions are incorrect. Check Q9 new code
+		if((whereClausePred.getLeft() != null && whereClausePred.getLeft().getQueryType() > 0)|| (whereClausePred.getRight() != null && whereClausePred.getRight().getQueryType() > 0)){//If binary relational or arithmetic node and is aliased column inside sub query
+			addToSubQuery(whereClausePred,qParser);
+			return whereClausePred;
+		}
+		if(whereClausePred.getQueryType() > 0){//If this condition uses aliased column
+			addToSubQuery(whereClausePred,qParser);
+			return null;
+		}
+
+		return whereClausePred;		
+	}
+	
+	
+	public static void addToSubQuery(Node n,QueryParser qParser){
+		boolean flag = false;//To indicate whether to add to havingClause or where Clause
+		boolean flag1 = false;//To indicate whether Where or from clause subquery
+		int index = -1;
+
+		if(n.getRight() != null && n.getRight().getQueryType() > 0 ){// if right side of binary relational condition and it uses aliased column
+			if(n.getRight().getType().equalsIgnoreCase(Node.getAggrNodeType())) flag = true;
+			if(n.getRight().getQueryType() == 2 ) flag1 = true;//Where sub query
+			index = n.getRight().getQueryIndex();
+		}
+
+		if (n.getLeft() != null &&  n.getLeft().getQueryType() > 0 ){//if left side of binary relational condition
+			if(n.getLeft().getType().equalsIgnoreCase(Node.getAggrNodeType())) flag = true;
+			if(n.getLeft().getQueryType() == 2 ) flag1 = true;//Where sub query
+			index = n.getLeft().getQueryIndex();
+		}
+
+		if (n.getLeft() == null && n.getRight() == null && n.getQueryType() > 0){
+			if(n.getType().equalsIgnoreCase(Node.getAggrNodeType())) flag = true;
+			if(n.getQueryType() == 2 ) flag1 = true;//Where sub query
+			index = n.getQueryIndex(); 
+		}
+
+		if(flag){//aggregate node
+			//Add this condition to having clause 
+			Node left;
+			if(flag1 == true)	left = qParser.getWhereClauseSubqueries().get(index).getHavingClause();
+			else 				left = qParser.getFromClauseSubqueries().get(index).getHavingClause();
+			if(left == null){
+				if(flag1 == true)   qParser.getWhereClauseSubqueries().get(index).setHavingClause(n);
+				else            qParser.getFromClauseSubqueries().get(index).setHavingClause(n);
+				return;
+			}
+			Node n1 = new Node();
+			n1.setOperator("AND");
+			n1.setType(Node.getAndNodeType());
+			n1.setRight(n);
+			n1.setLeft(left);
+			if(flag1 == true)     qParser.getWhereClauseSubqueries().get(index).setHavingClause(n1);
+			else       qParser.getFromClauseSubqueries().get(index).setHavingClause(n1);
+		}
+		else {//Add to where clause conditions
+			if(flag1 == true)    qParser.getWhereClauseSubqueries().get(index).allConds.add(n);
+			else          qParser.getFromClauseSubqueries().get(index).allConds.add(n);
+		}
+	}
+	
+	
+	public static Vector<Node> getAllProjectedColumns(Vector<FromListElement> visitedFLEs, QueryParser qParser){
+		Vector<Node> projectedColumns=new Vector<Node>();
+		for(FromListElement fle:visitedFLEs){
+			if(fle!=null && fle.getTableName()!=null){
+				Table t=qParser.getTableMap().getTable(fle.getTableName());
+				if(t!=null){
+					Iterator colItr=t.getColumns().values().iterator();
+					while(colItr.hasNext()){
+						Column col=(Column)colItr.next();
+						Node n = new Node();
+						n.setColumn(col);
+						n.setTable(col.getTable());
+						n.setLeft(null);
+						n.setRight(null);
+						n.setOperator(null);
+						n.setType(Node.getColRefType());
+						n.setTableNameNo(fle.getTableNameNo());
+						projectedColumns.add(n);
+					}
+				}
+			}
+			else if(fle!=null && fle.getTabs()!=null && !fle.getTabs().isEmpty()){
+				projectedColumns.addAll(getAllProjectedColumns(fle.getTabs(),qParser));				
+			}
+			else if(fle!=null && fle.getSubQueryParser()!=null){
+				projectedColumns.addAll(fle.getSubQueryParser().getProjectedCols());
+			}
+		}
+		return projectedColumns;
+	}
+	
+	public static Vector<Node> addAllProjectedColumns(FromListElement q,int queryType, QueryParser qParser) {
+
+		Vector<Node> projectedCols = new Vector<Node>();
+		for (int i = 0; i < q.getTabs().size(); i++) {
+			if (q.getTabs().get(i).getTableName() != null) {
+				Table t = qParser.getTableMap().getTable(q.getTabs().get(i).getTableName().toUpperCase());
+				Iterator itr = t.getColumns().values().iterator();
+				//mahesh
+				Vector<Node> tempProjectedCols = new Vector<Node>();
+				while (itr.hasNext()) {
+					Node c = new Node();
+					Column col = (Column) itr.next();
+					c.setColumn(col);
+					c.setTable(col.getTable());
+					c.setLeft(null);
+					c.setRight(null);
+					c.setOperator(null);
+					c.setType(Node.getColRefType());
+					c.setTableNameNo(q.getTabs().get(i).getTableNameNo().toUpperCase());
+					/*if(subQueryNames.containsKey(tableName)){//If this node is inside a sub query
+						c.setQueryType(1);
+						c.setQueryIndex(subQueryNames.get(tableName));
+					}
+					else{*/
+						c.setQueryType(queryType);
+						if(queryType == 1) c.setQueryIndex(qParser.getFromClauseSubqueries().size()-1);
+						if(queryType == 2) c.setQueryIndex(qParser.getWhereClauseSubqueries().size()-1);
+					/*}*/
+					
+					projectedCols.add(c);
+					tempProjectedCols.add(c);
+
+				}
+			} else {
+				projectedCols.addAll(addAllProjectedColumns(q.getTabs().get(i),queryType,qParser));
+			}
+		}
+		return projectedCols;
+	
 	}
 	
 	/**
-	 * @author mathew on Sep 11 2016
-	 * returns true iff the first arugment string is a member of the second argument, which is a list
-	 * 
+	 * Used to update the details about table occurrence
+	 * @param fromSubquery
+	 * @param whereSubquery
+	 * @param temp
 	 */
-	public static boolean isMemberOf(String element, List<String> list){
-		if(element==null)
-			return false;
-		for(String s:list){
-			if(element.equalsIgnoreCase(s))
-				return true;
+	public static void updateTableOccurrences(boolean fromSubquery,	boolean whereSubquery, String tableNameNo, QueryParser qParser) {
+		Integer[] li= new Integer[2]; 
+		if(fromSubquery){
+			li[0]=1;
+			li[1]=qParser.getFromClauseSubqueries().size()-1;
 		}
-		return false;
+		else if(whereSubquery){
+			li[0]=2;
+			li[1]=qParser.getWhereClauseSubqueries().size()-1;			
+		}
+		else{
+			li[0]=0;
+			li[1]=0;
+		}
+		
+		qParser.getTableNames().put(tableNameNo, li);
+		
+	
 	}
-	
-
-	
-
-	
-
-	
-	
-	
 	
 //	// adds the form table to the query
 //	public static void addFromTable(Table table, QueryParser qParser) {
@@ -239,7 +619,303 @@ public class Util {
 		}
 		return ret;
 	}
-			
+	
+	
+	/*
+	 * Added by Bhupesh currentQueryLevel is in the set: {'Q', 'SQ1', 'SQ2',
+	 * ..., 'SQn'} where SQn is the last level of sub query nesting and Q is the
+	 * main query Sample query: select * from (select * from dept d1 join
+	 * (select * from crse c) x using (dept_name)) d join teaches using
+	 * (course_id);
+	 * 
+	 * select * from (select * from dept d1 join } SQ1 (select * from teaches t
+	 * } } SQ2 ) x using (id) } } ) d join crse using (dept_name)
+	 * 
+	 * Corresponding Map: queryLevel queryLevelOrTable aliasOfSubQueryOrTable
+	 * --------------------------------------------------------------- Q CRSE
+	 * NO_ALIAS Q SQ1 d SQ1 SQ2 x SQ1 DEPT d1 SQ2 TEACHES t
+	 */
+	public static Column getColumn(String colName, String aliasIfAny,
+			String currentQueryLevel, QueryParser qParser) {
+
+		Column col = null;
+
+		if (aliasIfAny != null) {
+			for (QueryAliasMap qamElement : qParser.getQam()) {
+				if (qamElement.queryId.equalsIgnoreCase(currentQueryLevel)) { // Compare
+					// Sub
+					// Query
+					// level
+					if (qamElement.aliasOfSubqueryOrTable
+							.equalsIgnoreCase(aliasIfAny)) { // Compare
+						// AliasName
+						if (qamElement.queryIdOrTableName.contains("SQ")) { // If
+							// inside
+							// another
+							// Sub
+							// Query
+							// Then recurse but now the alias name does not
+							// matter. The column can be with any alias inside
+							// the new subquery.
+							return getColumn(colName, null,
+									qamElement.queryIdOrTableName,qParser);
+						} else {// If not a sub query then its a table
+							// If colName exists in the table: queryLevelOrTable
+							// then return that column
+							Table table = qParser.getTableMap()
+									.getTable(qamElement.queryIdOrTableName);
+							for (int i = 0; i < table.getColumns().size(); i++) {
+								if (table.getColumn(i).getColumnName().equalsIgnoreCase(colName)) {
+									return table.getColumn(i);
+								}
+							}
+						}
+					}
+				}
+			}
+		} else { // alias is not given. Now, find the column. Same as above but
+			// without the aliasName check.
+			for (QueryAliasMap qamElement : qParser.getQam()) {
+				if (qamElement.queryId.equalsIgnoreCase(currentQueryLevel)) {
+					if (qamElement.queryIdOrTableName.contains("SQ")) {
+						return getColumn(colName, null,
+								qamElement.queryIdOrTableName,qParser);
+					} else {
+						// If colName exists in the table: queryLevelOrTable
+						// then return that column
+						Table table = qParser.getTableMap()
+								.getTable(qamElement.queryIdOrTableName);
+						for (int i = 0; i < table.getColumns().size(); i++) {
+							if (table.getColumn(i).getColumnName()
+									.equalsIgnoreCase(colName)) {
+								return table.getColumn(i);
+							}
+						}
+					}
+				}
+			}
+		}
+		return col;
+	}
+	
+	/*
+	 * private Vector<Table> getTables(String tableOrAliasName){ Vector<Table>
+	 * tables = new Vector<Table>(); for(String tableName :
+	 * query.getFromTables().keySet()){ Table table =
+	 * query.getFromTables().get(tableName);
+	 * if(table.getTableName().equalsIgnoreCase(tableOrAliasName) ||
+	 * (table.getAliasName()!=null &&
+	 * table.getAliasName().equals(tableOrAliasName))){ tables.add(table); } }
+	 * return tables; }
+	 */
+	// returns all the columns having name searchcolumnName from all the tabes
+	// in from clause
+	public static Vector<Column> getColumns(String searchcolumnName, QueryParser qParser) {
+		Vector<Column> columns = new Vector<Column>();
+		// traverse through the tables in the form clause
+		for (String tableName : qParser.getQuery().getFromTables().keySet()) {
+			Table table = qParser.getQuery().getFromTables().get(tableName.toUpperCase());
+			// traverse all the columns of the table
+			for (String columnName : table.getColumns().keySet()) {
+				Column column = table.getColumn(columnName);
+				// if column name matches
+				if (column.getColumnName().equalsIgnoreCase(searchcolumnName)) {
+					columns.add(column); // add the column to columns
+				}
+			}
+		}
+		return columns;
+	}
+
+	// retrives column from table tableName and having name as columnName
+	public static Column getColumn(String columnName, String tableName, QueryParser qParser) {
+		Table table = qParser.getQuery().getFromTables().get(tableName.toUpperCase());
+		if (table == null) {// Then tablename is the alias of the table
+			Vector<String> tableNames = qParser.getQuery().getTableOfAlias(tableName);
+			for (int i = 0; i < tableNames.size(); i++) {
+				table = qParser.getQuery().getFromTables().get(tableNames.get(i).toUpperCase());
+				if (table != null)
+					break;
+			}
+		}
+		return table.getColumn(columnName);
+	}
+
+	// returns all the columns having name columnName and table alias name
+	// tableOrAlisName
+	// modify for the case when tableoraliasname is the alias of a subquery
+	public static Vector<Column> getJoinColumns(String columnName,
+			String tableOrAliasName, QueryParser qParser) {
+		Vector<Column> columns = new Vector<Column>();
+		Table table = null;
+		// Added by Bhupesh
+		Vector<String> tableNames = new Vector<String>();
+		tableNames = qParser.getQuery().getTableOfAlias(tableOrAliasName);
+		for (int i = 0; i < tableNames.size(); i++) {
+			table = qParser.getTableMap().getTable(tableNames.get(i));
+			if (table != null) {
+				if (table.getColumns().get(columnName) != null) {
+					columns.add(table.getColumns().get(columnName));
+				}
+			}
+		}
+		return columns;
+	}
+
+	public static Vector<Column> getJoinColumnsJSQL(String columnName, FromItem node, QueryParser qParser)
+			throws Exception {
+		Vector<Column> columns = new Vector<Column>();
+		// check if node is child of the FromBaseTable
+		if (node instanceof net.sf.jsqlparser.schema.Table) {
+			net.sf.jsqlparser.schema.Table fbTable = (net.sf.jsqlparser.schema.Table) node;// typecasting the node
+			// to FromBaseTable
+			String tableName = fbTable.getFullyQualifiedName().toUpperCase();// extracting the base
+			// table
+			if (qParser.getTableMap().getTable(tableName.toUpperCase()).getColumn(columnName) != null)// if
+				// the table contains the column of name columnName
+				columns.add(qParser.getTableMap().getTable(tableName.toUpperCase()).getColumn(columnName));
+			//add the column to columns
+		}
+		// check if the node is an instance of JoinNode
+		else if (node instanceof Join) {
+			// create a join node by typecasting node
+			Join joinNode = (Join) node;
+			// recursively calls the getJoinColumns on left child of the node
+			Vector<Column> leftColumns = getJoinColumnsJSQL(columnName, joinNode.getRightItem(),qParser);
+			// recursively calls the getJoinColumns on right child of the node
+			//Vector<Column> rightColumns = getJoinColumns(columnName, joinNode
+			//		.getRightResultSet(),qParser);
+
+			for (Column column : leftColumns)
+				columns.add(column);
+			//for (Column column : rightColumns)
+			//	columns.add(column);
+
+		} else if (node instanceof SubSelect) {
+			SubSelect fromSubquery = (SubSelect) node;
+			PlainSelect ps = (PlainSelect)fromSubquery.getSelectBody();
+			columns.addAll(getJoinColumnsJSQL(columnName, ps.getFromItem(),qParser));
+			if (ps.getJoins() != null) {
+				for (Iterator joinsIt = ps.getJoins().iterator(); joinsIt.hasNext();) {
+					Join join = (Join) joinsIt.next();
+					columns.addAll(getJoinColumnsJSQL(columnName,join.getRightItem(),qParser));
+				}
+			}
+		}
+		return columns;
+	}
+	
+
+	public static Vector<Column> getJoinColumnsForJSQL(String columnName, Vector<FromListElement> node, QueryParser qParser)
+			throws Exception {
+		Vector<Column> columns = new Vector<Column>();
+		//if(frm != null){
+		//	columns = getJoinColumnsJSQL(columnName, frm, qParser);
+		//}else{
+			for(int i=0; i< node.size();i++ ){
+				FromListElement fle = node.get(i);
+				//net.sf.jsqlparser.schema.Table fbTable = (net.sf.jsqlparser.schema.Table) node;// typecasting the node
+				// to FromBaseTable
+				if(fle != null && fle.tableName != null){
+					String tableName = fle.tableName.toUpperCase();// extracting the base
+					// table
+					if (qParser.getTableMap().getTable(tableName.toUpperCase()).getColumn(columnName) != null)// if				
+						columns.add(qParser.getTableMap().getTable(tableName.toUpperCase()).getColumn(columnName));// add
+					
+					//Shree added for join conditions
+					else{
+					if(node.get(i) != null && node.get(i).getTabs() != null)
+						columns.addAll(getJoinColumnsForJSQL(columnName,node.get(i).getTabs(),qParser));
+					} 
+				}else{
+					columns.addAll(getJoinColumnsForJSQL(columnName, node.get(i).getTabs(),qParser));
+					
+				}
+			//	}
+		}
+		
+		return columns;
+	}
+	
+	public static Vector<Column> getJoinColumns(String columnName, QueryTreeNode node, QueryParser qParser)
+			throws Exception {
+		Vector<Column> columns = new Vector<Column>();
+		// check if node is child of the FromBaseTable
+		if (node instanceof FromBaseTable) {
+			FromBaseTable fbTable = (FromBaseTable) node;// typecasting the node
+			// to FromBaseTable
+			String tableName = fbTable.getBaseTableName();// extracting the base
+			// table
+			if (qParser.getTableMap().getTable(tableName).getColumn(columnName) != null)// if
+				// the
+				// table
+				// contains
+				// the
+				// column
+				// of
+				// name
+				// columnName
+				columns.add(qParser.getTableMap().getTable(tableName).getColumn(columnName));// add
+			// the
+			// column
+			// to
+			// columns
+		}
+		// check if the node is an instance of JoinNode
+		else if (node instanceof JoinNode) {
+			// create a join node by typecasting node
+			JoinNode joinNode = (JoinNode) node;
+			// recursively calls the getJoinColumns on left child of the node
+			Vector<Column> leftColumns = getJoinColumns(columnName, joinNode
+					.getLeftResultSet(),qParser);
+			// recursively calls the getJoinColumns on right child of the node
+			Vector<Column> rightColumns = getJoinColumns(columnName, joinNode
+					.getRightResultSet(),qParser);
+
+			for (Column column : leftColumns)
+				columns.add(column);
+			for (Column column : rightColumns)
+				columns.add(column);
+
+		} else if (node instanceof FromSubquery) {
+			FromSubquery fromSubquery = (FromSubquery) node;
+			columns = getJoinColumns(columnName, fromSubquery.getSubquery()
+					.getFromList().getNodeVector().get(0),qParser);
+		}
+		return columns;
+	}
+	
+	
+	/*
+	 * Added by Mahesh
+	 * To get join conditions where the join conditions are on aliased names ( which may be aliased for aggregates also)
+	 */
+	public static Vector<Node> getAliasedNodes(Vector<FromListElement> fle, List <String> cols, QueryParser qParser) {
+		Vector<Node> list = new Vector<Node>();
+		for(String colName: cols){
+			if(qParser.getQuery().getQueryString().toLowerCase().contains(("as "+colName.toLowerCase()))){//It is aliased column
+				Vector<Node> names = new Vector<Node>();
+				names = qParser.getAliasedToOriginal().get(colName);
+
+				for(Node name: names){
+					String tableNameNo;
+					//If aggregate node
+					if(name.getType().equalsIgnoreCase(Node.getAggrNodeType()))
+
+						tableNameNo = name.getAgg().getAggExp().getTableNameNo().toUpperCase();
+
+					else tableNameNo = name.getTableNameNo().toUpperCase(); //Not an aggregate node
+
+
+					if(checkIn(tableNameNo,fle)){//Should add iff and only if it is aliased column in this from list elements
+						list.add(name);
+					}
+				}
+			}
+		}
+		return list;
+	}
+	
 	/*
 	 * Checks whether the tableNameNo is present in the given list of from list elements
 	 */
@@ -277,7 +953,61 @@ public class Util {
 		return cols;
 	}
 	
-		
+	//Added By Ankit
+	//Modified by Mahesh
+	//Modify--to include element from projected class...not from original table
+	public static ArrayList<String> getAllColumnofElement(Vector<FromListElement> t, QueryParser qParser) throws Exception{
+
+		ArrayList <String>allColumn=new ArrayList();
+		for(int i=0;i<t.size();i++){
+			FromListElement f=t.get(i);
+			if(f.getTableName()!=null){
+				for(String columnName : qParser.getTableMap().getTable(f.getTableName()).getColumns().keySet()){
+					if(!allColumn.contains(columnName))
+						allColumn.add(columnName);            	
+				}
+			}
+			
+		}
+		return allColumn;    	
+	}
+	
+	public static ArrayList<String> getAllColumnofElementForJSQL(Vector<FromListElement> t,ArrayList<String> allColumn,QueryParser qParser) throws Exception{
+
+		for(int i=0;i<t.size();i++){
+			FromListElement f=t.get(i);
+			if(f.getTableName()!=null){
+				for(String columnName : qParser.getTableMap().getTable(f.getTableName()).getColumns().keySet()){
+					if(!allColumn.contains(columnName))
+						allColumn.add(columnName);            	
+				}
+			}
+			else{
+				if(f.getTabs() != null && f.getTabs().size() > 0)
+					allColumn.addAll(getAllColumnofElementForJSQL(f.getTabs(),new ArrayList<String>(),qParser) );
+			}
+		}
+		return allColumn;    	
+	}
+	
+	public static void setQueryTypeAndIndex(boolean isFromSubquery,	boolean isWhereSubquery, boolean rightSubquery, Node n, QueryParser qParser) {
+		if(isFromSubquery){
+			n.setQueryType(1);
+			n.setQueryIndex(qParser.getFromClauseSubqueries().size()-1);
+		}
+		else if(isWhereSubquery){
+			n.setQueryType(2);
+			n.setQueryIndex(qParser.getWhereClauseSubqueries().size()-1);
+		}
+		else if(rightSubquery){
+			n.setQueryType(1);
+			n.setQueryIndex(qParser.getFromClauseSubqueries().size()-1);
+		}
+		else
+			n.setQueryType(0);
+	}
+	
+	
 	
 	/*
 	 * If the sub query is of the form col relop subQ then when parsing the relop the condition is added as a BRO condition. This function 
@@ -354,7 +1084,9 @@ public class Util {
 				n.setType(Node.getBroNodeSubQType());
 				n.setSubQueryConds(n.getRight().getSubQueryConds());
 				n.getRight().setSubQueryConds(null);
-				//n.getRight().setAgg(n.getRight().getLhsRhs().getAgg());//added by mahesh
+				if(n.getRight().getLhsRhs() != null){
+					n.getRight().setAgg(n.getRight().getLhsRhs().getAgg());//added by mahesh
+				}
 				n.setLhsRhs(n.getRight().getLhsRhs());
 				n.getRight().setLhsRhs(null);
 				n.getRight().setType(Node.getAggrNodeType());
@@ -404,6 +1136,160 @@ public class Util {
 
 	}
 
+
+
+/* Getting Foreign Key closure */
+public static void foreignKeyClosure(QueryParser qParser) {
+	/*
+	for (String tableName : query.getFromTables().keySet()) {
+		Table table = query.getFromTables().get(tableName);
+		System.out.println(tableName);
+		if (table.hasForeignKey()) {
+			System.out.println(tableName+" has foreign key");
+			for (String fKeyName : table.getForeignKeys().keySet()) {
+				ForeignKey fKey = table.getForeignKey(fKeyName);
+				Vector<Column> fKeyColumns = fKey.getFKeyColumns();
+				// Vector<Column> refKeyColumns =
+				// fKey.getReferenceKeyColumns();
+
+				for (Column fKeyColumn : fKeyColumns) {
+					// System.out.println(fKeyColumn.getTableName()+"."+fKeyColumn.getColumnName()+" -> "+fKeyColumn.getReferenceColumn().getTableName()+"."+fKeyColumn.getReferenceColumn().getColumnName());
+					JoinClauseInfo foreignKey = new JoinClauseInfo(fKeyColumn, fKeyColumn.getReferenceColumn(),JoinClauseInfo.FKType);
+					foreignKey.setConstant(fKeyName);
+					this.foreignKeyVector.add(foreignKey);
+				}
+			}
+		}
+	}
+	System.out.println("foreignKeyVector " + foreignKeyVector);
+	 */
+	//Changed by Biplab the original code is commented out above
+	Vector<Table> fkClosure = new Vector<Table>();
+	LinkedList<Table> fkClosureQueue = new LinkedList<Table>();
+	logger.log(Level.INFO,"FOREIGN KEY GRAPH : \n"+qParser.getTableMap().foreignKeyGraph);
+	for (String tableName : qParser.getQuery().getFromTables().keySet()) {
+		fkClosure.add( qParser.getTableMap().getTables().get(tableName.toUpperCase()));
+		fkClosureQueue.addLast(qParser.getTableMap().getTables().get(tableName.toUpperCase()));
+		logger.log(Level.INFO,"fkClosureQueue.add tables: \n "+qParser.getTableMap().getTables().get(tableName.toUpperCase()));
+	}
+	while(!fkClosureQueue.isEmpty())
+	{
+		Table table = fkClosureQueue.removeFirst();
+		logger.log(Level.INFO,"fkClosureQueue Not Empty and contains table \n"+table.getTableName());
+		for(Table tempTable : qParser.getTableMap().foreignKeyGraph.getAllVertex())
+		{  
+			Map<Table,Vector<ForeignKey>> neighbours = qParser.getTableMap().foreignKeyGraph.getNeighbours(tempTable);
+			for(Table neighbourTable : neighbours.keySet())
+			{
+				if(neighbourTable.equals(table) && !fkClosure.contains(tempTable))
+				{
+					fkClosure.add(tempTable);
+					fkClosureQueue.addLast(tempTable);
+				}
+			}
+		}
+	}
+	Graph<Table, ForeignKey> tempForeignKeyGraph = qParser.getTableMap().foreignKeyGraph.createSubGraph();
+	for(Table table : fkClosure)
+		tempForeignKeyGraph.add(qParser.getTableMap().foreignKeyGraph, table);
+	fkClosure = tempForeignKeyGraph.topSort();
+
+	for(Table table : fkClosure)
+		fkClosureQueue.addFirst(table);
+	fkClosure.removeAllElements();
+	fkClosure.addAll(fkClosureQueue);
+
+	while(!fkClosureQueue.isEmpty())
+	{
+		Table table = fkClosureQueue.removeFirst();
+
+		if(table.getForeignKeys() != null)
+		{
+			for (String fKeyName : table.getForeignKeys().keySet())
+			{
+				ForeignKey fKey = table.getForeignKey(fKeyName);
+				qParser.getForeignKeyVectorModified().add(fKey);
+				Vector<Column> fKeyColumns = fKey.getFKeyColumns();
+				for (Column fKeyColumn : fKeyColumns)
+				{
+					JoinClauseInfo foreignKey = new JoinClauseInfo(fKeyColumn, fKeyColumn.getReferenceColumn(),JoinClauseInfo.FKType);
+					foreignKey.setConstant(fKeyName);
+					qParser.getForeignKeyVector().add(foreignKey);
+				}
+			}
+		}
+	}
+//Changed by Biplab till here
+	qParser.setForeignKeyVectorOriginal((Vector<JoinClauseInfo>) qParser.getForeignKeyVector().clone());
+
+	// Now taking closure of foreign key conditions
+	/*
+	 * Altered closure algorithm so that the last foreign key in the chain is not added if it is nullable
+	 * If the foreign key from this relation to other relations is nullale, 
+	 * then this relation must not appear in the closure.
+	 */
+
+	//Commented out by Biplab
+	/*for (int i = 0; i < this.foreignKeyVector.size(); i++) {
+		JoinClauseInfo jci1 = this.foreignKeyVector.get(i);
+
+		for (int j = i + 1; j < this.foreignKeyVector.size(); j++) {
+			JoinClauseInfo jci2 = this.foreignKeyVector.get(j);
+			if (jci1.getJoinTable2() == jci2.getJoinTable1()
+					&& jci1.getJoinAttribute2() == jci2.getJoinAttribute1()) {
+				//Check to see if the from column is nullable. If so, do not add the FK.
+				//if(jci1.getJoinAttribute1().isNullable()){
+				//	continue;
+				//}
+				JoinClauseInfo foreignKey = new JoinClauseInfo(jci1.getJoinAttribute1(), jci2.getJoinAttribute2(),JoinClauseInfo.FKType);
+				if (!this.foreignKeyVector.contains(foreignKey)) {
+					this.foreignKeyVector.add(foreignKey);
+				}
+			}
+		}
+	}*/
+	//Commented out by Biplab till here
+
+	// Convert the closure to type Vector<Node>
+	foreignKeyInNode(qParser);
+}
+
+/*
+ * Convert the foreignKeyClosure of type Vector<JoinClauseInfo> to a type of
+ * Vector<Node>.
+ */
+
+public static void foreignKeyInNode(QueryParser qParser) {
+	for (int i = 0; i < qParser.getForeignKeyVector().size(); i++) {
+		Node left = new Node();
+		left.setColumn(qParser.getForeignKeyVector().get(i).getJoinAttribute1());
+		left.setTable(qParser.getForeignKeyVector().get(i).getJoinAttribute1()
+				.getTable());
+		left.setLeft(null);
+		left.setRight(null);
+		left.setOperator(null);
+		left.setType(Node.getColRefType());
+
+		Node right = new Node();
+		right.setColumn(qParser.getForeignKeyVector().get(i).getJoinAttribute2());
+		right.setTable(qParser.getForeignKeyVector().get(i).getJoinAttribute2()
+				.getTable());
+		right.setLeft(null);
+		right.setRight(null);
+		right.setOperator(null);
+		right.setType(Node.getColRefType());
+
+		Node refJoin = new Node();
+		refJoin.setColumn(null);
+		refJoin.setTable(null);
+		refJoin.setLeft(left);
+		refJoin.setRight(right);
+		refJoin.setType(Node.getBaoNodeType());
+		refJoin.setOperator("=");
+		refJoin.setStrConst(qParser.getForeignKeyVector().get(i).getConstant());
+		qParser.getForeignKeys().add(refJoin);
+	}
+}
 
 
 /** @author mathew on 22 June 2016

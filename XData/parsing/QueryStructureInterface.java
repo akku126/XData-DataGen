@@ -15,14 +15,13 @@ public interface QueryStructureInterface {
 		
 		public TableMap getTableMap();
 		public void setTableMap(TableMap tableMap);
-		public void buildQueryStructureJSQL(String queryString) 
-				throws Exception;
+		public void buildQueryStructureJSQL(String queryId, 
+				String queryString, boolean debug) throws Exception;
 		
 		public Vector<ForeignKey> getForeignKeyVectorModified();
 		public void setForeignKeyVectorModified(
 				Vector<ForeignKey> foreignKeyVectorModified);
 		
-		@Override
 		public String toString();	
 	}
 

@@ -103,8 +103,10 @@ public class UtilsRelatedToNode {
 		else
 			if(n.getLhsRhs() != null && n.getLhsRhs().getRight() != null){
 				index = n.getLhsRhs().getRight().getQueryIndex();
-			}else{
+			}else if(n.getLhsRhs() != null){
 				index = n.getLhsRhs().getQueryIndex();
+			}else{
+				index = n.getQueryIndex();
 			}
 		return index;
 	}

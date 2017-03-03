@@ -439,7 +439,7 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 		}
 		else{
 			
-			if(subQ.getLhsRhs()!= null
+			if(subQ.getLhsRhs()!= null && subQ.getLhsRhs().getLeft() != null
 					&& subQ.getLhsRhs().getLeft().getType().equalsIgnoreCase(Node.getBaoNodeType())
 					){
 				tableNameNumber = UtilsRelatedToNode.getTableNameNo(subQ.getLhsRhs().getLeft());

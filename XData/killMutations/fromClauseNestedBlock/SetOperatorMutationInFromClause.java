@@ -2,6 +2,7 @@ package killMutations.fromClauseNestedBlock;
 
 import java.util.logging.Logger;
 
+import parsing.QueryParser;
 import parsing.QueryStructure;
 
 import testDataGen.GenerateCVC1;

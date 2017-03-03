@@ -50,7 +50,7 @@ public class MutationsInOuterBlock {
 			WhereClauseSubQueryConnectiveMutations.killWhereClauseSubQueryConnectiveMutations(cvc);
 			
 			/**Killing missing join condition with reference relations **/
-			MissingJoinMutations.generateDataForkillingMissingJoinMutations(cvc);
+			//MissingJoinMutations.generateDataForkillingMissingJoinMutations(cvc);
 			
 			/** killing having clause mutations in outer query blocks*/
 			ConstrainedAggregationMutationsInOuterQueryBlock.generateDataForkillingConstrainedAggregationInOuterQueryBlock(cvc);

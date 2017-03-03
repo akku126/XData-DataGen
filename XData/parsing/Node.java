@@ -87,6 +87,7 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 		caseCondition=null;
 		aliasName=null;
 		caseExpression=null;
+	    subQueryParser=null;
 	}
 
  //the following lines added by mathew on 1st october 2016
@@ -112,6 +113,16 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 		}
 
 
+	QueryParser subQueryParser;
+		
+		public QueryParser getSubQueryParser(){
+			return subQueryParser;
+		}
+		
+		public void setSubQueryParser(QueryParser subQP){
+			this.subQueryParser=subQP;
+		}
+		
 
 		
 		public void setSubQueryStructure(QueryStructure subQP){
@@ -120,12 +131,10 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 		
 		private String aliasName;
 		
-		@Override
 		public String getAliasName(){
 			return aliasName;
 		}
 		
-		@Override
 		public void setAliasName(String aName){
 			this.aliasName=aName;
 		}
@@ -489,7 +498,7 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 		return right;
 	}
 	public void setRight(Node right) {
-		this.right = right;
+		this.right = (Node)right;
 	}
 	public String getStrConst() {
 		return strConst;
@@ -611,25 +620,26 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 			}
 		else if(this.getType()!=null&& this.getType().equalsIgnoreCase(Node.getAnyNodeType())){
 			retString+=" "+Node.getAnyNodeType()+" ";
-			if(this.getSubQueryStructure()!=null){
-				retString+="("+this.getSubQueryStructure().getQuery().getQueryString()+")";
+			if(this.getSubQueryParser()!=null){
+				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
 			}
 			return retString;
 		}
 		else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getAllNodeType())){
 			retString+=" "+Node.getAllNodeType()+" ";
-			if(this.getSubQueryStructure()!=null){
-				retString+="("+this.getSubQueryStructure().getQuery().getQueryString()+")";
+			if(this.getSubQueryParser()!=null){
+				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
 			}
 			return retString;
 		}
 		 else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getExistsNodeType())){
 			retString+=" "+Node.getExistsNodeType()+" ";
-			if(this.getSubQueryStructure()!=null){
-				retString+="("+this.getSubQueryStructure().getQuery().getQueryString()+")";
+			if(this.getSubQueryParser()!=null){
+				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
 			}
 			return retString;
 		}
+
 		 else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getNotExistsNodeType())){
 			retString+=" "+Node.getNotExistsNodeType()+" ";
 			if(this.getSubQueryStructure()!=null){

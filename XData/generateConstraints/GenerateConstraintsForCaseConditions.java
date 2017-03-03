@@ -97,7 +97,7 @@ public class GenerateConstraintsForCaseConditions {
 		if(ccMap != null){
 			//Add constraints for CASE statements in Projected columns
 			if(ccMap.containsKey(2)){
-				ArrayList<CaseCondition> selectionConds = ccMap.get(2).getWhenConditionals();
+				ArrayList<CaseCondition> selectionConds = ((CaseExpression)ccMap.get(2)).getWhenConditionals();
 				for(int i=0; i < selectionConds.size(); i++){
 					
 					CaseCondition sc = selectionConds.get(i);
@@ -106,9 +106,9 @@ public class GenerateConstraintsForCaseConditions {
 					caseConditionCompleted.add(sc);
 					constraintString += ") OR (";
 				}
-				if((ccMap.get(2).getElseConditional()) != null){
+				if((((CaseExpression)ccMap.get(2)).getElseConditional()) != null){
 				
-					CaseCondition sc = (ccMap.get(2).getElseConditional());
+					CaseCondition sc = (((CaseExpression)ccMap.get(2)).getElseConditional());
 					constraintString += getConstraintsInCaseStatement(cvc,qbt,sc,caseConditionCompleted);
 					constraintString += ")";
 				}

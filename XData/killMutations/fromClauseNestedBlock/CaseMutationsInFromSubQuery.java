@@ -176,7 +176,7 @@ public class CaseMutationsInFromSubQuery {
 		HashMap<Integer,CaseExpression> ccMap = (HashMap)qbt.getCaseConditionMap();
 		
 		//1 is Key value for case stmnt in projected cols
-		ArrayList<CaseCondition> selectionConds = ccMap.get(2).getWhenConditionals();
+		ArrayList<CaseCondition> selectionConds = ((CaseExpression)ccMap.get(2)).getWhenConditionals();
 		try{
 			/** Kill each selection condition of this conjunct*/
 			

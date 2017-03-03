@@ -9,7 +9,7 @@ import killMutations.outerQueryBlock.JoinMutationsInOuterQueryBlock;
 
 //import parsing.Conjunct;
 import parsing.ConjunctQueryStructure;
-import parsing.DisjunctQueryStructure;
+import parsing.Disjunct;
 import parsing.JoinClauseInfo;
 import parsing.Node;
 import parsing.Table;
@@ -89,7 +89,7 @@ public class GenerateConstraintsForMissingJoinMutation {
 		HashMap<String, Vector<Vector<Node>>> equiJoins= cvc.getEquiJoins();//new Vector<Vector<Node>>();
 		Vector<Vector<Node>>  equivalenceClasses = new Vector<Vector<Node>>();
 		Vector<Node> newEqClasses = new Vector<Node>(); 
-		Vector<DisjunctQueryStructure> disjuncts=new Vector<DisjunctQueryStructure>();
+		Vector<Disjunct> disjuncts=new Vector<Disjunct>();
 		Node temp;
 		HashMap<Integer, Node> hm = new HashMap<Integer, Node>();
 		Vector<Node> joinConds = new Vector<Node>();

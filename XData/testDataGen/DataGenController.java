@@ -2,11 +2,14 @@ package testDataGen;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import parsing.QueryParser;
 import parsing.QueryStructure;
+import parsing.QueryStructureForDataGen;
 
 import util.Configuration;
 import util.TableMap;
@@ -79,7 +82,7 @@ public class DataGenController{
 				cvc.initializeQueryDetails(cvc.getqParser() );*/
 				
 				QueryStructure qStructure = new QueryStructure(tableMap);
-				qStructure.buildQueryStructureJSQL(queryStr.toString());
+				qStructure.buildQueryStructureJSQL(String.valueOf(cvc.getQueryId()), queryStr.toString(),false);
 				cvc.setqStructure(qStructure);
 				
 				cvc.initializeQueryDetailsQStructure(qStructure);
@@ -96,7 +99,7 @@ public class DataGenController{
 				
 				else{
 
-					//cvc.getBranchQueries().intitializ(cvc);
+					cvc.getBranchQueries().intitializeDetails(cvc);
 
 					/**Populate the values from the data base 
 					 * Needed so that the generated values looks realistic */	

@@ -30,6 +30,7 @@ import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.parser.CCJSqlParserManager;
 import net.sf.jsqlparser.parser.ParseException;
 import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.select.AllColumns;
 import net.sf.jsqlparser.statement.select.ExceptOp;
 import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.IntersectOp;
@@ -56,6 +57,7 @@ import parsing.JoinTreeNode;
 import parsing.ORNode;
 import parsing.Query;
 import parsing.RelationHierarchyNode;
+import parsing.TreeNode;
 import parsing.Node;
 import parsing.CaseExpression;
 import parsing.ProcessSelectClause;
@@ -71,6 +73,7 @@ import util.TableMap;
 		private Query query;
 		private TableMap tableMap;
 
+		private Vector<TreeNode> inOrderList;
 
 		private Vector<JoinClauseInfo> foreignKeyVector;
 
@@ -117,7 +120,7 @@ import util.TableMap;
 		// aggregation
 		Vector<AggregateFunction> aggFunc;
 		Vector<Node> groupByNodes;
-		Vector<Node> havingClauses;
+		Vector<Node> lsthavingClauses;
 		Node havingClause;
 
 		JoinTreeNode root;//currently not used
@@ -249,9 +252,9 @@ import util.TableMap;
 					else
 						this.numberOfInnerJoins++;
 				}
-				
 
-				this.lstHavingConditions.addAll(this.getHavingClauses());
+
+				this.lstHavingConditions.addAll(this.getlstHavingClauses());
 
 				this.lstProjectedCols.addAll(this.getProjectedCols());
 
@@ -342,6 +345,11 @@ import util.TableMap;
 				
 				Vector <Node> subQConds = con.getAllSubQueryConds();
 				for(Node n : subQConds){
+					/* the expression: n.getType().equalsIgnoreCase(Node.getAllAnyNodeType()) 
+					 * from the If condition below removed, and 
+					 * All node, Any node type in the following condition added by mathew on 27 June 2016
+					 */
+
 					if(n.getNodeType().equals(Node.getAllNodeType())
 							||n.getNodeType().equals(Node.getAnyNodeType())
 							||n.getNodeType().equals(Node.getExistsNodeType())
@@ -349,7 +357,20 @@ import util.TableMap;
 							||n.getNodeType().equals(Node.getInNodeType())
 							||n.getNodeType().equals(Node.getNotInNodeType())){
 
-						this.lstSubQConnectives.add(n.getNodeType());
+						// commented by mathew on 18 oct 2016
+//						if(this.isInSubQ && n.getNodeType().equals(Node.getExistsNodeType())){
+//							this.lstSubQConnectives.add(Node.getInNodeType());
+//						}else if(this.isInSubQ && n.getNodeType().equals(Node.getNotExistsNodeType())){
+//								this.lstSubQConnectives.add(Node.getNotInNodeType());	
+//						}else{
+						if(n.getNodeType().equals(Node.getExistsNodeType()) && n.isInNode){
+							this.lstSubQConnectives.add(Node.getInNodeType());
+						}else if(n.getNodeType().equals(Node.getNotExistsNodeType()) && n.isInNode){
+							this.lstSubQConnectives.add(Node.getNotInNodeType());
+						}else {
+							this.lstSubQConnectives.add(n.getNodeType());
+						}
+//						}
 					}
 				}
 
@@ -550,7 +571,7 @@ import util.TableMap;
 			for(Node n:this.groupByNodes)
 				retString+=" "+n;
 			retString+="\n Having \n";
-			for(Node n:this.havingClauses)
+			for(Node n:this.lsthavingClauses)
 				retString+=" "+n;
 			retString+="\n Order By \n";
 			for(Node n:this.orderByNodes)
@@ -595,12 +616,10 @@ import util.TableMap;
 		}
 
 
-		@Override
 		public TableMap getTableMap() {
 			return tableMap;
 		}
 
-		@Override
 		public void setTableMap(TableMap tableMap) {
 			this.tableMap = tableMap;
 		}
@@ -713,21 +732,21 @@ import util.TableMap;
 			return havingClause;
 		}
 		
-		public void setHavingClause(Node n) {
-			this.havingClause=n;
+		public Node setHavingClause(Node n) {
+			return havingClause = n;
 		}
 		
-		public Vector<Node> getHavingClauses() {
-			return havingClauses;
+		public Vector<Node> getlstHavingClauses() {
+			return lsthavingClauses;
 		}
 
-		public void setHavingClauses(Node n) {		
+		public void setlstHavingClauses(Node n) {		
 			
 				if(n != null && n.getNodeType()!=null&& !n.getNodeType().equals(Node.getAndNodeType()) && n.getNodeType().equals(Node.getBroNodeType())){
-					this.getHavingClauses().add(n);
+					this.getlstHavingClauses().add(n);
 				}else if(n != null && n.getNodeType()!=null && n.getNodeType().equals(Node.getAndNodeType())){
-					this.setHavingClauses(n.getLeft());
-					this.setHavingClauses(n.getRight());
+					this.setlstHavingClauses(n.getLeft());
+					this.setlstHavingClauses(n.getRight());
 				}	
 		}
 		
@@ -798,13 +817,10 @@ import util.TableMap;
 		public Vector<QueryStructure> getWhereClauseSubqueries(){
 			return this.WhereClauseSubqueries;
 		}
-		
-		private QueryStructure(){
-			
-		}
 
 		public QueryStructure(TableMap tableMap) {
 			this.tableMap = tableMap;
+			this.inOrderList = new Vector<TreeNode>();
 			this.foreignKeyVector = new Vector<JoinClauseInfo>();
 			orNode = new ORNode();
 			this.conjuncts = new Vector<ConjunctQueryStructure>();
@@ -834,7 +850,7 @@ import util.TableMap;
 			groupByNodes = new Vector<Node>();
 			//following line added by mathew on 25 June 2016
 			this.orderByNodes=new Vector<Node>();
-			havingClauses = new Vector<Node>();
+			lsthavingClauses = new Vector<Node>();
 			allSubQueryConds = new Vector<Node>();
 			allCondsExceptSubQuery = new Vector<Node>();
 
@@ -849,8 +865,6 @@ import util.TableMap;
 			this.lstRelationInstances=new ArrayList<String>();
 
 		}
-		
-
 		
 		/** @author mathew
 		 * @param input
@@ -932,7 +946,7 @@ import util.TableMap;
 	    /* rename of old method parseQuery
 	     *       
 	     */
-		public void buildQueryStructure(String queryString) throws Exception {
+		public void buildQueryStructure(String queryId, String queryString) throws Exception {
 			
 			try{
 				queryString=queryString.trim().replaceAll("\n+", " ");
@@ -955,7 +969,7 @@ import util.TableMap;
 				queryString = replaceFormatForRowLists(queryString);
 				queryString = replaceFormatForGroupBy(queryString);
 
-				buildQueryStructureJSQL(queryString);
+				buildQueryStructureJSQL(queryId, queryString, true);
 
 			}catch(ParseException ex){
 				
@@ -977,13 +991,12 @@ import util.TableMap;
 	    /* rename of old method parseQueryJSQL
 	     *       
 	     */
-		@Override
-		public void buildQueryStructureJSQL(String queryString)
+		public void buildQueryStructureJSQL(String queryId, String queryString, boolean debug)
 				throws Exception {
 			logger.info("beginning to parse query");
 			try{
 				if(this.query==null)
-					this.query = new Query(queryString);
+					this.query = new Query(queryId, queryString);
 				else
 					this.query.setQueryString(queryString);
 				
@@ -998,7 +1011,7 @@ import util.TableMap;
 							((Select)stmt).getWithItemsList() == null){						
 						 plainSelect = (PlainSelect)((Select) stmt).getSelectBody();
 //						ProcessResultSetNode.processResultSetNodeJSQL(plainSelect, debug, this);
-						ProcessSelectClause.getInstance().ProcessSelect(plainSelect, this);
+						ProcessSelectClause.ProcessSelect(plainSelect, debug, this);
 					}
 					
 					//Check if query contains WithItem list - then Query is of the form  WITH S AS ()
@@ -1011,7 +1024,8 @@ import util.TableMap;
 						String alteredWithQuery=((Select)stmt).getSelectBody().toString();
 						logger.info("transformed query after substitution of Witt aliases\n"+ alteredWithQuery);
 		
-						ProcessSelectClause.getInstance().ProcessSelect((PlainSelect)((Select) stmt).getSelectBody(), this);
+						//ProcessResultSetNode.processResultSetNodeJSQL((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
+						ProcessSelectClause.ProcessSelect((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
 					}
 					
 					//If it is instance of SetOperationList - UNION,EXCEPT OR INTERSECT
@@ -1025,7 +1039,7 @@ import util.TableMap;
 									
 							//Test in different scenarios - joins in SET  Op and test
 							//Get the select list to check it has select statement or nested SET operation
-							processQueriesForSetOp(setOpList); 
+							processQueriesForSetOp(setOpList,debug); 
 						} 
 					}
 				}catch (ParseException e){
@@ -1113,7 +1127,7 @@ import util.TableMap;
 
 		PlainSelect transformPlainSelectForWithAs(WithItem srcWithItem, PlainSelect tarSelectClause){
 			// Starts by dealing with from items, a from item can be a Table name, a subselect statement, or a subjoin statement
-			FromItem tarFromItem=tarSelectClause.getFromItem();			
+			FromItem tarFromItem=tarSelectClause.getFromItem();
 			// if fromitem is a Table then check if its name is equal to the name of the input withitem, if yes substitutes its occurence
 			// by its definition
 			if(tarFromItem instanceof net.sf.jsqlparser.schema.Table){
@@ -1185,7 +1199,7 @@ import util.TableMap;
 		private void transformJoinsForWithAs(WithItem srcWithItem, List<Join> joinList){
 			for(int k=0; k < joinList.size(); k++){
 				Join jcl = joinList.get(k);	
-				FromItem tarJoinFromItem=jcl.getRightItem();
+				FromItem tarJoinFromItem=jcl.getRightItem();				
 				//if the join item is a table, then call the corresponding method that handles it
 				if(tarJoinFromItem instanceof net.sf.jsqlparser.schema.Table){
 					net.sf.jsqlparser.schema.Table tarTable= (net.sf.jsqlparser.schema.Table)tarJoinFromItem;
@@ -1416,7 +1430,7 @@ import util.TableMap;
 		 * @param setOpList
 		 * @throws Exception
 		 */
-		public void processQueriesForSetOp(SetOperationList setOpList) throws Exception {
+		public void processQueriesForSetOp(SetOperationList setOpList, boolean debug) throws Exception {
 			
 			logger.info(" set operation List"+setOpList.toString());
 			SetOperation setOperation =  setOpList.getOperations().get(0);
@@ -1439,15 +1453,16 @@ import util.TableMap;
 						PlainSelect left= (PlainSelect)nxtElement;
 						
 						if(leftQuery.query==null)
-							leftQuery.query= new Query(left.toString());
+							leftQuery.query= new Query("q2", left.toString());
 						else
 							leftQuery.query.setQueryString(left.toString());
 						
-						ProcessSelectClause.getInstance().ProcessSelect(left, leftQuery);
+						//ProcessResultSetNode.processResultSetNodeJSQL(left, debug, leftQuery);
+						ProcessSelectClause.ProcessSelect(left, debug, leftQuery);
 						this.projectedCols.addAll(leftQuery.projectedCols);
 					}
 					else if(nxtElement instanceof SetOperationList){
-						leftQuery.buildQueryStructureJSQL(((SetOperationList)nxtElement).toString());
+						leftQuery.buildQueryStructureJSQL("q2",((SetOperationList)nxtElement).toString(),debug);
 					}
 				}if(selectList.size()==2&&selectListIt.hasNext()){
 					Object nxtElement = selectListIt.next();
@@ -1456,17 +1471,17 @@ import util.TableMap;
 					if(nxtElement instanceof PlainSelect){
 						PlainSelect right=(PlainSelect) nxtElement;
 						if(rightQuery.query==null)
-							rightQuery.query=new Query(right.toString());
+							rightQuery.query=new Query("q3",right.toString());
 						else
 							rightQuery.query.setQueryString(right.toString());
 						
 						//ProcessResultSetNode.processResultSetNodeJSQL(right, debug, rightQuery);			
-						ProcessSelectClause.getInstance().ProcessSelect(right, rightQuery);
+						ProcessSelectClause.ProcessSelect(right, debug, rightQuery);
 						if(projectedCols.isEmpty())
 							this.projectedCols.addAll(rightQuery.projectedCols);
 						}
 					else if(nxtElement instanceof SetOperationList){
-						rightQuery.buildQueryStructureJSQL(((SetOperationList)nxtElement).toString());
+						rightQuery.buildQueryStructureJSQL("q3",((SetOperationList)nxtElement).toString(),debug);
 					}
 				}
 				/*The following else added by mathew on  22 August 2016
@@ -1488,7 +1503,7 @@ import util.TableMap;
 					for(int i=1;i<setOpList.getSelects().size();i++)
 						tempListSelectBodies.add(setOpList.getSelects().get(i));
 					tempSetOpList.setBracketsOpsAndSelects(tempBrackets, tempListSelectBodies, tempListOperations);
-					rightQuery.buildQueryStructureJSQL(tempSetOpList.toString());
+					rightQuery.buildQueryStructureJSQL("q3",tempSetOpList.toString(),debug);
 				}
 			}
 			this.initializeQueryListStructures();
@@ -1563,6 +1578,13 @@ import util.TableMap;
 			return newquery;		
 		}
 
+		public Vector<TreeNode> getInOrderList() {
+			return inOrderList;
+		}
+
+		public void setInOrderList(Vector<TreeNode> inOrderList) {
+			this.inOrderList = inOrderList;
+		}
 
 
 		public Vector<JoinClauseInfo> getForeignKeyVector() {
@@ -1573,12 +1595,10 @@ import util.TableMap;
 			this.foreignKeyVector = foreignKeyVector;
 		}
 
-		@Override
 		public Vector<ForeignKey> getForeignKeyVectorModified() {
 			return foreignKeyVectorModified;
 		}
 
-		@Override
 		public void setForeignKeyVectorModified(
 				Vector<ForeignKey> foreignKeyVectorModified) {
 			this.foreignKeyVectorModified = foreignKeyVectorModified;
@@ -1730,6 +1750,7 @@ import util.TableMap;
 		 */
 		public void reviseAfterFindingRedundantRelations(){
 			reviseRelations();
+			//reviseJoinTables();
 			reviseProjectedColumns();
 			reviseGroupByColumns();
 			reviseSelectionConditions();
@@ -2055,8 +2076,8 @@ import util.TableMap;
 					
 					if(n.getJoinType()!=null &&(n.getJoinType().equals(JoinClauseInfo.leftOuterJoin)||n.getJoinType().equals(JoinClauseInfo.rightOuterJoin)))
 						continue;
-					if(Util.isMemberOf(n.getLeft().getTableNameNo(), lstRedundantRelations)
-						||Util.isMemberOf(n.getRight().getTableNameNo(),lstRedundantRelations)){
+					if(QueryData.isMemberOf(n.getLeft().getTableNameNo(), lstRedundantRelations)
+						||QueryData.isMemberOf(n.getRight().getTableNameNo(),lstRedundantRelations)){
 						Node eqNode=getAlternateEquivalentBinaryNode(n);
 						if(eqNode==null){
 							binaryConds.remove(n);
@@ -2109,7 +2130,6 @@ import util.TableMap;
 				lstSelectionConds.clear();
 				lstSelectionConds.addAll(tempSelectionConds);
 			}
-
 		}
 		
 		/*@ author mathew on May 7 2016
@@ -2283,7 +2303,7 @@ import util.TableMap;
 			Node leftNodeNew=n.getLeft();
 			
 			if(leftNode!=null&&!leftNode.getNodeType().equals(Node.getValType())){
-				if(Util.isMemberOf(leftNode.getTableNameNo(),lstRedundantRelations)){
+				if(QueryData.isMemberOf(leftNode.getTableNameNo(),lstRedundantRelations)){
 					leftNodeNew=getAlternateEquivalentColumnNode(leftNode);
 					if(leftNodeNew==null)
 						return null;
@@ -2295,7 +2315,7 @@ import util.TableMap;
 			Node rightNode=n.getRight();
 			Node rightNodeNew=n.getRight();
 			if(rightNode!=null&& !rightNode.getNodeType().equals(Node.getValType())){
-				if(Util.isMemberOf(rightNode.getTableNameNo(),lstRedundantRelations)){
+				if(QueryData.isMemberOf(rightNode.getTableNameNo(),lstRedundantRelations)){
 					rightNodeNew=getAlternateEquivalentColumnNode(rightNode);
 				}
 				if(rightNodeNew==null)
@@ -2422,7 +2442,12 @@ import util.TableMap;
 							type.equalsIgnoreCase(Node.getExistsNodeType()) || type.equalsIgnoreCase(Node.getBroNodeSubQType())
 							||type.equalsIgnoreCase(Node.getNotInNodeType())//added by mathew on 17 oct 2016
 							||type.equalsIgnoreCase(Node.getNotExistsNodeType())){
-						subCond.add(n);
+						if(n.getSubQueryConds() != null){
+						subCond.addAll(n.getSubQueryConds());
+						}
+						else{
+							subCond.add(n);
+						}
 						temp1.remove(n);
 					}
 				}

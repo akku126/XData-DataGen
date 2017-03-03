@@ -21,6 +21,7 @@ import parsing.ForeignKey;
 import parsing.Node;
 import parsing.Query;
 import parsing.Table;
+import testDataGen.PopulateTestData;
 import util.Configuration;
 import util.Utilities;
 
@@ -187,7 +188,7 @@ public class RelatedToPreprocessing {
 						}*/
 						for(int i = 0; i < noOfBranchQueries; i++)
 						{
-							Vector<Node> tempColNode = cvc.getBranchQueries().getqStructure1()[1].getProjectedCols();
+							Vector<Node> tempColNode = cvc.getBranchQueries().getqParser1()[i].getProjectedCols();
 							for(int j = 0; j < tempColNode.size(); j++)
 								if(tempColNode.get(j).getColumn().equals(column))
 								{
@@ -256,6 +257,8 @@ public class RelatedToPreprocessing {
 					if(!cvc.getResultsetTables().contains(table)){
 						cvc.getResultsetTables().add(table);
 					}
+					
+					
 					Collection columns = table.getColumns().values();
 					Iterator c = columns.iterator();
 					while(c.hasNext()){

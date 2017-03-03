@@ -18,6 +18,7 @@ import killMutations.outerQueryBlock.SetOperatorMutations;
 import parsing.ConjunctQueryStructure;
 import parsing.ForeignKey;
 import parsing.Node;
+import parsing.QueryParser;
 import parsing.QueryStructure;
 import parsing.RelationHierarchyNode;
 import parsing.Table;
@@ -141,14 +142,14 @@ public class PreProcessingActivity {
 		Iterator<Table> iter1 = left.getTablesOfOriginalQuery().iterator();
 		while(iter1.hasNext())
 		{
-			Table t = iter1.next();
+			Table t = (Table)iter1.next();
 			if(t.hasForeignKey())
 			{
 				Map<String, ForeignKey> fks = t.getForeignKeys();
 				Iterator<ForeignKey> iter2 = fks.values().iterator();
 				while(iter2.hasNext())
 				{
-					ForeignKey fk = iter2.next();
+					ForeignKey fk = (ForeignKey)iter2.next();
 					if(!left.getTablesOfOriginalQuery().contains(fk.getReferenceTable()))
 					{
 						left.getTablesOfOriginalQuery().add(fk.getReferenceTable());
@@ -187,7 +188,7 @@ public class PreProcessingActivity {
 			*/
 				//Trying with new query structure
 				QueryStructure qStructure=new QueryStructure(cvc.getTableMap());
-				qStructure.buildQueryStructure(queryStr.toString());
+				qStructure.buildQueryStructure("q1", queryStr.toString());
 				cvc.setqStructure(qStructure);
 				
 				
@@ -228,7 +229,7 @@ public class PreProcessingActivity {
 					
 				else{
 
-					//cvc.getBranchQueries().intitializeDetails(cvc);
+					cvc.getBranchQueries().intitializeDetails(cvc);
 
 					/**Populate the values from the data base 
 					 * Needed so that the generated values looks realistic */	
@@ -274,9 +275,9 @@ public class PreProcessingActivity {
 				GenerateUnionCVC unionCVC= new GenerateUnionCVC(cvcCopy, cvcCopy.getqStructure());
 
 				
-				//RelatedToPreprocessing.populateData(cvc);
+				/*RelatedToPreprocessing.populateData(cvc);
 
-				/*Generate CVC3 Header, This is need to initialize the CVC3 Data Type field of each column of each table 
+				//**Generate CVC3 Header, This is need to initialize the CVC3 Data Type field of each column of each table 
 				cvc.setCVC3_HEADER( GetCVC3HeaderAndFooter.generateCVC3_Header( cvc ) );
 
 				cvc.getUnionCVC().generateDataForApp();

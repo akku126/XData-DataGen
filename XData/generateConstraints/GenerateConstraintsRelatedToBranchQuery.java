@@ -12,7 +12,7 @@ import parsing.Column;
 import parsing.ForeignKey;
 import parsing.Node;
 import parsing.Query;
-import parsing.QueryStructure;
+import parsing.QueryParser;
 import parsing.Table;
 import testDataGen.DataType;
 import testDataGen.GenerateCVC1;
@@ -47,7 +47,7 @@ public class GenerateConstraintsRelatedToBranchQuery {
 
 		/** Adding constraints for results of branch query*/
 		for(int i = 0; i < noOfBranchQueries; i++)
-			projectedColBranchQuery[i] = cvc.getBranchQueries().getqStructure1()[i].getProjectedCols();
+			projectedColBranchQuery[i] = cvc.getBranchQueries().getqParser1()[i].getProjectedCols();
 
 		tempTuplesAdded = new HashMap<Table, Integer>();
 
@@ -284,7 +284,7 @@ public class GenerateConstraintsRelatedToBranchQuery {
 
 		for(int i = 0; i < noOfBranchQueries; i++){
 
-			Vector<Node> branchQueryGroupByNodes = cvc.getBranchQueries().getqStructure1()[i].getGroupByNodes();
+			Vector<Node> branchQueryGroupByNodes = cvc.getBranchQueries().getqParser1()[i].getGroupByNodes();
 
 			if(branchQueryGroupByNodes != null && branchQueryGroupByNodes.size() > 0){
 
@@ -324,7 +324,7 @@ public class GenerateConstraintsRelatedToBranchQuery {
 
 		for(int i = 0; i < noOfBranchQueries; i++){
 
-			Vector<Node> branchQueryGroupByNodes = cvc.getBranchQueries().getqStructure1()[i].getGroupByNodes();
+			Vector<Node> branchQueryGroupByNodes = cvc.getBranchQueries().getqParser1()[i].getGroupByNodes();
 
 			if(branchQueryGroupByNodes != null && branchQueryGroupByNodes.size() > 0){
 
@@ -358,9 +358,9 @@ public class GenerateConstraintsRelatedToBranchQuery {
 
 		for(int i = 0; i < noOfBranchQueries; i++){
 
-			if(cvc.getBranchQueries().getqStructure1()[i].getHavingClause() != null){
+			if(cvc.getBranchQueries().getqParser1()[i].getHavingClause() != null){
 
-				Node tempHavingClause = cvc.getBranchQueries().getqStructure1()[i].getHavingClause();
+				Node tempHavingClause = cvc.getBranchQueries().getqParser1()[i].getHavingClause();
 				Vector<Node> tempHavingClauseArray = new Vector<Node>();
 
 				while(tempHavingClause.getOperator().equals("AND"))	{
@@ -582,7 +582,7 @@ public class GenerateConstraintsRelatedToBranchQuery {
 			noOfTuplesAddedToTablesForBranchQueries = new HashMap[noOfBranchQueries];
 
 
-			QueryStructure qParser1[] = cvc.getBranchQueries().getqStructure1();
+			QueryParser qParser1[] = cvc.getBranchQueries().getqParser1();
 
 			for(int i = 0; i < noOfBranchQueries; i++){
 

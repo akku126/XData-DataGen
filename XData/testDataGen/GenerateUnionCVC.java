@@ -26,11 +26,15 @@ import parsing.Column;
 import parsing.ConjunctQueryStructure;
 import parsing.ForeignKey;
 import parsing.Node;
+import parsing.QueryParser;
 import parsing.QueryStructure;
 import parsing.Table;
 
 public class GenerateUnionCVC implements Serializable{
 	
+	QueryParser qParser;
+	QueryParser leftqParser;
+	QueryParser rightqParser;
 	
 	QueryStructure qStructure;
 	QueryStructure leftqStructure;
@@ -337,7 +341,7 @@ public class GenerateUnionCVC implements Serializable{
 			if(SelCond==null){
 				dnfSelConds.add(leftSelConds);
 			}
-			*/
+			
 		//End transfered
 		
 		
@@ -1162,6 +1166,29 @@ public class GenerateUnionCVC implements Serializable{
 		
 	}
 
+	public QueryParser getqParser() {
+		return qParser;
+	}
+
+	public void setqParser(QueryParser qParser) {
+		this.qParser = qParser;
+	}
+
+	public QueryParser getLeftqParser() {
+		return leftqParser;
+	}
+
+	public void setLeftqParser(QueryParser leftqParser) {
+		this.leftqParser = leftqParser;
+	}
+
+	public QueryParser getRightqParser() {
+		return rightqParser;
+	}
+
+	public void setRightqParser(QueryParser rightqParser) {
+		this.rightqParser = rightqParser;
+	}
 
 	public GenerateCVC1 getGenCVC() {
 		return genCVC;

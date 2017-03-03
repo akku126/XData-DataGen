@@ -68,7 +68,7 @@ public class CaseMutationsInWhereSubQuery {
 		HashMap<Integer,CaseExpression> ccMap = (HashMap)qbt.getCaseConditionMap();
 		
 		//1 is Key value for case stmnt in projected cols
-		ArrayList<CaseCondition> selectionConds = ccMap.get(1).getWhenConditionals();
+		ArrayList<CaseCondition> selectionConds = ((CaseExpression)ccMap.get(1)).getWhenConditionals();
 		try{
 			/** Kill each selection condition of this conjunct*/
 			for(int i=0; i < (selectionConds.size()-1); i++){
@@ -107,7 +107,7 @@ public class CaseMutationsInWhereSubQuery {
 						/*******Code from selection mutations code end******/
 			}//for each casecondition ends
 			//Else condition Part
-			if( (ccMap.get(1)) != null &&  ccMap.get(1).getElseConditional() != null){
+			if( ((CaseExpression)ccMap.get(1)) != null &&  ((CaseExpression)ccMap.get(1)).getElseConditional() != null){
 				
 				cvc.inititalizeForDatasetQs();
 				CaseCondition sc = selectionConds.get(selectionConds.size()-1);
@@ -159,7 +159,7 @@ public class CaseMutationsInWhereSubQuery {
 		HashMap<Integer,CaseExpression> ccMap = (HashMap)qbt.getCaseConditionMap();
 		
 		//1 is Key value for case stmnt in projected cols
-		ArrayList<CaseCondition> selectionConds = ccMap.get(2).getWhenConditionals();
+		ArrayList<CaseCondition> selectionConds = ((CaseExpression)ccMap.get(2)).getWhenConditionals();
 		try{
 			/** Kill each selection condition of this conjunct*/
 			

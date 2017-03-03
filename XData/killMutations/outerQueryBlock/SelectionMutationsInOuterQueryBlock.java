@@ -16,6 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import parsing.ConjunctQueryStructure;
+import parsing.Disjunct;
 import parsing.DisjunctQueryStructure;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
