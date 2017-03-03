@@ -1,3 +1,5 @@
+
+
 package parsing;
 
 import java.util.Iterator;
@@ -25,6 +27,7 @@ import net.sf.jsqlparser.expression.JsonExpression;
 import net.sf.jsqlparser.expression.KeepExpression;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.MySQLGroupConcat;
+import net.sf.jsqlparser.expression.NotExpression;
 import net.sf.jsqlparser.expression.NullValue;
 import net.sf.jsqlparser.expression.NumericBind;
 import net.sf.jsqlparser.expression.OracleHierarchicalExpression;
@@ -51,6 +54,8 @@ import net.sf.jsqlparser.expression.operators.arithmetic.Subtraction;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.Between;
+import net.sf.jsqlparser.expression.operators.relational.ContainedBy;
+import net.sf.jsqlparser.expression.operators.relational.Contains;
 import net.sf.jsqlparser.expression.operators.relational.DoubleAnd;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.expression.operators.relational.ExistsExpression;
@@ -60,6 +65,7 @@ import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.expression.operators.relational.IsNullExpression;
 import net.sf.jsqlparser.expression.operators.relational.ItemsListVisitor;
+import net.sf.jsqlparser.expression.operators.relational.JsonOperator;
 import net.sf.jsqlparser.expression.operators.relational.LikeExpression;
 import net.sf.jsqlparser.expression.operators.relational.Matches;
 import net.sf.jsqlparser.expression.operators.relational.MinorThan;
@@ -534,9 +540,30 @@ public class AddSelectClauseForWithAs implements SelectVisitor, FromItemVisitor,
 		// TODO Auto-generated method stub
 		
 	}
+	@Override
+	public void visit(Contains arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void visit(ContainedBy arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void visit(JsonOperator arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void visit(NotExpression arg0) {
+		// TODO Auto-generated method stub
+		
+	}
 
 	
 
 
 
 }
+

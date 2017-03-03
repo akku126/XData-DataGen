@@ -424,7 +424,7 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 		String returnString="ASSERT NOT (";
 		int offset=0, count=0;
 		String tableNameNumber = null;
-		if(subQ.getType().equals(Node.getExistsNodeType()) || subQ.getType().equals(Node.getNotExistsNodeType()) )
+		if(subQ.getType().equals(Node.getExistsNodeType()) || subQ.getType().equals(Node.getNotNodeType()) )
 			return "";
 		/** Get the details about tuples of table this subquery node*/
 		if(subQ.getType().equals(Node.getBroNodeSubQType())){

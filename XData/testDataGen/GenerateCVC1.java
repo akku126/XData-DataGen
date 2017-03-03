@@ -578,7 +578,7 @@ public class GenerateCVC1 implements Serializable{
 					Node rhs = new Node();
 					rhs.setQueryType(2);
 					rhs.setQueryIndex(qs.getWhereClauseSubqueries().size()-1);
-					//sqNode.setLhsRhs(rhs);
+					sqNode.setLhsRhs(rhs);
 					sqNode.setLeft(rhs);
 					sqNode.setType(Node.getExistsNodeType());
 					sqNode.setQueryType(2);
@@ -593,7 +593,7 @@ public class GenerateCVC1 implements Serializable{
 					}else{
 						notNode.setType(Node.getNotNodeType());
 						notNode.setRight(null);
-						//notNode.setLeft(sqNode);
+						notNode.setLeft(sqNode);
 						notNode.setLhsRhs(sqNode);
 						notNode.setQueryType(2); 
 						notNode.setQueryIndex(qs.getWhereClauseSubqueries().size()-1);			

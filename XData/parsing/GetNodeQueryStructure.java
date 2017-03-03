@@ -219,8 +219,8 @@ public class GetNodeQueryStructure {
 					 * left.setQueryType(node.getQueryType());
 					 * commented by mathew and the line below added
 					 */
-					left.isInNode = true;
-					left.setType(Node.getNotExistsNodeType());	
+					//left.isInNode = true;
+					//left.setType(Node.getNotExistsNodeType());	
 					left.setQueryIndex(node.getQueryIndex());
 					left.setQueryType(node.getQueryType());
 				}
