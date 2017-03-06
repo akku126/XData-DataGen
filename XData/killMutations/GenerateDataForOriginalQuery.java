@@ -38,7 +38,7 @@ public class GenerateDataForOriginalQuery {
 			
 			
 			//initializing once again after params are set up--- FIX once params are set properly
-			cvc.inititalizeForDataset();
+		//	cvc.inititalizeForDataset();
 			
 			/**set the type of mutation we are trying to kill*/
 			cvc.setTypeOfMutation(mutationType);
