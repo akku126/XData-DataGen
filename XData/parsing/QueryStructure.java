@@ -732,8 +732,8 @@ import util.TableMap;
 			return havingClause;
 		}
 		
-		public Node setHavingClause(Node n) {
-			return havingClause = n;
+		public void setHavingClause(Node n) {
+			this.havingClause = n;
 		}
 		
 		public Vector<Node> getlstHavingClauses() {

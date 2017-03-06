@@ -552,7 +552,14 @@ public class GenerateCVC1 implements Serializable{
 						
 						Node lhsrhs = notNode.getLeft().getLhsRhs();
 						int queryIndex = lhsrhs.getRight().getQueryIndex();
+						if( notNode.getLeft().getSubQueryConds() != null
+								&& ! notNode.getLeft().getSubQueryConds().isEmpty()){
 						 notNode.getLeft().getSubQueryConds().add(lhsrhs);
+						}else{
+							Vector newV = new Vector();
+							newV.add(lhsrhs);
+							 notNode.getLeft().setSubQueryConds(newV);
+						}
 						 notNode.getLeft().setLhsRhs(null);
 						 notNode.getLeft().setType(Node.getNotExistsNodeType());	
 						 notNode.getLeft().setQueryIndex( notNode.getQueryIndex());
@@ -912,7 +919,7 @@ public class GenerateCVC1 implements Serializable{
 		queryBlock.setSingleValuedAttributesAdd(new HashSet<Node>());
 
 		queryBlock.setNoOfGroups(1);
-		queryBlock.setFinalCount(0);
+		queryBlock.setFinalCount(1);
 
 		queryBlock.setEquivalenceClassesKilled( new ArrayList<Node>());
 

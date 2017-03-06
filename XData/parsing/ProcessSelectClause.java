@@ -1791,7 +1791,7 @@ public class ProcessSelectClause {
 					if(qStruct.getWhereClauseSubqueries() != null && !qStruct.getWhereClauseSubqueries().isEmpty()){						
 						if(qStruct.getWhereClauseSubqueries().get(0).getConjuncts() != null && !qStruct.getWhereClauseSubqueries().get(0).getConjuncts().isEmpty() 
 								&& qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).selectionConds != null &&
-								!qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).selectionConds.isEmpty()){
+								!qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).selectionConds.isEmpty() &&(rhs.getSubQueryConds() != null)){
 							
 							//If subquery condition is a String selection condition, add it as a conjunt
 								qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).selectionConds.addAll(rhs.getSubQueryConds());
