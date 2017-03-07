@@ -2481,8 +2481,15 @@ public class ProcessSelectClause {
 					Table table=qStruct.getTableMap().getTable(fle.getTableName());
 					n.setTable(table);
 					//n.setColumn(new parsing.Column(n.getColumn().getColumnName(),table));
+					parsing.Column c=table.getColumn(n.getColumn().getColumnName());
+					if(c==null){
+						logger.info(" Column name could not be resolved, query parsing failed, exception thrown, column name: "+n.getColumn().getColumnName());
+						throw new Exception(" Column name could not be resolved, query parsing failed, exception thrown, column name: "+n.getColumn().getColumnName());
+					}
+					else{
 					n.setColumn(table.getColumn(n.getColumn().getColumnName()));
 					logger.info("table Name Found "+n);
+					}
 					return n;
 				}
 				else if(fle.getAliasName().equalsIgnoreCase(n.getTableNameNo())){
@@ -2490,7 +2497,11 @@ public class ProcessSelectClause {
 					Table table=qStruct.getTableMap().getTable(fle.getTableName());
 					if(table!=null){
 						n.setTable(table);
-						n.setColumn(table.getColumn(n.getColumn().getColumnName()));
+						parsing.Column c=table.getColumn(n.getColumn().getColumnName());
+						if(c==null){
+							logger.info(" Column name could not be resolved, query parsing failed, exception thrown, column name: "+n.getColumn().getColumnName());
+							throw new Exception(" Column name could not be resolved, query parsing failed, exception thrown, column name: "+n.getColumn().getColumnName());
+						}
 					}
 					logger.info("alias Name Found "+n);
 					return n;
