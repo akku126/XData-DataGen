@@ -620,22 +620,22 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 			}
 		else if(this.getType()!=null&& this.getType().equalsIgnoreCase(Node.getAnyNodeType())){
 			retString+=" "+Node.getAnyNodeType()+" ";
-			if(this.getSubQueryParser()!=null){
-				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
+			if(this.getSubQueryStructure()!=null){
+				retString+="("+this.getSubQueryStructure().getQuery().getQueryString()+")";
 			}
 			return retString;
 		}
 		else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getAllNodeType())){
 			retString+=" "+Node.getAllNodeType()+" ";
-			if(this.getSubQueryParser()!=null){
-				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
+			if(this.getSubQueryStructure()!=null){
+				retString+="("+this.getSubQueryStructure().getQuery().getQueryString()+")";
 			}
 			return retString;
 		}
 		 else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getExistsNodeType())){
 			retString+=" "+Node.getExistsNodeType()+" ";
-			if(this.getSubQueryParser()!=null){
-				retString+="("+this.getSubQueryParser().getQuery().getQueryString()+")";
+			if(this.getSubQueryStructure()!=null){
+				retString+="("+this.getSubQueryStructure().getQuery().getQueryString()+")";
 			}
 			return retString;
 		}
