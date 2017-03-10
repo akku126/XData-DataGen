@@ -193,9 +193,6 @@ import util.TableMap;
 		// Relation numbers involved, added by mathew on sep 7 2016 
 		private ArrayList<String> lstRelationInstances;
 		
-		// The tables involved in joins
-		private ArrayList<String> lstJoinTables;
-
 		// The number of outer joins (left + right) present
 		private int numberOfOuterJoins;
 		
@@ -222,7 +219,6 @@ import util.TableMap;
 				this.lstSubQConnectives=new ArrayList<String>();
 				this.lstSetOperators=new ArrayList<String>();
 				this.lstAggregateList=new ArrayList<AggregateFunction>();
-				this.lstJoinTables=new ArrayList<String>();
 				this.lstRedundantRelations=new ArrayList<String>();
 				this.lstEqClasses=new ArrayList<ArrayList<Node>>();
 				this.lstForeignKeysModified = new ArrayList<ForeignKey>( getForeignKeyVectorModified());
@@ -491,17 +487,7 @@ import util.TableMap;
 			this.lstRelations = data;
 		}
 
-		
-		// Gets the join tables
-		public ArrayList<String> getLstJoinTables(){
-			return this.lstJoinTables;
-		}
-		
-		// Sets the join tables
-		public void setLstJoinTables(ArrayList<String> tables){
-			this.lstJoinTables = tables;
-		}
-		
+				
 
 		// Gets the number of outer joins
 		public int getNumberOfOuterJoins(){
@@ -1888,26 +1874,7 @@ import util.TableMap;
 		   this.setNumberOfInnerJoins(numberOfInnerJoins-lstRedundantRelations.size());
 		}
 		
-		
-		/*@ author mathew on May 7 2016
-		 *  The following method, to be called after redundant (eliminatable)
-		 *    relations are derived, to update join tables
-		 */
-		@Deprecated
-		public void reviseJoinTables(){
-			ArrayList<String> temp=new ArrayList<String>();
-			for(String table:this.lstJoinTables){
-				if(!lstRedundantRelations.contains(table)){
-					temp.add(table);
-				}
-				else{
-					this.numberOfInnerJoins--;
-				}
-			}
-			this.lstJoinTables=temp;
-		}
-		
-		
+				
 		/*@ author mathew on May 7 2016
 		 *  The following method, to be called after redundant (eliminatable)
 		 *   relations are derived, to update projection conditions, so that
