@@ -26,313 +26,6 @@ public class QueryStructureDatagen extends QueryStructure{
 	
 	
 	
-	 /* Revamp allConds. It should now contain the distinct predicates not
-	 * containing a AND (or OR but ORs not considered for the moment) TODO: Do
-	 * something about the presence of ORs: Need to convert the predicate into
-	 * CNF and then create datasets by nulling each pair Eg.: if R.a = S.b OR
-	 * T.c = U.d is the predicate, then create datasets by killing each of the
-	 * following: 1. R.a and Tc 2. R.a and U.d 3. S.b and T.c 4. S.b and U.d 
-	 */
-
-	public static void flattenAndSeparateAllConds(QueryStructure qParser) {
-		if(qParser.allConds == null)
-			return ;
-
-		Vector<Node> allCondsDuplicate;
-		allCondsDuplicate = (Vector<Node>) qParser.allConds.clone();
-
-		qParser.allConds.removeAllElements();
-		Vector<Vector<Node>> allDnfDuplicate;
-		allDnfDuplicate =(Vector<Vector<Node>>) qParser.dnfCond.clone();
-
-		qParser.dnfCond.removeAllElements();
-		Node temp;
-		for (int i = 0; i < allCondsDuplicate.size(); i++) {
-			if(allCondsDuplicate.get(i) != null)
-				qParser.allConds.addAll(parsing.GetNodeQueryStructure.flattenNode(qParser, allCondsDuplicate.get(i)));
-		}
-	
-		for (int i = 0; i < allCondsDuplicate.size(); i++) {
-			if(allCondsDuplicate.get(i) != null)
-				qParser.dnfCond.addAll(parsing.GetNodeQueryStructure.flattenCNF(qParser, allCondsDuplicate.get(i)));
-		}			
-
-
-		for (int i=0;i< allCondsDuplicate.size() ; i++) {
-			if(allCondsDuplicate.get(i)!=null){
-			ORNode t = GetNodeQueryStructure.flattenOr(allCondsDuplicate.get(i));
-				for(Node n: t.leafNodes){
-					qParser.orNode.leafNodes.add(n);
-				}
-				
-				for(ANDNode n: t.andNodes){
-					qParser.orNode.andNodes.add(n);
-				}
-				
-//				qParser.orNode=GetNodeQueryStructure.flattenOr(allCondsDuplicate.get(i));
-			}
-
-		}
-
-		ConjunctQueryStructure.createConjuncts(qParser);
-
-		allCondsDuplicate.removeAllElements();
-		allCondsDuplicate = (Vector<Node>) qParser.allConds.clone();
-
-		allDnfDuplicate.removeAllElements();
-		allDnfDuplicate = (Vector<Vector<Node>>) qParser.dnfCond.clone();
-
-		for(Vector<Node> conjunct:allDnfDuplicate)
-		{
-			Vector<Node> subCond=new Vector<Node>();
-			Vector<Node> temp1 = new Vector<Node>();
-			temp1=(Vector<Node>) conjunct.clone();
-			for(Node n:conjunct)
-			{
-				String type=n.getType();
-				/* the expression: type.equalsIgnoreCase(Node.getAllAnyNodeType()) 
-				 * from the If condition below removed by mathew on 29 June 2016
-				 * corresponding All node type and Any node type expressions added
-				 */
-
-				if(type.equalsIgnoreCase(Node.getAllNodeType()) || type.equalsIgnoreCase(Node.getAnyNodeType())
-						|| type.equalsIgnoreCase(Node.getInNodeType()) ||
-						type.equalsIgnoreCase(Node.getExistsNodeType()) || type.equalsIgnoreCase(Node.getBroNodeSubQType())
-						||type.equalsIgnoreCase(Node.getNotInNodeType())//added by mathew on 17 oct 2016
-						||type.equalsIgnoreCase(Node.getNotExistsNodeType())){
-					if(n.getSubQueryConds() != null){
-					subCond.addAll(n.getSubQueryConds());
-					}
-					else{
-						subCond.add(n);
-					}
-					temp1.remove(n);
-				}
-			}
-			qParser.dnfCond.remove(conjunct);
-			if(!temp1.isEmpty())
-			{
-				qParser.dnfCond.add(temp1);
-			}
-			if(!subCond.isEmpty())
-			{
-				qParser.allDnfSubQuery.add(subCond);
-			}
-		}
-
-		for(Node n:allCondsDuplicate){
-			String type=n.getType();
-			/* the expression: type.equalsIgnoreCase(Node.getAllAnyNodeType()) 
-			 * from the If condition below removed by mathew on 29 June 2016
-			 * corresponding All node type and Any node type expressions added
-			 */
-			if((type.equalsIgnoreCase(Node.getAllNodeType())
-					||type.equalsIgnoreCase(Node.getAnyNodeType())
-					|| type.equalsIgnoreCase(Node.getInNodeType()) ||
-					type.equalsIgnoreCase(Node.getExistsNodeType()) || type.equalsIgnoreCase(Node.getBroNodeSubQType())
-					||type.equalsIgnoreCase(Node.getNotInNodeType())
-					||type.equalsIgnoreCase(Node.getNotExistsNodeType()))){
-				qParser.allSubQueryConds.add(n);
-				qParser.allConds.remove(n);
-			}
-		}
-
-		for(Vector<Node> conjunct:allDnfDuplicate)
-		{
-			Vector<Node> subCond=new Vector<Node>();
-			Vector<Node> temp1 = new Vector<Node>();
-			temp1=(Vector<Node>) conjunct.clone();
-			for(Node n:conjunct)
-			{
-				if (n.getType().equalsIgnoreCase(Node.getBroNodeType())
-						&& n.getOperator().equalsIgnoreCase("=")) {
-					if (n.getLeft()!=null && n.getLeft().getType().equalsIgnoreCase(Node.getColRefType())
-							&& n.getRight()!=null&& n.getRight().getType().equalsIgnoreCase(
-									Node.getColRefType())) {
-						subCond.add(n);
-						temp1.remove(n);
-					}
-				}
-
-			}
-			qParser.dnfCond.remove(conjunct);
-			if(!temp1.isEmpty())
-			{
-				qParser.dnfCond.add(temp1);
-			}
-			if(!subCond.isEmpty())
-			{
-				qParser.dnfJoinCond.add(subCond);
-			}
-		}
-		
-
-		// Now separate Join Conds for EC And Selection Conds and Non Equi join
-		// conds
-		for (int i = 0; i < allCondsDuplicate.size(); i++) {
-			temp = allCondsDuplicate.get(i);
-
-			ConjunctQueryStructure con = new ConjunctQueryStructure( new Vector<Node>());
-
-			boolean isJoinNodeForEC = GetNodeQueryStructure.getJoinNodesForEC(con, temp);
-			// Remove that object from allConds. Because that will now be a part
-			// of some or the other equivalence class and be handeled
-			if (isJoinNodeForEC) {
-				isJoinNodeForEC = false;
-				qParser.joinConds.add(temp);//added by mathew on 17 oct 2016
-				qParser.allConds.remove(temp);
-			}			
-		}
-		
-		// added by mathew on 18 oct 2016
-		// Now separate Non-Equi/Outer join conds
-		for (int i = 0; i < allCondsDuplicate.size(); i++) {
-			temp = allCondsDuplicate.get(i);
-
-			ConjunctQueryStructure con = new ConjunctQueryStructure( new Vector<Node>());
-
-			boolean isJoinNodeAllOther = parsing.GetNodeQueryStructure.getJoinNodesAllOther(con, temp);
-			// Remove that object from allConds. Because that will now be a part
-			// of some or the other equivalence class and be handeled
-			if (isJoinNodeAllOther) {
-				isJoinNodeAllOther = false;
-				qParser.joinConds.add(temp);//added by mathew on 17 oct 2016
-				qParser.allConds.remove(temp);
-			}			
-		}
-
-		for(Vector<Node> conjunct:allDnfDuplicate)
-		{
-			Vector<Node> subCond=new Vector<Node>();
-			Vector<Node> temp1 = new Vector<Node>();
-			temp1=(Vector<Node>) conjunct.clone();
-			for(Node n:conjunct)
-			{
-				if (n.containsConstant()) {
-					subCond.add(n);
-					temp1.remove(n);
-
-				}
-			}
-			qParser.dnfCond.remove(conjunct);
-			if(!temp1.isEmpty())
-			{
-				qParser.dnfCond.add(temp1);
-			}
-			if(!subCond.isEmpty())
-			{
-				qParser.allDnfSelCond.add(subCond);
-			}
-		}
-
-		// Now separate Selection conds into the vector Selection Conds
-		for (int i = 0; i < allCondsDuplicate.size(); i++) {
-			temp = allCondsDuplicate.get(i);
-
-			ConjunctQueryStructure con = new ConjunctQueryStructure( new Vector<Node>());
-
-			boolean isSelection = GetNodeQueryStructure.getSelectionNode(con,temp);
-			if (isSelection) {
-				isSelection = false;
-				// remove it from allConds as it is added to selection
-				// conditions
-				qParser.allConds.remove(temp);
-			}
-		}
-
-		for(Vector<Node> conjunct:allDnfDuplicate)
-		{
-			//Vector<Node> 
-			Vector<Node> subCond=new Vector<Node>();
-			Vector<Node> temp1 = new Vector<Node>();
-			temp1=(Vector<Node>) conjunct.clone();
-			for(Node n:conjunct)
-			{
-				if(n.getType().equalsIgnoreCase(Node.getLikeNodeType())){//CharConstantNode
-					subCond.add(n);
-					temp1.remove(n);
-
-				}    
-			}
-			qParser.dnfCond.remove(conjunct);
-			if(!temp1.isEmpty())
-			{
-				qParser.dnfCond.add(temp1);
-			}
-			if(!subCond.isEmpty())
-			{
-				qParser.dnfLikeConds.add(subCond);
-			}
-		}
-
-		//Added by Bikash----------------------------------------------------
-		//For the like operator
-		for(int i=0;i<allCondsDuplicate.size();i++){
-			temp = allCondsDuplicate.get(i);
-
-			ConjunctQueryStructure con = new ConjunctQueryStructure( new Vector<Node>());
-			boolean isLikeType = GetNodeQueryStructure.getLikeNode(con,temp);
-			if(isLikeType){
-				isLikeType = false;
-				//remove it from allConds as it is added to like conditions
-				qParser.allConds.remove(temp);
-			}
-		}
-
-		//***************************************************************************/
-		for(Vector<Node> conjunct:allDnfDuplicate)
-		{
-			//Vector<Node> 
-			Vector<Node> subCond=new Vector<Node>();
-			Vector<Node> temp1 = new Vector<Node>();
-			temp1=(Vector<Node>) conjunct.clone();
-			for(Node n:conjunct)
-			{
-				if(n.getType().equals(Node.getIsNullNodeType())){
-					subCond.add(n);
-					temp1.remove(n);
-
-				}    
-			}
-			qParser.dnfCond.remove(conjunct);
-			if(!temp1.isEmpty())
-			{
-				qParser.dnfCond.add(temp1);
-			}
-			if(!subCond.isEmpty())
-			{
-				qParser.dnfIsNullConds.add(subCond);
-			}
-		}
-
-		for(Node n:allCondsDuplicate){
-			if(n.getType().equals(Node.getIsNullNodeType())){
-				qParser.isNullConds.add(n);
-				qParser.allConds.remove(n);
-			}
-		}
-		//Now get the lhsRhs conditions in a separate vector, lhsRhsConds
-		//This has to be added in each and every killing procedure as positive cond
-		for(int i=0;i<qParser.allSubQueryConds.size();i++){
-			Node n = qParser.allSubQueryConds.get(i);
-			if(n.getLhsRhs()==null || n.getType().equalsIgnoreCase(Node.getExistsNodeType()) || n.getType().equalsIgnoreCase(Node.getNotExistsNodeType()))	
-				continue;
-			Vector<Node> lhsRhs = parsing.GetNodeQueryStructure.flattenNode(qParser, n.getLhsRhs());
-			qParser.lhsRhsConds.addAll(lhsRhs);				//Why is this variable required???
-		}
-
-		for(Node n: qParser.allSubQueryConds){
-			if(n.getSubQueryConds()!=null){
-				Vector<Node> subQConds=(Vector<Node>)n.getSubQueryConds().clone();
-				n.getSubQueryConds().removeAllElements();
-				for(Node subQ:subQConds){
-					n.getSubQueryConds().addAll(parsing.GetNodeQueryStructure.flattenNode(qParser,subQ));
-					//n.setSubQueryConds(flattenNode(subQ));
-				}
-			}
-		}
-
-	}
 	
 	//Update the outer block with no Of tuples, updated table name no:'s - including subQ relations, then call foreign key relations
 	//Update no of output tuples, table names, etc.,
@@ -673,4 +366,318 @@ public class QueryStructureDatagen extends QueryStructure{
 			qStructure.getForeignKeys().add(refJoin);
 		}
 	}
+	
+	
+	
+	
+	
+
+	 /* Revamp allConds. It should now contain the distinct predicates not
+	 * containing a AND (or OR but ORs not considered for the moment) TODO: Do
+	 * something about the presence of ORs: Need to convert the predicate into
+	 * CNF and then create datasets by nulling each pair Eg.: if R.a = S.b OR
+	 * T.c = U.d is the predicate, then create datasets by killing each of the
+	 * following: 1. R.a and Tc 2. R.a and U.d 3. S.b and T.c 4. S.b and U.d 
+	 */
+
+	public static void flattenAndSeparateAllConds(QueryStructure qParser) {
+		if(qParser.allConds == null)
+			return ;
+
+		Vector<Node> allCondsDuplicate;
+		allCondsDuplicate = (Vector<Node>) qParser.allConds.clone();
+
+		qParser.allConds.removeAllElements();
+		Vector<Vector<Node>> allDnfDuplicate;
+		allDnfDuplicate =(Vector<Vector<Node>>) qParser.dnfCond.clone();
+
+		qParser.dnfCond.removeAllElements();
+		Node temp;
+		for (int i = 0; i < allCondsDuplicate.size(); i++) {
+			if(allCondsDuplicate.get(i) != null)
+				qParser.allConds.addAll(parsing.GetNodeQueryStructure.flattenNode(qParser, allCondsDuplicate.get(i)));
+		}
+	
+		for (int i = 0; i < allCondsDuplicate.size(); i++) {
+			if(allCondsDuplicate.get(i) != null)
+				qParser.dnfCond.addAll(parsing.GetNodeQueryStructure.flattenCNF(qParser, allCondsDuplicate.get(i)));
+		}			
+
+
+		for (int i=0;i< allCondsDuplicate.size() ; i++) {
+			if(allCondsDuplicate.get(i)!=null){
+			ORNode t = GetNodeQueryStructure.flattenOr(allCondsDuplicate.get(i));
+				for(Node n: t.leafNodes){
+					qParser.orNode.leafNodes.add(n);
+				}
+				
+				for(ANDNode n: t.andNodes){
+					qParser.orNode.andNodes.add(n);
+				}
+				
+//				qParser.orNode=GetNodeQueryStructure.flattenOr(allCondsDuplicate.get(i));
+			}
+
+		}
+
+		ConjunctQueryStructure.createConjuncts(qParser);
+
+		allCondsDuplicate.removeAllElements();
+		allCondsDuplicate = (Vector<Node>) qParser.allConds.clone();
+
+		allDnfDuplicate.removeAllElements();
+		allDnfDuplicate = (Vector<Vector<Node>>) qParser.dnfCond.clone();
+
+		for(Vector<Node> conjunct:allDnfDuplicate)
+		{
+			Vector<Node> subCond=new Vector<Node>();
+			Vector<Node> temp1 = new Vector<Node>();
+			temp1=(Vector<Node>) conjunct.clone();
+			for(Node n:conjunct)
+			{
+				String type=n.getType();
+				/* the expression: type.equalsIgnoreCase(Node.getAllAnyNodeType()) 
+				 * from the If condition below removed by mathew on 29 June 2016
+				 * corresponding All node type and Any node type expressions added
+				 */
+
+				if(type.equalsIgnoreCase(Node.getAllNodeType()) || type.equalsIgnoreCase(Node.getAnyNodeType())
+						|| type.equalsIgnoreCase(Node.getInNodeType()) ||
+						type.equalsIgnoreCase(Node.getExistsNodeType()) || type.equalsIgnoreCase(Node.getBroNodeSubQType())
+						||type.equalsIgnoreCase(Node.getNotInNodeType())//added by mathew on 17 oct 2016
+						||type.equalsIgnoreCase(Node.getNotExistsNodeType())){
+					if(n.getSubQueryConds() != null){
+					subCond.addAll(n.getSubQueryConds());
+					}
+					else{
+						subCond.add(n);
+					}
+					temp1.remove(n);
+				}
+			}
+			qParser.dnfCond.remove(conjunct);
+			if(!temp1.isEmpty())
+			{
+				qParser.dnfCond.add(temp1);
+			}
+			if(!subCond.isEmpty())
+			{
+				qParser.allDnfSubQuery.add(subCond);
+			}
+		}
+
+		for(Node n:allCondsDuplicate){
+			String type=n.getType();
+			/* the expression: type.equalsIgnoreCase(Node.getAllAnyNodeType()) 
+			 * from the If condition below removed by mathew on 29 June 2016
+			 * corresponding All node type and Any node type expressions added
+			 */
+			if((type.equalsIgnoreCase(Node.getAllNodeType())
+					||type.equalsIgnoreCase(Node.getAnyNodeType())
+					|| type.equalsIgnoreCase(Node.getInNodeType()) ||
+					type.equalsIgnoreCase(Node.getExistsNodeType()) || type.equalsIgnoreCase(Node.getBroNodeSubQType())
+					||type.equalsIgnoreCase(Node.getNotInNodeType())
+					||type.equalsIgnoreCase(Node.getNotExistsNodeType()))){
+				qParser.allSubQueryConds.add(n);
+				qParser.allConds.remove(n);
+			}
+		}
+
+		for(Vector<Node> conjunct:allDnfDuplicate)
+		{
+			Vector<Node> subCond=new Vector<Node>();
+			Vector<Node> temp1 = new Vector<Node>();
+			temp1=(Vector<Node>) conjunct.clone();
+			for(Node n:conjunct)
+			{
+				if (n.getType().equalsIgnoreCase(Node.getBroNodeType())
+						&& n.getOperator().equalsIgnoreCase("=")) {
+					if (n.getLeft()!=null && n.getLeft().getType().equalsIgnoreCase(Node.getColRefType())
+							&& n.getRight()!=null&& n.getRight().getType().equalsIgnoreCase(
+									Node.getColRefType())) {
+						subCond.add(n);
+						temp1.remove(n);
+					}
+				}
+
+			}
+			qParser.dnfCond.remove(conjunct);
+			if(!temp1.isEmpty())
+			{
+				qParser.dnfCond.add(temp1);
+			}
+			if(!subCond.isEmpty())
+			{
+				qParser.dnfJoinCond.add(subCond);
+			}
+		}
+		
+
+		// Now separate Join Conds for EC And Selection Conds and Non Equi join
+		// conds
+		for (int i = 0; i < allCondsDuplicate.size(); i++) {
+			temp = allCondsDuplicate.get(i);
+
+			ConjunctQueryStructure con = new ConjunctQueryStructure( new Vector<Node>());
+
+			boolean isJoinNodeForEC = GetNodeQueryStructure.getJoinNodesForEC(con, temp);
+			// Remove that object from allConds. Because that will now be a part
+			// of some or the other equivalence class and be handeled
+			if (isJoinNodeForEC) {
+				isJoinNodeForEC = false;
+				qParser.joinConds.add(temp);//added by mathew on 17 oct 2016
+				qParser.allConds.remove(temp);
+			}			
+		}
+		
+		// added by mathew on 18 oct 2016
+		// Now separate Non-Equi/Outer join conds
+		for (int i = 0; i < allCondsDuplicate.size(); i++) {
+			temp = allCondsDuplicate.get(i);
+
+			ConjunctQueryStructure con = new ConjunctQueryStructure( new Vector<Node>());
+
+			boolean isJoinNodeAllOther = parsing.GetNodeQueryStructure.getJoinNodesAllOther(con, temp);
+			// Remove that object from allConds. Because that will now be a part
+			// of some or the other equivalence class and be handeled
+			if (isJoinNodeAllOther) {
+				isJoinNodeAllOther = false;
+				qParser.joinConds.add(temp);//added by mathew on 17 oct 2016
+				qParser.allConds.remove(temp);
+			}			
+		}
+
+		for(Vector<Node> conjunct:allDnfDuplicate)
+		{
+			Vector<Node> subCond=new Vector<Node>();
+			Vector<Node> temp1 = new Vector<Node>();
+			temp1=(Vector<Node>) conjunct.clone();
+			for(Node n:conjunct)
+			{
+				if (n.containsConstant()) {
+					subCond.add(n);
+					temp1.remove(n);
+
+				}
+			}
+			qParser.dnfCond.remove(conjunct);
+			if(!temp1.isEmpty())
+			{
+				qParser.dnfCond.add(temp1);
+			}
+			if(!subCond.isEmpty())
+			{
+				qParser.allDnfSelCond.add(subCond);
+			}
+		}
+
+		// Now separate Selection conds into the vector Selection Conds
+		for (int i = 0; i < allCondsDuplicate.size(); i++) {
+			temp = allCondsDuplicate.get(i);
+
+			ConjunctQueryStructure con = new ConjunctQueryStructure( new Vector<Node>());
+
+			boolean isSelection = GetNodeQueryStructure.getSelectionNode(con,temp);
+			if (isSelection) {
+				isSelection = false;
+				// remove it from allConds as it is added to selection
+				// conditions
+				qParser.allConds.remove(temp);
+			}
+		}
+
+		for(Vector<Node> conjunct:allDnfDuplicate)
+		{
+			//Vector<Node> 
+			Vector<Node> subCond=new Vector<Node>();
+			Vector<Node> temp1 = new Vector<Node>();
+			temp1=(Vector<Node>) conjunct.clone();
+			for(Node n:conjunct)
+			{
+				if(n.getType().equalsIgnoreCase(Node.getLikeNodeType())){//CharConstantNode
+					subCond.add(n);
+					temp1.remove(n);
+
+				}    
+			}
+			qParser.dnfCond.remove(conjunct);
+			if(!temp1.isEmpty())
+			{
+				qParser.dnfCond.add(temp1);
+			}
+			if(!subCond.isEmpty())
+			{
+				qParser.dnfLikeConds.add(subCond);
+			}
+		}
+
+		//Added by Bikash----------------------------------------------------
+		//For the like operator
+		for(int i=0;i<allCondsDuplicate.size();i++){
+			temp = allCondsDuplicate.get(i);
+
+			ConjunctQueryStructure con = new ConjunctQueryStructure( new Vector<Node>());
+			boolean isLikeType = GetNodeQueryStructure.getLikeNode(con,temp);
+			if(isLikeType){
+				isLikeType = false;
+				//remove it from allConds as it is added to like conditions
+				qParser.allConds.remove(temp);
+			}
+		}
+
+		//***************************************************************************/
+		for(Vector<Node> conjunct:allDnfDuplicate)
+		{
+			//Vector<Node> 
+			Vector<Node> subCond=new Vector<Node>();
+			Vector<Node> temp1 = new Vector<Node>();
+			temp1=(Vector<Node>) conjunct.clone();
+			for(Node n:conjunct)
+			{
+				if(n.getType().equals(Node.getIsNullNodeType())){
+					subCond.add(n);
+					temp1.remove(n);
+
+				}    
+			}
+			qParser.dnfCond.remove(conjunct);
+			if(!temp1.isEmpty())
+			{
+				qParser.dnfCond.add(temp1);
+			}
+			if(!subCond.isEmpty())
+			{
+				qParser.dnfIsNullConds.add(subCond);
+			}
+		}
+
+		for(Node n:allCondsDuplicate){
+			if(n.getType().equals(Node.getIsNullNodeType())){
+				qParser.isNullConds.add(n);
+				qParser.allConds.remove(n);
+			}
+		}
+		//Now get the lhsRhs conditions in a separate vector, lhsRhsConds
+		//This has to be added in each and every killing procedure as positive cond
+		for(int i=0;i<qParser.allSubQueryConds.size();i++){
+			Node n = qParser.allSubQueryConds.get(i);
+			if(n.getLhsRhs()==null || n.getType().equalsIgnoreCase(Node.getExistsNodeType()) || n.getType().equalsIgnoreCase(Node.getNotExistsNodeType()))	
+				continue;
+			Vector<Node> lhsRhs = parsing.GetNodeQueryStructure.flattenNode(qParser, n.getLhsRhs());
+			qParser.lhsRhsConds.addAll(lhsRhs);				//Why is this variable required???
+		}
+
+		for(Node n: qParser.allSubQueryConds){
+			if(n.getSubQueryConds()!=null){
+				Vector<Node> subQConds=(Vector<Node>)n.getSubQueryConds().clone();
+				n.getSubQueryConds().removeAllElements();
+				for(Node subQ:subQConds){
+					n.getSubQueryConds().addAll(parsing.GetNodeQueryStructure.flattenNode(qParser,subQ));
+					//n.setSubQueryConds(flattenNode(subQ));
+				}
+			}
+		}
+
+	}
+	
 }	

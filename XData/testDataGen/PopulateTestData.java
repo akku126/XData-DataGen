@@ -111,7 +111,16 @@ public class PopulateTestData {
 			ExecutorService service = Executors.newSingleThreadExecutor();
 
 			try {
-
+				Callable<Integer> call = new CallableProcess(myProcess);
+				Future<Integer> future = service.submit(call);
+				int exitValue = future.get(180, TimeUnit.SECONDS);
+				
+				
+				if(myProcess.exitValue() != 0){
+					logger.log(Level.SEVERE," GenerateCvcOutput function :  Generating CVC Output failed.");
+					myProcess.destroy();	
+					service.shutdown();
+				}
 
 				InputStreamReader myIStreamReader = new InputStreamReader(myProcess.getInputStream());
 
@@ -122,10 +131,7 @@ public class PopulateTestData {
 				{ 
 					out.write((char)ch); 
 				} 	
-				Callable<Integer> call = new CallableProcess(myProcess);
-				Future<Integer> future = service.submit(call);
-				int exitValue = future.get(300000L, TimeUnit.MILLISECONDS);		    
-
+				
 				
 				Utilities.closeProcessStreams(myProcess);
 
