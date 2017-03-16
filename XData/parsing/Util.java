@@ -1495,12 +1495,110 @@ public static void foreignKeyInNode(QueryStructure qParser) {
 	}
 }
 
+/** @author mathew
+ * 
+ * @param qStruct
+ * 
+ * Computes transitive closure of foreign key relationships over tables in the input QueryStructure
+ */
+public static void FKClosure(QueryStructure qStruct){
+	Graph<Table, ForeignKey> foreignKeyGraph=qStruct.getTableMap().foreignKeyGraph;
+	boolean updateFlag;
+	logger.info("New Foreign Key Closure algorithm");
+	/**
+	 *  computes the least fix point of the binary operation OP on the set of foreign key dependencies, where
+	 *  OP(FK1, FK2)=FK3 s.t. FK3.foreignKeyColumns=FK1.foreignKeyColumns
+	 *  and FK3.referencedKeyColumns=FK2.referencedKeyColumns, when FK1.referencedColumns=FK2.foreignKeyColumns, 
+	 *  OP(FK1,FK2)=undefined, otherwise;
+	 * 
+	 */
+	do{
+		updateFlag=false;
+		for(Table midTable:foreignKeyGraph.getAllVertex()){
+			Map<String,ForeignKey> midTableFKMap=midTable.getForeignKeys();
+			if(midTableFKMap==null||midTableFKMap.keySet().isEmpty()||midTableFKMap.values().isEmpty())
+				continue;
+			Vector<Column> midTablePKColumns=midTable.getPrimaryKey();
+			//midTable is the intermediate Table to which FK1 refers to
+			for(String midTableFKName:midTableFKMap.keySet()){
+				//note that midTableForeignKey is the FK2 
+				ForeignKey midTableForeignKey=midTableFKMap.get(midTableFKName);
+				if(midTablePKColumns.containsAll(midTableForeignKey.getFKeyColumns())){
+					Map<Table,Vector<ForeignKey>> leftTableFKMap=foreignKeyGraph.getNeighbours(midTable);
+					if(leftTableFKMap==null)
+						continue;
+					//leftTable is the Table from which FK1 refers to midTable
+					for(Table leftTable:leftTableFKMap.keySet()){
+						Vector<ForeignKey> leftTableFKeys=leftTableFKMap.get(leftTable);
+						if(leftTableFKeys==null)
+							continue;
+						//note that leftTableForeignKey is the FK1
+						for(ForeignKey leftTableForeignKey:leftTableFKeys){							
+							if(leftTableForeignKey.getReferenceTable().equals(midTable))
+								//note that OP is defined only if the condition is true
+							{
+								String newFKname=null;
+								boolean newFKnameSet=false;
+								ForeignKey newFK=null;
+								int seq_no=1;							
+								for(int i=0;i<leftTableForeignKey.getFKeyColumns().size();i++){
+									boolean breakCalled=false;
+									for(int j=0;j<midTableForeignKey.getFKeyColumns().size();j++){
+										if(leftTableForeignKey.getReferenceKeyColumns().get(i).equals(midTableForeignKey.getFKeyColumns().get(j)))
+											//note that OP is defined only if the condition is true
+										{
+											String pottFKname=leftTable.getTableName()+"_"+leftTableForeignKey.getFKeyColumns().get(i)+
+													"_"+midTableForeignKey.getReferenceTable().getTableName()+"_fkeyInf";
+											if(!newFKnameSet){
+												//the check below to ensure that pottFKname is not already defined
+												if(leftTable.getForeignKeys().get(pottFKname)!=null){
+													breakCalled=true;
+													break;
+												}
+												newFKname=pottFKname;
+												newFKnameSet=true;
+											}
+											//now adds the FK to the leftTable
+											//note that Table.getForeignKey(String fkName) return a new FK if none exists with the name
+											// fkName, otherwise it return an existing one, which which case the respective 
+											// referencing and referenced columns are updated using the index seq_no
+											if(newFKnameSet){
+												newFK = leftTable.getForeignKey(newFKname);
+												newFK.setReferenceTable(midTableForeignKey.getReferenceTable());
+												newFK.addFKeyColumn(leftTableForeignKey.getFKeyColumns().get(i), seq_no);
+												newFK.addReferenceKeyColumn(midTableForeignKey.getReferenceKeyColumns().get(j),seq_no);
+												seq_no++;
+												leftTable.addForeignKey(newFK);
+											}
+										}
+									}
+									if(breakCalled)
+										break;
+								}
+								if(newFK!=null){
+									foreignKeyGraph.add(midTableForeignKey.getReferenceTable(), leftTable, newFK);
+									logger.info("New foreign key: "+newFKname+" added \n"+newFK.getFKTablename()+":"+newFK.getFKeyColumns()+"-->"+newFK.getReferenceTable().getTableName()+":"+newFK.getReferenceKeyColumns());
+									updateFlag=true;
+
+								}
+
+							}
+						}
+						
+					}
+				}
+			}
+		}
+	}while(updateFlag);
+}
+
 /* Getting Foreign Key closure */
 public static void foreignKeyClosure(QueryStructure qParser) {
+	FKClosure(qParser);//added by mathew to enable foreignKey Closure
 	Vector<Table> fkClosure = new Vector<Table>();
 	LinkedList<Table> fkClosureQueue = new LinkedList<Table>();
 	logger.log(Level.INFO,"FOREIGN KEY GRAPH : \n"+qParser.getTableMap().foreignKeyGraph);		
-	//for (String tableName : qParser.getQuery().getFromTables().keySet()) {
+	//for (String tableName : qParser.getQuery().getFromTables().keySet()) {	
 	for (String tableName : qParser.getLstRelations()) {
 		fkClosure.add( qParser.getTableMap().getTables().get(tableName.toUpperCase()));
 		fkClosureQueue.addLast(qParser.getTableMap().getTables().get(tableName.toUpperCase()));
@@ -1522,7 +1620,7 @@ public static void foreignKeyClosure(QueryStructure qParser) {
 				}
 			}
 		}
-	}
+	}	
 	Graph<Table, ForeignKey> tempForeignKeyGraph = qParser.getTableMap().foreignKeyGraph.createSubGraph();
 	for(Table table : fkClosure)
 		tempForeignKeyGraph.add(qParser.getTableMap().foreignKeyGraph, table);
