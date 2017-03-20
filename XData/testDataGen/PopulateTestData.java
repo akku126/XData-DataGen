@@ -106,10 +106,10 @@ public class PopulateTestData {
 			String[] smtCommand = new String[2];
 			smtCommand[0] = Configuration.smtsolver;
 			smtCommand[1] = Configuration.homeDir+"/temp_cvc"+filePath+"/" + cvcFileName;
-			Process myProcess = r.exec(smtCommand);	
+		
  
 			ExecutorService service = Executors.newSingleThreadExecutor();
-
+			Process myProcess = r.exec(smtCommand);	
 			try {
 				Callable<Integer> call = new CallableProcess(myProcess);
 				Future<Integer> future = service.submit(call);
