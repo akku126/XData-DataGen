@@ -241,7 +241,7 @@ public class TableMap implements Serializable{
                 fk.addReferenceKeyColumn(pkColumn, seq_no);
                 fk.setReferenceTable(pkTable);
                 fkTable.addForeignKey(fk);
-                // logger.log(Level.INFO,"Create Foreign Key Graph  For first RS = " + fkColumn + " - ref Table Name = "+pkTableName);
+                //logger.log(Level.INFO,"Foreign Key =  "+fkTableName+":" + fkColumnName + " --> "+pkTableName+": "+pkColumnName);
              
             }
             

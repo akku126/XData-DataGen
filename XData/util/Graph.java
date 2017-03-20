@@ -48,7 +48,7 @@ public class Graph<Vertex,Edge> implements Serializable{
         StringBuffer s = new StringBuffer();
         for (int i =0; i<vertices.size(); i++){
         	Vertex v = vertices.get(i);
-        	s.append("\n    " + v + " -> " + neighbours.get(v));
+        	s.append("\n    " + v + " <- " + neighbours.get(v));
         } 
         return s.toString();                
     }
