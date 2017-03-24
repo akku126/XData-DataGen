@@ -1,0 +1,26 @@
+#name of the database to be used
+databaseName=xdata
+
+#database user name- 
+existingDatabaseUser=testing1
+#password
+existingDatabaseUserPasswd=testing1
+
+#test database for creating test tables (not required for parsing)
+testDatabaseUser=testing2
+testDatabaseUserPasswd=testing2
+
+# Address of database server--10....14
+
+databaseIP=localhost
+databasePort=5434
+
+
+#Home directory (not required for parsing)
+homeDir=/home/xdata
+
+smtsolver=cvc3
+
+logFile=/home/xdata/apache-tomcat-7.0.54/logs/XData.log
+logLevel=INFO
+
