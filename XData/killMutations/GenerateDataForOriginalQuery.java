@@ -95,7 +95,7 @@ public class GenerateDataForOriginalQuery {
 			 GenerateCommonConstraintsForQueryUsingSMT.generateNullandDBConstraintsUsingSMT(cvc,false);
 			 
 			/**Get the constraints for all the blocks of the query  */
-			//cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlockUsingSMT(cvc) );
+			cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlockSMT(cvc));
 			
 			/** Call the method for the data generation*/
 			return false;//GenerateCommonConstraintsForQueryUsingSMT.generateDataSetForConstraintsUsingSMT(cvc,false);

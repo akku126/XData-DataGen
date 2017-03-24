@@ -315,6 +315,38 @@ public class QueryBlockDetails implements Serializable{
 	 * @param qb 
 	 * @param cvc 
 	 */
+	public static String getConstraintsForQueryBlockSMT(GenerateCVC1 cvc) throws Exception{
+
+		String constraintString = "";
+		QueryBlockDetails qb = cvc.getOuterBlock();
+		try{
+			constraintString += "%---------------------------------------------\n%CONSTRAINTS OF THIS BLOCK \n%--------------------------------------------\n";
+		//	constraintString +=  getConstraintsForQueryBlockExceptSubQuriesSMT(cvc, qb);
+			constraintString += "%---------------------------------------------\n%END OF CONSTRAINTS OF THIS BLOCK \n%--------------------------------------------\n";
+	
+	
+			/** Add constraints related to From clause subqueries block */
+			for(QueryBlockDetails qbt: qb.getFromClauseSubQueries()){
+	
+				constraintString += "\n%---------------------------------\n% FROM CLAUSE SUBQUERY BLOCK\n%---------------------------------\n";
+			//	constraintString += getConstraintsForQueryBlockSMT(cvc, qbt);			
+				constraintString += "\n%---------------------------------\n% END OF FROM CLAUSE SUBQUERY BLOCK\n%---------------------------------\n";
+			}
+		}catch(Exception e){
+			logger.log(Level.SEVERE, e.getMessage(), e);
+			throw e;
+		}
+
+		return constraintString;
+
+	}
+
+	
+	/**
+	 * This method is used to get constraints for all the conditions involved in this query block, including from clause sub query blocks, if any
+	 * @param qb 
+	 * @param cvc 
+	 */
 	public static String getConstraintsForQueryBlock(GenerateCVC1 cvc, QueryBlockDetails qb, Node n) throws Exception{
 
 		String constraintString = "";
@@ -340,6 +372,36 @@ public class QueryBlockDetails implements Serializable{
 
 	}
 
+	/**
+	 * This method is used to get constraints for all the conditions involved in this query block, including from clause sub query blocks, if any
+	 * @param qb 
+	 * @param cvc 
+	 */
+	public static String getConstraintsForQueryBlockSMT(GenerateCVC1 cvc, Node n) throws Exception{
+
+		String constraintString = "";
+		QueryBlockDetails qb = cvc.getOuterBlock();
+		try{
+			constraintString += "%---------------------------------------------\n%CONSTRAINTS OF THIS BLOCK \n%--------------------------------------------\n";
+			//constraintString +=  getConstraintsForQueryBlockExceptSubQuriesSMT(cvc, qb, n);
+			constraintString += "%---------------------------------------------\n%END OF CONSTRAINTS OF THIS BLOCK \n%--------------------------------------------\n";
+	
+	
+			/** Add constraints related to From clause subqueries block */
+			for(QueryBlockDetails qbt: qb.getFromClauseSubQueries()){
+	
+				constraintString += "\n%---------------------------------\n% FROM CLAUSE SUBQUERY BLOCK\n%---------------------------------\n";
+			//	constraintString += getConstraintsForQueryBlockSMT(cvc, qbt);			
+				constraintString += "\n%---------------------------------\n% END OF FROM CLAUSE SUBQUERY BLOCK\n%---------------------------------\n";
+			}
+		}catch(Exception e){
+			logger.log(Level.SEVERE, e.getMessage(), e);
+			throw e;
+		}
+
+		return constraintString;
+
+	}
 	/** 
 	 * This method is used to get constraints for all the conditions of this query block
 	 * @param cvc

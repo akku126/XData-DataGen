@@ -162,13 +162,14 @@ public class AddDataBaseConstraintsSMT {
 							String tempConstString2 = "";
 							//** Get column details 
 							Column pkeyColumn = primaryKeys.get(p);				
+							int pos = table.getColumnIndex(pkeyColumn.getColumnName());
 							
 							if(p ==0 ){
-								tempConstString1 += " (= ("+pkeyColumn.getColumnName()+" (select O_"+ pkeyColumn.getTableName()+" " + k +")) " +
-										"("+pkeyColumn.getColumnName()+" (select O_"+pkeyColumn.getTableName()+" "+ j +") )"+" )";
+								tempConstString1 += " (= ("+pkeyColumn.getColumnName()+pos+" (select O_"+ pkeyColumn.getTableName()+" " + k +")) " +
+										"("+pkeyColumn.getColumnName()+pos+" (select O_"+pkeyColumn.getTableName()+" "+ j +") )"+" )";
 							}
 							else if(p > 0){
-								tempConstString2 += getSMTAndConstraint(pkeyColumn,pkeyColumn ,Integer.valueOf(k), Integer.valueOf(j), tempConstString1);
+								tempConstString2 += getSMTAndConstraint(pkeyColumn,pkeyColumn ,Integer.valueOf(k), Integer.valueOf(j), tempConstString1,Integer.valueOf(pos),pos);
 								tempConstString1 = tempConstString2;
 							}
 							//**If this pk attribute is equal
@@ -187,11 +188,11 @@ public class AddDataBaseConstraintsSMT {
 								int pos = table.getColumnIndex(col);
 	
 								if(indx == 0 ){
-									tString1 += " (= ("+col+" (select O_"+ table.getTableName()+" " + k +")) " +
-											"("+col+" (select O_"+table.getTableName()+" "+ j +") )"+" )";
+									tString1 += " (= ("+col+pos+" (select O_"+ table.getTableName()+" " + k +")) " +
+											"("+col+pos+" (select O_"+table.getTableName()+" "+ j +") )"+" )";
 								}
 								else if(indx > 0){
-									tString2 += getSMTAndConstraint(table.getColumns().get(col),table.getColumns().get(col) ,Integer.valueOf(k), Integer.valueOf(j), tString1);
+									tString2 += getSMTAndConstraint(table.getColumns().get(col),table.getColumns().get(col) ,Integer.valueOf(k), Integer.valueOf(j), tString1,pos,pos);
 									tString1 = tString2;
 								}
 								indx ++;
@@ -301,12 +302,12 @@ public class AddDataBaseConstraintsSMT {
 							int pos = table.getColumnIndex(pkeyColumn.getColumnName());
 							//For first primary key column
 							if(p == 0){
-								tempConstString1 += " (distinct ("+pkeyColumn.getColumnName()+" (select O_"+tableName+" " + (k + offset - 1) +")) ("+pkeyColumn.getColumnName()+" (select O_"+tableName+" "+ (j + offset - 1) +") )"+" )";
+								tempConstString1 += " (distinct ("+pkeyColumn.getColumnName()+pos+" (select O_"+tableName+" " + (k + offset - 1) +")) ("+pkeyColumn.getColumnName()+pos+" (select O_"+tableName+" "+ (j + offset - 1) +") )"+" )";
 								tempConstString1 += ")";
 							}
 							else if(p > 0){
 								tempConstString2 += "( or ("; 
-								tempConstString2 += getSMTOrConstraintForPrimaryKey(pkeyColumn, tableName,Integer.valueOf(k + offset - 1) ,  Integer.valueOf(j + offset - 1) , tempConstString1);
+								tempConstString2 += getSMTOrConstraintForPrimaryKey(pkeyColumn, tableName,Integer.valueOf(k + offset - 1) ,  Integer.valueOf(j + offset - 1) , tempConstString1,pos,pos);
 								tempConstString2 += ") )";
 								tempConstString1 = tempConstString2;
 							}
@@ -549,14 +550,16 @@ public class AddDataBaseConstraintsSMT {
 				{
 					//temp1 += "(O_" + GenerateCVCConstraintForNode.cvcMap(fSingleCol, j + fkOffset -1 + "") + " = O_" + 
 					//		GenerateCVCConstraintForNode.cvcMap(pSingleCol, (j + pkOffset - 1) + "" ) + ") AND ";
+					int pos1 = fSingleCol.getTable().getColumnIndex(fSingleCol.getColumnName());
+					int pos2 = pSingleCol.getTable().getColumnIndex(pSingleCol.getColumnName());
 					
 					if(fkCount == 1){
-						tempConstString1 += " (= ("+fSingleCol.getColumnName()+" (select O_"+fSingleCol.getTableName()+" " + ( j + fkOffset -1) +")) " +
-													"("+pSingleCol.getColumnName()+" (select O_"+pSingleCol.getTableName()+" "+ (j + pkOffset - 1) +") )"+" )";
+						tempConstString1 += " (= ("+fSingleCol.getColumnName()+pos1+" (select O_"+fSingleCol.getTableName()+" " + ( j + fkOffset -1) +")) " +
+													"("+pSingleCol.getColumnName()+pos2+" (select O_"+pSingleCol.getTableName()+" "+ (j + pkOffset - 1) +") )"+" )";
 					}
 					else if(fkCount > 1){
 						
-						tempConstString2 += getSMTAndConstraint(fSingleCol,pSingleCol ,Integer.valueOf(j + fkOffset -1), Integer.valueOf(j + pkOffset - 1), tempConstString1);
+						tempConstString2 += getSMTAndConstraint(fSingleCol,pSingleCol ,Integer.valueOf(j + fkOffset -1), Integer.valueOf(j + pkOffset - 1), tempConstString1, pos1,pos2);
 						tempConstString1 = tempConstString2;
 					}
 					}
@@ -656,7 +659,7 @@ public class AddDataBaseConstraintsSMT {
  * @param s1
  * @return
  */
-public static String getSMTOrConstraintForPrimaryKey(Column col, String tableName, Integer index1,Integer index2, String s1){
+public static String getSMTOrConstraintForPrimaryKey(Column col, String tableName, Integer index1,Integer index2, String s1,Integer pos1, Integer pos2){
 		
 		String cvcStr ="";
 		cvcStr += " (or ";
@@ -666,7 +669,7 @@ public static String getSMTOrConstraintForPrimaryKey(Column col, String tableNam
 		}
 		
 		if(col != null && tableName != null){
-			cvcStr += "(distinct " + cvcMapSMT(col,tableName,index1) +" "+cvcMapSMT(col,tableName,index2)+")";
+			cvcStr += "(distinct " + cvcMapSMT(col,tableName,index1,pos1) +" "+cvcMapSMT(col,tableName,index2,pos2)+")";
 		}
 		cvcStr +=")  ";
 		return cvcStr;
@@ -682,7 +685,7 @@ public static String getSMTOrConstraintForPrimaryKey(Column col, String tableNam
  * @param s1
  * @return
  */
-public static String getSMTAndConstraint(Column fKeyCol, Column pKeyCol, Integer fKeyIndex,Integer pKeyIndex, String s1){
+public static String getSMTAndConstraint(Column fKeyCol, Column pKeyCol, Integer fKeyIndex,Integer pKeyIndex, String s1,Integer pos1,Integer pos2){
 	
 String cvcStr ="";
 cvcStr += " (and ";
@@ -692,7 +695,7 @@ if(s1 != null){
 }
 
 if(fKeyCol != null && pKeyCol != null){
-	cvcStr += "(=  (" + cvcMapSMT(fKeyCol,fKeyCol.getTableName(),fKeyIndex) +")  ("+cvcMapSMT(pKeyCol,pKeyCol.getTableName(),pKeyIndex)+") )";
+	cvcStr += "(=  (" + cvcMapSMT(fKeyCol,fKeyCol.getTableName(),fKeyIndex,pos1) +")  ("+cvcMapSMT(pKeyCol,pKeyCol.getTableName(),pKeyIndex,pos2)+") )";
 }
 cvcStr +=")  ";
 return cvcStr;
@@ -710,10 +713,10 @@ public static String cvcMapSMT(Column col, String index){
 		Table table = col.getTable();
 		String tableName = col.getTableName();
 		String columnName = col.getColumnName();
-		
+		int pos = table.getColumnIndex(columnName);
 		String smtCond = "";
 		String colName =tableName+"_"+columnName;		
-		smtCond = "("+colName+" "+"(select O_"+tableName+" "+index +") )";
+		smtCond = "("+colName+pos+" "+"(select O_"+tableName+" "+index +") )";
 		return smtCond;
 	}
 
@@ -725,13 +728,13 @@ public static String cvcMapSMT(Column col, String index){
  * @param index
  * @return
  */
-public static String cvcMapSMT(Column col, String tableName,Integer index){
+public static String cvcMapSMT(Column col, String tableName,Integer index,Integer pos){
 
 		String columnName = col.getColumnName();
 		
 		String smtCond = "";
 		String colName =tableName+"_"+columnName;		
-		smtCond = "("+colName+" "+"(select O_"+tableName+" "+index +") )";
+		smtCond = "("+colName+pos+" "+"(select O_"+tableName+" "+index +") )";
 		return smtCond;
 	}
 	

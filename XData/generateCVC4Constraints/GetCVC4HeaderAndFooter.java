@@ -54,7 +54,7 @@ public class GetCVC4HeaderAndFooter {
 			int columnType = 0;
 			//Set the SMT LIB Logic type
 			String cvc_datatype = "(set-logic ALL_SUPPORTED)";
-			cvc_datatype += "\n" +"(set-option:produce-models true)" +"\n";
+			cvc_datatype += "\n (set-option:produce-models true) \n (set-option :interactive-mode true) \n (set-option :produce-assertions true) \n (set-option :produce-assignments true) ";
 			
 			Vector<String> columnValue = column.getColumnValues();
 			columnType = dt.getDataType(column.getDataType());
@@ -424,9 +424,9 @@ public class GetCVC4HeaderAndFooter {
 				if(c.getTableName().equalsIgnoreCase(temp)){
 					String s=c.getCvcDatatype();
 					if(s!= null && (s.equals("INT") || s.equals("REAL") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
-						tempStr += "("+temp+j+" "+s + ") ";
+						tempStr += "("+c+j+" "+s + ") ";
 					else
-						tempStr+= "("+temp+j+" "+c.getColumnName() + ") ";;
+						tempStr+= "("+c+j+" "+c.getColumnName() + ") ";;
 				}
 			}
 			//tempStr = tempStr.substring(0, tempStr.length()-2);
@@ -447,9 +447,10 @@ public class GetCVC4HeaderAndFooter {
 	public static String generateCvc3_Footer() {
 		
 		String temp="";
-		temp += "\n\nQUERY FALSE;";			// need to right generalize one
+		temp += "\n\n(check-sat)";			// need to right generalize one
 		//temp += "\nCOUNTEREXAMPLE;";
-		temp += "\nCOUNTERMODEL;";
+	
+		temp += "\n(get-assertions) \n (get-assignment) \n(get-model)";
 		return temp;
 	}
 	
