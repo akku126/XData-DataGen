@@ -42,20 +42,24 @@ public class GetCVC4HeaderAndFooter {
 	public static String  generateCVC4_Header( GenerateCVC1 cvc,boolean unique) throws Exception{
 		DataType dt = new DataType();
 
-		String cvc_tuple = "", tableName="";
+		String cvc_tuple = "", tableName=""; 
 		String tempStr = "";
 		HashMap<Vector<String>,Boolean> equivalenceColumns = new HashMap<Vector<String>, Boolean>();
 		
 		HashSet<String> uniqueValues = new HashSet<String>();
-
+		
+		String cvc_datatype = "(set-logic ALL_SUPPORTED)";
+		cvc_datatype += "\n (set-option:produce-models true) \n (set-option :interactive-mode true) \n (set-option :produce-assertions true) \n (set-option :produce-assignments true) ";
+		
 		for(int i=1; i < cvc.getResultsetColumns().size(); i++){
+			if(i >1){
+				cvc_datatype = "";
+			}
 			Column column = cvc.getResultsetColumns().get(i);
 			String columnName = column.getColumnName();		
 			int columnType = 0;
 			//Set the SMT LIB Logic type
-			String cvc_datatype = "(set-logic ALL_SUPPORTED)";
-			cvc_datatype += "\n (set-option:produce-models true) \n (set-option :interactive-mode true) \n (set-option :produce-assertions true) \n (set-option :produce-assignments true) ";
-			
+		
 			Vector<String> columnValue = column.getColumnValues();
 			columnType = dt.getDataType(column.getDataType());
 			cvc_tuple += columnName+", ";
@@ -96,11 +100,11 @@ public class GetCVC4HeaderAndFooter {
 				}
 				cvc.getColNullValuesMap().put(column, nullValuesInt);
 				*/
-				cvc_datatype = "\n"+ "(declare-fun "+columnName+"() Int)";
+				cvc_datatype += "\n"+ "(declare-fun "+columnName+"() Int)";
 				cvc_datatype += isNullMembers;
 				column.setMinVal(min);
 				column.setMaxVal(max);
-				column.setCvcDatatype("INT");
+				column.setCvcDatatype("Int");
 				break;
 			} 
 			case 2:
@@ -135,11 +139,11 @@ public class GetCVC4HeaderAndFooter {
 					nullValuesInt.put(k+"",0);
 				}
 				cvc.getColNullValuesMap().put(column, nullValuesInt);*/
-				cvc_datatype = "\n"+ "(declare-fun "+columnName+"() Real)";
+				cvc_datatype += "\n"+ "(declare-fun "+columnName+"() Real)";
 				cvc_datatype += isNullMembers;
 				column.setMinVal(min);
 				column.setMaxVal(max);
-				column.setCvcDatatype("REAL");
+				column.setCvcDatatype("Real");
 				break;
 			}
 			case 3:
@@ -164,7 +168,7 @@ public class GetCVC4HeaderAndFooter {
 				 */
 
 			//	cvc_datatype = "\nDATATYPE \n"+columnName+" = ";
-				cvc_datatype ="\n"+"(declare-datatypes () ((columnName  ";
+				cvc_datatype +="\n"+"(declare-datatypes () (("+columnName;
 				if(columnValue.size()>0){
 					if(!unique || !uniqueValues.contains(columnValue.get(0))){
 						colValue =  Utilities.escapeCharacters(columnName)+"__"+Utilities.escapeCharacters(columnValue.get(0));//.trim());
@@ -193,7 +197,7 @@ public class GetCVC4HeaderAndFooter {
 						 
 						if(!colValue.isEmpty()){
 							//cvc_datatype = cvc_datatype+" | "+"_"+colValue;
-							cvc_datatype = cvc_datatype + ")"+"("+colValue+")";
+							cvc_datatype += ""+"("+colValue+")";
 							//isNullMembers += "ASSERT NOT ISNULL_"+columnName+"(_"+colValue+");\n";
 						}
 					}
@@ -202,7 +206,7 @@ public class GetCVC4HeaderAndFooter {
 				//Adding support for NULLs
 				if(columnValue.size()!=0){
 					//cvc_datatype += " | ";
-					cvc_datatype += ") (";
+					cvc_datatype += " (";
 				}
 				for(int k=1;k<=4;k++){
 					cvc_datatype += "NULL_"+columnName+"_"+k;
@@ -211,7 +215,7 @@ public class GetCVC4HeaderAndFooter {
 						cvc_datatype += ") (";
 					}
 				}						
-				cvc_datatype = cvc_datatype+")))"+"\n;";
+				cvc_datatype += "))))"+"\n;";
 
 				//Adding function for testing NULL
 				/*(cvc_datatype += "ISNULL_" + columnName +" : "+ columnName + " -> BOOLEAN;\n";
@@ -384,7 +388,7 @@ public class GetCVC4HeaderAndFooter {
 					nullValuesChar.put(k+"",0);
 				}
 				//colNullValuesMap.put(column, nullValuesChar);
-				//cvc_datatype += isNullMembers;
+				//cvc_datatype += isNullMembers; 
 			}
 		}
 
@@ -401,7 +405,7 @@ public class GetCVC4HeaderAndFooter {
 		for(Node n:tempForeignKeys){
 			n.getLeft().getColumn().setCvcDatatype(n.getRight().getColumn().getCvcDatatype());
 		}
-
+		
 		/*
 		 * End building datatypes for all the columns
 		 * Now build the tuple types
@@ -411,8 +415,9 @@ public class GetCVC4HeaderAndFooter {
 		Table t;
 		String temp;
 		Vector<String> tablesAdded = new Vector<String>();
-
+		
 		for(int i=0;i<cvc.getResultsetTables().size();i++){
+			int index = 0;
 			t = cvc.getResultsetTables().get(i);
 			temp = t.getTableName();
 			if(!tablesAdded.contains(temp)){
@@ -420,13 +425,15 @@ public class GetCVC4HeaderAndFooter {
 				tempStr += "\n (declare-datatypes () (("+temp +"_TupleType" + "("+temp +"_TupleType ";
 			}
 			for(int j=0;j<cvc.getResultsetColumns().size();j++){
+			
 				c = cvc.getResultsetColumns().get(j);
 				if(c.getTableName().equalsIgnoreCase(temp)){
+					index++;
 					String s=c.getCvcDatatype();
-					if(s!= null && (s.equals("INT") || s.equals("REAL") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
-						tempStr += "("+c+j+" "+s + ") ";
+					if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
+						tempStr += "("+c+index+" "+s + ") ";
 					else
-						tempStr+= "("+c+j+" "+c.getColumnName() + ") ";;
+						tempStr+= "("+c+index+" "+c.getColumnName() + ") ";;
 				}
 			}
 			//tempStr = tempStr.substring(0, tempStr.length()-2);
@@ -434,7 +441,7 @@ public class GetCVC4HeaderAndFooter {
 			/*
 			 * Now create the Array for this TypleType
 			 */
-			tempStr += "(declare-fun O_" + temp + "() (ARRAY INT " + temp + "_TupleType))";
+			tempStr += "(declare-fun O_" + temp + "() (Array Int " + temp + "_TupleType))";
 		}
 	//}
 		/*finally{
@@ -444,7 +451,7 @@ public class GetCVC4HeaderAndFooter {
 		return tempStr;
 	}
 
-	public static String generateCvc3_Footer() {
+	public static String generateCvc4_Footer() {
 		
 		String temp="";
 		temp += "\n\n(check-sat)";			// need to right generalize one

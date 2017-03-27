@@ -2498,6 +2498,7 @@ public class ProcessSelectClause {
 					if(table!=null){
 						n.setTable(table);
 						parsing.Column c=table.getColumn(n.getColumn().getColumnName());
+						n.setColumn(c);
 						if(c==null){
 							logger.info(" Column name could not be resolved, query parsing failed, exception thrown, column name: "+n.getColumn().getColumnName());
 							throw new Exception(" Column name could not be resolved, query parsing failed, exception thrown, column name: "+n.getColumn().getColumnName());
