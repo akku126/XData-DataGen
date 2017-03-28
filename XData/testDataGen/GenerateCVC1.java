@@ -97,6 +97,8 @@ public class GenerateCVC1 implements Serializable{
 
 	private String CVCStr;
 
+	private String constraintSolver;
+	
 	private HashMap<Table,Vector<String> > resultsetTableColumns1;
 
 	private Vector<Column> resultsetColumns;
@@ -186,7 +188,7 @@ public class GenerateCVC1 implements Serializable{
 		resultsetColumns = new Vector<Column>();
 		resultsetTableColumns1 = new HashMap<Table, Vector<String>>();
 		resultsetTables = new ArrayList<Table>();
-		stringSolver = new StringConstraintSolver();	
+		stringSolver = new StringConstraintSolver();
 		branchQueries = new BranchQueriesDetails();
 		tableNames = new HashMap<String, Integer[]>();
 		equiJoins = new HashMap<String, Vector<Vector<Node>>>();
@@ -803,6 +805,15 @@ public class GenerateCVC1 implements Serializable{
 		try{
 			String mutationType = TagDatasets.MutationType.ORIGINAL.getMutationType() + TagDatasets.QueryBlock.NONE.getQueryBlock();
 			GenerateDataForOriginalQuery.generateDataForOriginalQueryUsingSMT(this, mutationType);		
+			
+			/**Generate data sets to kill mutations in outer query block */
+			//MutationsInOuterBlock.generateDataForKillingMutantsInOuterQueryBlock(this);
+	
+			/**Generate data sets  to kill mutations in from clause nested sub query blocks */
+			//MutationsInFromSubQuery.generateDataForKillingMutantsInFromSubQuery(this);
+	
+			/**Generate data sets  to kill mutations in where clause nested sub query blocks */
+			//MutationsInWhereSubQuery.generateDataForKillingMutantsInWhereSubQuery(this);
 			
 		}catch(Exception e){
 			logger.log(Level.SEVERE,e.getMessage(),e);
@@ -1550,6 +1561,22 @@ public class GenerateCVC1 implements Serializable{
 
 	public void setqStructure(QueryStructure qStructure) {
 		this.qStructure = qStructure;
+	}
+
+
+	/**
+	 * @return the constraintSolver
+	 */
+	public String getConstraintSolver() {
+		return constraintSolver;
+	}
+
+
+	/**
+	 * @param constraintSolver the constraintSolver to set
+	 */
+	public void setConstraintSolver(String constraintSolver) {
+		this.constraintSolver = constraintSolver;
 	}
 	
 	

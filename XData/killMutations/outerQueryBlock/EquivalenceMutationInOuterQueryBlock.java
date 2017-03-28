@@ -32,8 +32,17 @@ public class EquivalenceMutationInOuterQueryBlock {
 	 * @param cvc
 	 * @throws Exception
 	 */
+	public static void generateDataForkillingEquivalenceClassMutationsInOuterQueryBlockGen(GenerateCVC1 cvc) throws Exception{
+	
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			generateDataForkillingEquivalenceClassMutationsInOuterQueryBlock(cvc);
+		}
+		else{
+			//generateDataForkillingEquivalenceClassMutationsInOuterQueryBlockSMT(cvc);
+		}
+	}
+	
 	public static void generateDataForkillingEquivalenceClassMutationsInOuterQueryBlock(GenerateCVC1 cvc) throws Exception{
-
 		/** keep a copy of this tuple assignment values */
 		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
 		HashMap<String, Integer> noOfTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfTuples().clone();

@@ -24,6 +24,25 @@ import java.util.logging.Logger;
 public class ExtraGroupByMutationsInOuterQueryBlock {
 
 	private static Logger logger = Logger.getLogger(ExtraGroupByMutationsInOuterQueryBlock.class.getName());
+	
+	public static void generateDataForkillingExtraGroupByMutationsInOuterQueryBlockGen(GenerateCVC1 cvc) throws Exception {
+		
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			generateDataForkillingExtraGroupByMutationsInOuterQueryBlock(cvc);
+		}
+		else{
+			//generateDataForkillingExtraGroupByMutationsInOuterQueryBlockSMT(cvc);
+		}
+	}
+	
+	public static void  generateDataForkillingExtraGroupByMutationsInOuterQueryBlock2Gen(GenerateCVC1 cvc) throws Exception {
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			generateDataForkillingExtraGroupByMutationsInOuterQueryBlock2(cvc);
+		}
+		else{
+			//generateDataForkillingExtraGroupByMutationsInOuterQueryBlock2SMT(cvc);
+		}
+	}
 	/**
 	 * Generate data set to kill mutations with extra  group by attributes in outer block of the query
 	 * 

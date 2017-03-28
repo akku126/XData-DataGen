@@ -237,11 +237,11 @@ public class PreProcessingActivity {
 
 					/**Initialize cvc3 headers etc>,*/				
 					cvc.initializeOtherDetails();
-					
+					cvc.setConstraintSolver(Configuration.getProperty("smtsolver"));
 					
 					/** Segregate selection conditions in each query block */
 					RelatedToPreprocessing.segregateSelectionConditions(cvc);
-
+					
 					/** Call the method for generating the data sets */
 					//if(Configuration.getProperty("smtsolver").equalsIgnoreCase("cvc3")){
 					//	cvc.generateDatasetsToKillMutations();

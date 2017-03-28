@@ -31,6 +31,17 @@ import util.TagDatasets;
 public class JoinMutationsInOuterQueryBlock {
 
 	private static Logger logger = Logger.getLogger(JoinMutationsInOuterQueryBlock.class.getName());
+	
+	public static void generateDataForkillingJoinMutationsInOuterQueryBlockGen(GenerateCVC1 cvc) throws Exception{
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			generateDataForkillingJoinMutationsInOuterQueryBlock(cvc);
+		}
+		else{
+			//generateDataForkillingJoinMutationsInOuterQueryBlockSMT(cvc);
+		}
+	}
+	
+	
 	/**
 	 * Generates data to kill non equi-join  class mutations inside outer query block
 	 * @param cvc

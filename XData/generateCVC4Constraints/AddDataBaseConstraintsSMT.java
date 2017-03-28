@@ -39,7 +39,7 @@ public class AddDataBaseConstraintsSMT {
 		 * These constraints must be added to only that occurrence of the table
 		 * FIXME: Killing partial group by case 2 is a special case here
 		 * FIXME: We should consider repeated relation occurrences here*/
-		String unConstraints = "\n%---------------------------------\n%UNIQUE CONSTRAINTS  FOR PRIMARY KEY TO SATISFY CONSTRAINED AGGREGATION\n%---------------------------------\n";
+		String unConstraints = "\n;---------------------------------\n;UNIQUE CONSTRAINTS  FOR PRIMARY KEY TO SATISFY CONSTRAINED AGGREGATION\n;---------------------------------\n";
 
 		
 		
@@ -58,21 +58,21 @@ public class AddDataBaseConstraintsSMT {
 				if(queryBlock.isConstrainedAggregation())/** if there is constrained aggregation */
 					unConstraints += getUniqueConstraintsForPrimaryKeys(cvc, queryBlock);	
 	
-			unConstraints += "\n%---------------------------------\n%END OF UNIQUE CONSTRAINTS  FOR PRIMARY KEY TO SATISFY CONSTRAINED AGGREGATION\n%---------------------------------\n";
+			unConstraints += "\n;---------------------------------\n;END OF UNIQUE CONSTRAINTS  FOR PRIMARY KEY TO SATISFY CONSTRAINED AGGREGATION\n;---------------------------------\n";
 	
 			/**Generate foreign key constraints */
-			dbConstraints += "\n%---------------------------------\n%FOREIGN  KEY CONSTRAINTS \n%---------------------------------\n";
+			dbConstraints += "\n;---------------------------------\n;FOREIGN  KEY CONSTRAINTS \n;---------------------------------\n";
 			dbConstraints += generateConstraintsForForeignKeys(cvc);
-			dbConstraints += "\n%---------------------------------\n%END OF FOREIGN  KEY CONSTRAINTS \n%---------------------------------\n";
+			dbConstraints += "\n;---------------------------------\n;END OF FOREIGN  KEY CONSTRAINTS \n;---------------------------------\n";
 	
 			/** Now add primary key constraints */
-			dbConstraints += "\n%---------------------------------\n%PRIMARY KEY CONSTRAINTS \n%---------------------------------\n";
+			dbConstraints += "\n;---------------------------------\n;PRIMARY KEY CONSTRAINTS \n;---------------------------------\n";
 			dbConstraints += generateConstraintsForPrimaryKeys(cvc);
-			dbConstraints += "\n%---------------------------------\n%END OF PRIMARY KEY CONSTRAINTS \n%---------------------------------\n";
+			dbConstraints += "\n;---------------------------------\n;END OF PRIMARY KEY CONSTRAINTS \n;---------------------------------\n";
 	
-			//dbConstraints += "\n%---------------------------------\n%CONSTRAINTS FOR TUPLE INDICES \n%---------------------------------\n";
+			//dbConstraints += "\n;---------------------------------\n;CONSTRAINTS FOR TUPLE INDICES \n;---------------------------------\n";
 			//dbConstraints += generateConstraintsForTupleIndices(cvc);
-			//dbConstraints += "\n%---------------------------------\n%END OF CONSTRAINTS FOR TUPLE INDICES \n%---------------------------------\n";
+			//dbConstraints += "\n;---------------------------------\n;END OF CONSTRAINTS FOR TUPLE INDICES \n;---------------------------------\n";
 		}catch(Exception e){
 			logger.log(Level.SEVERE,"\n Exception in AddDatabaseConstraints.java:Function addDBConstraints :",e);
 			throw e;
@@ -128,33 +128,7 @@ public class AddDataBaseConstraintsSMT {
 				for(int k=1; k<=noOfTuples; k++){
 					for(int j=k+1; j<=noOfTuples; j++){
 						
-						/*pkConstraint += "ASSERT (";	
-						//**Generate the constraint for each primary key attribute 					
-						for(int p=0; p<primaryKeys.size();p++){
-	
-							//** Get column details 
-							Column pkeyColumn = primaryKeys.get(p);
-							int pos = table.getColumnIndex(pkeyColumn.getColumnName());	
-							//**If this pk attribute is equal
-							pkConstraint += "O_" + tableName + "[" + k + "]." + pos + " = O_" + tableName + "[" + j +"]." + pos + " AND ";						
-						}	
-						pkConstraint = pkConstraint.substring(0,pkConstraint.length()-4);
-						pkConstraint += ") => ";	
-						boolean x = false;
-						for(String col : table.getColumns().keySet()){
-							if(!( primaryKeys.toString().contains(col))){
-								x = true;
-								int pos = table.getColumnIndex(col);	
-								//**This attribute has to be equal
-								pkConstraint += "(O_"+tableName+"["+k+"]."+pos+" = O_"+tableName+"["+ j +"]."+pos+") AND ";
-							}
-						}
-						if(x == false){
-							pkConstraint += "TRUE;\n";	
-						}
-						else
-							pkConstraint = pkConstraint.substring(0,pkConstraint.length()-4)+";\n";						
-						*/
+					
 						pkConstraint +="\n (assert ";
 						String tempConstString1 = "";
 						//**Generate the constraint for each primary key attribute 					
@@ -176,28 +150,34 @@ public class AddDataBaseConstraintsSMT {
 							//pkConstraint += "O_" + tableName + "[" + k + "]." + pos + " = O_" + tableName + "[" + j +"]." + pos + " AND ";	
 						}
 						
-						pkConstraint += "(=> "+tempConstString1 +" (";
+						pkConstraint += "(=> "+tempConstString1;
 						
 						boolean x = false;
-						String tString1 = "";
+						
+						if(table.getColumns().size() > 1){
+							pkConstraint += "(and ";
+						}
+						
 						for(String col : table.getColumns().keySet()){
+							
 							int indx = 0;
+							String tString1 = "";
 							String tString2 = "";
 							if(!( primaryKeys.toString().contains(col))){
 								x = true;
 								int pos = table.getColumnIndex(col);
-	
+								
 								if(indx == 0 ){
 									tString1 += " (= ("+col+pos+" (select O_"+ table.getTableName()+" " + k +")) " +
 											"("+col+pos+" (select O_"+table.getTableName()+" "+ j +") )"+" )";
+									
 								}
 								else if(indx > 0){
 									tString2 += getSMTAndConstraint(table.getColumns().get(col),table.getColumns().get(col) ,Integer.valueOf(k), Integer.valueOf(j), tString1,pos,pos);
 									tString1 = tString2;
 								}
+								
 								indx ++;
-								//**This attribute has to be equal
-								//pkConstraint += "(O_"+tableName+"["+k+"]."+pos+" = O_"+tableName+"["+ j +"]."+pos+") AND ";
 								pkConstraint += tString1;
 							}
 						}
@@ -219,6 +199,83 @@ public class AddDataBaseConstraintsSMT {
 	}
 
 
+	/**
+	 * Get CVC constraints for foreign keys
+	 * @param foreignKey
+	 * @param fkCount
+	 * @param fkOffset
+	 * @param pkOffset
+	 * @return
+	 */
+	public static String getCVCforForeignKey(ForeignKey foreignKey, int fkCount, int fkOffset, int pkOffset) {
+
+
+		String fkConstraint = "";
+
+		/** Get foreign key column details */					
+		Vector<Column> fCol = (Vector<Column>)foreignKey.getFKeyColumns().clone();
+
+		/** Get primary key column details*/
+		Vector<Column> pCol = (Vector<Column>)foreignKey.getReferenceKeyColumns().clone();
+
+		String tempConstString1 = "";
+		fkConstraint += "(assert ";
+		/** Get the constraints for this foreign key */
+		for(int j=1;j <= fkCount; j++){
+			tempConstString1 = "";
+			String temp1 = "";
+			String temp2 = "";
+			String tempConstString2 = "";
+			
+			//if(fkCount == 1 && fCol.size() > 1){
+			///	tempConstString1 += "(and ";
+			//}
+			
+			for (Column fSingleCol : fCol)
+			{
+				Column pSingleCol = pCol.get(fCol.indexOf(fSingleCol));
+				/*if(fkCount == 1 && fCol.size() > 1){
+					tempConstString1 += "(and ";
+				}*/
+				
+				if(fSingleCol.getCvcDatatype() != null)
+				{
+					int pos1 = fSingleCol.getTable().getColumnIndex(fSingleCol.getColumnName());
+					int pos2 = pSingleCol.getTable().getColumnIndex(pSingleCol.getColumnName());
+					
+					/*if(fkCount == 1){
+						
+						tempConstString1 += " (= ("+fSingleCol.getColumnName()+pos1+" (select O_"+fSingleCol.getTableName()+" " + ( j + fkOffset -1) +")) " +
+													"("+pSingleCol.getColumnName()+pos2+" (select O_"+pSingleCol.getTableName()+" "+ (j + pkOffset - 1) +") )"+" )";
+						
+					}
+					else if(fkCount > 1){*/
+						
+						tempConstString2 = getSMTAndConstraint(fSingleCol,pSingleCol ,Integer.valueOf(j + fkOffset -1), Integer.valueOf(j + pkOffset - 1), tempConstString1, pos1,pos2);
+						tempConstString1 = tempConstString2;
+					//}
+					}
+				
+				//Commented - Nullable Foreign keys - how to handle them in SMT LIB
+					/*if(fSingleCol.isNullable()){
+						if(fSingleCol.getCvcDatatype().equals("INT")|| fSingleCol.getCvcDatatype().equals("REAL") || fSingleCol.getCvcDatatype().equals("DATE") || fSingleCol.getCvcDatatype().equals("TIME") || fSingleCol.getCvcDatatype().equals("TIMESTAMP"))
+							temp2 += "ISNULL_" + fSingleCol.getColumnName() + "(O_" + GenerateCVCConstraintForNode.cvcMap(fSingleCol, j + fkOffset -1 + "") + ") AND ";
+						else
+							temp2 += "ISNULL_" + fSingleCol.getCvcDatatype() + "(O_" + GenerateCVCConstraintForNode.cvcMap(fSingleCol, j + fkOffset -1 + "") + ") AND ";
+					}*/
+
+				}
+			//if(fkCount == 1 && fCol.size() > 1){
+			//	tempConstString1 += ")";
+			//}
+			}
+			fkConstraint += tempConstString1;					
+			fkConstraint += " ) \n";
+		
+		return fkConstraint;
+	}
+
+	
 	
 	/**
 	 * Generates unique constraints for the primary keys across all the tuples of a relation occurrence in the query block
@@ -515,82 +572,7 @@ public class AddDataBaseConstraintsSMT {
 		return fkConstraint;
 	}	
 
-	/**
-	 * Get CVC constraints for foreign keys
-	 * @param foreignKey
-	 * @param fkCount
-	 * @param fkOffset
-	 * @param pkOffset
-	 * @return
-	 */
-	public static String getCVCforForeignKey(ForeignKey foreignKey, int fkCount, int fkOffset, int pkOffset) {
 
-
-		String fkConstraint = "";
-
-		/** Get foreign key column details */					
-		Vector<Column> fCol = (Vector<Column>)foreignKey.getFKeyColumns().clone();
-
-		/** Get primary key column details*/
-		Vector<Column> pCol = (Vector<Column>)foreignKey.getReferenceKeyColumns().clone();
-
-		String tempConstString1 = "";
-		fkConstraint += "(assert ";
-		/** Get the constraints for this foreign key */
-		for(int j=1;j <= fkCount; j++){
-			
-			String temp1 = "";
-			String temp2 = "";
-			String tempConstString2 = "";
-			
-			for (Column fSingleCol : fCol)
-			{
-				Column pSingleCol = pCol.get(fCol.indexOf(fSingleCol));
-				if(fSingleCol.getCvcDatatype() != null)
-				{
-					//temp1 += "(O_" + GenerateCVCConstraintForNode.cvcMap(fSingleCol, j + fkOffset -1 + "") + " = O_" + 
-					//		GenerateCVCConstraintForNode.cvcMap(pSingleCol, (j + pkOffset - 1) + "" ) + ") AND ";
-					int pos1 = fSingleCol.getTable().getColumnIndex(fSingleCol.getColumnName());
-					int pos2 = pSingleCol.getTable().getColumnIndex(pSingleCol.getColumnName());
-					
-					if(fkCount == 1){
-						tempConstString1 += " (= ("+fSingleCol.getColumnName()+pos1+" (select O_"+fSingleCol.getTableName()+" " + ( j + fkOffset -1) +")) " +
-													"("+pSingleCol.getColumnName()+pos2+" (select O_"+pSingleCol.getTableName()+" "+ (j + pkOffset - 1) +") )"+" )";
-					}
-					else if(fkCount > 1){
-						
-						tempConstString2 += getSMTAndConstraint(fSingleCol,pSingleCol ,Integer.valueOf(j + fkOffset -1), Integer.valueOf(j + pkOffset - 1), tempConstString1, pos1,pos2);
-						tempConstString1 = tempConstString2;
-					}
-					}
-				//Commented - Nullable Foreign keys - how to handle them in SMT LIB
-					/*if(fSingleCol.isNullable()){
-						if(fSingleCol.getCvcDatatype().equals("INT")|| fSingleCol.getCvcDatatype().equals("REAL") || fSingleCol.getCvcDatatype().equals("DATE") || fSingleCol.getCvcDatatype().equals("TIME") || fSingleCol.getCvcDatatype().equals("TIMESTAMP"))
-							temp2 += "ISNULL_" + fSingleCol.getColumnName() + "(O_" + GenerateCVCConstraintForNode.cvcMap(fSingleCol, j + fkOffset -1 + "") + ") AND ";
-						else
-							temp2 += "ISNULL_" + fSingleCol.getCvcDatatype() + "(O_" + GenerateCVCConstraintForNode.cvcMap(fSingleCol, j + fkOffset -1 + "") + ") AND ";
-					}*/
-
-				}
-			}
-			fkConstraint += tempConstString1;					
-			fkConstraint += " ) \n";
-			/*if(temp1 != null && !temp1.isEmpty()){
-				temp1 = temp1.substring(0, temp1.length() - 5);
-			}
-			
-			if(!temp2.isEmpty()){
-				temp2 = temp2.substring(0, temp2.length() - 5);
-				//fkConstraint += "ASSERT (" + temp1 + ") OR (" + temp2 + ");\n";
-			}
-			else {
-				fkConstraint += "ASSERT (" + temp1 + ");\n";
-			}*/
-		
-		return fkConstraint;
-	}
-
-	
 
 	/**
 	 * Updates the number of tuples of the tables
@@ -695,7 +677,7 @@ if(s1 != null){
 }
 
 if(fKeyCol != null && pKeyCol != null){
-	cvcStr += "(=  (" + cvcMapSMT(fKeyCol,fKeyCol.getTableName(),fKeyIndex,pos1) +")  ("+cvcMapSMT(pKeyCol,pKeyCol.getTableName(),pKeyIndex,pos2)+") )";
+	cvcStr += "(=  " + cvcMapSMT(fKeyCol,fKeyCol.getTableName(),fKeyIndex,pos1) +" "+cvcMapSMT(pKeyCol,pKeyCol.getTableName(),pKeyIndex,pos2)+" )";
 }
 cvcStr +=")  ";
 return cvcStr;
@@ -715,7 +697,7 @@ public static String cvcMapSMT(Column col, String index){
 		String columnName = col.getColumnName();
 		int pos = table.getColumnIndex(columnName);
 		String smtCond = "";
-		String colName =tableName+"_"+columnName;		
+		String colName =columnName;//tableName+"_"+columnName;		
 		smtCond = "("+colName+pos+" "+"(select O_"+tableName+" "+index +") )";
 		return smtCond;
 	}
@@ -733,7 +715,7 @@ public static String cvcMapSMT(Column col, String tableName,Integer index,Intege
 		String columnName = col.getColumnName();
 		
 		String smtCond = "";
-		String colName =tableName+"_"+columnName;		
+		String colName =columnName ;//tableName+"_"+columnName;		
 		smtCond = "("+colName+pos+" "+"(select O_"+tableName+" "+index +") )";
 		return smtCond;
 	}

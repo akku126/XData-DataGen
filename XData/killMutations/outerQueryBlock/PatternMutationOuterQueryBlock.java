@@ -20,6 +20,17 @@ import util.TagDatasets;
 public class PatternMutationOuterQueryBlock {
 
 	private static Logger logger = Logger.getLogger(PatternMutationOuterQueryBlock.class.getName());
+	
+	public static void  generateDataForkillingMutationsGen ( GenerateCVC1 cvc) throws Exception{
+		
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			generateDataForkillingMutations(cvc);
+		}
+		else{
+			//generateDataForkillingMutationsSMT(cvc);
+		}
+		
+	}
 	/**
 	 * Generates data to kill like pattern mutations inside outer query block
 	 * @param cvc

@@ -10,9 +10,9 @@ import parsing.Node;
 import parsing.Table;
 import testDataGen.GenerateCVC1;
 
-public class GenerateCommonConstraintsForNodeSMT {
+public class GenerateCVCConstraintForNodeSMT {
 
-	private static Logger logger=Logger.getLogger(GenerateCommonConstraintsForNodeSMT.class.getName());
+	private static Logger logger=Logger.getLogger(GenerateCVCConstraintForNodeSMT.class.getName());
 	/**
 	 * Returns the cvc statement for assignment of a NULL value to a particular Tuple
 	 * Accordingly also sets whether the null value for that column has been used or not 
@@ -36,8 +36,10 @@ public class GenerateCommonConstraintsForNodeSMT {
 			}
 		}
 		/** If found */
-		if(foundNullVal){
+		if(foundNullVal && cvc.getStringSolver().equals("cvc3")){
 			return "\n (ASSERT O_"+cvcMapSMT(c, index)+" = "+nullVal+")";
+		}else if(foundNullVal){
+			return "\n (assert (= ("+GenerateCVCConstraintForNodeSMT.cvcMapSMT(c, index)+") "+nullVal+"  ))";
 		}
 		else{
 			System.out.println("In cvcSetNull Function: "+"Unassigned Null value cannot be found due to insufficiency");

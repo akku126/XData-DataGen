@@ -25,6 +25,17 @@ import util.TagDatasets;
 public class LikeMutationsInOuterQueryBlock {
 
 	private static Logger logger = Logger.getLogger(LikeMutationsInOuterQueryBlock.class.getName());
+	
+	public static void  generateDataForkillingLikeMutationsInOuterQueryBlockGen(GenerateCVC1 cvc) throws Exception{
+		
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			generateDataForkillingLikeMutationsInOuterQueryBlock(cvc);
+		}
+		else{
+			//generateDataForkillingLikeMutationsInOuterQueryBlockSMT(cvc);
+		}
+	}
+	
 	/**
 	 * Generates data to kill like conditions mutations inside outer query block
 	 * @param cvc

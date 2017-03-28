@@ -428,12 +428,14 @@ public class GetCVC4HeaderAndFooter {
 			
 				c = cvc.getResultsetColumns().get(j);
 				if(c.getTableName().equalsIgnoreCase(temp)){
-					index++;
+					
 					String s=c.getCvcDatatype();
 					if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
 						tempStr += "("+c+index+" "+s + ") ";
 					else
-						tempStr+= "("+c+index+" "+c.getColumnName() + ") ";;
+						tempStr+= "("+c+index+" "+c.getColumnName() + ") ";
+					
+					index++;
 				}
 			}
 			//tempStr = tempStr.substring(0, tempStr.length()-2);

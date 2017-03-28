@@ -546,7 +546,7 @@ public class ConjunctQueryStructure implements Serializable{
 	}
 	
 	public static boolean isStringSelection(Node n,int flag) {
-		if(n.getLeft().getType().equals(Node.getColRefType())/* */){
+		if(n.getLeft() != null && n.getLeft().getType().equals(Node.getColRefType())/* */){
 			if(flag==1  && !n.getRight().getType().equals(Node.getValType()))
 				return false;
 			int i=n.getLeft().getColumn().getDataType();

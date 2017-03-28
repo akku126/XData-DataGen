@@ -25,6 +25,18 @@ import util.TagDatasets;
 public class AggMutationsInOuterQueryBlock {
 
 	private static Logger logger = Logger.getLogger(AggMutationsInOuterQueryBlock.class.getName());
+	
+	public static void  generateDataForkillingAggMutationsInOuterQueryBlockGen (GenerateCVC1 cvc) throws Exception{
+		
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			generateDataForkillingAggMutationsInOuterQueryBlock(cvc);
+		}
+		else{
+			//generateDataForkillingAggMutationsInOuterQueryBlockSMT(cvc);
+		}
+		
+	}
+	
 	/**
 	 * Generates data to kill aggregation function mutations inside each outer query block
 	 * @param cvc

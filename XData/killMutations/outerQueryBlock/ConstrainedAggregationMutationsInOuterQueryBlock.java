@@ -21,6 +21,17 @@ import util.TagDatasets;
 public class ConstrainedAggregationMutationsInOuterQueryBlock {
 
 	private static Logger logger = Logger.getLogger(ConstrainedAggregationMutationsInOuterQueryBlock.class.getName());
+	
+	public static void generateDataForkillingConstrainedAggregationInOuterQueryBlockGen(GenerateCVC1 cvc) throws Exception{
+		
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			generateDataForkillingConstrainedAggregationInOuterQueryBlock(cvc);
+		}
+		else{
+			//generateDataForkillingConstrainedAggregationInOuterQueryBlockSMT(cvc);
+		}
+	}
+	
 	/**
 	 * Generates data to kill having clause mutations inside outer query block
 	 * @param cvc

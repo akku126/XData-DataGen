@@ -27,6 +27,17 @@ import util.Utilities;
 public class DistinctMutationsInOuterQueryBlock {
 
 	private static Logger logger = Logger.getLogger(DistinctMutationsInOuterQueryBlock.class.getName());
+	
+	public static void  generateDataForkillingDistinctMutationsInOuterQueryBlockGen (GenerateCVC1 cvc) throws Exception{
+		
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			generateDataForkillingDistinctMutationsInOuterQueryBlock(cvc);
+		}
+		else{
+			//generateDataForkillingDistinctMutationsInOuterQueryBlockSMT(cvc);
+		}
+		
+	}
 	/**
 	 * Generates data to kill distinct clause mutations in the outer block of the query
 	 * @param cvc

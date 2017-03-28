@@ -86,6 +86,37 @@ public class StringConstraintSolver implements Serializable
 		
 	}
 	
+	//Added by Shree to handle OR conditions in String conditions in SMT LIB constraint format
+	public Vector<String> solveOrConstraintsForSMT(Vector<String> assertConstraints,Vector<Column> columns,TableMap tableMap) throws Exception {
+		Vector<String> stringConstraints = new Vector<String>();
+		Vector<String> Final=new Vector<String>();
+		for(String str:assertConstraints){
+			if(str.startsWith("ASSERT")){
+				str=str.substring(7, str.length());
+				str=str.substring(0, str.length()-1);
+				str=str.trim();
+			}
+			String Ors[]=str.split(" OR ");
+			for(String EachOr : Ors){
+				//EachOr=removeBraces(EachOr);
+				String AndConstraint[] = EachOr.trim().split(" AND ");
+				for(String And: AndConstraint){
+					//And=removeBraces(And);
+					And=And.trim();
+					stringConstraints.add(And);
+				}
+				Vector<String> ret1;
+				ret1= null;//solveConstraints(stringConstraints, columns,tableMap);
+				if(ret1!=null){
+					Final.addAll(ret1);
+					break;
+				}
+			}
+		}
+		return Final;
+		
+	}
+	
 	/**
 	 * Takes a Vector of String constraints and instantiates the corresponding string variables to CVC compatible form
 	 * @param dataConstraints String constraints for generation of datasets

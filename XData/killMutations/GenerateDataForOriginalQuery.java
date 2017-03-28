@@ -5,7 +5,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import generateCVC4Constraints.GenerateCommonConstraintsForQueryUsingSMT;
+import generateCVC4Constraints.GenerateCommonConstraintsForQuerySMT;
 import generateCVC4Constraints.GetCVC4HeaderAndFooter;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GetCVC3HeaderAndFooter;
@@ -95,25 +95,25 @@ public class GenerateDataForOriginalQuery {
 			
 			/**Get the null and database constraints - get the number of outout tuples
 			 * and generate other constraints  accordingly*/
-			 GenerateCommonConstraintsForQueryUsingSMT.generateNullandDBConstraintsUsingSMT(cvc,false);
+			 GenerateCommonConstraintsForQuerySMT.generateNullandDBConstraintsUsingSMT(cvc,false);
 			 
 			/**Get the constraints for all the blocks of the query  */
 			cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlockSMT(cvc));
 			cvc.setDatatypeColumns( new ArrayList<String>() );
-			String CVC4_HEADER = GetCVC4HeaderAndFooter.generateCVC4_Header(cvc, false);
+			//String CVC4_HEADER = GetCVC4HeaderAndFooter.generateCVC4_Header(cvc, false);
 			
-			String CVCStr = GetCVC4HeaderAndFooter.generateCvc4_Footer();
-			 CVCStr = "%--------------------------------------------\n\n%MUTATION TYPE: " + 
-					cvc.getTypeOfMutation() +"\n\n%--------------------------------------------\n\n\n\n" + 
-					CVC4_HEADER +CVCStr;
+			//String CVCStr = GetCVC4HeaderAndFooter.generateCvc4_Footer();
+			// CVCStr = ";--------------------------------------------\n\n%MUTATION TYPE: " + 
+			//		cvc.getTypeOfMutation() +"\n\n;--------------------------------------------\n\n\n\n" + 
+			//		CVC4_HEADER +CVCStr;
 			 
-			cvc.setCVCStr(CVCStr);
+			//cvc.setCVCStr(CVCStr);
 			System.out.println("\n cvc.getConstraints () : \n");
 			System.out.println(cvc.getConstraints());
 			System.out.println("************************************************************************************************************************");
-			System.out.println("\n CVSTR : \n"+CVCStr);
+			//System.out.println("\n CVSTR : \n"+CVCStr);
 			/** Call the method for the data generation*/
-			return false;//GenerateCommonConstraintsForQueryUsingSMT.generateDataSetForConstraintsUsingSMT(cvc,false);
+			return GenerateCommonConstraintsForQuerySMT.generateDataSetForConstraintsForSMT(cvc,false);
 		}catch (TimeoutException e){
 			logger.log(Level.SEVERE,e.getMessage(),e);		
 			throw e;

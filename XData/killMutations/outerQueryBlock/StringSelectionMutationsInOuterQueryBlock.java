@@ -26,6 +26,15 @@ import util.TagDatasets;
 public class StringSelectionMutationsInOuterQueryBlock {
 
 	private static Logger logger = Logger.getLogger(StringSelectionMutationsInOuterQueryBlock.class.getName());
+	
+	public static void  generateDataForkillingStringSelectionMutationsInOuterQueryBlockGen(	GenerateCVC1 cvc) throws Exception{
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			generateDataForkillingStringSelectionMutationsInOuterQueryBlock(cvc);
+		}
+		else{
+			//generateDataForkillingStringSelectionMutationsInOuterQueryBlockSMT(cvc);
+		}
+	}
 	/**
 	 * Generates data to kill string selection conditions mutations inside outer block
 	 * @param cvc

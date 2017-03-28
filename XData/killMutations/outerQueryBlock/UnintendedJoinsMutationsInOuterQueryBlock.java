@@ -28,6 +28,17 @@ import util.TagDatasets;
 public class UnintendedJoinsMutationsInOuterQueryBlock {
 
 	private static Logger logger = Logger.getLogger(UnintendedJoinsMutationsInOuterQueryBlock.class.getName());
+	
+	public static void  generateDataForkillingUnintendedJoinsMutationsInOuterQueryBlockGen(GenerateCVC1 cvc) throws Exception{
+		
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			generateDataForkillingUnintendedJoinsMutationsInOuterQueryBlock(cvc);
+		}
+		else{
+			//generateDataForkillingUnintendedJoinsMutationsInOuterQueryBlockSMT(cvc);
+		}
+		
+	}
 	/**
 	 * Generates constraints to kill unintended join mutations
 	 * @param cvc

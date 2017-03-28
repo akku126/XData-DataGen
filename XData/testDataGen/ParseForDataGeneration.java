@@ -12,8 +12,6 @@ public class ParseForDataGeneration {
 	private static Logger logger = Logger.getLogger(ParseForDataGeneration.class.getName());
 	
 	/**
-	 * This method will be moved to new DataGenerationParser
-	 * 
 	 * This method converts the standard query structure from parsing to a query structure required for data generation  
 	 * 
 	 * @param qs
@@ -30,7 +28,7 @@ public class ParseForDataGeneration {
 				
 				for(Node n : con.getAllSubQueryConds()){
 					
-					//Convert IN and NOT IN node to EXISTS and NOT EXISTS node
+					//Convert IN and NOT IN node to EXISTS and NOT EXISTS node - Start
 					if(n.getType().equals(Node.getInNodeType()) || n.getType().equals(Node.getNotInNodeType()) ){
 						
 						subQCondToRemove.add(n);
@@ -55,14 +53,12 @@ public class ParseForDataGeneration {
 							rhsNew.setQueryType(2);
 						}
 						
-						//Added by Shree - end
 						inNode.setQueryType(2);
 						inNode.setQueryIndex(0);
 						inNode.setLeft(n.getLeft());
 						inNode.setRight(rhsNew);
 						
-						//set lhsrhs node with inNode - set rhs to contain the nodes in allDnfSelCond in the subQStructure inside rhs - if vector has more nodes, add them with AND node condition recursively
-						
+						//set lhsrhs node with inNode - set rhs to contain the nodes in allDnfSelCond in the subQStructure- if vector has more nodes, add them with AND nodes						
 						Node sqNode = new Node();
 						sqNode.setLeft(null);
 						sqNode.setRight(null);				
@@ -97,14 +93,13 @@ public class ParseForDataGeneration {
 							Node lhsrhs = sqNode.getLhsRhs();
 							int queryIndex = lhsrhs.getRight().getQueryIndex();
 							updateSubQueryConditions(queryIndex,lhsrhs,qs);
-							//left.getSubQueryConds().add(lhsrhs);
+					
 							Node newNode = new Node();
 							newNode.setQueryIndex(0);
 							sqNode.setLhsRhs(newNode);
 							sqNode.setType(Node.getExistsNodeType());	
 							newSubQCond.add(sqNode);
 						}
-							//return sqNode;
 					if(n.getType().equals(Node.getNotInNodeType()) ){
 							Node notNode = new Node();	
 						
@@ -129,11 +124,12 @@ public class ParseForDataGeneration {
 							 notNode.getLeft().setQueryIndex( notNode.getQueryIndex());
 							 notNode.getLeft().setQueryType( notNode.getQueryType());
 							 newSubQCond.add(notNode);
-							//setQueryTypeAndIndex(notNode,qStruct);
-							//return notNode;
+							
 					}
 					}
+					//Conversion of IN/NOT IN to EXISTS/NOT EXISTS ends here
 					
+					// Convert the node structure and SubQ conditions of EXISTS/NOT EXISTS node types as required for Data Generation Processing
 					if(n.getType().equals(Node.getExistsNodeType()) || n.getType().equals(Node.getNotExistsNodeType())){
 						
 						subQCondToRemove.add(n);
@@ -158,11 +154,11 @@ public class ParseForDataGeneration {
 						existsNode.setQueryType(2);
 						existsNode.setQueryIndex(qs.getWhereClauseSubqueries().size()-1);				
 						
-						if(n.getType().equals(Node.getNotExistsNodeType())){					
+						if(n.getType().equals(Node.getExistsNodeType())){					
 							//return existsNode;
 							newSubQCond.add(existsNode);
 						}else{
-							notNode.setType(Node.getNotNodeType());
+							notNode.setType(Node.getNotExistsNodeType());
 							notNode.setRight(null);
 							notNode.setLeft(sqNode);
 							notNode.setLhsRhs(sqNode);
@@ -170,6 +166,180 @@ public class ParseForDataGeneration {
 							notNode.setQueryIndex(qs.getWhereClauseSubqueries().size()-1);			
 							newSubQCond.add(notNode);
 						}
+					}
+					
+					//Convert ANY node to EXISTS Node with relop condition added as selection condition in SubQuery
+					if(n.getType().equals(Node.getAnyNodeType())){
+						
+						subQCondToRemove.add(n);
+						//Convert ANY to EXISTS
+						Node anyNode=new Node();
+						anyNode.setType(Node.getBroNodeType());
+						anyNode.setOperator(n.getLhsRhs().getOperator());
+						
+						//Create a new node with lhs=rhs.projected column - and add it to subQConditions
+						Node rhs = new Node();
+						rhs.setQueryIndex(0);
+						rhs.setQueryType(2);						
+						Node rhsNew = new Node();
+						if(n.getLhsRhs().getRight() != null && n.getLhsRhs().getRight().getSubQueryStructure() != null){
+							Node existingProjCol = n.getLhsRhs().getRight().getSubQueryStructure().getLstProjectedCols().get(0);
+							Node nd = new Node();
+							nd.setColumn(existingProjCol.getColumn());
+							nd.setTable(existingProjCol.getTable());
+							nd.setTableAlias(existingProjCol.getTableAlias());
+							nd.setTableNameNo(existingProjCol.getTableNameNo());
+							nd.setType(Node.getColRefType());
+							if(nd!= null){
+								rhsNew = nd;	
+							}				
+							rhsNew.setSubQueryStructure(n.getLhsRhs().getRight().getSubQueryStructure());
+							rhsNew.setQueryIndex(0);
+							rhsNew.setQueryType(2);
+						}
+						
+						anyNode.setQueryType(2);
+						anyNode.setQueryIndex(0);
+						anyNode.setLeft(n.getLhsRhs().getLeft());
+						anyNode.setRight(rhsNew);
+						
+						//set lhsrhs node with AnyNode - set rhs to contain the nodes in allDnfSelCond in the subQStructure - if vector has more nodes, add them as AND nodes
+						
+						Node sqNode = new Node();
+						sqNode.setLeft(null);
+						sqNode.setRight(null);				
+						
+						sqNode.setLhsRhs(anyNode);
+						sqNode.setType(Node.getExistsNodeType());
+						
+						 Vector allCon = new Vector<>();  
+						 if( n.getLhsRhs().getRight().getSubQueryStructure().getAllDnfSelCond() != null
+								 && ! n.getLhsRhs().getRight().getSubQueryStructure().getAllDnfSelCond() .isEmpty()){
+							 
+							 allCon = n.getLhsRhs().getRight().getSubQueryStructure().getAllDnfSelCond().get(0);
+						 }else{
+							 allCon = null;
+						 }
+						 if(allCon != null && !allCon.isEmpty()){
+							 Node condition1 = (Node)allCon.get(allCon.size()-1);
+								condition1.setQueryIndex(0);
+								condition1.setQueryType(2);
+								sqNode.setSubQueryConds(allCon);
+								 
+						 }else{
+							// create the final subquery node and return it
+							 	sqNode.setLhsRhs(anyNode);
+								sqNode.setType(Node.getAnyNodeType());				
+						 }
+						
+						 	sqNode.setQueryIndex(0);
+							sqNode.setQueryType(2);
+							
+							Node lhsrhs = sqNode.getLhsRhs();
+							int queryIndex = lhsrhs.getRight().getQueryIndex();
+							updateSubQueryConditions(queryIndex,lhsrhs,qs);
+							Node newNode = new Node();
+							newNode.setQueryIndex(0);
+							newNode.setQueryType(2);
+							sqNode.setLhsRhs(newNode);
+							sqNode.setType(Node.getExistsNodeType());	
+							newSubQCond.add(sqNode);
+										
+					}
+					
+					//Convert ALL node to NOT EXISTS Node with with negation of relop condition and additional IS NULL condition on left and right node  
+					if(n.getType().equals(Node.getAllNodeType())){
+						
+						subQCondToRemove.add(n);
+						
+						//Convert ANY to EXISTS
+						Node allNode=new Node();
+						allNode.setType(Node.getBroNodeType());
+						//allNode.setOperator("=");
+						allNode.setOperator(this.getNegatedOperator(n.getLhsRhs()));
+
+						//Create a new node with lhs=rhs.projected column - and add it to subQConditions
+						Node rhs = new Node();
+						rhs.setQueryIndex(0);
+						rhs.setQueryType(2);
+						
+						Node rhsNew = new Node();
+						if(n.getLhsRhs().getRight() != null && n.getLhsRhs().getRight().getSubQueryStructure() != null){
+							Node existingProjCol = n.getLhsRhs().getRight().getSubQueryStructure().getLstProjectedCols().get(0);
+							Node nd = new Node();
+							nd.setColumn(existingProjCol.getColumn());
+							nd.setTable(existingProjCol.getTable());
+							nd.setTableAlias(existingProjCol.getTableAlias());
+							nd.setTableNameNo(existingProjCol.getTableNameNo());
+							nd.setType(Node.getColRefType());
+							
+							if(nd!= null){
+								rhsNew = nd;
+							}				
+							rhsNew.setSubQueryStructure(n.getLhsRhs().getRight().getSubQueryStructure());
+							rhsNew.setQueryIndex(0);
+							rhsNew.setQueryType(2);
+						}
+						
+						allNode.setQueryType(2);
+						allNode.setQueryIndex(0);
+						allNode.setLeft(n.getLhsRhs().getLeft());
+						allNode.setRight(rhsNew);
+						
+						//set lhsrhs node with AnyNode - set rhs to contain the nodes in allDnfSelCond in the subQStructure - if vector has more nodes, add them as AND nodes
+						
+						Node sqNode = new Node();
+						sqNode.setLeft(null);
+						sqNode.setRight(null);				
+						sqNode.setType(allNode.getType());
+						
+						sqNode.setLhsRhs(allNode);
+						sqNode.setType(Node.getNotExistsNodeType());
+						
+						 Vector allCon = new Vector<>();  
+						 if( n.getLhsRhs().getRight().getSubQueryStructure().getAllDnfSelCond() != null
+								 && ! n.getLhsRhs().getRight().getSubQueryStructure().getAllDnfSelCond() .isEmpty()){
+							 
+							 allCon = n.getLhsRhs().getRight().getSubQueryStructure().getAllDnfSelCond().get(0);
+						 }else{
+							 allCon = null;
+						 }
+						 if(allCon != null && !allCon.isEmpty()){
+							 Node condition1 = (Node)allCon.get(allCon.size()-1);
+								condition1.setQueryIndex(0);
+								condition1.setQueryType(2);
+								sqNode.setSubQueryConds(allCon);
+								 
+						 }else{
+							// create the final subquery node and return it
+								sqNode.setType(Node.getAllNodeType());	
+								sqNode.setLhsRhs(allNode);
+						 }
+						 
+						 	Node notNode = new Node();	
+							notNode.setType(Node.getNotExistsNodeType());
+							notNode.setRight(null);
+							notNode.setLeft(sqNode);
+							notNode.setQueryIndex(0);
+							notNode.setQueryType(2);
+							
+							Node lhsrhs = notNode.getLeft().getLhsRhs();
+							int queryIndex = lhsrhs.getRight().getQueryIndex();
+							if( notNode.getLeft().getSubQueryConds() != null
+									&& ! notNode.getLeft().getSubQueryConds().isEmpty()){
+							 notNode.getLeft().getSubQueryConds().add(lhsrhs);
+							}else{
+								Vector newV = new Vector();
+								newV.add(lhsrhs);
+								 notNode.getLeft().setSubQueryConds(newV);
+							}
+							  updateSubQueryConditions(queryIndex,lhsrhs,qs);
+							 notNode.getLeft().setLhsRhs(null);
+							 notNode.getLeft().setType(Node.getNotExistsNodeType());	
+							 notNode.getLeft().setQueryIndex( notNode.getQueryIndex());
+							 notNode.getLeft().setQueryType( notNode.getQueryType());
+							 newSubQCond.add(notNode);
+						 				
 					}
 				}
 				con.allSubQueryConds.addAll(newSubQCond);
@@ -215,4 +385,27 @@ public class ParseForDataGeneration {
 			}
 		}
 		
+		/**
+		 * This method returns the negated operator for converting ALL to NOT EXISTS query
+		 * 
+		 * @param n
+		 * @return
+		 */
+		public static String getNegatedOperator(Node n){
+			String op = "";
+			if(n.getOperator().equals("="))
+				op = "/=";
+			else if(n.getOperator().equals("/="))
+				op = "=";
+			else if(n.getOperator().equals(">"))
+				op = "<=";
+			else if(n.getOperator().equals("<"))
+				op = ">=";
+			else if(n.getOperator().equals("<="))
+				op = ">";
+			else if(n.getOperator().equals(">="))
+				op = "<";
+			
+			return op;
+		}
 }

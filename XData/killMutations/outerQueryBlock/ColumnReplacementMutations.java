@@ -20,6 +20,18 @@ public class ColumnReplacementMutations {
 	
 	private static Logger logger = Logger.getLogger(ColumnReplacementMutations.class.getName());
 	
+	public static void generateDataForkillingColumnReplacementMutationsInProjectionGen(GenerateCVC1 cvc) throws Exception{
+		
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			generateDataForkillingColumnReplacementMutationsInProjection(cvc);
+		}
+		else{
+			//generateDataForkillingColumnReplacementMutationsInProjectionSMT(cvc);
+		}
+		
+	}
+	
+	
 	public static void generateDataForkillingColumnReplacementMutationsInProjection(GenerateCVC1 cvc) throws Exception{
 		try {
 			/*adasdSystem.out.println("\n----------------------------------");
