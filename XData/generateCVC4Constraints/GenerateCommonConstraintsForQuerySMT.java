@@ -169,7 +169,7 @@ public class GenerateCommonConstraintsForQuerySMT {
 			
 			
 			 CVCStr = ";--------------------------------------------\n\n;MUTATION TYPE: " + 
-					cvc.getTypeOfMutation() +"\n\n;--------------------------------------------\n\n\n\n  ;Construction Under Progress \n\n" + 
+					cvc.getTypeOfMutation() +"\n\n;--------------------------------------------\n\n\n\n  -----------------------------------------------------\n\n" + 
 					CVC4_HEADER +CVCStr;
 	
 			/** Add not null constraints */

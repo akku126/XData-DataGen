@@ -133,21 +133,14 @@ public class AddDataBaseConstraintsSMT {
 						String tempConstString1 = "";
 						//**Generate the constraint for each primary key attribute 					
 						for(int p=0; p<primaryKeys.size();p++){
+							tempConstString1 = "";
 							String tempConstString2 = "";
 							//** Get column details 
 							Column pkeyColumn = primaryKeys.get(p);				
 							int pos = table.getColumnIndex(pkeyColumn.getColumnName());
 							
-							if(p ==0 ){
-								tempConstString1 += " (= ("+pkeyColumn.getColumnName()+pos+" (select O_"+ pkeyColumn.getTableName()+" " + k +")) " +
-										"("+pkeyColumn.getColumnName()+pos+" (select O_"+pkeyColumn.getTableName()+" "+ j +") )"+" )";
-							}
-							else if(p > 0){
-								tempConstString2 += getSMTAndConstraint(pkeyColumn,pkeyColumn ,Integer.valueOf(k), Integer.valueOf(j), tempConstString1,Integer.valueOf(pos),pos);
+							tempConstString2 += getSMTAndConstraint(pkeyColumn,pkeyColumn ,Integer.valueOf(k), Integer.valueOf(j), tempConstString1,Integer.valueOf(pos),pos);
 								tempConstString1 = tempConstString2;
-							}
-							//**If this pk attribute is equal
-							//pkConstraint += "O_" + tableName + "[" + k + "]." + pos + " = O_" + tableName + "[" + j +"]." + pos + " AND ";	
 						}
 						
 						pkConstraint += "(=> "+tempConstString1;
@@ -169,8 +162,7 @@ public class AddDataBaseConstraintsSMT {
 								
 								if(indx == 0 ){
 									tString1 += " (= ("+col+pos+" (select O_"+ table.getTableName()+" " + k +")) " +
-											"("+col+pos+" (select O_"+table.getTableName()+" "+ j +") )"+" )";
-									
+											"("+col+pos+" (select O_"+table.getTableName()+" "+ j +") )"+" )";									
 								}
 								else if(indx > 0){
 									tString2 += getSMTAndConstraint(table.getColumns().get(col),table.getColumns().get(col) ,Integer.valueOf(k), Integer.valueOf(j), tString1,pos,pos);
@@ -227,33 +219,17 @@ public class AddDataBaseConstraintsSMT {
 			String temp2 = "";
 			String tempConstString2 = "";
 			
-			//if(fkCount == 1 && fCol.size() > 1){
-			///	tempConstString1 += "(and ";
-			//}
-			
 			for (Column fSingleCol : fCol)
 			{
 				Column pSingleCol = pCol.get(fCol.indexOf(fSingleCol));
-				/*if(fkCount == 1 && fCol.size() > 1){
-					tempConstString1 += "(and ";
-				}*/
-				
+							
 				if(fSingleCol.getCvcDatatype() != null)
 				{
 					int pos1 = fSingleCol.getTable().getColumnIndex(fSingleCol.getColumnName());
 					int pos2 = pSingleCol.getTable().getColumnIndex(pSingleCol.getColumnName());
 					
-					/*if(fkCount == 1){
-						
-						tempConstString1 += " (= ("+fSingleCol.getColumnName()+pos1+" (select O_"+fSingleCol.getTableName()+" " + ( j + fkOffset -1) +")) " +
-													"("+pSingleCol.getColumnName()+pos2+" (select O_"+pSingleCol.getTableName()+" "+ (j + pkOffset - 1) +") )"+" )";
-						
-					}
-					else if(fkCount > 1){*/
-						
 						tempConstString2 = getSMTAndConstraint(fSingleCol,pSingleCol ,Integer.valueOf(j + fkOffset -1), Integer.valueOf(j + pkOffset - 1), tempConstString1, pos1,pos2);
 						tempConstString1 = tempConstString2;
-					//}
 					}
 				
 				//Commented - Nullable Foreign keys - how to handle them in SMT LIB
@@ -265,9 +241,6 @@ public class AddDataBaseConstraintsSMT {
 					}*/
 
 				}
-			//if(fkCount == 1 && fCol.size() > 1){
-			//	tempConstString1 += ")";
-			//}
 			}
 			fkConstraint += tempConstString1;					
 			fkConstraint += " ) \n";
@@ -294,16 +267,6 @@ public class AddDataBaseConstraintsSMT {
 	
 				/**Get base table name for this relation*/
 				String tableName = relation.substring(0, relation.length()-1);/**FIXME: If the relation occurrence >= 10 then problem*/
-	
-				/**Get the table details from base table*/
-				/*Table table = null;
-				for(int i=0; i < cvc.getResultsetTables().size(); i++){
-					Table table1 = (Table)cvc.getResultsetTables().get(i);
-					if(table1.getTableName().equalsIgnoreCase(tableName)){*//**The data base relation is found*//*
-						table = table1;
-						break ; 
-					}
-				}*/
 	
 				Table table = cvc.getQuery().getFromTables().get(tableName);
 				/**If there is no table */
@@ -670,16 +633,19 @@ public static String getSMTOrConstraintForPrimaryKey(Column col, String tableNam
 public static String getSMTAndConstraint(Column fKeyCol, Column pKeyCol, Integer fKeyIndex,Integer pKeyIndex, String s1,Integer pos1,Integer pos2){
 	
 String cvcStr ="";
-cvcStr += " (and ";
+
 		
-if(s1 != null){
+if(s1 != null && !s1.isEmpty()){
+	cvcStr += " (and ";
 	cvcStr += s1;
 }
 
 if(fKeyCol != null && pKeyCol != null){
 	cvcStr += "(=  " + cvcMapSMT(fKeyCol,fKeyCol.getTableName(),fKeyIndex,pos1) +" "+cvcMapSMT(pKeyCol,pKeyCol.getTableName(),pKeyIndex,pos2)+" )";
 }
-cvcStr +=")  ";
+if(s1 != null && !s1.isEmpty()){
+	cvcStr +=")  ";
+}
 return cvcStr;
 }
 
