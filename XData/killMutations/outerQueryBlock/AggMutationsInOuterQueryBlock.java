@@ -26,10 +26,10 @@ public class AggMutationsInOuterQueryBlock {
 
 	private static Logger logger = Logger.getLogger(AggMutationsInOuterQueryBlock.class.getName());
 	
-	public static void  generateDataForkillingAggMutationsInOuterQueryBlockGen (GenerateCVC1 cvc) throws Exception{
+	public static void  generateDataForkillingAggMutationsInOuterQueryBlock(GenerateCVC1 cvc) throws Exception{
 		
 		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
-			generateDataForkillingAggMutationsInOuterQueryBlock(cvc);
+			generateDataForkillingAggMutationsInOuterQueryBlockCVC(cvc);
 		}
 		else{
 			//generateDataForkillingAggMutationsInOuterQueryBlockSMT(cvc);
@@ -43,7 +43,7 @@ public class AggMutationsInOuterQueryBlock {
 	 */
 	/**FIXME: COUNT() to COUNT(*) is not added yet*/
 
-	public static void generateDataForkillingAggMutationsInOuterQueryBlock(GenerateCVC1 cvc) throws Exception{
+	public static void generateDataForkillingAggMutationsInOuterQueryBlockCVC(GenerateCVC1 cvc) throws Exception{
 
 
 		/** keep a copy of this tuple assignment values */

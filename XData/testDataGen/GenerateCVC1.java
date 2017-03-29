@@ -1,9 +1,9 @@
 
 package testDataGen;
 
-import generateCVC4Constraints.GetCVC4HeaderAndFooter;
 import generateConstraints.GetCVC3HeaderAndFooter;
 import generateConstraints.TupleRange;
+import generateSMTConstraints.GetSMTHeaderAndFooter;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -468,7 +468,7 @@ public class GenerateCVC1 implements Serializable{
 					/**Generate CVC3 Header, This is need to initialize the CVC3 Data Type field of each column of each table */
 					this.setCVC3_HEADER( GetCVC3HeaderAndFooter.generateCVC3_Header(this) );
 			}else{
-				this.setSMTLIB_HEADER(GetCVC4HeaderAndFooter.generateCVC4_Header(this));
+				this.setSMTLIB_HEADER(GetSMTHeaderAndFooter.generateSMT_Header(this));
 			}
 		}catch (TimeoutException e){
 			logger.log(Level.SEVERE,e.getMessage(),e);		
@@ -804,7 +804,7 @@ public class GenerateCVC1 implements Serializable{
 	public void generateDatasetsToKillMutationsUsingSMT() throws Exception{
 		try{
 			String mutationType = TagDatasets.MutationType.ORIGINAL.getMutationType() + TagDatasets.QueryBlock.NONE.getQueryBlock();
-			GenerateDataForOriginalQuery.generateDataForOriginalQueryUsingSMT(this, mutationType);		
+			GenerateDataForOriginalQuery.generateDataForOriginalQuery(this, mutationType);		
 			
 			/**Generate data sets to kill mutations in outer query block */
 			//MutationsInOuterBlock.generateDataForKillingMutantsInOuterQueryBlock(this);

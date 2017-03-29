@@ -22,10 +22,10 @@ public class ConstrainedAggregationMutationsInOuterQueryBlock {
 
 	private static Logger logger = Logger.getLogger(ConstrainedAggregationMutationsInOuterQueryBlock.class.getName());
 	
-	public static void generateDataForkillingConstrainedAggregationInOuterQueryBlockGen(GenerateCVC1 cvc) throws Exception{
+	public static void generateDataForkillingConstrainedAggregationInOuterQueryBlock(GenerateCVC1 cvc) throws Exception{
 		
 		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
-			generateDataForkillingConstrainedAggregationInOuterQueryBlock(cvc);
+			generateDataForkillingConstrainedAggregationInOuterQueryBlockCVC(cvc);
 		}
 		else{
 			//generateDataForkillingConstrainedAggregationInOuterQueryBlockSMT(cvc);
@@ -36,7 +36,7 @@ public class ConstrainedAggregationMutationsInOuterQueryBlock {
 	 * Generates data to kill having clause mutations inside outer query block
 	 * @param cvc
 	 */
-	public static void generateDataForkillingConstrainedAggregationInOuterQueryBlock(GenerateCVC1 cvc) throws Exception{
+	public static void generateDataForkillingConstrainedAggregationInOuterQueryBlockCVC(GenerateCVC1 cvc) throws Exception{
 		
 		/** keep a copy of this tuple assignment values */
 		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();

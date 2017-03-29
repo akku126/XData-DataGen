@@ -1,4 +1,4 @@
-package generateCVC4Constraints;
+package generateSMTConstraints;
 
 import generateConstraints.GenerateCVCConstraintForNode;
 

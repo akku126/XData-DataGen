@@ -1,4 +1,6 @@
-package generateCVC4Constraints;
+package generateSMTConstraints;
+
+import generateConstraints.GenerateCVCConstraintForNode;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -36,9 +38,7 @@ public class GenerateCVCConstraintForNodeSMT {
 			}
 		}
 		/** If found */
-		if(foundNullVal && cvc.getStringSolver().equals("cvc3")){
-			return "\n (ASSERT O_"+cvcMapSMT(c, index)+" = "+nullVal+")";
-		}else if(foundNullVal){
+		if(foundNullVal ){
 			return "\n (assert (= ("+GenerateCVCConstraintForNodeSMT.cvcMapSMT(c, index)+") "+nullVal+"  ))";
 		}
 		else{
@@ -86,6 +86,28 @@ public class GenerateCVCConstraintForNodeSMT {
 		String colName =tableName+"_"+columnName;		
 		smtCond = "("+colName+" "+"(select O_"+tableName+" "+index +") )";
 		return smtCond;
+	}
+
+	/**
+	 * Used to get CVC3 constraint for the given node for the given tuple position
+	 * @param n
+	 * @param index
+	 * @return
+	 */
+	public static String cvcMapNodeSMT(Node n, String index){
+		if(n.getType().equalsIgnoreCase(Node.getValType())){
+			return n.getStrConst();
+		}
+		else if(n.getType().equalsIgnoreCase(Node.getColRefType())){
+			return cvcMapSMT(n.getColumn(), index);
+		}
+		else if(n.getType().toString().equalsIgnoreCase("i")){
+			return "i";
+		}
+		else if(n.getType().equalsIgnoreCase(Node.getBroNodeType()) || n.getType().equalsIgnoreCase(Node.getBaoNodeType())){
+			return "("+ n.getOperator()+" "+cvcMapNodeSMT(n.getLeft(), index) +" " + cvcMapNodeSMT(n.getRight(), index)+")";
+		}
+		else return "";
 	}
 
 	

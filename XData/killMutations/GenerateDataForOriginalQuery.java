@@ -5,10 +5,10 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import generateCVC4Constraints.GenerateCommonConstraintsForQuerySMT;
-import generateCVC4Constraints.GetCVC4HeaderAndFooter;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GetCVC3HeaderAndFooter;
+import generateSMTConstraints.GenerateCommonConstraintsForQuerySMT;
+import generateSMTConstraints.GetSMTHeaderAndFooter;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
 
@@ -20,11 +20,22 @@ import testDataGen.QueryBlockDetails;
 public class GenerateDataForOriginalQuery {
 
 	private static Logger logger = Logger.getLogger(GenerateDataForOriginalQuery.class.getName());
+	
+	
+	public static boolean generateDataForOriginalQuery(GenerateCVC1 cvc, String mutationType) throws Exception{
+		
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			return generateDataForOriginalQueryCVC(cvc, mutationType);
+		}else{
+			return generateDataForOriginalQueryUsingSMT(cvc, mutationType);
+		}
+	}
+	
 	/**
 	 * Generates data set for the original query
 	 * @param cvc
 	 */
-	public static boolean generateDataForOriginalQuery(GenerateCVC1 cvc, String mutationType) throws Exception{
+	public static boolean generateDataForOriginalQueryCVC(GenerateCVC1 cvc, String mutationType) throws Exception{
 
 		logger.log(Level.INFO,"\n----------------------------------");
 		logger.log(Level.INFO,"GENERATE DATA FOR ORIGINAL QUERY: ");
@@ -100,14 +111,7 @@ public class GenerateDataForOriginalQuery {
 			/**Get the constraints for all the blocks of the query  */
 			cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlockSMT(cvc));
 			cvc.setDatatypeColumns( new ArrayList<String>() );
-			//String CVC4_HEADER = GetCVC4HeaderAndFooter.generateCVC4_Header(cvc, false);
 			
-			//String CVCStr = GetCVC4HeaderAndFooter.generateCvc4_Footer();
-			// CVCStr = ";--------------------------------------------\n\n%MUTATION TYPE: " + 
-			//		cvc.getTypeOfMutation() +"\n\n;--------------------------------------------\n\n\n\n" + 
-			//		CVC4_HEADER +CVCStr;
-			 
-			//cvc.setCVCStr(CVCStr);
 			System.out.println("\n cvc.getConstraints () : \n");
 			System.out.println(cvc.getConstraints());
 			System.out.println("************************************************************************************************************************");

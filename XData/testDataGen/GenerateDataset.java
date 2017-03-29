@@ -204,8 +204,8 @@
 			Connection conn=DriverManager.getConnection(loginUrl, Configuration.getProperty("existingDatabaseUser"), Configuration.getProperty("existingDatabaseUserPasswd"));;
 			
 			int queryId=1;
-			//String query="select id,name from student ";
-			String query = "select ID, course_id from teaches";
+			String query="select id,name from student ";
+			//String query = "select ID, course_id from teaches";
 			File schemaFile=new File("/tmp/DDL.sql");
 			File sampleDataFile=new File("/tmp/data.sql");
 			boolean orderDependent=false;
