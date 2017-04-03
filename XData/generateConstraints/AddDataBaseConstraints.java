@@ -192,9 +192,6 @@ public class AddDataBaseConstraints {
 				for(int k=1; k<=noOfTuples; k++){
 					for(int j=k+1; j<=noOfTuples; j++){
 	
-						
-					//	pkConstraint += "ASSERT (";
-	
 						/**Generate the constraint for each primary key attribute */					
 						for(int p=0; p<primaryKeys.size();p++){
 							
@@ -205,21 +202,16 @@ public class AddDataBaseConstraints {
 							int pos = table.getColumnIndex(pkeyColumn.getColumnName());
 	
 							/**If this pk attribute is equal*/
-							//pkConstraint += "O_" + tableName + "[" + k + "]." + pos + " = O_" + tableName + "[" + j +"]." + pos + " AND ";
 							
 							con = constraintGenerator.getConstraint(cvc,tableName,Integer.valueOf(k),Integer.valueOf(pos),
 									tableName,Integer.valueOf(j),Integer.valueOf(pos),
 									pkeyColumn,pkeyColumn,"=");
-							
+							//get primary Key constraint and add to constraint list
 							conList.add(con);
 							
 						}
 						constraintString =constraintGenerator.generateANDConstraints(cvc, conList);
-						//pkConstraint = pkConstraint.substring(0,pkConstraint.length()-4);
-						//pkConstraint += ") => ";
-						primaryKeyConstraint.setLeftConstraint(constraintString);
-						primaryKeyConstraint.setOperator(" =>");
-	
+				
 						boolean x = false;
 						for(String col : table.getColumns().keySet()){
 							if(!( primaryKeys.toString().contains(col))){
@@ -230,21 +222,20 @@ public class AddDataBaseConstraints {
 								impliedConstraint = constraintGenerator.getConstraint(cvc,tableName,Integer.valueOf(k),Integer.valueOf(pos),
 										tableName,Integer.valueOf(j),Integer.valueOf(pos),
 										table.getColumn(col),table.getColumn(col),"=");
-								
+								//get primary Key constraint implied other constraints and add to constraint list
 								impliedConstraintList.add(impliedConstraint);
-								//pkConstraint += "(O_"+tableName+"["+k+"]."+pos+" = O_"+tableName+"["+ j +"]."+pos+") AND ";
-								
 							}
 						}
 						impliedConstraintString =constraintGenerator.generateANDConstraints(cvc, conList);
+						
+						//Generate single constraint with => as operator and left and right as FKConstraints and implied constraints based on solver.
+						
+						primaryKeyConstraint.setLeftConstraint(constraintString);
+						primaryKeyConstraint.setOperator(" =>");
 						primaryKeyConstraint.setRightConstraint(impliedConstraintString);
 						
 						pkConstraint += constraintGenerator.getImpliedConstraints(cvc, primaryKeyConstraint,(!x));
-						//if(x == false){
-						//	pkConstraint += "TRUE;\n";	//TODO: Should it imply FALSE???
-						//}
-						//else
-						//	pkConstraint = pkConstraint.substring(0,pkConstraint.length()-4)+";\n";
+					
 					}
 				}
 	
@@ -667,40 +658,16 @@ public class AddDataBaseConstraints {
 					con = constraintGenerator.getConstraint(cvc,tableName1,Integer.valueOf(j + fkOffset -1 ),Integer.valueOf(pos1),
 							tableName2,Integer.valueOf(j + pkOffset - 1),Integer.valueOf(pos2),
 							fSingleCol,pSingleCol,"=");
-					
+					//Add single constraint to the list of constraints. Later call constraintGenerator.generateANDConstraints to AND all constraints based on solver.
 					conList.add(con);
 					
-					
-					//temp1 += "(O_" + GenerateCVCConstraintForNode.cvcMap(fSingleCol, j + fkOffset -1 + "") + " = O_" + 
-					//		GenerateCVCConstraintForNode.cvcMap(pSingleCol, (j + pkOffset - 1) + "" ) + ") AND ";
 					if(fSingleCol.isNullable()){
-						//if(fSingleCol.getCvcDatatype().equals("INT")|| fSingleCol.getCvcDatatype().equals("REAL") || fSingleCol.getCvcDatatype().equals("DATE") || fSingleCol.getCvcDatatype().equals("TIME") || fSingleCol.getCvcDatatype().equals("TIMESTAMP"))
-						//{	
 							isNullCon = constraintGenerator.getIsNullCondition(cvc,fSingleCol,(Integer.valueOf(j + fkOffset -1)).toString());
-							
-						//	temp2 += "ISNULL_" + fSingleCol.getColumnName() + "(O_" + GenerateCVCConstraintForNode.cvcMap(fSingleCol, j + fkOffset -1 + "") + ") AND ";
-					//	}
-					//	else
-						//{
-						//	isNullCon = constraintGenerator.getIsNullCondition(cvc,fSingleCol,(Integer.valueOf(j + fkOffset -1)).toString());
-						//	temp2 += "ISNULL_" + fSingleCol.getCvcDatatype() + "(O_" + GenerateCVCConstraintForNode.cvcMap(fSingleCol, j + fkOffset -1 + "") + ") AND ";
-						//}
+							//Add single constraint to the list of constraints. Later call constraintGenerator.getNullConditionConjuncts to AND all Null constraints based on solver.
 							isNullConstraintList.add(isNullCon);
 					}
 				}
 			}
-			
-			/*if(temp1 != null && !temp1.isEmpty()){
-				temp1 = temp1.substring(0, temp1.length() - 5);
-			}
-			
-			if(!temp2.isEmpty()){
-				temp2 = temp2.substring(0, temp2.length() - 5);
-				fkConstraint += "ASSERT (" + temp1 + ") OR (" + temp2 + ");\n";
-			}
-			else {
-				fkConstraint += "ASSERT (" + temp1 + ");\n";
-			}*/
 		}
 		constraintString =constraintGenerator.generateANDConstraints(cvc, conList);
 		isNullConstraintString = constraintGenerator.getNullConditionConjuncts(cvc, isNullConstraintList);
@@ -877,7 +844,6 @@ public class AddDataBaseConstraints {
 					for(int j = k+1; j <= totalTuples; j++){
 	
 						//constraintString += "ASSERT ";
-	
 						/** Any of the attribute of the primary key can be distinct across multiple tuples*/
 						for(int p = 0; p < primaryKeys.size(); p++){
 							ConstraintObject con = new ConstraintObject();
@@ -890,13 +856,10 @@ public class AddDataBaseConstraints {
 							con = constraintGenerator.getConstraint(cvc,tableName,Integer.valueOf(k + offset - 1),Integer.valueOf(pos),
 																		tableName,Integer.valueOf(j + offset - 1),Integer.valueOf(pos),
 																		pkeyColumn,pkeyColumn,"DISTINCT");
+							
 							conList.add(con);
-							
-							
 							//constraintString += " DISTINCT ( O_"+tableName+"[" + (k + offset - 1) + "]."+pos+" , O_"+tableName+"["+ (j + offset - 1) +"]."+pos + ") OR ";
-							
 						}
-	
 						//int lastIndex = constraintString.lastIndexOf("OR");
 						//constraintString = constraintString.substring(0, lastIndex-1) + " ;\n";
 					}
