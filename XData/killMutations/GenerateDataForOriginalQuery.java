@@ -106,7 +106,7 @@ public class GenerateDataForOriginalQuery {
 			
 			/**Get the null and database constraints - get the number of outout tuples
 			 * and generate other constraints  accordingly*/
-			 GenerateCommonConstraintsForQuerySMT.generateNullandDBConstraintsUsingSMT(cvc,false);
+			 GenerateCommonConstraintsForQuery.generateNullandDBConstraints(cvc,false);
 			 
 			/**Get the constraints for all the blocks of the query  */
 			cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlockSMT(cvc));

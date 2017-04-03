@@ -230,18 +230,28 @@ public class AddDataBaseConstraintsSMT {
 					
 						tempConstString2 = getSMTAndConstraint(fSingleCol,pSingleCol ,Integer.valueOf(j + fkOffset -1), Integer.valueOf(j + pkOffset - 1), tempConstString1, pos1,pos2);
 						tempConstString1 = tempConstString2;
-					}
+					
 				
 				//Commented - Nullable Foreign keys - how to handle them in SMT LIB
-					/*if(fSingleCol.isNullable()){
-						if(fSingleCol.getCvcDatatype().equals("INT")|| fSingleCol.getCvcDatatype().equals("REAL") || fSingleCol.getCvcDatatype().equals("DATE") || fSingleCol.getCvcDatatype().equals("TIME") || fSingleCol.getCvcDatatype().equals("TIMESTAMP"))
-							temp2 += "ISNULL_" + fSingleCol.getColumnName() + "(O_" + GenerateCVCConstraintForNode.cvcMap(fSingleCol, j + fkOffset -1 + "") + ") AND ";
+					if(fSingleCol.isNullable()){
+						temp2+= "(and ";
+						
+						if(fSingleCol.getCvcDatatype().equals("INT")|| fSingleCol.getCvcDatatype().equals("REAL") || fSingleCol.getCvcDatatype().equals("DATE") 
+								|| fSingleCol.getCvcDatatype().equals("TIME") || fSingleCol.getCvcDatatype().equals("TIMESTAMP"))
+							
+							temp2 += "(ISNULL_" + fSingleCol.getColumnName() + "(" + GenerateCVCConstraintForNodeSMT.cvcMapSMT(fSingleCol, j + fkOffset -1 + "") + "))";
 						else
-							temp2 += "ISNULL_" + fSingleCol.getCvcDatatype() + "(O_" + GenerateCVCConstraintForNode.cvcMap(fSingleCol, j + fkOffset -1 + "") + ") AND ";
-					}*/
-
+							temp2 += "(ISNULL_" + fSingleCol.getCvcDatatype() + "(" + GenerateCVCConstraintForNodeSMT.cvcMapSMT(fSingleCol, j + fkOffset -1 + "") + "))";
+						temp2 += ")";
+					}
 				}
+				}
+			if(temp2 != null && !temp2.isEmpty()){
+				temp1 = "(or "+tempConstString1 + " "+temp2;
+				tempConstString1 = temp1;
 			}
+			}
+		
 			fkConstraint += tempConstString1;					
 			fkConstraint += " ) \n";
 		

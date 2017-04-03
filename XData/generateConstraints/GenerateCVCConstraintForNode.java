@@ -195,6 +195,7 @@ public class GenerateCVCConstraintForNode {
 	public static String cvcSetNull(GenerateCVC1 cvc, Column c, String index){
 		HashMap<String, Integer> nullValues = cvc.getColNullValuesMap().get(c);
 		Iterator<String> itr = nullValues.keySet().iterator();
+		ConstraintGenerator consGen = new ConstraintGenerator();
 		boolean foundNullVal = false;
 		String nullVal = "";
 		while(itr.hasNext()){
@@ -207,8 +208,10 @@ public class GenerateCVCConstraintForNode {
 		}
 		/** If found */
 		if(foundNullVal){
-			return "\nASSERT O_"+cvcMap(c, index)+" = "+nullVal+";";
+			 return consGen.getAssertNullValue(cvc,c,index,nullVal);
+			//return "\nASSERT O_"+cvcMap(c, index)+" = "+nullVal+";";
 		}
+		
 		else{
 			System.out.println("In cvcSetNull Function: "+"Unassigned Null value cannot be found due to insufficiency");
 			logger.log(Level.WARNING,"Unassigned Null value cannot be found due to insufficiency");		

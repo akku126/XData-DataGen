@@ -801,18 +801,18 @@ public class GenerateCVC1 implements Serializable{
 		}
 	}
 
-	public void generateDatasetsToKillMutationsUsingSMT() throws Exception{
+	/*public void generateDatasetsToKillMutationsUsingSMT() throws Exception{
 		try{
 			String mutationType = TagDatasets.MutationType.ORIGINAL.getMutationType() + TagDatasets.QueryBlock.NONE.getQueryBlock();
 			GenerateDataForOriginalQuery.generateDataForOriginalQuery(this, mutationType);		
 			
-			/**Generate data sets to kill mutations in outer query block */
+			//**Generate data sets to kill mutations in outer query block 
 			//MutationsInOuterBlock.generateDataForKillingMutantsInOuterQueryBlock(this);
 	
-			/**Generate data sets  to kill mutations in from clause nested sub query blocks */
+			//**Generate data sets  to kill mutations in from clause nested sub query blocks 
 			//MutationsInFromSubQuery.generateDataForKillingMutantsInFromSubQuery(this);
 	
-			/**Generate data sets  to kill mutations in where clause nested sub query blocks */
+			//**Generate data sets  to kill mutations in where clause nested sub query blocks
 			//MutationsInWhereSubQuery.generateDataForKillingMutantsInWhereSubQuery(this);
 			
 		}catch(Exception e){
@@ -820,7 +820,7 @@ public class GenerateCVC1 implements Serializable{
 			this.closeConn();
 			throw new Exception("Internal Error", e);
 		}
-	}
+	}*/
 	
 	/**
 	 * A wrapper method that is used to get the number of tuples for each base relation occurrence 
