@@ -5,7 +5,7 @@ import generateConstraints.GenerateCVCConstraintForNode;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GenerateConstraintsRelatedToBranchQuery;
 import generateConstraints.GenerateJoinPredicateConstraints;
-import generateConstraints.GetCVC3HeaderAndFooter;
+import generateConstraints.GetSolverHeaderAndFooter;
 import generateConstraints.TupleRange;
 import generateConstraints.UtilsRelatedToNode;
 

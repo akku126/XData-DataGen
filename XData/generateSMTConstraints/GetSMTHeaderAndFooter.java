@@ -109,7 +109,7 @@ public class GetSMTHeaderAndFooter {
 				int min, max;
 				min = max = 0;
 				boolean limitsDefined = false;
-				cvc_datatype = "\n(define-sort "+columnName+"() Int)";
+				cvc_datatype += "\n(define-sort "+columnName+"() Int)";
 				if(columnValue.size()>0){
 					for(int j=0; j<columnValue.size(); j++){
 						int colValue = (int)Float.parseFloat(columnValue.get(j));
@@ -162,7 +162,7 @@ public class GetSMTHeaderAndFooter {
 				double min, max;
 				max = 0;
 				min= 0;
-				cvc_datatype = "\n(define-sort "+columnName+"() Real)";
+				cvc_datatype += "\n(define-sort "+columnName+"() Real)";
 				boolean limitsDefined = false;
 				if(columnValue.size()>0){
 					for(int j=0; j<columnValue.size(); j++){
@@ -516,7 +516,7 @@ public class GetSMTHeaderAndFooter {
 		IsNullValueString +="\n(declare-const null_"+col+" "+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
 		IsNullValueString += "\n(define-fun ISNULL_"+col+" ((null_"+col+" "+col+")) Bool ";
 		
-		IsNullValueString += getOrForColumns("null_"+col, colValueMap.keySet(), "");//Get OR of all null columns
+		IsNullValueString += getOrForNullDataTypes("null_"+col, colValueMap.keySet(), "");//Get OR of all null columns
 		
 		IsNullValueString += ")";
 		return IsNullValueString;
@@ -527,20 +527,20 @@ public class GetSMTHeaderAndFooter {
 		NotIsNullValueString +="\n(declare-const notnull_"+col+" "+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
 		NotIsNullValueString += "\n(define-fun NOTISNULL_"+col+" ((notnull_"+col+" "+col+")) Bool ";
 		
-		NotIsNullValueString += getOrForColumns("notnull_"+col, colValueMap.keySet(), "");;//Get OR of all non-null columns
+		NotIsNullValueString += getOrForNullDataTypes("notnull_"+col, colValueMap.keySet(), "");;//Get OR of all non-null columns
 		
 		NotIsNullValueString += ")";
 		return NotIsNullValueString;
 	}
 	
-	public static String getOrForColumns(String colconst, Set columnValues, String tempString){
+	public static String getOrForNullDataTypes(String colconst, Set columnValues, String tempString){
 		
 	
 		Iterator it = columnValues.iterator();
 		int index = 0;
 		while(it.hasNext()){
 			index++;
-			tempString = getOrString(colconst,((String)it.next()),tempString);
+			tempString = getIsNullOrString(colconst,((String)it.next()),tempString);
 			//System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  \n "+tempString);
 			
 		}
@@ -549,7 +549,7 @@ public class GetSMTHeaderAndFooter {
 		return tempString;
 	}
 	
-	public static String getOrString(String colconst,String colValue,String tempstring){
+	public static String getIsNullOrString(String colconst,String colValue,String tempstring){
 		
 		String tStr = "";
 		
