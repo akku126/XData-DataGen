@@ -3,6 +3,11 @@ package generateConstraints;
 import generateSMTConstraints.GenerateCVCConstraintForNodeSMT;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.Vector;
 import java.util.logging.Logger;
 
 import parsing.Column;
@@ -11,13 +16,15 @@ import parsing.Table;
 
 import testDataGen.GenerateCVC1;
 import util.ConstraintObject;
+import util.Utilities;
 
 /**
- * This class generates the constraints based on solver defined in XData.Properties file. 
+ * This class generates the constraints based on solver in XData.Properties file
  * 
  * @author shree
  *
  */
+//FIXME:  Needs fine tuning - methods can be combined adding more parameters in constraint object.
 public class ConstraintGenerator {
 	private static Logger logger = Logger.getLogger(ConstraintGenerator.class.getName());
 	
@@ -329,12 +336,12 @@ public class ConstraintGenerator {
 public String generateCVCAndConstraints(ArrayList<ConstraintObject> constraintList){
 	
 	String constraint = "";
-	
+	constraint += "(";
 	for(ConstraintObject con : constraintList){
 		constraint += "("+con.getLeftConstraint()+" "+con.getOperator()+" "+con.getRightConstraint()+") AND " ;
 	}
 	constraint = constraint.substring(0,constraint.length()-5);
-	
+	constraint += ")";
 	return constraint;
 }
 
@@ -581,7 +588,7 @@ public String generateCVCNotConstraints(ArrayList<ConstraintObject> constraintLi
 	 * @param index
 	 * @return
 	 */
-	public static String cmtMapNode(Node n, String index){
+	public static String smtMapNode(Node n, String index){
 		if(n.getType().equalsIgnoreCase(Node.getValType())){
 			return n.getStrConst();
 		}
@@ -592,10 +599,455 @@ public String generateCVCNotConstraints(ArrayList<ConstraintObject> constraintLi
 			return "i";
 		}
 		else if(n.getType().equalsIgnoreCase(Node.getBroNodeType()) || n.getType().equalsIgnoreCase(Node.getBaoNodeType())){
-			return "("+ n.getOperator()+" "+cmtMapNode(n.getLeft(), index) +" " + cmtMapNode(n.getRight(), index)+")";
+			return "("+ n.getOperator()+" "+smtMapNode(n.getLeft(), index) +" " + smtMapNode(n.getRight(), index)+")";
 		}
 		else return "";
 	}
 
 	
+	//Specific methods for each datatype in solver file
+	/**
+	 * This method returns the header value for the Solver depending on whether solver is CVC / SMT
+	 * If solver is CVC - it returns nothing
+	 * If solver is SMT - it returns all options required for producing required output.
+	 * 
+	 * @param cvc
+	 * @return
+	 */
+	public String getHeader(GenerateCVC1 cvc){
+		String header = "";
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			return header;
+		}
+		else{
+			header = "(set-logic ALL_SUPPORTED)";
+			header += "\n (set-option:produce-models true) \n (set-option :interactive-mode true) \n (set-option :produce-assertions true) \n (set-option :produce-assignments true) ";
+		}
+		return header;
+	}
+	
+	/**
+	 * This method returns the Constraint String for defining and declaring integer type data
+	 * 
+	 * @param cvc
+	 * @param col
+	 * @param minVal
+	 * @param maxVal
+	 * @return
+	 */
+	public String getIntegerDatatypes(GenerateCVC1 cvc, Column col, int minVal, int maxVal){
+		
+		String constraint ="";
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			constraint = "\n"+col+" : TYPE = SUBTYPE (LAMBDA (x: INT) : (x > "+(minVal-4)+" AND x < "+(maxVal+4)+") OR (x > -100000 AND x < -99995));\n";
+		}
+		else{
+			constraint = "\n(declare-const i_"+col+" Int)";
+			constraint += "\n(define-fun get"+col+" ((i_"+col+" Int)) Bool \n\t\t(or (and " +
+																												"\n\t\t\t(> i_"+col+" "+((minVal-4)>0?(minVal-4):0)+") " +
+																												"\n\t\t\t(< i_"+col+" "+(maxVal+4)+")) " +
+																											"\n\t\t    (and " +
+																												"\n\t\t\t(> i_"+col+" (- "+100000+")) " +
+																												"\n\t\t\t(< i_"+col+" "+"(- "+99995+")))))";			
+		}
+		return constraint;
+	}
+	
+	/**
+	 * This method returns a constraint string that holds the allowed null values for the integer data defined
+	 * 
+	 * @param cvc
+	 * @param col
+	 * @return
+	 */
+	public String getIntegerNullDataValues(GenerateCVC1 cvc, Column col){
+		String constraint ="";
+		String isNullMembers = "";
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			
+			constraint = "ISNULL_" + col +" : "+ col + " -> BOOLEAN;\n";
+			for(int k=-99996;k>=-99999;k--){
+				isNullMembers += "ASSERT ISNULL_"+col+"("+k+");\n";
+			}
+			constraint += isNullMembers;
+			
+		}else{
+			HashMap<String, Integer> nullValuesInt = new HashMap<String, Integer>();
+			for(int k=-99996;k>=-99999;k--){
+				nullValuesInt.put(k+"",0);
+			}
+			constraint += defineIsNull(nullValuesInt, col);
+			
+		}
+		return constraint;
+	}
+	
+	/**
+	 * This method returns the Constraint String for defining and declaring Real type data
+	 * 
+	 * @param cvc
+	 * @param col
+	 * @param minVal
+	 * @param maxVal
+	 * @return
+	 */
+	public String getRealDatatypes(GenerateCVC1 cvc, Column col, double minVal, double maxVal){
+		String constraint ="";
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			String maxStr=util.Utilities.covertDecimalToFraction(maxVal+"");
+			String minStr=util.Utilities.covertDecimalToFraction(minVal+"");
+			constraint = "\n"+col+" : TYPE = SUBTYPE (LAMBDA (x: REAL) : (x >= "+(minStr)+" AND x <= "+(maxStr)+") OR (x > -100000 AND x < -99995));\n";
+			
+		}
+		else{
+			constraint += "\n(declare-const r_"+col+" Real)";
+			constraint += "\n(define-fun get"+col+" ((r_"+col+" Int)) Bool \n\t\t(or (and " +
+																												"\n\t\t\t(>= r_"+col+" "+minVal+") " +
+																												"\n\t\t\t(<= r_"+col+" "+maxVal+")) " +
+																											"\n\t\t    (and " +
+																												"\n\t\t\t(> r_"+col+" (- "+100000+")) " +
+																												"\n\t\t\t(< r_"+col+" "+"(- "+99995+")))))";
+			
+			
+		}
+		return constraint;
+	}
+	
+	/**
+	 * This method returns a constraint string that holds the allowed null values for the Real data defined
+	 * 
+	 * @param cvc
+	 * @param col
+	 * @return
+	 */
+	public String getRealNullDataValues(GenerateCVC1 cvc, Column col){
+		String constraint ="";
+		String isNullMembers = "";
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			
+			constraint += "ISNULL_" + col +" : "+ col + " -> BOOLEAN;\n";
+			for(int k=-99996;k>=-99999;k--){
+				isNullMembers += "ASSERT ISNULL_"+col+"("+k+");\n";
+				
+			}
+			constraint += isNullMembers;
+			
+		}else{
+			HashMap<String, Integer> nullValuesInt = new HashMap<String, Integer>();
+			for(int k=-99996;k>=-99999;k--){
+				nullValuesInt.put(k+"",0);
+			}
+			constraint +=defineIsNull(nullValuesInt, col);
+			
+		}
+		return constraint;
+	}
+	
+	/**
+	 * This method returns the <b>SMT Constraint</b> that holds the allowed Null values for given column
+	 * 
+	 * @param colValueMap
+	 * @param col
+	 * @return
+	 */
+	public static String defineIsNull(HashMap<String, Integer> colValueMap, Column col){
+		String IsNullValueString = "";
+		IsNullValueString +="\n(declare-const null_"+col+" "+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
+		IsNullValueString += "\n(define-fun ISNULL_"+col+" ((null_"+col+" "+col+")) Bool ";
+		IsNullValueString += getOrForNullDataTypes("null_"+col, colValueMap.keySet(), "");//Get OR of all null columns
+		IsNullValueString += ")";
+		return IsNullValueString;
+	}
+	
+	/**
+	 * This method returns the <b>SMT Constraint</b> that holds the allowed Not-Null values for given column
+	 * @param colValueMap
+	 * @param col
+	 * @return
+	 */
+	public static String defineNotIsNull(HashMap<String, Integer> colValueMap, Column col){
+		String NotIsNullValueString = "";
+		NotIsNullValueString +="\n(declare-const notnull_"+col+" "+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
+		NotIsNullValueString += "\n(define-fun NOTISNULL_"+col+" ((notnull_"+col+" "+col+")) Bool ";
+		
+		NotIsNullValueString += getOrForNullDataTypes("notnull_"+col, colValueMap.keySet(), "");;//Get OR of all non-null columns
+		
+		NotIsNullValueString += ")";
+		return NotIsNullValueString;
+	}
+	
+	/**
+	 * This method returns the <b>SMT Constraint</b> that holds the allowed Null values for a column concatenated with OR
+	 * @param colconst
+	 * @param columnValues
+	 * @param tempString
+	 * @return
+	 */
+	public static String getOrForNullDataTypes(String colconst, Set columnValues, String tempString){
+		
+	
+		Iterator it = columnValues.iterator();
+		int index = 0;
+		while(it.hasNext()){
+			index++;
+			tempString = getIsNullOrString(colconst,((String)it.next()),tempString);
+			
+		}
+		return tempString;
+	}
+	/**
+	 * This method returns the <b>SMT Constraint</b> that holds the allowed Not-Null values for a column concatenated with OR
+	 * @param colconst
+	 * @param colValue
+	 * @param tempstring
+	 * @return
+	 */
+	public static String getIsNullOrString(String colconst,String colValue,String tempstring){
+		
+		String tStr = "";
+		
+		if(tempstring != null && !tempstring.isEmpty()){
+			tStr = "(or "+tempstring;	
+		}
+		if(colValue != null && colValue.startsWith("-")){
+			tStr +=" (= "+colconst+" (- "+colValue.substring(1,colValue.length())+"))";
+		}else{
+			tStr +=" (= "+colconst+" "+colValue+")";
+		}
+		
+		if(tempstring != null && !tempstring.isEmpty()){
+			tStr += ")";	
+		}
+		
+		return tStr;
+	}
+	/**
+	 * This method returns the Constraint String for defining and declaring String / VARCHAR type data
+	 * @param cvc
+	 * @param columnValue
+	 * @param col
+	 * @param unique
+	 * @return
+	 * @throws Exception
+	 */
+	public String getStringDataTypes(GenerateCVC1 cvc, Vector<String> columnValue,Column col,boolean unique) throws Exception{
+		String constraint = "";
+		String colValue = "";
+		HashSet<String> uniqueValues = new HashSet<String>();
+		String isNullMembers = "";
+		
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			//If CVC Solver
+			constraint = "\nDATATYPE \n"+col+" = ";
+			if(columnValue.size()>0){
+				if(!unique || !uniqueValues.contains(columnValue.get(0))){
+					colValue =  Utilities.escapeCharacters(col.getColumnName())+"__"+Utilities.escapeCharacters(columnValue.get(0));//.trim());
+					constraint += "_"+colValue;
+					isNullMembers += "ASSERT NOT ISNULL_"+col+"(_"+colValue+");\n";
+					uniqueValues.add(columnValue.get(0));
+				}				
+				colValue = "";
+				for(int j=1; j<columnValue.size() || j < 4; j++){
+					if(j<columnValue.size())
+					{
+						if(!unique || !uniqueValues.contains(columnValue.get(j))){
+							colValue =  Utilities.escapeCharacters(col.getColumnName())+"__"+Utilities.escapeCharacters(columnValue.get(j));
+						}
+					}
+					else {
+						if(!uniqueValues.contains(((Integer)j).toString())){
+							colValue =  Utilities.escapeCharacters(col.getColumnName())+"__"+j;
+						}else{
+							continue;
+						}
+					}					 
+					if(!colValue.isEmpty()){
+						constraint = constraint+" | "+"_"+colValue;
+						isNullMembers += "ASSERT NOT ISNULL_"+col+"(_"+colValue+");\n";
+					}
+				}
+			}			
+			//Adding support for NULLs
+			if(columnValue.size()!=0){
+				constraint += " | ";
+			}
+			for(int k=1;k<=4;k++){
+				constraint += "NULL_"+col+"_"+k;
+				if(k < 4){
+					constraint += " | ";
+				}
+			}						
+			constraint = constraint+" END\n;";
+			constraint += "ISNULL_" + col +" : "+ col + " -> BOOLEAN;\n";
+			HashMap<String, Integer> nullValuesChar = new HashMap<String, Integer>();
+			for(int k=1;k<=4;k++){
+				isNullMembers += "ASSERT ISNULL_" + col+"(NULL_"+col+"_"+k+");\n";
+				nullValuesChar.put("NULL_"+col+"_"+k, 0);
+			}						
+			constraint += isNullMembers;
+			
+		}
+		else{//If SMT SOLVER
+			
+			constraint +="\n"+"(declare-datatypes () (("+col;
+			if(columnValue.size()>0){
+				if(!unique || !uniqueValues.contains(columnValue.get(0))){
+					colValue =  Utilities.escapeCharacters(col.getColumnName())+"__"+Utilities.escapeCharacters(columnValue.get(0));//.trim());
+					constraint += " (_"+colValue+") ";
+					uniqueValues.add(columnValue.get(0));
+				}
+				colValue = "";
+				for(int j=1; j<columnValue.size() || j < 4; j++){
+					if(j<columnValue.size())
+					{
+						if(!unique || !uniqueValues.contains(columnValue.get(j))){
+							colValue =  Utilities.escapeCharacters(col.getColumnName())+"__"+Utilities.escapeCharacters(columnValue.get(j));
+						}
+					}
+					else {
+						if(!uniqueValues.contains(((Integer)j).toString())){
+							colValue =  Utilities.escapeCharacters(col.getColumnName())+"__"+j;
+						}else{
+							continue;
+						}
+					}
+					 
+					if(!colValue.isEmpty()){
+						constraint += ""+"(_"+colValue+")";
+					}
+				}
+			}			
+			//Adding support for NULL values
+			if(columnValue.size()!=0){
+				constraint += " (";
+			}
+			for(int k=1;k<=4;k++){
+				constraint += "NULL_"+col+"_"+k;
+				if(k < 4){
+					constraint += ") (";
+				}
+			}						
+			constraint += "))))"+"\n;";		
+			
+			HashMap<String, Integer> nullValuesChar = new HashMap<String, Integer>();
+			for(int k=1;k<=4;k++){
+				//isNullMembers += "ASSERT ISNULL_" + columnName+"(NULL_"+columnName+"_"+k+");\n";
+				nullValuesChar.put("NULL_"+col+"_"+k, 0);
+			}	
+			
+			}
+		return constraint;
+	}
+
+	/**
+	 * This method returns the null integer values for CVC data type.
+	 * @param cvc
+	 * @param col
+	 * @return
+	 */
+	public String getNullMembers(GenerateCVC1 cvc, Column col){
+	String isNullMembers = "";
+		
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			for(int k=-99996;k>=-99999;k--){
+				isNullMembers += "ASSERT ISNULL_"+col+"("+k+");\n";
+			}
+		}else{
+			isNullMembers ="";
+		}
+		return isNullMembers;
+	}
+	
+	/**
+	 * This method returns the Footer Constraints based on the solver 
+	 * @param cvc
+	 * @return
+	 */
+	public String getFooter(GenerateCVC1 cvc){
+		
+		String temp = "";
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			temp += "\n\nQUERY FALSE;";			// need to right generalize one
+			temp += "\nCOUNTERMODEL;";
+		}
+		else{
+			temp += "\n\n(check-sat)";			// need to right generalize one
+			temp += "\n(get-assertions) \n (get-assignment) \n(get-model)";
+		}
+		return temp;
+	}
+	
+	/**
+	 * This method returns the constraint String that holds the Tuple Types based on solver
+	 * 
+	 * @param cvc
+	 * @param col
+	 * @return
+	 */
+	public String getTupleTypesForSolver(GenerateCVC1 cvc){
+		
+		String tempStr = "";
+		Column c;
+		Table t;
+		String temp;
+		Vector<String> tablesAdded = new Vector<String>();
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			
+				tempStr += "\n%Tuple Types for Relations\n";			 
+				for(int i=0;i<cvc.getResultsetTables().size();i++){
+					t = cvc.getResultsetTables().get(i);
+					temp = t.getTableName();
+					if(!tablesAdded.contains(temp)){
+						tempStr += temp + "_TupleType: TYPE = [";
+					}
+					for(int j=0;j<cvc.getResultsetColumns().size();j++){
+						c = cvc.getResultsetColumns().get(j);
+						if(c.getTableName().equalsIgnoreCase(temp)){
+							String s=c.getCvcDatatype();
+							if(s!= null && (s.equals("INT") || s.equals("REAL") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
+								tempStr += c.getColumnName() + ", ";
+							else
+								tempStr+=c.getCvcDatatype()+", ";
+						}
+					}
+					tempStr = tempStr.substring(0, tempStr.length()-2);
+					tempStr += "];\n";
+					/*
+					 * Now create the Array for this TupleType
+					 */
+					tempStr += "O_" + temp + ": ARRAY INT OF " + temp + "_TupleType;\n";
+				}
+		}
+		else{
+			
+			tempStr += "\n;%Tuple Types for Relations\n";
+			for(int i=0;i<cvc.getResultsetTables().size();i++){
+				int index = 0;
+				t = cvc.getResultsetTables().get(i);
+				temp = t.getTableName();
+				if(!tablesAdded.contains(temp)){
+					tempStr += "\n (declare-datatypes () (("+temp +"_TupleType" + "("+temp +"_TupleType ";
+				}
+				for(int j=0;j<cvc.getResultsetColumns().size();j++){				
+					c = cvc.getResultsetColumns().get(j);
+					if(c.getTableName().equalsIgnoreCase(temp)){						
+						String s=c.getCvcDatatype();
+						if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
+							tempStr += "("+c+index+" "+s + ") ";
+						else
+							tempStr+= "("+c+index+" "+c.getColumnName() + ") ";						
+						index++;
+					}
+				}
+				tempStr += ") )) )\n";
+				//Now create the Array for this TupleType
+				tempStr += "(declare-fun O_" + temp + "() (Array Int " + temp + "_TupleType))";
+			}
+			
+		}
+		return tempStr;
+		
+	}
+	
 }
+

@@ -1,7 +1,7 @@
 
 package testDataGen;
 
-import generateConstraints.GetCVC3HeaderAndFooter;
+import generateConstraints.GetSolverHeaderAndFooter;
 import generateConstraints.TupleRange;
 import generateSMTConstraints.GetSMTHeaderAndFooter;
 
@@ -132,7 +132,8 @@ public class GenerateCVC1 implements Serializable{
 	/** Used to number the data sets */
 	private int count;
 
-
+	private String solverSpecialCharacter;
+	
 	private ArrayList<Table> resultsetTables;
 
 	/** I/P DATABASE: ipdb = true/false*/
@@ -463,10 +464,17 @@ public class GenerateCVC1 implements Serializable{
 	
 			/**Sort the foreign keys based on topological sorting of foreign keys*/
 			RelatedToPreprocessing.sortForeignKeys(this);
-	
+			this.setConstraintSolver(Configuration.getProperty("smtsolver"));
+			
+			if(Configuration.getProperty("smtsolver").equalsIgnoreCase("cvc3")){
+				this.setSolverSpecialCharacter("#");
+			}else{
+				this.setSolverSpecialCharacter(";");
+			}
+			
 			if(Configuration.getProperty("smtsolver").equalsIgnoreCase("cvc3")){
 					/**Generate CVC3 Header, This is need to initialize the CVC3 Data Type field of each column of each table */
-					this.setCVC3_HEADER( GetCVC3HeaderAndFooter.generateCVC3_Header(this) );
+					this.setCVC3_HEADER( GetSolverHeaderAndFooter.generateSolver_Header(this) );
 			}else{
 				this.setSMTLIB_HEADER(GetSMTHeaderAndFooter.generateSMT_Header(this));
 			}
@@ -1577,6 +1585,16 @@ public class GenerateCVC1 implements Serializable{
 	 */
 	public void setConstraintSolver(String constraintSolver) {
 		this.constraintSolver = constraintSolver;
+	}
+
+
+	public String getSolverSpecialCharacter() {
+		return solverSpecialCharacter;
+	}
+
+
+	public void setSolverSpecialCharacter(String solverSpecialCharacter) {
+		this.solverSpecialCharacter = solverSpecialCharacter;
 	}
 	
 	

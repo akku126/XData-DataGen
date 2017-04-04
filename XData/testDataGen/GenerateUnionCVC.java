@@ -4,7 +4,7 @@ import generateConstraints.GenerateCVCConstraintForNode;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GenerateConstraintsForConjunct;
 import generateConstraints.GenerateConstraintsForWhereClauseSubQueryBlock;
-import generateConstraints.GetCVC3HeaderAndFooter;
+import generateConstraints.GetSolverHeaderAndFooter;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -280,7 +280,7 @@ public class GenerateUnionCVC implements Serializable{
 	//	genCVCleft.EqClass=genCVCleft.qParser.getEqClass();
 		genCVCleft.outerBlock.setConjunctsQs(new ArrayList<ConjunctQueryStructure>(genCVCleft.getqStructure().getConjuncts()));
 		RelatedToParameters.setupDataStructuresForParamConstraints(genCVCleft.outerBlock);
-		GetCVC3HeaderAndFooter.generateCVC3_Header(genCVCleft);
+		GetSolverHeaderAndFooter.generateSolver_Header(genCVCleft);
 		genCVCleft.setForeignKeysModified(new ArrayList<ForeignKey>(genCVCleft.getqStructure().getForeignKeyVectorModified()));
 //		genCVCleft.dnfStrCond=new Vector<Vector<Node>>();
 //		genCVCleft.seggregateDnfSelConditions();	

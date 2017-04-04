@@ -76,7 +76,7 @@ public class GenerateCommonConstraintsForQuery {
 	 
 			/** Solve the string constraints for the query */
 			if(!cvc.getStringConstraints().isEmpty()) {
-				cvc.getConstraints().add("\n%---------------------------------\n% TEMP VECTOR CONSTRAINTS\n%---------------------------------\n");
+				cvc.getConstraints().add("\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+" TEMP VECTOR CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n");
 				Vector<String> tempVector = cvc.getStringSolver().solveOrConstraints( new Vector<String>(cvc.getStringConstraints()), cvc.getResultsetColumns(), cvc.getTableMap());		
 				//if(cvc.getTypeOfMutation().equalsIgnoreCase(TagDatasets.MutationType.ORIGINAL.getMutationType() + TagDatasets.QueryBlock.NONE.getQueryBlock()))
 				cvc.getConstraints().addAll(tempVector);				
@@ -86,9 +86,9 @@ public class GenerateCommonConstraintsForQuery {
 			/** Add constraints, if there are branch queries*/
 			if( cvc.getBranchQueries().getBranchQuery() != null)
 			{
-				cvc.getConstraints().add("\n%---------------------------------\n%BRANCHQUERY CONSTRAINTS\n%---------------------------------\n");
+				cvc.getConstraints().add("\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"BRANCHQUERY CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n");
 				cvc.getConstraints().add( GenerateConstraintsRelatedToBranchQuery.addBranchQueryConstraints( cvc ));
-				cvc.getConstraints().add("\n%---------------------------------\n%END OF BRANCHQUERY CONSTRAINTS\n%---------------------------------\n");
+				cvc.getConstraints().add("\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"END OF BRANCHQUERY CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n");
 			}
 			
 			if(cvc.getOuterBlock().isConstrainedAggregation())
@@ -100,17 +100,17 @@ public class GenerateCommonConstraintsForQuery {
 	
 			cvc.setDatatypeColumns( new ArrayList<String>() );
 	
-			String CVC3_HEADER = GetCVC3HeaderAndFooter.generateCVC3_Header(cvc, unique);
+			String CVC3_HEADER = GetSolverHeaderAndFooter.generateSolver_Header(cvc, unique);
 	
 			/** Add not null constraints */
-			cvc.getConstraints().add("\n%---------------------------------\n% NOT NULL CONSTRAINTS\n%---------------------------------\n");
+			cvc.getConstraints().add("\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+" NOT NULL CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n");
 			CVCStr += GenerateCVCConstraintForNode.cvcSetNotNull(cvc);
 			
-			CVCStr += GetCVC3HeaderAndFooter.generateCvc3_Footer();
+			CVCStr += GetSolverHeaderAndFooter.generateSolver_Footer(cvc);
 	
 			/** add mutation type and CVC3 header*/
-			CVCStr = "%--------------------------------------------\n\n%MUTATION TYPE: " + 
-					cvc.getTypeOfMutation() +"\n\n%--------------------------------------------\n\n\n\n" + 
+			CVCStr = ""+cvc.getSolverSpecialCharacter()+"--------------------------------------------\n\n"+cvc.getSolverSpecialCharacter()+"MUTATION TYPE: " + 
+					cvc.getTypeOfMutation() +"\n\n"+cvc.getSolverSpecialCharacter()+"--------------------------------------------\n\n\n\n" + 
 					CVC3_HEADER + CVCStr;
 	
 			cvc.setCVCStr(CVCStr);
@@ -193,24 +193,24 @@ public class GenerateCommonConstraintsForQuery {
 
 		try{
 		/**Generate null constraints for outer query block */
-		cvc.getConstraints().add( "\n%---------------------------------\n%NULL CONSTRAINTS FOR OUTER BLOCK OF QUERY\n%---------------------------------\n" );
+		cvc.getConstraints().add( "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"NULL CONSTRAINTS FOR OUTER BLOCK OF QUERY\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n" );
 		cvc.getConstraints().add( getNullCOnstraintsForQueryBlock(cvc, cvc.getOuterBlock()) );
-		cvc.getConstraints().add( "\n%---------------------------------\n%END OF NULL CONSTRAINTS FOR OUTER BLOCK OF QUERY\n%---------------------------------\n" );
+		cvc.getConstraints().add( "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"END OF NULL CONSTRAINTS FOR OUTER BLOCK OF QUERY\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n" );
 
 		/**Generate null constraints for each from clause sub query block */
 		for(QueryBlockDetails queryBlock: cvc.getOuterBlock().getFromClauseSubQueries()){
 
-			cvc.getConstraints().add( "\n%---------------------------------\n%NULL CONSTRAINTS FOR FROM CLAUSE NESTED SUBQUERY BLOCK\n%---------------------------------\n" );
+			cvc.getConstraints().add( "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"NULL CONSTRAINTS FOR FROM CLAUSE NESTED SUBQUERY BLOCK\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n" );
 			cvc.getConstraints().add( getNullCOnstraintsForQueryBlock(cvc, queryBlock) );
-			cvc.getConstraints().add( "\n%---------------------------------\n%END OF NULL CONSTRAINTS FOR FROM CLAUSE NESTED SUBQUERY BLOCK\n%---------------------------------\n" );
+			cvc.getConstraints().add( "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"END OF NULL CONSTRAINTS FOR FROM CLAUSE NESTED SUBQUERY BLOCK\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n" );
 		}
 
 		/**Generate null constraints for each where clause sub query block */
 		for(QueryBlockDetails queryBlock: cvc.getOuterBlock().getWhereClauseSubQueries()){
 
-			cvc.getConstraints().add( "\n%---------------------------------\n%NULL CONSTRAINTS FOR WHERE CLAUSE NESTED SUBQUERY BLOCK\n%---------------------------------\n" );
+			cvc.getConstraints().add( "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"NULL CONSTRAINTS FOR WHERE CLAUSE NESTED SUBQUERY BLOCK\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n" );
 			cvc.getConstraints().add( getNullCOnstraintsForQueryBlock(cvc, queryBlock) );
-			cvc.getConstraints().add( "\n%---------------------------------\n%END OF NULL CONSTRAINTS FOR WHERE CLAUSE NESTED SUBQUERY BLOCK\n%---------------------------------\n" );
+			cvc.getConstraints().add( "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"END OF NULL CONSTRAINTS FOR WHERE CLAUSE NESTED SUBQUERY BLOCK\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n" );
 		}
 		}catch (TimeoutException e){
 			logger.log(Level.SEVERE,e.getMessage(),e);		

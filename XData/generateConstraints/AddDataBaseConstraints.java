@@ -44,7 +44,7 @@ public class AddDataBaseConstraints {
 		 * These constraints must be added to only that occurrence of the table
 		 * FIXME: Killing partial group by case 2 is a special case here
 		 * FIXME: We should consider repeated relation occurrences here*/
-		String unConstraints = "\n%---------------------------------\n%UNIQUE CONSTRAINTS  FOR PRIMARY KEY TO SATISFY CONSTRAINED AGGREGATION\n%---------------------------------\n";
+		String unConstraints = "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"UNIQUE CONSTRAINTS  FOR PRIMARY KEY TO SATISFY CONSTRAINED AGGREGATION\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
 
 		
 		
@@ -63,21 +63,21 @@ public class AddDataBaseConstraints {
 				if(queryBlock.isConstrainedAggregation())/** if there is constrained aggregation */
 					unConstraints += getUniqueConstraintsForPrimaryKeys(cvc, queryBlock);	
 	
-			unConstraints += "\n%---------------------------------\n%END OF UNIQUE CONSTRAINTS  FOR PRIMARY KEY TO SATISFY CONSTRAINED AGGREGATION\n%---------------------------------\n";
+			unConstraints += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"END OF UNIQUE CONSTRAINTS  FOR PRIMARY KEY TO SATISFY CONSTRAINED AGGREGATION\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
 	
 			/**Generate foreign key constraints */
-			dbConstraints += "\n%---------------------------------\n%FOREIGN  KEY CONSTRAINTS \n%---------------------------------\n";
+			dbConstraints += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"FOREIGN  KEY CONSTRAINTS \n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
 			dbConstraints += generateConstraintsForForeignKeys(cvc);
-			dbConstraints += "\n%---------------------------------\n%END OF FOREIGN  KEY CONSTRAINTS \n%---------------------------------\n";
+			dbConstraints += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"END OF FOREIGN  KEY CONSTRAINTS \n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
 	
 			/** Now add primary key constraints */
-			dbConstraints += "\n%---------------------------------\n%PRIMARY KEY CONSTRAINTS \n%---------------------------------\n";
+			dbConstraints += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"PRIMARY KEY CONSTRAINTS \n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
 			dbConstraints += generateConstraintsForPrimaryKeys(cvc);
-			dbConstraints += "\n%---------------------------------\n%END OF PRIMARY KEY CONSTRAINTS \n%---------------------------------\n";
+			dbConstraints += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"END OF PRIMARY KEY CONSTRAINTS \n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
 	
-			//dbConstraints += "\n%---------------------------------\n%CONSTRAINTS FOR TUPLE INDICES \n%---------------------------------\n";
+			//dbConstraints += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"CONSTRAINTS FOR TUPLE INDICES \n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
 			//dbConstraints += generateConstraintsForTupleIndices(cvc);
-			//dbConstraints += "\n%---------------------------------\n%END OF CONSTRAINTS FOR TUPLE INDICES \n%---------------------------------\n";
+			//dbConstraints += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"END OF CONSTRAINTS FOR TUPLE INDICES \n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
 		}catch(Exception e){
 			logger.log(Level.SEVERE,"\n Exception in AddDatabaseConstraints.java:Function addDBConstraints :",e);
 			throw e;

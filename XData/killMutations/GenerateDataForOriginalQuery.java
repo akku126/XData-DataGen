@@ -6,7 +6,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import generateConstraints.GenerateCommonConstraintsForQuery;
-import generateConstraints.GetCVC3HeaderAndFooter;
+import generateConstraints.GetSolverHeaderAndFooter;
 import generateSMTConstraints.GenerateCommonConstraintsForQuerySMT;
 import generateSMTConstraints.GetSMTHeaderAndFooter;
 import testDataGen.GenerateCVC1;
@@ -118,6 +118,7 @@ public class GenerateDataForOriginalQuery {
 			//System.out.println("\n CVSTR : \n"+CVCStr);
 			/** Call the method for the data generation*/
 			return GenerateCommonConstraintsForQuerySMT.generateDataSetForConstraintsForSMT(cvc,false);
+			//return GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc, false);
 		}catch (TimeoutException e){
 			logger.log(Level.SEVERE,e.getMessage(),e);		
 			throw e;

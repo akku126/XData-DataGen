@@ -209,7 +209,7 @@
 			File schemaFile=new File("/tmp/DDL.sql");
 			File sampleDataFile=new File("/tmp/data.sql");
 			boolean orderDependent=false;
-			String tempFilePath="4/Generated";
+			String tempFilePath="4/Generated/New";
 			
 			GenerateDataset d=new GenerateDataset();
 			d.generateDatasetForQuery(conn,queryId,query,  schemaFile,  sampleDataFile,  orderDependent,  tempFilePath);

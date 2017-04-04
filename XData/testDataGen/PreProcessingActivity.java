@@ -218,6 +218,12 @@ public class PreProcessingActivity {
 					cvc.initializeOtherDetails();
 					cvc.setConstraintSolver(Configuration.getProperty("smtsolver"));
 					
+					if(Configuration.getProperty("smtsolver").equalsIgnoreCase("cvc3")){
+						cvc.setSolverSpecialCharacter("#");
+					}else{
+						cvc.setSolverSpecialCharacter(";");
+					}
+					
 					/** Segregate selection conditions in each query block */
 					RelatedToPreprocessing.segregateSelectionConditions(cvc);
 					
