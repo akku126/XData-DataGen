@@ -247,6 +247,24 @@ public class ConstraintGenerator {
 	}
 	
 	/**
+	 * This method takes in the ConstraintObject List as input and generates an ASSERT constraint String AND'ing all conditions.
+	 * The returned string holds the AND'ed constraints in SMT or CVC format. 
+	 * 
+	 * @param cvc
+	 * @param constraintList
+	 * @return
+	 */
+	
+	public String generateAssertANDConstraints(GenerateCVC1 cvc, ArrayList<ConstraintObject> constraintList){
+	String constraint = "";
+	if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+		constraint = "\n ASSERT " + generateCVCAndConstraints(constraintList)+";";
+	}else{
+		constraint = "\n (assert "+generateSMTAndConstraints(constraintList,null)+")";
+	}
+	return constraint;
+}
+	/**
 	 * This method returns a constraint for null value in the query depending on solver.
 	 * 
 	 * @param cvc
@@ -307,6 +325,25 @@ public class ConstraintGenerator {
 	}
 	
 	/**
+	 * This method takes in the ConstraintObject List as input and generates an ASSERT constraint String OR'ing all conditions.
+	 * The returned string holds the OR'ed constraints in SMT or CVC format.
+	 *  
+	 * @param cvc
+	 * @param constraintList
+	 * @return
+	 */
+	public String generateAssertOrConstraints(GenerateCVC1 cvc, ArrayList<ConstraintObject> constraintList){
+		String constraint = "";
+		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+			constraint = "\n ASSERT"+generateCVCOrConstraints(constraintList)+";";
+		}else{
+			constraint = "\n (assert "+generateSMTOrConstraints(constraintList,null)+")";
+		}
+		return constraint;
+	}
+	
+	
+	/**
 	 * This method takes in the ConstraintObject List as input and generates a constraint String with NOT conditions.
 	 * The returned string holds the NOT constraints in SMT or CVC format.
 	 *  
@@ -333,12 +370,12 @@ public class ConstraintGenerator {
 public String generateCVCAndConstraints(ArrayList<ConstraintObject> constraintList){
 	
 	String constraint = "";
-	constraint += "(";
+	//constraint += "(";
 	for(ConstraintObject con : constraintList){
 		constraint += "("+con.getLeftConstraint()+" "+con.getOperator()+" "+con.getRightConstraint()+") AND " ;
 	}
 	constraint = constraint.substring(0,constraint.length()-5);
-	constraint += ")";
+	//constraint += ")";
 	return constraint;
 }
 
