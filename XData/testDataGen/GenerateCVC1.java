@@ -467,7 +467,7 @@ public class GenerateCVC1 implements Serializable{
 			this.setConstraintSolver(Configuration.getProperty("smtsolver"));
 			
 			if(Configuration.getProperty("smtsolver").equalsIgnoreCase("cvc3")){
-				this.setSolverSpecialCharacter("#");
+				this.setSolverSpecialCharacter("%");
 			}else{
 				this.setSolverSpecialCharacter(";");
 			}

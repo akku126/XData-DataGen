@@ -219,7 +219,7 @@ public class PreProcessingActivity {
 					cvc.setConstraintSolver(Configuration.getProperty("smtsolver"));
 					
 					if(Configuration.getProperty("smtsolver").equalsIgnoreCase("cvc3")){
-						cvc.setSolverSpecialCharacter("#");
+						cvc.setSolverSpecialCharacter("%");
 					}else{
 						cvc.setSolverSpecialCharacter(";");
 					}

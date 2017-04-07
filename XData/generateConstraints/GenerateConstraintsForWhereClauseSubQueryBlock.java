@@ -460,7 +460,6 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 		for(int i=0;i<count;i++){
 			Vector<Node> subQConds= new Vector<Node>();
 
-
 			/**Get the selction conditions of the subquery*/
 			/**FIXME: What should be done if inside is ORing of conditions*/
 			for(ConjunctQueryStructure conjunct: queryBlock.getWhereClauseSubQueries().get(index).getConjunctsQs()){
@@ -489,19 +488,16 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 							Integer.parseInt(position); 
 							present = true;
 							break;
-
 						} catch(NumberFormatException e) { 
 							continue;
 						}						
 					}
-
 				}
 				if( present ){
 					String subQueryConstraints ="ASSERT NOT ";
 					if( UtilsRelatedToNode.isStringSelection(cond,0)){
 
 						subQueryConstraints += GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, cond, i+offset);
-
 						String result = cvc.getStringSolver().solveConstraints(subQueryConstraints,cvc.getResultsetColumns(), cvc.getTableMap()).get(0);
 						returnString +=  result.substring(7,result.length()-2)+ " AND ";		
 					}

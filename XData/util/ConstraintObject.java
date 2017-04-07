@@ -8,7 +8,6 @@ import java.util.logging.Logger;
  * columns / already generated constraint string with which more constraints are to be concatenated.
  * 
  * @author shree
- *
  */
 public class ConstraintObject {
 
@@ -18,10 +17,10 @@ public class ConstraintObject {
 	//This variable holds the generated constraint String(which can have AND'ed / OR'ed constraints) that has  
 	//conjunction with or constraints and vice versa.  
 	//This can also hold some simple assert constraints with which more constraints will be concatenated 
-	private String assertConstraint;
+	private String existingConstraint;
 	
-	//Experimental variable to hold the column level constraint as a whole - with pos, index, table name and column name
-	//Will not be feasible as it differs for CVC/SMT
+	//Experimental variable to hold the column level constraint as a whole - with pos, index, table name and column name - to hold (left operator right)  or (operator left right) 
+	//Will not be feasible as even left and right differs for CVC/SMT 
 	private String baseConstraintString;
 	
 	//This holds the left side constraints usually constraint on column with pos, index and table name.
@@ -54,7 +53,7 @@ public class ConstraintObject {
 	 * @return the assertConstraint
 	 */
 	public String getAssertConstraint() {
-		return assertConstraint;
+		return existingConstraint;
 	}
 	
 	/**
@@ -62,7 +61,7 @@ public class ConstraintObject {
 	 * @param assertConstraint the assertConstraint to set
 	 */
 	public void setAssertConstraint(String assertConstraint) {
-		this.assertConstraint = assertConstraint;
+		this.existingConstraint = assertConstraint;
 	}
 	
 	/**

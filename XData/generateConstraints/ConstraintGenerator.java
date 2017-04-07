@@ -15,6 +15,7 @@ import parsing.Node;
 import parsing.Table;
 
 import testDataGen.GenerateCVC1;
+import testDataGen.QueryBlockDetails;
 import util.ConstraintObject;
 import util.Utilities;
 
@@ -159,8 +160,7 @@ public class ConstraintGenerator {
 		if(s1 != null && !s1.isEmpty()){
 			cvcStr += " (and ";
 			cvcStr += s1;
-		}
-		
+		}		
 		if(con != null){
 			cvcStr += con;
 		}
@@ -184,15 +184,14 @@ public class ConstraintGenerator {
 		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
 			constraint += "\nASSERT ";
 			constraint += generateCVCAndConstraints(AndConstraintList);
-			constraint = constraint.substring(0,constraint.length()-5);
-			
+			constraint = constraint.substring(0,constraint.length()-5);			
 			constraint += generateCVCOrConstraints(OrConstraintList);
 			constraint = constraint.substring(0,constraint.length()-4);
 			constraint +=";\n";
 			
 		}else{
 			constraint += "\n (assert "; 
-			constraint += generateSMTAndConstraints(AndConstraintList);
+			constraint += generateSMTAndConstraints(AndConstraintList,null);
 			constraint += generateSMTOrConstraints(OrConstraintList,constraint);
 			constraint += " )";
 		}
@@ -213,16 +212,14 @@ public class ConstraintGenerator {
 		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
 			constraint += "\nASSERT ";
 			constraint += generateCVCOrConstraints(OrConstraintList);
-			constraint = constraint.substring(0,constraint.length()-4);
-			
+			constraint = constraint.substring(0,constraint.length()-4);			
 			constraint += generateCVCAndConstraints(AndConstraintList);
-			constraint = constraint.substring(0,constraint.length()-5);
-	
+			constraint = constraint.substring(0,constraint.length()-5);	
 			constraint +=";\n";
 			
 		}else{
 			constraint += "\n (assert "; 
-			constraint += generateSMTOrConstraints(OrConstraintList);
+			constraint += generateSMTOrConstraints(OrConstraintList,null);
 			constraint += generateSMTAndConstraints(AndConstraintList,constraint);
 			constraint += " )";
 		}
@@ -244,7 +241,7 @@ public class ConstraintGenerator {
 		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
 			constraint = generateCVCAndConstraints(constraintList);
 		}else{
-			constraint = generateSMTAndConstraints(constraintList);
+			constraint = generateSMTAndConstraints(constraintList,null);
 		}
 		return constraint;
 	}
@@ -304,7 +301,7 @@ public class ConstraintGenerator {
 		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
 			constraint = generateCVCOrConstraints(constraintList);
 		}else{
-			constraint = generateSMTOrConstraints(constraintList);
+			constraint = generateSMTOrConstraints(constraintList,null);
 		}
 		return constraint;
 	}
@@ -351,7 +348,7 @@ public String generateCVCAndConstraints(ArrayList<ConstraintObject> constraintLi
  * StringValue holds the previous constraint of same form thus forming nested structure as required for SMT.
  * 
  */
-public String generateSMTAndConstraints(ArrayList<ConstraintObject> constraintList){
+/*public String generateSMTAndConstraints(ArrayList<ConstraintObject> constraintList){
 	
 	String constraintStr = "";
 	String constr1 ="";
@@ -360,7 +357,7 @@ public String generateSMTAndConstraints(ArrayList<ConstraintObject> constraintLi
 		constraintStr = constr1;
 	}
 	return constraintStr;
-}
+}*/
 
 public String generateSMTAndConstraints(ArrayList<ConstraintObject> constraintList,String constraintStr){
 	String constr1 ="";
@@ -379,14 +376,14 @@ public String generateSMTAndConstraints(ArrayList<ConstraintObject> constraintLi
  * StringValue holds the previous constraint of same form thus forming nested structure as required for SMT.
  * 
  */
-public String generateSMTOrConstraints(ArrayList<ConstraintObject> constraintList){
+/*public String generateSMTOrConstraints(ArrayList<ConstraintObject> constraintList){
 	
 	String constraintStr = "";
 	for(ConstraintObject con : constraintList){
 		constraintStr += getSMTOrConstraint(con,constraintStr);
 	}
 	return constraintStr;
-}
+}*/
 
 public String generateSMTOrConstraints(ArrayList<ConstraintObject> constraintList,String constraintStr){
 
@@ -410,8 +407,7 @@ public String getSMTAndConstraint(ConstraintObject con, String s1){
 	if(s1 != null && !s1.isEmpty()){
 		cvcStr += " (and ";
 		cvcStr += s1;
-	}
-	
+	}	
 	if(con != null){
 		cvcStr += "(" +con.getOperator()+"  (" +con.getLeftConstraint()+") ("+con.getRightConstraint()+") )";
 	}
@@ -670,14 +666,12 @@ public String generateCVCNotConstraints(ArrayList<ConstraintObject> constraintLi
 				isNullMembers += "ASSERT ISNULL_"+col+"("+k+");\n";
 			}
 			constraint += isNullMembers;
-			
 		}else{
 			HashMap<String, Integer> nullValuesInt = new HashMap<String, Integer>();
 			for(int k=-99996;k>=-99999;k--){
 				nullValuesInt.put(k+"",0);
 			}
-			constraint += defineIsNull(nullValuesInt, col);
-			
+			constraint += defineIsNull(nullValuesInt, col);			
 		}
 		return constraint;
 	}
@@ -696,8 +690,7 @@ public String generateCVCNotConstraints(ArrayList<ConstraintObject> constraintLi
 		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
 			String maxStr=util.Utilities.covertDecimalToFraction(maxVal+"");
 			String minStr=util.Utilities.covertDecimalToFraction(minVal+"");
-			constraint = "\n"+col+" : TYPE = SUBTYPE (LAMBDA (x: REAL) : (x >= "+(minStr)+" AND x <= "+(maxStr)+") OR (x > -100000 AND x < -99995));\n";
-			
+			constraint = "\n"+col+" : TYPE = SUBTYPE (LAMBDA (x: REAL) : (x >= "+(minStr)+" AND x <= "+(maxStr)+") OR (x > -100000 AND x < -99995));\n";			
 		}
 		else{
 			constraint += "\n(declare-const r_"+col+" Real)";
@@ -730,15 +723,13 @@ public String generateCVCNotConstraints(ArrayList<ConstraintObject> constraintLi
 				isNullMembers += "ASSERT ISNULL_"+col+"("+k+");\n";
 				
 			}
-			constraint += isNullMembers;
-			
+			constraint += isNullMembers;			
 		}else{
 			HashMap<String, Integer> nullValuesInt = new HashMap<String, Integer>();
 			for(int k=-99996;k>=-99999;k--){
 				nullValuesInt.put(k+"",0);
 			}
-			constraint +=defineIsNull(nullValuesInt, col);
-			
+			constraint +=defineIsNull(nullValuesInt, col);			
 		}
 		return constraint;
 	}
@@ -1048,6 +1039,39 @@ public String generateCVCNotConstraints(ArrayList<ConstraintObject> constraintLi
 		return tempStr;
 		
 	}
+	
+	
+	
+	/**
+	 * Generate CVC3 constraints for the given node and its tuple position
+	 * @param queryBlock
+	 * @param n
+	 * @param index
+	 * @return
+	 */
+	public static String genPositiveCondsForPred(GenerateCVC1 cvc,QueryBlockDetails queryBlock, Node n, int index){
+		if(n.getType().equalsIgnoreCase(Node.getColRefType())){			
+			if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+				return "O_"+cvcMap(n.getColumn(), index+"");
+			}else{				
+				return smtMap(n.getColumn(), index+"");
+			}
+		}
+		else if(n.getType().equalsIgnoreCase(Node.getValType())){
+			if(!n.getStrConst().contains("$"))
+				return n.getStrConst();
+			else
+				return queryBlock.getParamMap().get(n.getStrConst());
+		}
+		else if(n.getType().equalsIgnoreCase(Node.getBroNodeType()) || n.getType().equalsIgnoreCase(Node.getBaoNodeType()) || n.getType().equalsIgnoreCase(Node.getLikeNodeType()) ||
+				n.getType().equalsIgnoreCase(Node.getAndNodeType()) || n.getType().equalsIgnoreCase(Node.getOrNodeType())){
+			return "("+ genPositiveCondsForPred(cvc,queryBlock, n.getLeft(), index) +" "+ n.getOperator() +" "+ 
+					genPositiveCondsForPred(cvc,queryBlock, n.getRight(), index) +")";
+		}	
+		return null;
+	}
+
+	
 	
 }
 

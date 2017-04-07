@@ -234,7 +234,7 @@ public class AddDataBaseConstraints {
 						primaryKeyConstraint.setOperator(" =>");
 						primaryKeyConstraint.setRightConstraint(impliedConstraintString);
 						
-						pkConstraint += constraintGenerator.getImpliedConstraints(cvc, primaryKeyConstraint,(!x));
+						pkConstraint += constraintGenerator.getImpliedConstraints(cvc, primaryKeyConstraint,x);
 					
 					}
 				}
