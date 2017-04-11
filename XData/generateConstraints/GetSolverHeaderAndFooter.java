@@ -68,6 +68,8 @@ public class GetSolverHeaderAndFooter {
 			}
 			equivalenceColumns.put(vecEqCol, false);
 		}
+		ConstraintGenerator constraintGen = new ConstraintGenerator();				
+		String cvc_datatype = constraintGen.getHeader(cvc);
 		
 		Vector<Vector<Node>>  equivalenceClasses1 = new Vector<Vector<Node>>();
 		for(ConjunctQueryStructure con: cvc.getOuterBlock().getConjunctsQs())
@@ -81,21 +83,22 @@ public class GetSolverHeaderAndFooter {
 			for(ConjunctQueryStructure con: qb.getConjunctsQs())
 				equivalenceClasses1.addAll(con.getEquivalenceClasses());
 		
-		ConstraintGenerator constraintGen = new ConstraintGenerator();		
 		Vector<Column> eqColsVector = new Vector<Column>();
 		for(int i=1; i < cvc.getResultsetColumns().size(); i++){
+			if(i >1){
+				cvc_datatype = "";
+			}
 			Column column = cvc.getResultsetColumns().get(i);
 			String columnName = column.getColumnName();		
 			int columnType = 0;
-			String cvc_datatype = "";
-
+		
+			
+			
 			Vector<String> columnValue = column.getColumnValues();
 			columnType = dt.getDataType(column.getDataType());
 			cvc_tuple += columnName+", ";
-
 			boolean columnEquivalentAlreadyAdded = false;
 			String equivalentColumn = "";
-
 			String isNullMembers = "";
 			switch(columnType){//FIXME: ADD CORRECT CODE FOR MIN AND MAXIMUM VALUES OF COLUMNS
 								//This approach cause problems in some cases
@@ -103,6 +106,7 @@ public class GetSolverHeaderAndFooter {
 			{
 				int min, max;
 				min = max = 0;
+				column.setCvcDatatype("Int");
 				boolean limitsDefined = false;
 				if(columnValue.size()>0){
 					for(int j=0; j<columnValue.size(); j++){
@@ -121,7 +125,7 @@ public class GetSolverHeaderAndFooter {
 							max = colValue;
 					}
 				}
-				cvc_datatype = constraintGen.getIntegerDatatypes(cvc,column,min,max);
+				cvc_datatype += constraintGen.getIntegerDatatypes(cvc,column,min,max);
 				cvc_datatype += constraintGen.getIntegerNullDataValues(cvc,column);
 				
 				//Adding support for NULLs
@@ -141,7 +145,7 @@ public class GetSolverHeaderAndFooter {
 				cvc.getColNullValuesMap().put(column, nullValuesInt);
 				column.setMinVal(min);
 				column.setMaxVal(max);
-				column.setCvcDatatype("INT");
+			
 				break;
 			} 
 			case 2:
@@ -150,6 +154,7 @@ public class GetSolverHeaderAndFooter {
 				max = 0;
 				min= 0;
 				boolean limitsDefined = false;
+				column.setCvcDatatype("Real");
 				if(columnValue.size()>0){
 					for(int j=0; j<columnValue.size(); j++){
 						double colValue = Double.parseDouble(columnValue.get(j));
@@ -173,7 +178,7 @@ public class GetSolverHeaderAndFooter {
 				String maxStr=util.Utilities.covertDecimalToFraction(max+"");
 				String minStr=util.Utilities.covertDecimalToFraction(min+"");
 				
-				cvc_datatype = constraintGen.getRealDatatypes(cvc,column,min,max);
+				cvc_datatype += constraintGen.getRealDatatypes(cvc,column,min,max);
 				cvc_datatype += constraintGen.getRealNullDataValues(cvc,column);
 				
 				/*cvc_datatype = "\n"+columnName+" : TYPE = SUBTYPE (LAMBDA (x: REAL) : (x >= "+(minStr)+" AND x <= "+(maxStr)+") OR (x > -100000 AND x < -99995));\n";
@@ -189,7 +194,7 @@ public class GetSolverHeaderAndFooter {
 				//cvc_datatype += isNullMembers;
 				column.setMinVal(min);
 				column.setMaxVal(max);
-				column.setCvcDatatype("REAL");
+				
 				break;
 			}
 			case 3:
@@ -198,7 +203,7 @@ public class GetSolverHeaderAndFooter {
 				HashSet<String> uniqueValues = new HashSet<String>();
 				isNullMembers = "";
 				
-				cvc_datatype = constraintGen.getStringDataTypes(cvc,columnValue,column,unique);
+				cvc_datatype += constraintGen.getStringDataTypes(cvc,columnValue,column,unique);
 				
 				/*cvc_datatype = "\nDATATYPE \n"+columnName+" = ";
 

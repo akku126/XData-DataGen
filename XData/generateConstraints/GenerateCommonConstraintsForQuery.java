@@ -1,6 +1,7 @@
 package generateConstraints;
 
 import generateConstraints.TupleRange;
+import generateSMTConstraints.GetSMTHeaderAndFooter;
 
 import java.util.*;
 import java.util.concurrent.TimeoutException;
@@ -106,15 +107,24 @@ public class GenerateCommonConstraintsForQuery {
 			cvc.getConstraints().add("\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+" NOT NULL CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n");
 			CVCStr += GenerateCVCConstraintForNode.cvcSetNotNull(cvc);
 			
+
+			if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+				CVCStr += GetSolverHeaderAndFooter.generateSolver_Footer(cvc);
+		
+				/** add mutation type and CVC3 header*/
+				CVCStr = ""+cvc.getSolverSpecialCharacter()+"--------------------------------------------\n\n"+cvc.getSolverSpecialCharacter()+"MUTATION TYPE: " + 
+						cvc.getTypeOfMutation() +"\n\n"+cvc.getSolverSpecialCharacter()+"--------------------------------------------\n\n\n\n" + 
+						CVC3_HEADER + CVCStr;
+		
+				
+			}else{
+				CVCStr = ";--------------------------------------------\n\n;MUTATION TYPE: " + 
+						cvc.getTypeOfMutation() +"\n\n;--------------------------------------------\n\n\n\n  ;-----------------------------------------------------\n\n" + 
+						CVC3_HEADER +CVCStr;
+			}
+	
 			CVCStr += GetSolverHeaderAndFooter.generateSolver_Footer(cvc);
-	
-			/** add mutation type and CVC3 header*/
-			CVCStr = ""+cvc.getSolverSpecialCharacter()+"--------------------------------------------\n\n"+cvc.getSolverSpecialCharacter()+"MUTATION TYPE: " + 
-					cvc.getTypeOfMutation() +"\n\n"+cvc.getSolverSpecialCharacter()+"--------------------------------------------\n\n\n\n" + 
-					CVC3_HEADER + CVCStr;
-	
 			cvc.setCVCStr(CVCStr);
-	
 			/** Add extra tuples to satisfy branch queries constraints*/
 			for(int i = 0; i < cvc.getBranchQueries().getNoOfBranchQueries(); i++){
 				
@@ -124,18 +134,31 @@ public class GenerateCommonConstraintsForQuery {
 					
 					cvc.getNoOfOutputTuples().put(tempTab.getTableName(), cvc.getNoOfOutputTuples().get(tempTab.getTableName()) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempTab));
 			}
-	
-			/** Call CVC3 Solver with constraints */
-			logger.log(Level.INFO,"cvc count =="+cvc.getCount());
-			WriteFile.writeFile(Configuration.homeDir + "/temp_cvc" + cvc.getFilePath() + "/cvc3_" + cvc.getCount() + ".cvc", CVCStr);
+			Boolean success = false;
+			if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+				/** Call CVC3 Solver with constraints */
+				logger.log(Level.INFO,"cvc count =="+cvc.getCount());
+				WriteFile.writeFile(Configuration.homeDir + "/temp_cvc" + cvc.getFilePath() + "/cvc3_" + cvc.getCount() + ".cvc", CVCStr);
+				
+				success= new PopulateTestData().killedMutants("cvc3_" + cvc.getCount() 
+						+ ".cvc", cvc.getQuery(), 
+						"DS" + cvc.getCount(), cvc.getQueryString(), cvc.getFilePath(), cvc.getNoOfOutputTuples(), cvc.getTableMap(), 
+						cvc.getResultsetColumns(), cvc.getRepeatedRelationCount().keySet()) ;
 			
-			Boolean success= new PopulateTestData().killedMutants("cvc3_" + cvc.getCount() 
-					+ ".cvc", cvc.getQuery(), 
-					"DS" + cvc.getCount(), cvc.getQueryString(), cvc.getFilePath(), cvc.getNoOfOutputTuples(), cvc.getTableMap(), 
-					cvc.getResultsetColumns(), cvc.getRepeatedRelationCount().keySet()) ;
 			cvc.setOutput( cvc.getOutput() + success);
 			cvc.setCount(cvc.getCount() + 1);
-	
+			}else{
+				/** Call CVC3 Solver with constraints */
+				logger.log(Level.INFO,"cvc count =="+cvc.getCount());
+				WriteFile.writeFile(Configuration.homeDir + "temp_cvc" + cvc.getFilePath() + "/cvc4_" + cvc.getCount() + ".cvc", CVCStr);
+				
+				success= new PopulateTestData().killedMutants("cvc4_" + cvc.getCount() 
+						+ ".cvc", cvc.getQuery(), 
+						"DS" + cvc.getCount(), cvc.getQueryString(), cvc.getFilePath(), cvc.getNoOfOutputTuples(), cvc.getTableMap(), 
+						cvc.getResultsetColumns(), cvc.getRepeatedRelationCount().keySet()) ;
+				cvc.setOutput( cvc.getOutput() + success);
+				cvc.setCount(cvc.getCount() + 1);
+			}
 			/** remove extra tuples for Branch query */		
 			for(int i = 0; i < cvc.getBranchQueries().getNoOfBranchQueries(); i++){
 				

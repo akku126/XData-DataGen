@@ -675,7 +675,7 @@ public String generateCVCNotConstraints(ArrayList<ConstraintObject> constraintLi
 			constraint = "\n"+col+" : TYPE = SUBTYPE (LAMBDA (x: INT) : (x > "+(minVal-4)+" AND x < "+(maxVal+4)+") OR (x > -100000 AND x < -99995));\n";
 		}
 		else{
-			constraint = "\n(declare-const i_"+col+" Int)";
+			constraint = "\n(define-sort i_"+col+"() Int)";
 			constraint += "\n(define-fun get"+col+" ((i_"+col+" Int)) Bool \n\t\t(or (and " +
 																												"\n\t\t\t(> i_"+col+" "+((minVal-4)>0?(minVal-4):0)+") " +
 																												"\n\t\t\t(< i_"+col+" "+(maxVal+4)+")) " +
@@ -730,8 +730,8 @@ public String generateCVCNotConstraints(ArrayList<ConstraintObject> constraintLi
 			constraint = "\n"+col+" : TYPE = SUBTYPE (LAMBDA (x: REAL) : (x >= "+(minStr)+" AND x <= "+(maxStr)+") OR (x > -100000 AND x < -99995));\n";			
 		}
 		else{
-			constraint += "\n(declare-const r_"+col+" Real)";
-			constraint += "\n(define-fun get"+col+" ((r_"+col+" Int)) Bool \n\t\t(or (and " +
+			constraint += "\n(define-sort r_"+col+"() Real)";
+			constraint += "\n(define-fun get"+col+" ((r_"+col+" Real)) Bool \n\t\t(or (and " +
 																												"\n\t\t\t(>= r_"+col+" "+minVal+") " +
 																												"\n\t\t\t(<= r_"+col+" "+maxVal+")) " +
 																											"\n\t\t    (and " +
@@ -780,8 +780,18 @@ public String generateCVCNotConstraints(ArrayList<ConstraintObject> constraintLi
 	 */
 	public static String defineIsNull(HashMap<String, Integer> colValueMap, Column col){
 		String IsNullValueString = "";
-		IsNullValueString +="\n(declare-const null_"+col+" "+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
-		IsNullValueString += "\n(define-fun ISNULL_"+col+" ((null_"+col+" "+col+")) Bool ";
+		if(col.getCvcDatatype().equalsIgnoreCase("Int")){
+			IsNullValueString +="\n(declare-const null_"+col+" i_"+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
+			IsNullValueString += "\n(define-fun ISNULL_"+col+" ((null_"+col+" i_"+col+")) Bool ";
+		}else if(col.getCvcDatatype().equalsIgnoreCase("Real")){
+			IsNullValueString +="\n(declare-const null_"+col+" r_"+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
+			IsNullValueString += "\n(define-fun ISNULL_"+col+" ((null_"+col+" r_"+col+")) Bool ";
+		}else{
+			IsNullValueString +="\n(declare-const null_"+col+" "+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
+			IsNullValueString += "\n(define-fun ISNULL_"+col+" ((null_"+col+" "+col+")) Bool ";
+			
+		}
+		
 		IsNullValueString += getOrForNullDataTypes("null_"+col, colValueMap.keySet(), "");//Get OR of all null columns
 		IsNullValueString += ")";
 		return IsNullValueString;
@@ -795,8 +805,18 @@ public String generateCVCNotConstraints(ArrayList<ConstraintObject> constraintLi
 	 */
 	public static String defineNotIsNull(HashMap<String, Integer> colValueMap, Column col){
 		String NotIsNullValueString = "";
-		NotIsNullValueString +="\n(declare-const notnull_"+col+" "+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
-		NotIsNullValueString += "\n(define-fun NOTISNULL_"+col+" ((notnull_"+col+" "+col+")) Bool ";
+		
+		if(col.getCvcDatatype().equalsIgnoreCase("Int")){
+			NotIsNullValueString +="\n(declare-const notnull_"+col+" i_"+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
+			NotIsNullValueString += "\n(define-fun NOTISNULL_"+col+" ((notnull_"+col+" i_"+col+")) Bool ";
+		}else if(col.getCvcDatatype().equalsIgnoreCase("Real")){
+			NotIsNullValueString +="\n(declare-const notnull_"+col+" r_"+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
+			NotIsNullValueString += "\n(define-fun NOTISNULL_"+col+" ((notnull_"+col+" r_"+col+")) Bool ";
+		}else{
+			NotIsNullValueString +="\n(declare-const notnull_"+col+" "+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
+			NotIsNullValueString += "\n(define-fun NOTISNULL_"+col+" ((notnull_"+col+" "+col+")) Bool ";
+			
+		}
 		
 		NotIsNullValueString += getOrForNullDataTypes("notnull_"+col, colValueMap.keySet(), "");;//Get OR of all non-null columns
 		
@@ -918,6 +938,7 @@ public String generateCVCNotConstraints(ArrayList<ConstraintObject> constraintLi
 		else{//If SMT SOLVER
 			
 			constraint +="\n"+"(declare-datatypes () (("+col;
+			HashMap<String, Integer> nullValuesChar = new HashMap<String, Integer>();
 			if(columnValue.size()>0){
 				if(!unique || !uniqueValues.contains(columnValue.get(0))){
 					colValue =  Utilities.escapeCharacters(col.getColumnName())+"__"+Utilities.escapeCharacters(columnValue.get(0));//.trim());
@@ -957,13 +978,16 @@ public String generateCVCNotConstraints(ArrayList<ConstraintObject> constraintLi
 			}						
 			constraint += "))))"+"\n;";		
 			
-			HashMap<String, Integer> nullValuesChar = new HashMap<String, Integer>();
+		
 			for(int k=1;k<=4;k++){
 				//isNullMembers += "ASSERT ISNULL_" + columnName+"(NULL_"+columnName+"_"+k+");\n";
 				nullValuesChar.put("NULL_"+col+"_"+k, 0);
 			}	
-			
+			constraint += defineNotIsNull(nullValuesChar, col);
+			constraint +=defineIsNull(nullValuesChar, col);
 			}
+
+		
 		return constraint;
 	}
 
@@ -1032,7 +1056,7 @@ public String generateCVCNotConstraints(ArrayList<ConstraintObject> constraintLi
 						c = cvc.getResultsetColumns().get(j);
 						if(c.getTableName().equalsIgnoreCase(temp)){
 							String s=c.getCvcDatatype();
-							if(s!= null && (s.equals("INT") || s.equals("REAL") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
+							if(s!= null && (s.equalsIgnoreCase("INT") || s.equalsIgnoreCase("REAL") || s.equalsIgnoreCase("TIME") || s.equalsIgnoreCase("DATE") || s.equalsIgnoreCase("TIMESTAMP")))
 								tempStr += c.getColumnName() + ", ";
 							else
 								tempStr+=c.getCvcDatatype()+", ";
@@ -1107,7 +1131,6 @@ public String generateCVCNotConstraints(ArrayList<ConstraintObject> constraintLi
 		}	
 		return null;
 	}
-
 	
 	
 }

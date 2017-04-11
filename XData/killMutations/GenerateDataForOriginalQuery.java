@@ -109,7 +109,7 @@ public class GenerateDataForOriginalQuery {
 			 GenerateCommonConstraintsForQuery.generateNullandDBConstraints(cvc,false);
 			 
 			/**Get the constraints for all the blocks of the query  */
-			cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlockSMT(cvc));
+			cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlock(cvc));
 			cvc.setDatatypeColumns( new ArrayList<String>() );
 			
 			System.out.println("\n cvc.getConstraints () : \n");
@@ -117,8 +117,8 @@ public class GenerateDataForOriginalQuery {
 			System.out.println("************************************************************************************************************************");
 			//System.out.println("\n CVSTR : \n"+CVCStr);
 			/** Call the method for the data generation*/
-			return GenerateCommonConstraintsForQuerySMT.generateDataSetForConstraintsForSMT(cvc,false);
-			//return GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc, false);
+			//return GenerateCommonConstraintsForQuerySMT.generateDataSetForConstraintsForSMT(cvc,false);
+			return GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc, false);
 		}catch (TimeoutException e){
 			logger.log(Level.SEVERE,e.getMessage(),e);		
 			throw e;
