@@ -20,10 +20,10 @@ public class ColumnReplacementMutations {
 	
 	private static Logger logger = Logger.getLogger(ColumnReplacementMutations.class.getName());
 	
-	public static void generateDataForkillingColumnReplacementMutationsInProjection(GenerateCVC1 cvc) throws Exception{
+	public static void generateDataForkillingColumnReplacementMutationsInProjectionGen(GenerateCVC1 cvc) throws Exception{
 		
 		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
-			generateDataForkillingColumnReplacementMutationsInProjectionCVC(cvc);
+			generateDataForkillingColumnReplacementMutationsInProjection(cvc);
 		}
 		else{
 			//generateDataForkillingColumnReplacementMutationsInProjectionSMT(cvc);
@@ -32,7 +32,7 @@ public class ColumnReplacementMutations {
 	}
 	
 	
-	public static void generateDataForkillingColumnReplacementMutationsInProjectionCVC(GenerateCVC1 cvc) throws Exception{
+	public static void generateDataForkillingColumnReplacementMutationsInProjection(GenerateCVC1 cvc) throws Exception{
 		try {
 			/*adasdSystem.out.println("\n----------------------------------");
 			System.out.println("GENERATE DATA FOR KILLING COLUMN REPLACEMENT IN PROJECTION LIST: ");

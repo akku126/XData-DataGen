@@ -27,9 +27,9 @@ public class StringSelectionMutationsInOuterQueryBlock {
 
 	private static Logger logger = Logger.getLogger(StringSelectionMutationsInOuterQueryBlock.class.getName());
 	
-	public static void  generateDataForkillingStringSelectionMutationsInOuterQueryBlock(	GenerateCVC1 cvc) throws Exception{
+	public static void  generateDataForkillingStringSelectionMutationsInOuterQueryBlockGen(	GenerateCVC1 cvc) throws Exception{
 		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
-			generateDataForkillingStringSelectionMutationsInOuterQueryBlockCVC(cvc);
+			generateDataForkillingStringSelectionMutationsInOuterQueryBlock(cvc);
 		}
 		else{
 			//generateDataForkillingStringSelectionMutationsInOuterQueryBlockSMT(cvc);
@@ -39,7 +39,7 @@ public class StringSelectionMutationsInOuterQueryBlock {
 	 * Generates data to kill string selection conditions mutations inside outer block
 	 * @param cvc
 	 */
-	public static void generateDataForkillingStringSelectionMutationsInOuterQueryBlockCVC(	GenerateCVC1 cvc) throws Exception{
+	public static void generateDataForkillingStringSelectionMutationsInOuterQueryBlock(	GenerateCVC1 cvc) throws Exception{
 
 		/** keep a copy of this tuple assignment values */
 		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();

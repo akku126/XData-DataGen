@@ -48,16 +48,6 @@ public class Utilities {
 		}
 	}
 	
-	public static String covertDecimalToFractionSMT(String str){
-		String arr[]=str.split("\\.");
-		if(arr.length==1)	return str;
-		else {
-			String numerator=arr[0]+arr[1];
-			String denominator=((int)Math.pow(10,arr[1].length()))+"";
-			return ("\\ "+numerator +" "+denominator+")");
-		}
-	}
-	
 	public static String getHexVal(int n, int numDigits){
 		   String hex = Integer.toHexString(n);
 		   int zerosToAppend = numDigits-hex.length(); 

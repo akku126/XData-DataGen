@@ -289,17 +289,17 @@ public class QueryBlockDetails implements Serializable{
 
 		String constraintString = "";
 		try{
-			constraintString += ""+cvc.getSolverSpecialCharacter()+"---------------------------------------------\n"+cvc.getSolverSpecialCharacter()+"CONSTRAINTS OF THIS BLOCK \n"+cvc.getSolverSpecialCharacter()+"--------------------------------------------\n";
+			constraintString += "%---------------------------------------------\n%CONSTRAINTS OF THIS BLOCK \n%--------------------------------------------\n";
 			constraintString +=  getConstraintsForQueryBlockExceptSubQuries(cvc, qb);
-			constraintString += ""+cvc.getSolverSpecialCharacter()+"---------------------------------------------\n"+cvc.getSolverSpecialCharacter()+"END OF CONSTRAINTS OF THIS BLOCK \n"+cvc.getSolverSpecialCharacter()+"--------------------------------------------\n";
+			constraintString += "%---------------------------------------------\n%END OF CONSTRAINTS OF THIS BLOCK \n%--------------------------------------------\n";
 	
 	
 			/** Add constraints related to From clause subqueries block */
 			for(QueryBlockDetails qbt: qb.getFromClauseSubQueries()){
 	
-				constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+" FROM CLAUSE SUBQUERY BLOCK\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+				constraintString += "\n%---------------------------------\n% FROM CLAUSE SUBQUERY BLOCK\n%---------------------------------\n";
 				constraintString += getConstraintsForQueryBlock(cvc, qbt);			
-				constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+" END OF FROM CLAUSE SUBQUERY BLOCK\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+				constraintString += "\n%---------------------------------\n% END OF FROM CLAUSE SUBQUERY BLOCK\n%---------------------------------\n";
 			}
 		}catch(Exception e){
 			logger.log(Level.SEVERE, e.getMessage(), e);
@@ -320,17 +320,17 @@ public class QueryBlockDetails implements Serializable{
 		String constraintString = "";
 		QueryBlockDetails qb = cvc.getOuterBlock();
 		try{
-			constraintString += ""+cvc.getSolverSpecialCharacter()+"---------------------------------------------\n"+cvc.getSolverSpecialCharacter()+"CONSTRAINTS OF THIS BLOCK \n"+cvc.getSolverSpecialCharacter()+"--------------------------------------------\n";
+			constraintString += "%---------------------------------------------\n%CONSTRAINTS OF THIS BLOCK \n%--------------------------------------------\n";
 		//	constraintString +=  getConstraintsForQueryBlockExceptSubQuriesSMT(cvc, qb);
-			constraintString += ""+cvc.getSolverSpecialCharacter()+"---------------------------------------------\n"+cvc.getSolverSpecialCharacter()+"END OF CONSTRAINTS OF THIS BLOCK \n"+cvc.getSolverSpecialCharacter()+"--------------------------------------------\n";
+			constraintString += "%---------------------------------------------\n%END OF CONSTRAINTS OF THIS BLOCK \n%--------------------------------------------\n";
 	
 	
 			/** Add constraints related to From clause subqueries block */
 			for(QueryBlockDetails qbt: qb.getFromClauseSubQueries()){
 	
-				constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+" FROM CLAUSE SUBQUERY BLOCK\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+				constraintString += "\n%---------------------------------\n% FROM CLAUSE SUBQUERY BLOCK\n%---------------------------------\n";
 			//	constraintString += getConstraintsForQueryBlockSMT(cvc, qbt);			
-				constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+" END OF FROM CLAUSE SUBQUERY BLOCK\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+				constraintString += "\n%---------------------------------\n% END OF FROM CLAUSE SUBQUERY BLOCK\n%---------------------------------\n";
 			}
 		}catch(Exception e){
 			logger.log(Level.SEVERE, e.getMessage(), e);
@@ -351,17 +351,17 @@ public class QueryBlockDetails implements Serializable{
 
 		String constraintString = "";
 		try{
-			constraintString += ""+cvc.getSolverSpecialCharacter()+"---------------------------------------------\n"+cvc.getSolverSpecialCharacter()+"CONSTRAINTS OF THIS BLOCK \n"+cvc.getSolverSpecialCharacter()+"--------------------------------------------\n";
+			constraintString += "%---------------------------------------------\n%CONSTRAINTS OF THIS BLOCK \n%--------------------------------------------\n";
 			constraintString +=  getConstraintsForQueryBlockExceptSubQuries(cvc, qb, n);
-			constraintString += ""+cvc.getSolverSpecialCharacter()+"---------------------------------------------\n"+cvc.getSolverSpecialCharacter()+"END OF CONSTRAINTS OF THIS BLOCK \n"+cvc.getSolverSpecialCharacter()+"--------------------------------------------\n";
+			constraintString += "%---------------------------------------------\n%END OF CONSTRAINTS OF THIS BLOCK \n%--------------------------------------------\n";
 	
 	
 			/** Add constraints related to From clause subqueries block */
 			for(QueryBlockDetails qbt: qb.getFromClauseSubQueries()){
 	
-				constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+" FROM CLAUSE SUBQUERY BLOCK\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+				constraintString += "\n%---------------------------------\n% FROM CLAUSE SUBQUERY BLOCK\n%---------------------------------\n";
 				constraintString += getConstraintsForQueryBlock(cvc, qbt);			
-				constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+" END OF FROM CLAUSE SUBQUERY BLOCK\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+				constraintString += "\n%---------------------------------\n% END OF FROM CLAUSE SUBQUERY BLOCK\n%---------------------------------\n";
 			}
 		}catch(Exception e){
 			logger.log(Level.SEVERE, e.getMessage(), e);
@@ -382,17 +382,17 @@ public class QueryBlockDetails implements Serializable{
 		String constraintString = "";
 		QueryBlockDetails qb = cvc.getOuterBlock();
 		try{
-			constraintString += ""+cvc.getSolverSpecialCharacter()+"---------------------------------------------\n"+cvc.getSolverSpecialCharacter()+"CONSTRAINTS OF THIS BLOCK \n"+cvc.getSolverSpecialCharacter()+"--------------------------------------------\n";
+			constraintString += "%---------------------------------------------\n%CONSTRAINTS OF THIS BLOCK \n%--------------------------------------------\n";
 			//constraintString +=  getConstraintsForQueryBlockExceptSubQuriesSMT(cvc, qb, n);
-			constraintString += ""+cvc.getSolverSpecialCharacter()+"---------------------------------------------\n"+cvc.getSolverSpecialCharacter()+"END OF CONSTRAINTS OF THIS BLOCK \n"+cvc.getSolverSpecialCharacter()+"--------------------------------------------\n";
+			constraintString += "%---------------------------------------------\n%END OF CONSTRAINTS OF THIS BLOCK \n%--------------------------------------------\n";
 	
 	
 			/** Add constraints related to From clause subqueries block */
 			for(QueryBlockDetails qbt: qb.getFromClauseSubQueries()){
 	
-				constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+" FROM CLAUSE SUBQUERY BLOCK\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+				constraintString += "\n%---------------------------------\n% FROM CLAUSE SUBQUERY BLOCK\n%---------------------------------\n";
 			//	constraintString += getConstraintsForQueryBlockSMT(cvc, qbt);			
-				constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+" END OF FROM CLAUSE SUBQUERY BLOCK\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+				constraintString += "\n%---------------------------------\n% END OF FROM CLAUSE SUBQUERY BLOCK\n%---------------------------------\n";
 			}
 		}catch(Exception e){
 			logger.log(Level.SEVERE, e.getMessage(), e);
@@ -416,18 +416,18 @@ public class QueryBlockDetails implements Serializable{
 		try{
 			/** Add the positive conditions for each conjunct of this query block */
 			for(ConjunctQueryStructure conjunct : qb.getConjunctsQs()){
-				constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+" CONSTRAINTS FOR THIS CONJUNCT\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+				constraintString += "\n%---------------------------------\n% CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------\n";
 				//constraintString += GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, qb, conjunct);
 				constraints=Constraints.orConstraints(constraints, GenerateConstraintsForConjunct.getConstraintsInConjuct(cvc, qb, conjunct));
 				
 				/**FIXME: Handle OR + Where clause Sub query Correctly
 				 * Right Now we assume that if there is Where sub query then no ORing of conds
 				 * Use Amol generalized approach*/
-				constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+" WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+				constraintString += "\n%---------------------------------\n% WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n%---------------------------------\n";
 				constraintString += GenerateConstraintsForWhereClauseSubQueryBlock.getConstraintsForWhereClauseSubQueryBlock(cvc, qb, conjunct);
-				constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+" END OF WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+				constraintString += "\n%---------------------------------\n% END OF WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n%---------------------------------\n";
 				
-				//constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+" END OF CONSTRAINTS FOR THIS CONJUNCT\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+				//constraintString += "\n%---------------------------------\n% END OF CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------\n";
 			}
 			constraintString += Constraints.getConstraint(constraints);
 			String stringConstraints= Constraints.getStringConstraints(constraints);
@@ -458,18 +458,18 @@ public class QueryBlockDetails implements Serializable{
 		try{
 			/** Add the positive conditions for each conjunct of this query block */
 			for(ConjunctQueryStructure conjunct : qb.getConjunctsQs()){
-				constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+" CONSTRAINTS FOR THIS CONJUNCT\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+				constraintString += "\n%---------------------------------\n% CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------\n";
 				//constraintString += GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, qb, conjunct);
 				constraints=Constraints.orConstraints(constraints, GenerateConstraintsForConjunct.getConstraintsInConjuct(cvc, qb, conjunct));
 				
 				/**FIXME: Handle OR + Where clause Sub query Correctly
 				 * Right Now we assume that if there is Where sub query then no ORing of conds
 				 * Use Amol generalized approach*/
-				constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+" WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+				constraintString += "\n%---------------------------------\n% WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n%---------------------------------\n";
 				constraintString += GenerateConstraintsForWhereClauseSubQueryBlock.getConstraintsForWhereClauseSubQueryBlock(cvc, qb, conjunct);
-				constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+" END OF WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+				constraintString += "\n%---------------------------------\n% END OF WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n%---------------------------------\n";
 				
-				//constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+" END OF CONSTRAINTS FOR THIS CONJUNCT\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+				//constraintString += "\n%---------------------------------\n% END OF CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------\n";
 				
 			}
 			//FOR CASE CONDITION IN WHERE CLAUSE - ADD CONSTRAINTS APPENDING AND HERE
@@ -501,18 +501,18 @@ public class QueryBlockDetails implements Serializable{
 		String constraintString = "";
 		try{
 			/**Add constraints related to parameters in the query block*/
-			constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"PARAMETERIZED CLAUSE CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";		 
+			constraintString += "\n%---------------------------------\n%PARAMETERIZED CLAUSE CONSTRAINTS\n%---------------------------------\n";		 
 			constraintString += RelatedToParameters.getConstraintsForParameters( cvc, qb);
-			constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"END OF PARAMETERIZED CLAUSE CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+			constraintString += "\n%---------------------------------\n%END OF PARAMETERIZED CLAUSE CONSTRAINTS\n%---------------------------------\n";
 			
 			/**Application constraints if any*/
-			constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"APPLICATION CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";		
+			constraintString += "\n%---------------------------------\n%APPLICATION CONSTRAINTS\n%---------------------------------\n";		
 			/*FIXME: constraintString += NonEmptyConstraints;*/
-			constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"END OF APPLICATION CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+			constraintString += "\n%---------------------------------\n%END OF APPLICATION CONSTRAINTS\n%---------------------------------\n";
 			
-			constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+" UNIQUE  KEY CONSTRAINTS \n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+			constraintString += "\n%---------------------------------\n% UNIQUE  KEY CONSTRAINTS \n%---------------------------------\n";
 			constraintString += GenerateUniqueKeyConstraints.generateUniqueConstraints(cvc, qb, qb.getUniqueElements());
-			constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"END OF UNIQUE  KEY CONSTRAINTS \n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+			constraintString += "\n%---------------------------------\n%END OF UNIQUE  KEY CONSTRAINTS \n%---------------------------------\n";
 		}catch(Exception e){
 			logger.log(Level.SEVERE, e.getMessage(), e);
 			throw e;
@@ -533,18 +533,18 @@ public class QueryBlockDetails implements Serializable{
 		String constraintString = "";
 		try{
 			/** get group by constraints */
-			constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"GROUP BY CLAUSE CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+			constraintString += "\n%---------------------------------\n%GROUP BY CLAUSE CONSTRAINTS\n%---------------------------------\n";
 			constraintString += GenerateGroupByConstraints.getGroupByConstraints(cvc, qb);
-			constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"END OF GROUP BY CLAUSE CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+			constraintString += "\n%---------------------------------\n%END OF GROUP BY CLAUSE CONSTRAINTS\n%---------------------------------\n";
 	
 	
 			/** Generate havingClause constraints */
-			constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"HAVING CLAUSE CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+			constraintString += "\n%---------------------------------\n%HAVING CLAUSE CONSTRAINTS\n%---------------------------------\n";
 			for(int j=0; j< qb.getNoOfGroups();j ++)
 				for(int k=0; k < qb.getAggConstraints().size();k++){
 					constraintString += GenerateConstraintsForHavingClause.getHavingClauseConstraints(cvc, qb, qb.getAggConstraints().get(k), qb.getFinalCount(), j);
 				}
-			constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"END OF HAVING CLAUSE CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+			constraintString += "\n%---------------------------------\n%END OF HAVING CLAUSE CONSTRAINTS\n%---------------------------------\n";
 		}catch(Exception e){
 			logger.log(Level.SEVERE, e.getMessage(), e);
 			throw e;
@@ -564,9 +564,9 @@ public class QueryBlockDetails implements Serializable{
 		String constraintString = "";
 		try{
 			/** get group by constraints */
-			constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"GROUP BY CLAUSE CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+			constraintString += "\n%---------------------------------\n%GROUP BY CLAUSE CONSTRAINTS\n%---------------------------------\n";
 			constraintString += GenerateGroupByConstraints.getGroupByConstraints(cvc, qb, n);
-			constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"END OF GROUP BY CLAUSE CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+			constraintString += "\n%---------------------------------\n%END OF GROUP BY CLAUSE CONSTRAINTS\n%---------------------------------\n";
 			
 		}catch(Exception e){
 			logger.log(Level.SEVERE, e.getMessage(), e);
@@ -587,9 +587,9 @@ public class QueryBlockDetails implements Serializable{
 		
 		try{
 			
-			constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"CASE CONDITION CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+			constraintString += "\n%---------------------------------\n%CASE CONDITION CONSTRAINTS\n%---------------------------------\n";
 			constraintString += GenerateConstraintsForCaseConditions.getCaseConditionConstraintsForOriginalQuery(cvc,cvc.getOuterBlock());
-			constraintString += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"END OF CASE CONDITION CONSTRAINTS\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
+			constraintString += "\n%---------------------------------\n%END OF CASE CONDITION CONSTRAINTS\n%---------------------------------\n";
 			
 		}catch(Exception e){
 			logger.log(Level.SEVERE, e.getMessage(), e);

@@ -29,10 +29,10 @@ public class UnintendedJoinsMutationsInOuterQueryBlock {
 
 	private static Logger logger = Logger.getLogger(UnintendedJoinsMutationsInOuterQueryBlock.class.getName());
 	
-	public static void  generateDataForkillingUnintendedJoinsMutationsInOuterQueryBlock(GenerateCVC1 cvc) throws Exception{
+	public static void  generateDataForkillingUnintendedJoinsMutationsInOuterQueryBlockGen(GenerateCVC1 cvc) throws Exception{
 		
 		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
-			generateDataForkillingUnintendedJoinsMutationsInOuterQueryBlockCVC(cvc);
+			generateDataForkillingUnintendedJoinsMutationsInOuterQueryBlock(cvc);
 		}
 		else{
 			//generateDataForkillingUnintendedJoinsMutationsInOuterQueryBlockSMT(cvc);
@@ -44,7 +44,7 @@ public class UnintendedJoinsMutationsInOuterQueryBlock {
 	 * @param cvc
 	 * @throws Exception
 	 */
-	public static void generateDataForkillingUnintendedJoinsMutationsInOuterQueryBlockCVC(GenerateCVC1 cvc) throws Exception{
+	public static void generateDataForkillingUnintendedJoinsMutationsInOuterQueryBlock(GenerateCVC1 cvc) throws Exception{
 
 
 		logger.log(Level.INFO,"\n----------------------------------");

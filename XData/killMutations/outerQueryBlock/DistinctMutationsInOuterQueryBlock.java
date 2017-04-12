@@ -28,10 +28,10 @@ public class DistinctMutationsInOuterQueryBlock {
 
 	private static Logger logger = Logger.getLogger(DistinctMutationsInOuterQueryBlock.class.getName());
 	
-	public static void  generateDataForkillingDistinctMutationsInOuterQueryBlock(GenerateCVC1 cvc) throws Exception{
+	public static void  generateDataForkillingDistinctMutationsInOuterQueryBlockGen (GenerateCVC1 cvc) throws Exception{
 		
 		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
-			generateDataForkillingDistinctMutationsInOuterQueryBlockCVC(cvc);
+			generateDataForkillingDistinctMutationsInOuterQueryBlock(cvc);
 		}
 		else{
 			//generateDataForkillingDistinctMutationsInOuterQueryBlockSMT(cvc);
@@ -43,7 +43,7 @@ public class DistinctMutationsInOuterQueryBlock {
 	 * @param cvc
 	 */
 
-	public static void generateDataForkillingDistinctMutationsInOuterQueryBlockCVC(GenerateCVC1 cvc) throws Exception{
+	public static void generateDataForkillingDistinctMutationsInOuterQueryBlock(GenerateCVC1 cvc) throws Exception{
 
 		/** keep a copy of this tuple assignment values */
 		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();

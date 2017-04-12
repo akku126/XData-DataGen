@@ -205,7 +205,28 @@ public class PreProcessingActivity {
 					isSetOp = true;
 					genDataForSetOp(cvc,cvc.getqStructure().setOperator);
 					
-				}					
+				}
+				/*else if(cvc.getqParser() != null && (cvc.getqParser().getFromClauseSubqueries() != null 
+						|| cvc.getqParser().getWhereClauseSubqueries() != null) ){
+					
+					for(int i=0;i<cvc.getqParser().getFromClauseSubqueries().size();i++){
+						QueryParser qpFrom = cvc.getqParser().getFromClauseSubqueries().get(i);
+						if(qpFrom.setOperator!=null && qpFrom.setOperator.length()>0){
+							isSetOp = true;
+							genDataForSetOp(cvc,qpFrom.setOperator);
+							
+						}
+					}
+					
+					for(int i=0;i<cvc.getqParser().getWhereClauseSubqueries().size();i++){
+						QueryParser qpWhere = cvc.getqParser().getWhereClauseSubqueries().get(i);
+						if(qpWhere.setOperator!=null && qpWhere.setOperator.length()>0){
+							isSetOp = true;
+							genDataForSetOp(cvc,qpWhere.setOperator);
+						}
+					}
+				}*/
+					
 				else{
 
 					cvc.getBranchQueries().intitializeDetails(cvc);
@@ -218,20 +239,14 @@ public class PreProcessingActivity {
 					cvc.initializeOtherDetails();
 					cvc.setConstraintSolver(Configuration.getProperty("smtsolver"));
 					
-					if(Configuration.getProperty("smtsolver").equalsIgnoreCase("cvc3")){
-						cvc.setSolverSpecialCharacter("%");
-					}else{
-						cvc.setSolverSpecialCharacter(";");
-					}
-					
 					/** Segregate selection conditions in each query block */
 					RelatedToPreprocessing.segregateSelectionConditions(cvc);
 					
 					/** Call the method for generating the data sets */
 					//if(Configuration.getProperty("smtsolver").equalsIgnoreCase("cvc3")){
-						cvc.generateDatasetsToKillMutations();
-				//	}else{
-					//	cvc.generateDatasetsToKillMutationsUsingSMT();
+					//	cvc.generateDatasetsToKillMutations();
+					//}else{
+						cvc.generateDatasetsToKillMutationsUsingSMT();
 					//}
 				
 				}

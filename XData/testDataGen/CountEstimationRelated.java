@@ -4,7 +4,7 @@ package testDataGen;
 
 import generateConstraints.GenerateCVCConstraintForNode;
 import generateConstraints.GenerateConstraintsForHavingClause;
-import generateConstraints.GetSolverHeaderAndFooter;
+import generateConstraints.GetCVC3HeaderAndFooter;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -63,7 +63,7 @@ public class CountEstimationRelated {
 				CVCText += GenerateConstraintsForHavingClause.getHavingClauseConstraints(cvc, queryBlock, aggCons.get(i), queryBlock.getFinalCount(), 0) ;
 
 
-			CVCText += GetSolverHeaderAndFooter.generateSolver_Footer(cvc);
+			CVCText += GetCVC3HeaderAndFooter.generateCvc3_Footer();
 			//Escape the whitespaces in the file path when writing File Name in BASH SCRIPT OR Enclose it with single quotes in BASH SCRIPT
 			//This is OS specific.
 			String filePath =  cvc.getFilePath().replace(" ", "\\ ");

@@ -26,10 +26,10 @@ public class LikeMutationsInOuterQueryBlock {
 
 	private static Logger logger = Logger.getLogger(LikeMutationsInOuterQueryBlock.class.getName());
 	
-	public static void  generateDataForkillingLikeMutationsInOuterQueryBlock(GenerateCVC1 cvc) throws Exception{
+	public static void  generateDataForkillingLikeMutationsInOuterQueryBlockGen(GenerateCVC1 cvc) throws Exception{
 		
 		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
-			generateDataForkillingLikeMutationsInOuterQueryBlockCVC(cvc);
+			generateDataForkillingLikeMutationsInOuterQueryBlock(cvc);
 		}
 		else{
 			//generateDataForkillingLikeMutationsInOuterQueryBlockSMT(cvc);
@@ -40,7 +40,7 @@ public class LikeMutationsInOuterQueryBlock {
 	 * Generates data to kill like conditions mutations inside outer query block
 	 * @param cvc
 	 */
-	public static void generateDataForkillingLikeMutationsInOuterQueryBlockCVC( GenerateCVC1 cvc) throws Exception{
+	public static void generateDataForkillingLikeMutationsInOuterQueryBlock( GenerateCVC1 cvc) throws Exception{
 
 		/** keep a copy of this tuple assignment values */
 		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();

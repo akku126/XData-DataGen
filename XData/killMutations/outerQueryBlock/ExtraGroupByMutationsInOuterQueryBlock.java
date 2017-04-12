@@ -25,19 +25,19 @@ public class ExtraGroupByMutationsInOuterQueryBlock {
 
 	private static Logger logger = Logger.getLogger(ExtraGroupByMutationsInOuterQueryBlock.class.getName());
 	
-	public static void generateDataForkillingExtraGroupByMutationsInOuterQueryBlock(GenerateCVC1 cvc) throws Exception {
+	public static void generateDataForkillingExtraGroupByMutationsInOuterQueryBlockGen(GenerateCVC1 cvc) throws Exception {
 		
 		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
-			generateDataForkillingExtraGroupByMutationsInOuterQueryBlockCVC(cvc);
+			generateDataForkillingExtraGroupByMutationsInOuterQueryBlock(cvc);
 		}
 		else{
 			//generateDataForkillingExtraGroupByMutationsInOuterQueryBlockSMT(cvc);
 		}
 	}
 	
-	public static void  generateDataForkillingExtraGroupByMutationsInOuterQueryBlock2(GenerateCVC1 cvc) throws Exception {
+	public static void  generateDataForkillingExtraGroupByMutationsInOuterQueryBlock2Gen(GenerateCVC1 cvc) throws Exception {
 		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
-			generateDataForkillingExtraGroupByMutationsInOuterQueryBlock2CVC(cvc);
+			generateDataForkillingExtraGroupByMutationsInOuterQueryBlock2(cvc);
 		}
 		else{
 			//generateDataForkillingExtraGroupByMutationsInOuterQueryBlock2SMT(cvc);
@@ -54,7 +54,7 @@ public class ExtraGroupByMutationsInOuterQueryBlock {
 	 * 
 	 * @param cvc
 	 */
-	public static void generateDataForkillingExtraGroupByMutationsInOuterQueryBlockCVC(GenerateCVC1 cvc) throws Exception {
+	public static void generateDataForkillingExtraGroupByMutationsInOuterQueryBlock(GenerateCVC1 cvc) throws Exception {
 
 		/** keep a copy of this tuple assignment values */
 		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
@@ -140,7 +140,7 @@ public class ExtraGroupByMutationsInOuterQueryBlock {
 	 * @throws Exception 
 	 */
 	@SuppressWarnings("unchecked")
-	public static void generateDataForkillingExtraGroupByMutationsInOuterQueryBlock2CVC(GenerateCVC1 cvc) throws Exception {
+	public static void generateDataForkillingExtraGroupByMutationsInOuterQueryBlock2(GenerateCVC1 cvc) throws Exception {
 		try{		
 			/** keep a copy of this tuple assignment values */
 			HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();

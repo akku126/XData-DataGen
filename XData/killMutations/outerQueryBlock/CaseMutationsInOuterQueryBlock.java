@@ -22,10 +22,10 @@ public class CaseMutationsInOuterQueryBlock {
 
 	private static Logger logger = Logger.getLogger(CaseMutationsInOuterQueryBlock.class.getName());
 	
-	public static void generateDataForKillingCaseMutationsInOuterQueryBlock(GenerateCVC1 cvc) throws Exception{
+	public static void generateDataForKillingCaseMutationsInOuterQueryBlockGen(GenerateCVC1 cvc) throws Exception{
 		
 		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
-			generateDataForKillingCaseMutationsInOuterQueryBlockCVC(cvc);
+			generateDataForKillingCaseMutationsInOuterQueryBlock(cvc);
 		}
 		else{
 			//generateDataForKillingCaseMutationsInOuterQueryBlockSMT(cvc);
@@ -33,7 +33,7 @@ public class CaseMutationsInOuterQueryBlock {
 		
 	}
 	
-	public static void generateDataForKillingCaseMutationsInOuterQueryBlockCVC(GenerateCVC1 cvc) throws Exception{
+	public static void generateDataForKillingCaseMutationsInOuterQueryBlock(GenerateCVC1 cvc) throws Exception{
 		/** keep a copy of this tuple assignment values */
 		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
 		HashMap<String, Integer> noOfTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfTuples().clone();

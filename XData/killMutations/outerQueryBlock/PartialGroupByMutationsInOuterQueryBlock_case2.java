@@ -32,9 +32,9 @@ public class PartialGroupByMutationsInOuterQueryBlock_case2 {
 
 	private static Logger logger = Logger.getLogger(PartialGroupByMutationsInOuterQueryBlock_case2.class.getName());
 	
-	public static void generateDataForkillingParialGroupByMutationsInOuterQueryBlock(GenerateCVC1 cvc) throws Exception{
+	public static void generateDataForkillingParialGroupByMutationsInOuterQueryBlockGen(GenerateCVC1 cvc) throws Exception{
 		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
-			generateDataForkillingParialGroupByMutationsInOuterQueryBlockCVC(cvc);
+			generateDataForkillingParialGroupByMutationsInOuterQueryBlock(cvc);
 		}
 		else{
 			//generateDataForkillingParialGroupByMutationsInOuterQueryBlockSMT(cvc);
@@ -44,7 +44,7 @@ public class PartialGroupByMutationsInOuterQueryBlock_case2 {
 	 *  Generates data sets for killing partial group by attributes 
 	 * @param cvc
 	 */
-	public static void generateDataForkillingParialGroupByMutationsInOuterQueryBlockCVC(GenerateCVC1 cvc) throws Exception{
+	public static void generateDataForkillingParialGroupByMutationsInOuterQueryBlock(GenerateCVC1 cvc) throws Exception{
 
 		/** keep a copy of this tuple assignment values */
 		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();

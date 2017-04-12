@@ -2,7 +2,7 @@
 
 package testDataGen;
 
-import generateConstraints.GetSolverHeaderAndFooter;
+import generateConstraints.GetCVC3HeaderAndFooter;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -91,7 +91,6 @@ public class GetTupleAssignmentUsingSolver {
 
 	public boolean getTupleAssignment() throws Exception{
 		long startAssgn = System.currentTimeMillis();
-		GenerateCVC1 cvc = new GenerateCVC1();
 		String constraints = "";
 
 		constraints += "%DATA TYPES \n \n";
@@ -110,7 +109,7 @@ public class GetTupleAssignmentUsingSolver {
 		constraints += getConstraintsForGraph();		
 
 		/**get the footer for the CVC solver*/
-		constraints += GetSolverHeaderAndFooter.generateSolver_Footer(cvc);
+		constraints += GetCVC3HeaderAndFooter.generateCvc3_Footer();
 
 		long endAssgn = System.currentTimeMillis();
 

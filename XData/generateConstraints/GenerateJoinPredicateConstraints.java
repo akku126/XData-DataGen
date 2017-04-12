@@ -1,6 +1,5 @@
 package generateConstraints;
 
-import java.util.ArrayList;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -9,7 +8,6 @@ import parsing.Column;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
-import util.ConstraintObject;
 
 /**
  * This class is used to generate constraints for the join predicates
@@ -478,7 +476,6 @@ public class GenerateJoinPredicateConstraints {
 		for(int k=1,l=1;; k++,l++){
 			constraintString += "ASSERT ("+ GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n1, ((k-1)*tuples1+offset1))+ operator +
 					GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n2, ((l-1)*tuples2+offset2))+");\n";
-			
 			if(leftGroup>rightGroup){
 				if(l==rightGroup && k<leftGroup)	l=0;
 				if(k>=leftGroup) break;
@@ -536,17 +533,9 @@ public class GenerateJoinPredicateConstraints {
 		if(cvc.getNoOfTuples().containsKey(r2)){
 			tuples2 = cvc.getNoOfTuples().get(r2);
 		}
-		ConstraintGenerator constrGen = new ConstraintGenerator();
-		ArrayList<ConstraintObject> constrObjList = new ArrayList<ConstraintObject>();
+
 		/**Do a round robin for the smaller value of the group number*/
 		for(int k=1,l=1;; k++,l++){
-			//Populate constraint Object list and call AND function
-			ConstraintObject constrObj = new ConstraintObject();
-			constrObj.setLeftConstraint(constrGen.genPositiveCondsForPred(cvc,queryBlock, n1, ((k-1)*tuples1+offset1)));
-			constrObj.setRightConstraint(constrGen.genPositiveCondsForPred(cvc,queryBlock, n2, ((l-1)*tuples2+offset2)));
-			constrObj.setOperator(operator);
-			constrObjList.add(constrObj);
-			
 			constraintString += "("+ GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n1, ((k-1)*tuples1+offset1))+ operator +
 					GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n2, ((l-1)*tuples2+offset2))+") AND ";
 			if(leftGroup>rightGroup){
@@ -561,7 +550,7 @@ public class GenerateJoinPredicateConstraints {
 				if(l==leftGroup) break;
 			}
 		}
-		constraintString =constrGen.generateAssertANDConstraints(cvc, constrObjList);
+
 		return constraintString;
 	}
 

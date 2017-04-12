@@ -26,10 +26,10 @@ public class WhereClauseSubQueryConnectiveMutations {
 
 	private static Logger logger = Logger.getLogger(WhereClauseSubQueryConnectiveMutations.class.getName());
 	
-	public static void killWhereClauseSubQueryConnectiveMutations(GenerateCVC1 cvc) throws Exception{
+	public static void killWhereClauseSubQueryConnectiveMutationsGen(GenerateCVC1 cvc) throws Exception{
 		
 		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
-			killWhereClauseSubQueryConnectiveMutationsCVC(cvc);
+			killWhereClauseSubQueryConnectiveMutations(cvc);
 		}
 		else{
 			//killWhereClauseSubQueryConnectiveMutationsSMT(cvc);
@@ -37,7 +37,7 @@ public class WhereClauseSubQueryConnectiveMutations {
 		
 	}
 	
-	public static void killWhereClauseSubQueryConnectiveMutationsCVC(GenerateCVC1 cvc) throws Exception{
+	public static void killWhereClauseSubQueryConnectiveMutations(GenerateCVC1 cvc) throws Exception{
 		
 		/** keep a copy of this tuple assignment values */
 		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
