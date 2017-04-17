@@ -66,7 +66,45 @@
 		public String toString(){
 			return " WHEN "+this.getWhenNode()+" THEN "+this.getThenNode();
 		}
+		//Application Testing
+		String caseCondition;
+		public String getCaseCondition() {
+			return caseCondition;
+		}
+
+		/**
+		 * @param caseCondition the caseCondition to set
+		 */
+		public void setCaseCondition(String caseCondition) {
+			this.caseCondition = caseCondition;
+		}
+		/**
+		 * @return the caseConditionNode
+		 */
+		Node caseConditionNode;
+		public Node getCaseConditionNode() {
+			return caseConditionNode;
+		}
+
+		/**
+		 * @param caseConditionNode the caseConditionNode to set
+		 */
+		public void setCaseConditionNode(Node caseConditionNode) {
+			this.caseConditionNode = caseConditionNode;
+		}
 		
+		String constantValue;
+		public String getConstantValue() {
+			return constantValue;
+		}
+
+		/**
+		 * @param constantValue the constantValue to set
+		 */
+		public void setConstantValue(String constantValue) {
+			this.constantValue = constantValue;
+		}
+		//end
 	
 	
 }

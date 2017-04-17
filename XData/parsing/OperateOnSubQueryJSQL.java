@@ -29,7 +29,7 @@ import net.sf.jsqlparser.statement.select.UnionOp;
 public class OperateOnSubQueryJSQL {
 
 	private static Logger logger = Logger.getLogger(OperateOnSubQueryJSQL.class.getName());
-	public static FromListElement OperateOnSubquery(SubSelect subquery,Vector<Node> allConds, JoinTreeNode jtn,boolean fromSubquery, boolean whereSubquery, parsing.QueryParser qParser) throws Exception {
+	public static FromListElement OperateOnSubquery(SubSelect subquery,Vector<Node> allConds, JoinTreeNode jtn,boolean fromSubquery, boolean whereSubquery, parsing.QueryParser qParser,AppTest_Parameters dbApparameters) throws Exception {
 		try{
 		String aliasName = "";
 		if(subquery.getAlias() != null){
@@ -62,7 +62,7 @@ public class OperateOnSubQueryJSQL {
 	
 				//Test in different scenarios - joins in SET  Op and test
 				//Get the select list to check it has select statement or nested SET operation
-				qp.parseQueriesForSetOp(setOpList,true); 
+				qp.parseQueriesForSetOp(setOpList,true,dbApparameters); 
 				QueryParser newSetQp = new QueryParser(qParser.getTableMap());
 				if(fromSubquery){
 					qParser.getFromClauseSubqueries().add(qp);
@@ -257,7 +257,7 @@ public class OperateOnSubQueryJSQL {
 				}else if(prev instanceof SubSelect){
 					//QueryParser qp = new QueryParser(qParser.getTableMap());
 					
-					FromListElement temp = 	temp = OperateOnSubQueryJSQL.OperateOnSubquery(((SubSelect)prev), allConds, jtn, fromSubquery, whereSubquery, qParser);
+					FromListElement temp = 	temp = OperateOnSubQueryJSQL.OperateOnSubquery(((SubSelect)prev), allConds, jtn, fromSubquery, whereSubquery, qParser, dbApparameters);
 					
 					t.add(temp);
 				}	
@@ -265,7 +265,7 @@ public class OperateOnSubQueryJSQL {
 			} else {
 				
 				FromListElement temp = OperateOnJoinJSQL.OperateOnJoinsJSQL(plainSelect.getJoins(),prev,(new Vector<FromListElement>()),plainSelect.getJoins().size(),
-						(fromSubquery)?fromClause.allConds:whereClause.allConds, jtn,fromSubquery, whereSubquery,qParser);
+						(fromSubquery)?fromClause.allConds:whereClause.allConds, jtn,fromSubquery, whereSubquery,qParser, dbApparameters);
 				t.add(temp);	
 			} 
 			sqa.setTabs(t);
@@ -277,14 +277,14 @@ public class OperateOnSubQueryJSQL {
 			 */
 			if (sqWhereClause != null) {
 				/**********CALL LOCAL METHOD FOR HANDLING CASE CONDITION IN WHERE SUBQ **********/
-				caseInWhereClause(sqWhereClause,null,whereClause);
+				caseInWhereClause(sqWhereClause,null,whereClause, dbApparameters);
 				
-				whereClausePred = WhereClauseVectorJSQL.getWhereClauseVector(sqWhereClause,null, sqa ,true, queryType, qParser);
+				whereClausePred = WhereClauseVectorJSQL.getWhereClauseVector(sqWhereClause,null, sqa ,true, queryType, qParser,dbApparameters);
 			}
 			
 			//FIXME: Mahesh Add code to collect projected columns,groupby and having clause of subquery
 			//ResultSetNode rs=subquery.getSubquery();//FIXME
-			WhereClauseVectorJSQL.getAggregationDataStructures(plainSelect, sqa, qParser.getQuery().getFromTables(),fromSubquery,whereSubquery,qParser);
+			WhereClauseVectorJSQL.getAggregationDataStructures(plainSelect, sqa, qParser.getQuery().getFromTables(),fromSubquery,whereSubquery,qParser,dbApparameters);
 			//	Add projected columns	for this subquery	
 			List<SelectItem> rcList = plainSelect.getSelectItems();
 			Vector<CaseCondition> caseConditionsVector = new Vector<CaseCondition>();
@@ -347,7 +347,7 @@ public class OperateOnSubQueryJSQL {
 						 for(int i=0;i < whenClauses.size();i++ ){
 							
 							CaseCondition cC = new CaseCondition();
-							Node n = WhereClauseVectorJSQL.getWhereClauseVector(((WhenClause)((CaseExpression) exp).getWhenClauses().get(i)).getWhenExpression(),exposedName, sqa,false,queryType,qParser);
+							Node n = WhereClauseVectorJSQL.getWhereClauseVector(((WhenClause)((CaseExpression) exp).getWhenClauses().get(i)).getWhenExpression(),exposedName, sqa,false,queryType,qParser,dbApparameters);
 							//cC.setCaseConditionNode(n);
 							//cC.setCaseCondition(n.toString());
 						   // cC.setConstantValue(((WhenClause)((CaseExpression) exp).getWhenClauses().get(i)).getThenExpression().toString());
@@ -366,7 +366,7 @@ public class OperateOnSubQueryJSQL {
 						 fromClause.getCaseConditionMap().put(1,caseConditionsVector);
 					}
 					else{
-						Node n = WhereClauseVectorJSQL.getWhereClauseVector(exp,exposedName, sqa,false,queryType,qParser);
+						Node n = WhereClauseVectorJSQL.getWhereClauseVector(exp,exposedName, sqa,false,queryType,qParser,dbApparameters);
 						n.setDistinct(isDistinct);
 						tempProjectedCols.add(n);
 					}
@@ -452,7 +452,7 @@ public class OperateOnSubQueryJSQL {
 	 * @return
 	 * @throws Exception
 	 */
-	private static boolean caseInWhereClause(Expression whereClause, Expression colExpression, QueryParser qParser) throws Exception{
+	private static boolean caseInWhereClause(Expression whereClause, Expression colExpression, QueryParser qParser, AppTest_Parameters dbApparameters) throws Exception{
 		
 		Vector<CaseCondition> caseConditionsVector = new Vector<CaseCondition>();
 		boolean isCaseExpr = false;
@@ -464,12 +464,12 @@ public class OperateOnSubQueryJSQL {
 			 for(int i=0;i < whenClauses.size();i++ ){
 				
 				CaseCondition cC = new CaseCondition();
-				Node n = WhereClauseVectorJSQL.getWhereClauseVector(((WhenClause)((CaseExpression) whereClause).getWhenClauses().get(i)).getWhenExpression(),null, qParser.queryAliases,true,0,qParser);
+				Node n = WhereClauseVectorJSQL.getWhereClauseVector(((WhenClause)((CaseExpression) whereClause).getWhenClauses().get(i)).getWhenExpression(),null, qParser.queryAliases,true,0,qParser,dbApparameters);
 				//cC.setCaseConditionNode(n);
 				//cC.setCaseCondition(n.toString());
 			   // cC.setConstantValue(((WhenClause)((CaseExpression) whereClause).getWhenClauses().get(i)).getThenExpression().toString());
 			    if(colExpression!= null && colExpression instanceof Column){
-			    	Node n1 = ((WhereClauseVectorJSQL.getWhereClauseVector((colExpression),null, qParser.queryAliases,true,0,qParser)));
+			    	Node n1 = ((WhereClauseVectorJSQL.getWhereClauseVector((colExpression),null, qParser.queryAliases,true,0,qParser,dbApparameters)));
 			    	//cC.setColValueForConjunct(n1.getColumn());
 			    //	cC.setCaseOperator("=");
 			    }
@@ -483,7 +483,7 @@ public class OperateOnSubQueryJSQL {
 				//cC.setCaseCondition("else");
 			   // cC.setConstantValue(((CaseExpression) whereClause).getElseExpression().toString());
 			    if(colExpression != null && colExpression instanceof Column){
-			    	Node n1 = ((WhereClauseVectorJSQL.getWhereClauseVector((colExpression),null, qParser.queryAliases,true,0,qParser)));
+			    	Node n1 = ((WhereClauseVectorJSQL.getWhereClauseVector((colExpression),null, qParser.queryAliases,true,0,qParser, dbApparameters)));
 			    	//cC.setColValueForConjunct(n1.getColumn());
 			    }
 			    caseConditionsVector.add(cC);
@@ -496,7 +496,7 @@ public class OperateOnSubQueryJSQL {
 			Expression binaryLeftExp = ((BinaryExpression)whereClause).getLeftExpression();
 			Expression binaryRightExp = ((BinaryExpression)whereClause).getRightExpression();
 			if(binaryLeftExp != null){
-				isCaseExists= caseInWhereClause(binaryLeftExp,binaryRightExp,qParser);
+				isCaseExists= caseInWhereClause(binaryLeftExp,binaryRightExp,qParser, dbApparameters);
 				//If Case stmnt exists, rearrange Where clause to omit CASE condition
 				if(isCaseExists){
 					((BinaryExpression) whereClause).setLeftExpression(null);
@@ -505,7 +505,7 @@ public class OperateOnSubQueryJSQL {
 			}
 			
 			if(binaryRightExp != null){
-				isCaseExists = caseInWhereClause(binaryRightExp,binaryLeftExp,qParser);
+				isCaseExists = caseInWhereClause(binaryRightExp,binaryLeftExp,qParser, dbApparameters);
 				//If Case stmnt exists, rearrange Where clause to omit CASE condition
 				if(isCaseExists){
 					((BinaryExpression) whereClause).setLeftExpression(null);
@@ -517,7 +517,7 @@ public class OperateOnSubQueryJSQL {
 			Expression caseExpr = ((Parenthesis)whereClause).getExpression();
 			
 			if(caseExpr instanceof CaseExpression){
-				isCaseExists = caseInWhereClause(caseExpr,colExpression,qParser);
+				isCaseExists = caseInWhereClause(caseExpr,colExpression,qParser, dbApparameters);
 				//If Case stmnt exists, rearrange Where clause to omit CASE condition
 				if(isCaseExists){
 					((Parenthesis) whereClause).setExpression(null);

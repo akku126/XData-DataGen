@@ -40,6 +40,7 @@ import net.sf.jsqlparser.statement.select.SubJoin;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import net.sf.jsqlparser.statement.select.UnionOp;
 import net.sf.jsqlparser.statement.select.WithItem;
+
 import org.apache.derby.impl.sql.compile.CursorNode;
 import org.apache.derby.impl.sql.compile.DeleteNode;
 import org.apache.derby.impl.sql.compile.InsertNode;
@@ -50,6 +51,7 @@ import org.apache.derby.impl.sql.compile.SelectNode;
 import org.apache.derby.impl.sql.compile.StatementNode;
 import org.apache.derby.impl.sql.compile.UnionNode;
 import org.apache.derby.impl.sql.compile.UpdateNode;
+
 import parsing.AggregateFunction;
 import parsing.Conjunct_ToDel;
 import parsing.ForeignKey;
@@ -699,7 +701,7 @@ public class QueryParser implements Serializable{
 		return modifiedQueryString;  
 	} 
           
-	public void parseQuery(String queryId, String queryString) throws Exception {
+	public void parseQuery(String queryId, String queryString,AppTest_Parameters dbApparameters) throws Exception {
 		try{
 			queryString=queryString.trim().replaceAll("\n+", " ");
 			queryString=queryString.trim().replaceAll(" +", " ");
@@ -714,7 +716,7 @@ public class QueryParser implements Serializable{
 			queryString = queryString.replace("RIGHT JOIN","RIGHT OUTER JOIN");
 			queryString = queryString.replace("FULL JOIN","FULL OUTER JOIN");
 
-			parseQueryJSQL(queryId, queryString, true);
+			parseQueryJSQL(queryId, queryString, true, dbApparameters);
 		}catch(ParseException ex){
 			
 			logger.log(Level.SEVERE," Function parseQuery : "+ex.getMessage(),ex);
@@ -725,7 +727,7 @@ public class QueryParser implements Serializable{
 		}
 	}
     
-	public void parseQueryJSQL(String queryId, String queryString, boolean debug)
+	public void parseQueryJSQL(String queryId, String queryString, boolean debug, AppTest_Parameters dbApparameters)
 			throws Exception {
 		logger.info("beginning to parse query");
 		try{
@@ -744,7 +746,7 @@ public class QueryParser implements Serializable{
 				if(((Select) stmt).getSelectBody() instanceof PlainSelect &&
 						((Select)stmt).getWithItemsList() == null){						
 					 plainSelect = (PlainSelect)((Select) stmt).getSelectBody();
-					ProcessResultSetNode.processResultSetNodeJSQL(plainSelect, debug, this);
+					ProcessResultSetNode.processResultSetNodeJSQL(plainSelect, debug, this,dbApparameters);
 //					ProcessSelectClause.ProcessSelect(plainSelect, debug, this);
 				}
 				
@@ -758,7 +760,7 @@ public class QueryParser implements Serializable{
 					String alteredWithQuery=((Select)stmt).getSelectBody().toString();
 					logger.info("transformed query after substitution of Witt aliases\n"+ alteredWithQuery);
 	
-					ProcessResultSetNode.processResultSetNodeJSQL((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
+					ProcessResultSetNode.processResultSetNodeJSQL((PlainSelect)((Select) stmt).getSelectBody(), debug, this,dbApparameters);
 					//ProcessSelectClause.ProcessSelect((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
 				}
 				
@@ -773,7 +775,7 @@ public class QueryParser implements Serializable{
 								
 						//Test in different scenarios - joins in SET  Op and test
 						//Get the select list to check it has select statement or nested SET operation
-						parseQueriesForSetOp(setOpList,debug); 
+						parseQueriesForSetOp(setOpList,debug, dbApparameters); 
 					} 
 				}
 			}catch (ParseException e){
@@ -1164,7 +1166,7 @@ public class QueryParser implements Serializable{
 	 * @param setOpList
 	 * @throws Exception
 	 */
-	public void parseQueriesForSetOp(SetOperationList setOpList, boolean debug) throws Exception {
+	public void parseQueriesForSetOp(SetOperationList setOpList, boolean debug, AppTest_Parameters dbApparameters) throws Exception {
 		
 		logger.info(" set operation List"+setOpList.toString());
 		SetOperation setOperation =  setOpList.getOperations().get(0);
@@ -1191,12 +1193,12 @@ public class QueryParser implements Serializable{
 					else
 						leftQuery.query.setQueryString(left.toString());
 					
-					ProcessResultSetNode.processResultSetNodeJSQL(left, debug, leftQuery);
+					ProcessResultSetNode.processResultSetNodeJSQL(left, debug, leftQuery,dbApparameters);
 					//ProcessSelectClause.ProcessSelect(left, debug, leftQuery);
 					this.projectedCols.addAll(leftQuery.projectedCols);
 				}
 				else if(nxtElement instanceof SetOperationList){
-					leftQuery.parseQueryJSQL("q2",((SetOperationList)nxtElement).toString(),debug);
+					leftQuery.parseQueryJSQL("q2",((SetOperationList)nxtElement).toString(),debug, dbApparameters);
 				}
 			}if(selectList.size()==2&&selectListIt.hasNext()){
 				Object nxtElement = selectListIt.next();
@@ -1209,13 +1211,13 @@ public class QueryParser implements Serializable{
 					else
 						rightQuery.query.setQueryString(right.toString());
 					
-					ProcessResultSetNode.processResultSetNodeJSQL(right, debug, rightQuery);			
+					ProcessResultSetNode.processResultSetNodeJSQL(right, debug, rightQuery,dbApparameters);			
 					//ProcessSelectClause.ProcessSelect(right, debug, rightQuery);
 					if(projectedCols.isEmpty())
 						this.projectedCols.addAll(rightQuery.projectedCols);
 					}
 				else if(nxtElement instanceof SetOperationList){
-					rightQuery.parseQueryJSQL("q3",((SetOperationList)nxtElement).toString(),debug);
+					rightQuery.parseQueryJSQL("q3",((SetOperationList)nxtElement).toString(),debug, dbApparameters);
 				}
 			}
 			/*The following else added by mathew on  22 August 2016
@@ -1237,7 +1239,7 @@ public class QueryParser implements Serializable{
 				for(int i=1;i<setOpList.getSelects().size();i++)
 					tempListSelectBodies.add(setOpList.getSelects().get(i));
 				tempSetOpList.setBracketsOpsAndSelects(tempBrackets, tempListSelectBodies, tempListOperations);
-				rightQuery.parseQueryJSQL("q3",tempSetOpList.toString(),debug);
+				rightQuery.parseQueryJSQL("q3",tempSetOpList.toString(),debug,dbApparameters);
 			}
 			
 		}
@@ -1251,7 +1253,7 @@ public class QueryParser implements Serializable{
 	 * @throws Exception
 	 */
 	@Deprecated
-	public void parseQuery(String queryId, String queryString, boolean debug)
+	public void parseQuery(String queryId, String queryString, boolean debug,AppTest_Parameters dbApparameters )
 			throws Exception {
 		logger.log(Level.WARNING,"ParseQuery : Call to deprecated Method");
 		queryString=queryString.trim().replaceAll("\n+", " ");
@@ -1295,11 +1297,11 @@ public class QueryParser implements Serializable{
 			setOperator="UNION";
 			leftQuery = new QueryParser(this.tableMap);
 			String left=queryString.substring(0,queryString.toLowerCase().indexOf("union"));
-			leftQuery.parseQuery("q2", left);
+			leftQuery.parseQuery("q2", left,dbApparameters);
 
 			rightQuery = new QueryParser(this.tableMap);
 			String right=queryString.substring(queryString.toLowerCase().indexOf("union")+5);
-			rightQuery.parseQuery("q3", right);
+			rightQuery.parseQuery("q3", right,dbApparameters);
 
 		}else if (rsNode instanceof IntersectOrExceptNode){
 
@@ -1308,11 +1310,11 @@ public class QueryParser implements Serializable{
 
 			leftQuery = new QueryParser(this.tableMap);
 			String left=queryString.substring(0,queryString.toLowerCase().indexOf("except"));
-			leftQuery.parseQuery("q2", left);
+			leftQuery.parseQuery("q2", left,dbApparameters);
 
 			rightQuery = new QueryParser(this.tableMap);
 			String right=queryString.substring(queryString.toLowerCase().indexOf("except")+6);
-			rightQuery.parseQuery("q3", right);
+			rightQuery.parseQuery("q3", right,dbApparameters);
 
 		}else{
 			ProcessResultSetNode.processResultSetNode(rsNode, debug, this);

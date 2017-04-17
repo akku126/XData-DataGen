@@ -98,8 +98,9 @@ public class BranchQueriesDetails implements Serializable{
 			if(branchQueryString[i] != null && !branchQueryString[i].equals(""))
 			{
 				qParser1[i] = new QueryParser( cvc.getTableMap() );
+				//Application Testing - pass the new parameter
 				
-				qParser1[i].parseQuery("q1" + i, branchQueryString[i]);
+				qParser1[i].parseQuery("q1" + i, branchQueryString[i],cvc.getDBAppparams());
 				
 				branchQuery[i] = qParser1[i].getQuery();
 				

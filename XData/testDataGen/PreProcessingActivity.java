@@ -163,6 +163,60 @@ public class PreProcessingActivity {
 		
 	}	
 	
+	//Application Testing
+	public static Vector<Node> preProcessingActivityForSchema(GenerateCVC1 cvc) throws Exception{
+
+
+		/** check if there are branch queries and upload the details */
+		//TODO: This is for application testing, a flag should be set
+		//for calling this function
+		RelatedToPreprocessing.uploadBranchQueriesDetails(cvc);
+		/** To store input query string */
+		String queryString = "";
+		boolean isSetOp = false;
+		BufferedReader input = null;
+		StringBuffer queryStr = new StringBuffer();
+		try {
+			input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/queries.txt"));
+			/**Read the input query */
+			while (( queryString = input.readLine()) != null){
+				queryStr.append(queryString);
+			}
+			if(queryStr != null){
+				/**Create a new query parser
+			cvc.setqParser( new QueryParser(cvc.getTableMap()));
+			cvc.getqParser().parseQuery("q1", queryStr.toString());
+			*/
+				//Trying with new query structure
+				QueryStructure qStructure=new QueryStructure(cvc.getTableMap());
+				qStructure.buildQueryStructure("q1", queryStr.toString(),cvc.getDBAppparams());
+				cvc.setqStructure(qStructure);
+				
+				
+					cvc.getDBAppparams().setSchemaProjectedColumns(cvc.getqStructure().getProjectedCols());				
+					System.out.println(cvc.getDBAppparams().getSchemaProjectedColumns());
+					return cvc.getDBAppparams().getSchemaProjectedColumns();
+				
+				//end
+				
+				
+			}
+		}catch(Exception e){
+			logger.log(Level.SEVERE,""+e.getStackTrace(),e);
+			//e.printStackTrace();
+			throw e;
+		} 
+		finally {
+			if(cvc != null &&  cvc.getConnection() != null && ! cvc.getConnection().isClosed()){
+				cvc.closeConn();
+			}
+			if(input != null)
+			input.close();
+		}
+		return cvc.getDBAppparams().getSchemaProjectedColumns();
+	}
+	//end
+	
 	public static void preProcessingActivity(GenerateCVC1 cvc) throws Exception{
 
 
@@ -188,9 +242,17 @@ public class PreProcessingActivity {
 			*/
 				//Trying with new query structure
 				QueryStructure qStructure=new QueryStructure(cvc.getTableMap());
-				qStructure.buildQueryStructure("q1", queryStr.toString());
+				qStructure.buildQueryStructure("q1", queryStr.toString(),cvc.getDBAppparams());
 				cvc.setqStructure(qStructure);
 				
+				//Application Testing --- not need to execute further statements for schema parsing
+				
+				if(cvc.getDBAppparams().isSchemasetFlag()== true){
+					cvc.getDBAppparams().setSchemaProjectedColumns(cvc.getqStructure().getProjectedCols());				
+					System.out.println(cvc.getDBAppparams().getSchemaProjectedColumns());
+					return;
+				}
+				//end
 				
 				cvc.initializeQueryDetailsQStructure(cvc.getqStructure() );
 			
@@ -244,9 +306,9 @@ public class PreProcessingActivity {
 					
 					/** Call the method for generating the data sets */
 					//if(Configuration.getProperty("smtsolver").equalsIgnoreCase("cvc3")){
-					//	cvc.generateDatasetsToKillMutations();
+					cvc.generateDatasetsToKillMutations();
 					//}else{
-						cvc.generateDatasetsToKillMutationsUsingSMT();
+						//cvc.generateDatasetsToKillMutationsUsingSMT();
 					//}
 				
 				}

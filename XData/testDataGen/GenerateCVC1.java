@@ -1,7 +1,7 @@
 
 package testDataGen;
 
-import generateCVC4Constraints.GetCVC4HeaderAndFooter;
+
 import generateConstraints.GetCVC3HeaderAndFooter;
 import generateConstraints.TupleRange;
 
@@ -27,6 +27,7 @@ import killMutations.GenerateDataForOriginalQuery;
 import killMutations.MutationsInFromSubQuery;
 import killMutations.MutationsInOuterBlock;
 import killMutations.MutationsInWhereSubQuery;
+import parsing.AppTest_Parameters;
 import parsing.Column;
 import parsing.ConjunctQueryStructure;
 import parsing.ForeignKey;
@@ -58,7 +59,20 @@ public class GenerateCVC1 implements Serializable{
 
 	/** The parser stores the details of the query after the input query is parsed	 */
 	private QueryParser qParser;
+	//Application Testing
+	private AppTest_Parameters DBAppparams;
+	
 
+	public AppTest_Parameters getDBAppparams() {
+		return DBAppparams;
+	}
+
+
+	public void setDBAppparams(AppTest_Parameters dBAppparams) {
+		DBAppparams = dBAppparams;
+	}
+
+	//end
 	private QueryStructure qStructure;
 	/** Stores the base relation for each repeated occurrence of a relation  */
 
@@ -468,7 +482,7 @@ public class GenerateCVC1 implements Serializable{
 					/**Generate CVC3 Header, This is need to initialize the CVC3 Data Type field of each column of each table */
 					this.setCVC3_HEADER( GetCVC3HeaderAndFooter.generateCVC3_Header(this) );
 			}else{
-				this.setSMTLIB_HEADER(GetCVC4HeaderAndFooter.generateCVC4_Header(this));
+				//this.setSMTLIB_HEADER(GetCVC4HeaderAndFooter.generateCVC4_Header(this));
 			}
 		}catch (TimeoutException e){
 			logger.log(Level.SEVERE,e.getMessage(),e);		
@@ -751,6 +765,9 @@ public class GenerateCVC1 implements Serializable{
 	 * @param queryBlock
 	 */
 	public void initilizeDataStructuresForTupleAssignment(QueryBlockDetails queryBlock){
+		
+		/** neha -- added to initialize the param data structure**/
+		RelatedToParameters.setupDataStructuresForParamConstraints(queryBlock);
 
 		/** Add constraints related to parameters*/
 		this.getConstraints().add(RelatedToParameters.addDatatypeForParameters( this, queryBlock));

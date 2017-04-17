@@ -6,12 +6,17 @@ import generateConstraints.GenerateConstraintsForHavingClause;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.Vector;
 import java.util.logging.Logger;
 
 import parsing.Column;
 import parsing.ConjunctQueryStructure;
 import parsing.Node;
+import parsing.Table;
+import stringSolver.AppTest_StringConstraintSolver;
+import stringSolver.StringConstraint;
+import stringSolver.StringConstraintSolver;
 
 /**
  * TODO: GOOD DOC
@@ -103,6 +108,11 @@ public class RelatedToParameters {
 		Iterator<ArrayList<String>> itr = queryBlock.getParamsNodeMap().keySet().iterator();
 		int val = 0;
 		boolean isMaxOrMin = false;
+		//Application Testing		
+		ArrayList<String> xdata_param_constraints = cvc.getDBAppparams().getDbridge_Param_Constraints();			
+		HashMap<String,String> xdata_param_selMap = cvc.getDBAppparams().getDbridge_param_sel_map();
+		HashMap<String,String> params_Datatype = (HashMap<String, String>) cvc.getDBAppparams().getParameters_Datatype().clone(); 
+		//end
 		while(itr.hasNext()){
 			ArrayList<String> params = itr.next();
 			Node n = queryBlock.getParamsNodeMap().get(params);
@@ -158,16 +168,292 @@ public class RelatedToParameters {
 					}
 				}
 			}
-			//Add the data type for all the params to CVC
+			//Application Testing --Add the data type for all the params to CVC
+			
 			for(int i=0;i<params.size();i++){
-				retVal += params.get(i) + " : " + datatype +";\n";
+				
+				retVal = params.get(i) + " : " + datatype +";\n" + retVal;
+				//to collect all string constraints
+				Vector<String> Stringvec = new Vector();
+				String newconsformat ="";
+				boolean notflag = false;
+				if(xdata_param_selMap.containsKey(params.get(i).toString())){
+					String keyValue = xdata_param_selMap.get(params.get(i));
+					if(! retVal.contains(keyValue + " : ")){
+						retVal = keyValue + " : " + datatype +";\n" + retVal;
+						retVal+= "ASSERT NOT ISNULL_"+datatype+"("+keyValue+");"+"\n";
+						
+					}
+					if(! retVal.contains("ASSERT ("+ keyValue +" = "+params.get(i)))
+						retVal+= "ASSERT ("+ keyValue +" = "+params.get(i)+" );"+"\n";
+											
+						for(String paramsstr : xdata_param_constraints){
+							if(paramsstr.contains(keyValue)){								
+								String tempstr = paramsstr;
+								tempstr =tempstr.replace(keyValue, params.get(i));
+								 notflag=false;
+								if(tempstr.contains("NOT")){
+									notflag=true;
+									//tempstr=tempstr.replace("NOT ", "");
+								}
+									
+								if(cvc.getDBAppparams().getParameters_Datatype_Copy().get(keyValue).toLowerCase().contains("string")){
+									//need to call string constraint solver
+									 newconsformat = "(O_";
+									String tableName ="";
+									while(tempstr.length()>0){
+										if(tempstr.charAt(0)==' ')
+											tempstr = tempstr.substring(1);
+										else
+											break;
+									}
+									String[] tempstr_array = tempstr.split(" ");
+									
+									tempstr="";
+									if(!notflag){
+										tempstr+=tempstr_array[0]+" "+tempstr_array[1]+" "+ "'";
+										for(int arsize=2;arsize<tempstr_array.length;arsize++){
+											tempstr+=tempstr_array[arsize];
+											if(arsize<tempstr_array.length-1)
+												tempstr+=" ";
+										}
+									}
+										
+									else{
+										tempstr+=tempstr_array[1]+" ";//+tempstr_array[2]+" "+"'";
+										if(tempstr_array[2].equals("!=")){
+											tempstr+="= '";
+											notflag=false;
+										}
+										else if(tempstr_array[2].equals("==")){
+											tempstr+="/= '";
+											notflag=false;
+										}
+										else
+											tempstr+=tempstr_array[2]+" "+"'";
+											
+										for(int arsize=3;arsize<tempstr_array.length;arsize++){
+											tempstr+=tempstr_array[arsize];
+											if(arsize<tempstr_array.length-1)
+												tempstr+=" ";
+										}
+									}
+										
+									
+									tempstr+="'";
+									for(Entry<ArrayList<String>, Node> strtmp : queryBlock.getParamsNodeMap().entrySet()){
+										if(strtmp.getKey().toString().contains(params.get(i))){
+											tableName=strtmp.getValue().toString();
+											break;
+										}
+									}
+									//String tableName = queryBlock.getParamsNodeMap()..get(params.get(i)).toString();
+									tableName = tableName.substring(1,tableName.indexOf(datatype)-2);
+									for(Table tbstr : cvc.getResultsetTables()){
+										if(tbstr.toString().equalsIgnoreCase(tableName)){
+											int clmnindex =0;
+											for(String clmn :tbstr.getColumns().keySet()){
+												if(clmn.equalsIgnoreCase(datatype)){
+													newconsformat+=tableName+"[1]."+clmnindex;
+													break;
+												}
+												clmnindex++;
+											}
+										}
+									}
+									tempstr =tempstr.replace(params.get(i), newconsformat);
+									tempstr =tempstr.replace("!","/");								
+									tempstr+=")";								
+									
+									Stringvec.add(tempstr);
+//									
+								}
+								
+								else{
+									paramsstr=paramsstr.replace("!","/");
+									if(paramsstr.contains("NOT ")){
+										if(! retVal.contains( "ASSERT NOT ("+paramsstr.replace("NOT ", "")+");"))
+											retVal+= "ASSERT NOT ("+paramsstr.replace("NOT ", "")+");"+"\n";
+									
+										if(! retVal.contains( "ASSERT NOT ("+tempstr.replace("NOT ", "")+");"))
+											retVal+= "ASSERT NOT ("+tempstr.replace("NOT ", "")+");"+"\n";
+									}
+									else{
+										if(! retVal.contains("ASSERT ("+paramsstr+");"))
+											retVal+= "ASSERT ("+paramsstr+");"+"\n";
+										
+										if(! retVal.contains( "ASSERT ("+tempstr.replace("NOT ", "")+");"))
+											retVal+= "ASSERT ("+tempstr.replace("NOT ", "")+");"+"\n";
+									}
+								}
+								
+								
+							}
+						}
+						if(Stringvec.size()>0){
+							AppTest_StringConstraintSolver obstrsolver = new AppTest_StringConstraintSolver();
+							try {
+								
+								Vector<String> res_string = obstrsolver.solveConstraints_Apptest(Stringvec,cvc.getResultsetColumns(),cvc.getTableMap());
+								String new_res_string="";
+								if(res_string.size()>0){
+									for(int rssize=0;rssize<res_string.size();rssize++){
+										new_res_string=res_string.get(rssize);
+										new_res_string=new_res_string.replace("ASSERT ","");
+										new_res_string=new_res_string.replace(newconsformat, params.get(i));
+										new_res_string=new_res_string.replace(")", "");
+										new_res_string=new_res_string.replace(";", "");
+										new_res_string=new_res_string.replace("\n", "");
+										if(!notflag){
+											retVal+= "ASSERT ("+new_res_string+");"+"\n";
+											new_res_string=new_res_string.replace(params.get(i), keyValue);
+											retVal+= "ASSERT ("+new_res_string+");"+"\n";
+										}
+										else{
+											retVal+= "ASSERT NOT ("+new_res_string+");"+"\n";
+											new_res_string=new_res_string.replace(params.get(i), keyValue);
+											retVal+= "ASSERT NOT ("+new_res_string+");"+"\n";
+										}
+									}
+									
+								}
+								
+									
+							} catch (Exception e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+						if(params_Datatype.containsKey(keyValue))
+							params_Datatype.remove(keyValue);
+					
+				}
+//				
+				//end
 				if(isMaxOrMin)
 					//retVal += "ASSERT "+params.get(i)+" = "+val+";\n";
 					retVal += "ASSERT "+n+" = "+val+";\n";
 			}
 			isMaxOrMin = false;
 		}
-
+		//Application Testing
+				if(params_Datatype != null && params_Datatype.size()>0){
+					//add the datatype of the parameters first
+					 for (Entry<String, String> entry : params_Datatype.entrySet()){
+						 if(! retVal.contains(entry.getKey() + " : " + entry.getValue())){
+							 if(! entry.getValue().toLowerCase().contains("string")){
+								 String data_type = entry.getValue().toUpperCase();
+								 if(data_type.equals("FLOAT") || data_type.equals("DOUBLE"))
+									 data_type = "REAL";
+								 retVal = entry.getKey() + " : " + data_type+";\n" + retVal;
+							 }
+						 }
+					 }
+					//add program parameters
+					 for (Entry<String, String> entry : params_Datatype.entrySet()){
+						 if(! retVal.contains(entry.getKey() + " : " + entry.getValue())){
+							 if(! entry.getValue().toLowerCase().contains("string")){
+								 String data_type = entry.getValue().toUpperCase();
+								 if(data_type.equals("FLOAT") || data_type.equals("DOUBLE"))
+									 data_type = "REAL";
+								// retVal += entry.getKey() + " : " + data_type+";\n";
+								 for(String paramsstr : xdata_param_constraints){
+										if(paramsstr.contains(entry.getKey())){
+											if(paramsstr.contains("NOT ")){
+												if(paramsstr.contains("!=")){
+													paramsstr=paramsstr.replace("NOT ", "");
+													paramsstr=paramsstr.replace("!=", "=");
+												}
+											}
+											paramsstr=paramsstr.replace("!","/");
+											if(paramsstr.contains("NOT ")){										
+												if(! retVal.contains( "ASSERT NOT ("+paramsstr.replace("NOT ", "")+");"))
+													retVal+= "ASSERT NOT ("+paramsstr.replace("NOT ", "")+");"+"\n";
+											}
+											else{
+												if(! retVal.contains("ASSERT ("+paramsstr+");"))
+													retVal+= "ASSERT ("+paramsstr+");"+"\n";
+											}
+											
+										}
+								 }
+								 
+								}
+							 else{
+								 for(String paramsstr : xdata_param_constraints){
+									 
+									 boolean flagfornot =false;
+									 if(paramsstr.contains(entry.getKey())){
+										 if(paramsstr.contains("NOT "))
+											 flagfornot = true;
+										 if(flagfornot && paramsstr.contains("!=")){
+											 paramsstr=paramsstr.replace("NOT ", "");
+											 paramsstr=paramsstr.replace("!=", "=");
+											 flagfornot=false;
+										 }
+										 //need to code
+										 String[] tempstr_array = paramsstr.split(" ");
+										 String paramVal ="";
+										 String op ="";
+										 String operand ="";
+										 if(!flagfornot && tempstr_array.length>2){
+											 paramVal+=tempstr_array[2]+" ";
+											 op = tempstr_array[1];
+											 operand = tempstr_array[0];
+										 }
+										 else{
+											 op = tempstr_array[2];
+											 operand = tempstr_array[1];
+										 }
+										// op =op.replace("!","/");
+										 for(int l=3;l<tempstr_array.length;l++){
+											 paramVal+=tempstr_array[l];
+											 if(l<tempstr_array.length-1)
+												 paramVal+=" ";
+										 }
+										 if(! op.equals("=")){
+											 StringConstraintSolver obstrsolver = new StringConstraintSolver();
+											 StringConstraint s=new StringConstraint(operand +" "+op+" '"+paramVal+"'"); 	
+											 //Need to first check for related parameters then call for solving single constraints
+											 StringConstraintSolver scsobj = new StringConstraintSolver();
+											String  paramValnew = scsobj.solveSingleConstraint(s);
+											//System.out.println("paramValnew---"+paramValnew);
+											paramVal = paramValnew;
+										 }
+										
+										 paramVal = paramVal.replace("%","_p");
+										 paramVal = paramVal.replace("+","_s");								 
+										 paramVal = paramVal.replace("-","_m");
+										 paramVal = paramVal.replace("*","_s");
+										 paramVal = paramVal.replace( "_","_u");
+										 paramVal = paramVal.replace(".","_d");
+										 paramVal = paramVal.replace(" ","_ub");
+										 //call the string solver
+										 
+										 //end
+										 retVal+= "DATATYPE \n";
+										 if(! retVal.contains("STR"+entry.getKey()+" = "+paramVal+ " END ")){
+											 retVal+= "STR"+entry.getKey()+" = "+paramVal+ " END ; \n";
+											 retVal+= entry.getKey() +" : "+ "STR"+entry.getKey()+"; \n";
+											 retVal+= "ASSERT ("+entry.getKey()+" = "+paramVal+");"+"\n";
+										 }
+									 }
+									 else{
+										 if(! retVal.contains("STR"+entry.getKey()+" = ")){
+											 retVal+= "DATATYPE \n";
+											 retVal+= "STR"+entry.getKey()+" = xyz END ; \n";
+											 retVal+= entry.getKey() +" : "+ "STR"+entry.getKey()+"; \n";
+											 retVal+= "ASSERT ("+entry.getKey()+" = "+"xyz"+");"+"\n";
+										 }
+										 
+										 
+									 }
+								 }
+							 }
+						 }
+					 }
+				}
+				//end
 		return retVal;
 	}
 

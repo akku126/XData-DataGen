@@ -5,8 +5,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import generateCVC4Constraints.GenerateCommonConstraintsForQuerySMT;
-import generateCVC4Constraints.GetCVC4HeaderAndFooter;
+
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GetCVC3HeaderAndFooter;
 import testDataGen.GenerateCVC1;
@@ -95,7 +94,7 @@ public class GenerateDataForOriginalQuery {
 			
 			/**Get the null and database constraints - get the number of outout tuples
 			 * and generate other constraints  accordingly*/
-			 GenerateCommonConstraintsForQuerySMT.generateNullandDBConstraintsUsingSMT(cvc,false);
+		//	 GenerateCommonConstraintsForQuerySMT.generateNullandDBConstraintsUsingSMT(cvc,false);
 			 
 			/**Get the constraints for all the blocks of the query  */
 			cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlockSMT(cvc));
@@ -113,7 +112,7 @@ public class GenerateDataForOriginalQuery {
 			System.out.println("************************************************************************************************************************");
 			//System.out.println("\n CVSTR : \n"+CVCStr);
 			/** Call the method for the data generation*/
-			return GenerateCommonConstraintsForQuerySMT.generateDataSetForConstraintsForSMT(cvc,false);
+			return false;//GenerateCommonConstraintsForQuerySMT.generateDataSetForConstraintsForSMT(cvc,false);
 		}catch (TimeoutException e){
 			logger.log(Level.SEVERE,e.getMessage(),e);		
 			throw e;

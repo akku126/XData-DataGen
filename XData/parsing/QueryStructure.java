@@ -932,7 +932,7 @@ import util.TableMap;
 	    /* rename of old method parseQuery
 	     *       
 	     */
-		public void buildQueryStructure(String queryId, String queryString) throws Exception {
+		public void buildQueryStructure(String queryId, String queryString,AppTest_Parameters dbAppParameters ) throws Exception {
 			
 			try{
 				queryString=queryString.trim().replaceAll("\n+", " ");
@@ -955,7 +955,7 @@ import util.TableMap;
 				queryString = replaceFormatForRowLists(queryString);
 				queryString = replaceFormatForGroupBy(queryString);
 
-				buildQueryStructureJSQL(queryId, queryString, true);
+				buildQueryStructureJSQL(queryId, queryString, true,dbAppParameters);
 
 			}catch(ParseException ex){
 				
@@ -977,7 +977,7 @@ import util.TableMap;
 	    /* rename of old method parseQueryJSQL
 	     *       
 	     */
-		public void buildQueryStructureJSQL(String queryId, String queryString, boolean debug)
+		public void buildQueryStructureJSQL(String queryId, String queryString, boolean debug,AppTest_Parameters dbAppParameters)
 				throws Exception {
 			logger.info("beginning to parse query");
 			try{
@@ -997,7 +997,7 @@ import util.TableMap;
 							((Select)stmt).getWithItemsList() == null){						
 						 plainSelect = (PlainSelect)((Select) stmt).getSelectBody();
 //						ProcessResultSetNode.processResultSetNodeJSQL(plainSelect, debug, this);
-						ProcessSelectClause.ProcessSelect(plainSelect, debug, this);
+						ProcessSelectClause.ProcessSelect(plainSelect, debug, this, dbAppParameters);
 					}
 					
 					//Check if query contains WithItem list - then Query is of the form  WITH S AS ()
@@ -1011,7 +1011,7 @@ import util.TableMap;
 						logger.info("transformed query after substitution of Witt aliases\n"+ alteredWithQuery);
 		
 						//ProcessResultSetNode.processResultSetNodeJSQL((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
-						ProcessSelectClause.ProcessSelect((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
+						ProcessSelectClause.ProcessSelect((PlainSelect)((Select) stmt).getSelectBody(), debug, this, dbAppParameters);
 					}
 					
 					//If it is instance of SetOperationList - UNION,EXCEPT OR INTERSECT
@@ -1025,7 +1025,7 @@ import util.TableMap;
 									
 							//Test in different scenarios - joins in SET  Op and test
 							//Get the select list to check it has select statement or nested SET operation
-							processQueriesForSetOp(setOpList,debug); 
+							processQueriesForSetOp(setOpList,debug, dbAppParameters); 
 						} 
 					}
 				}catch (ParseException e){
@@ -1416,7 +1416,7 @@ import util.TableMap;
 		 * @param setOpList
 		 * @throws Exception
 		 */
-		public void processQueriesForSetOp(SetOperationList setOpList, boolean debug) throws Exception {
+		public void processQueriesForSetOp(SetOperationList setOpList, boolean debug,AppTest_Parameters dbAppParameters) throws Exception {
 			
 			logger.info(" set operation List"+setOpList.toString());
 			SetOperation setOperation =  setOpList.getOperations().get(0);
@@ -1444,11 +1444,11 @@ import util.TableMap;
 							leftQuery.query.setQueryString(left.toString());
 						
 						//ProcessResultSetNode.processResultSetNodeJSQL(left, debug, leftQuery);
-						ProcessSelectClause.ProcessSelect(left, debug, leftQuery);
+						ProcessSelectClause.ProcessSelect(left, debug, leftQuery, dbAppParameters);
 						this.projectedCols.addAll(leftQuery.projectedCols);
 					}
 					else if(nxtElement instanceof SetOperationList){
-						leftQuery.buildQueryStructureJSQL("q2",((SetOperationList)nxtElement).toString(),debug);
+						leftQuery.buildQueryStructureJSQL("q2",((SetOperationList)nxtElement).toString(),debug, dbAppParameters);
 					}
 				}if(selectList.size()==2&&selectListIt.hasNext()){
 					Object nxtElement = selectListIt.next();
@@ -1462,12 +1462,12 @@ import util.TableMap;
 							rightQuery.query.setQueryString(right.toString());
 						
 						//ProcessResultSetNode.processResultSetNodeJSQL(right, debug, rightQuery);			
-						ProcessSelectClause.ProcessSelect(right, debug, rightQuery);
+						ProcessSelectClause.ProcessSelect(right, debug, rightQuery, dbAppParameters);
 						if(projectedCols.isEmpty())
 							this.projectedCols.addAll(rightQuery.projectedCols);
 						}
 					else if(nxtElement instanceof SetOperationList){
-						rightQuery.buildQueryStructureJSQL("q3",((SetOperationList)nxtElement).toString(),debug);
+						rightQuery.buildQueryStructureJSQL("q3",((SetOperationList)nxtElement).toString(),debug, dbAppParameters);
 					}
 				}
 				/*The following else added by mathew on  22 August 2016
@@ -1489,7 +1489,7 @@ import util.TableMap;
 					for(int i=1;i<setOpList.getSelects().size();i++)
 						tempListSelectBodies.add(setOpList.getSelects().get(i));
 					tempSetOpList.setBracketsOpsAndSelects(tempBrackets, tempListSelectBodies, tempListOperations);
-					rightQuery.buildQueryStructureJSQL("q3",tempSetOpList.toString(),debug);
+					rightQuery.buildQueryStructureJSQL("q3",tempSetOpList.toString(),debug, dbAppParameters);
 				}
 			}
 			this.initializeQueryListStructures();
@@ -2661,5 +2661,7 @@ import util.TableMap;
 		public void setCaseConditionMap(HashMap<Integer,CaseExpression> caseConditionMap) {
 			this.caseConditionMap = caseConditionMap;
 		}
+
+		
 
 	}

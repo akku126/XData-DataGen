@@ -132,7 +132,7 @@ public class GenerateCommonConstraintsForQuery {
 			Boolean success= new PopulateTestData().killedMutants("cvc3_" + cvc.getCount() 
 					+ ".cvc", cvc.getQuery(), 
 					"DS" + cvc.getCount(), cvc.getQueryString(), cvc.getFilePath(), cvc.getNoOfOutputTuples(), cvc.getTableMap(), 
-					cvc.getResultsetColumns(), cvc.getRepeatedRelationCount().keySet()) ;
+					cvc.getResultsetColumns(), cvc.getRepeatedRelationCount().keySet(),cvc.getDBAppparams()) ;
 			cvc.setOutput( cvc.getOutput() + success);
 			cvc.setCount(cvc.getCount() + 1);
 	

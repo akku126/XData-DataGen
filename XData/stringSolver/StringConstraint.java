@@ -22,7 +22,7 @@ public class StringConstraint {
 		c=constant;
 		op=operator;
 	}
-	StringConstraint(String constr){
+	public StringConstraint(String constr){
 		String[] arr=constr.trim().split("\\s+",3);
 		var1=arr[0];
 		operator=arr[1];

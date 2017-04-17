@@ -255,7 +255,7 @@ public class StringConstraintSolver implements Serializable
 	 * @param dataConstraints Vector from which the constraints are considered
 	 * @return 
 	 */
-	private void  getReleatedConstraints(String var,HashSet<StringConstraint> relatedConstraints,Vector<StringConstraint> dataConstraints)	{
+	public void  getReleatedConstraints(String var,HashSet<StringConstraint> relatedConstraints,Vector<StringConstraint> dataConstraints)	{
 		if(dataConstraints.size()==0) return ;
 		int l=dataConstraints.size();
 		for(int i=0;i<l;i++){
@@ -284,7 +284,7 @@ public class StringConstraintSolver implements Serializable
 	 * @param noOfVar number of variables in the constraints
 	 * @return
 	 */
-	private HashMap<Integer,String> solveGroupedConstraintsWithInequalities(Vector<StringConstraint> toBeAdded, Vector<StringConstraint> added,int noOfVar){
+	public HashMap<Integer,String> solveGroupedConstraintsWithInequalities(Vector<StringConstraint> toBeAdded, Vector<StringConstraint> added,int noOfVar){
 		if(toBeAdded != null && toBeAdded.size()!=0){
 			Vector<StringConstraint> temp=(Vector<StringConstraint>)toBeAdded.clone();
 			for(StringConstraint c:temp){
@@ -433,7 +433,7 @@ public class StringConstraintSolver implements Serializable
 	 * @param str The single string constraint
 	 * @return The value of the string
 	 */
-	private String solveSingleConstraint(StringConstraint str){
+	public String solveSingleConstraint(StringConstraint str){
 		if(str.operator.equalsIgnoreCase(">=") || str.operator.equalsIgnoreCase("<=") ){
 			return str.constant;
 		}
@@ -552,7 +552,7 @@ public class StringConstraintSolver implements Serializable
 	 * @param constraints The String constraints from which redundant constraints are to be removed
 	 * @return If it is impossible to satisfy the constraints returns false
 	 */
-	private static boolean removeRedundantConds(Vector<StringConstraint> input,Vector<StringConstraint> equal){
+	public static boolean removeRedundantConds(Vector<StringConstraint> input,Vector<StringConstraint> equal){
 		
 		String var,constant;
 		StringConstraint sc=null;
@@ -660,7 +660,7 @@ public class StringConstraintSolver implements Serializable
 	 * @param equal Constraints of equality type
 	 * @return If it is impossible to satisfy the constraints returns false
 	 */
-	private static boolean removeEqualConds(Vector<StringConstraint> input,HashMap<String,String> equal){
+	public static boolean removeEqualConds(Vector<StringConstraint> input,HashMap<String,String> equal){
 		String str1,str2;
 		if(input.size()==0)	return true;
 		while(true){

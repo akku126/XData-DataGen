@@ -11,6 +11,7 @@ import org.apache.derby.impl.sql.compile.AndNode;
 import org.apache.derby.impl.sql.compile.BinaryRelationalOperatorNode;
 import org.apache.derby.impl.sql.compile.LikeEscapeOperatorNode;
 import org.apache.derby.impl.sql.compile.QueryTreeNode;
+
 import parsing.Column;
 import parsing.FromListElement;
 import parsing.JoinClause;
@@ -35,7 +36,7 @@ public class OperateOnJoinJSQL {
 	 * 
 	 */
 	public static FromListElement OperateOnJoinsJSQL(List<Join> joinList, FromItem frmItem,Vector<FromListElement> frmList, int orgSize,Vector<Node> allConds, 
-			JoinTreeNode jtn,boolean isFromSubquery, boolean isWhereSubquery, QueryParser qparser) throws Exception{
+			JoinTreeNode jtn,boolean isFromSubquery, boolean isWhereSubquery, QueryParser qparser, AppTest_Parameters dbApparameters) throws Exception{
 		FromListElement jtan = new FromListElement();
 		boolean hasOuter = false;
 		Join joinItem= null;
@@ -48,9 +49,9 @@ public class OperateOnJoinJSQL {
 			}
 		}
 		if(hasOuter){
-			jtan = OperateOnOuterJoins(joinList, frmItem, frmList, orgSize, allConds, jtn, isFromSubquery, isWhereSubquery, qparser);
+			jtan = OperateOnOuterJoins(joinList, frmItem, frmList, orgSize, allConds, jtn, isFromSubquery, isWhereSubquery, qparser, dbApparameters);
 		}else{
-			jtan = OperateOnJoinNodesJSQL(joinList, frmItem, frmList, orgSize, allConds, jtn, isFromSubquery, isWhereSubquery, qparser);
+			jtan = OperateOnJoinNodesJSQL(joinList, frmItem, frmList, orgSize, allConds, jtn, isFromSubquery, isWhereSubquery, qparser,  dbApparameters);
 		}
 		}catch(Exception e){
 			logger.log(Level.SEVERE,"Failed while Operating On Joins : "+e.getMessage(),e);
@@ -78,7 +79,7 @@ public class OperateOnJoinJSQL {
 	 * @throws Exception
 	 */
 	public static FromListElement OperateOnJoinNodesJSQL(List<Join> joinList, FromItem frmItem,Vector<FromListElement> frmList, int orgSize,Vector<Node> allConds, 
-			JoinTreeNode jtn,boolean isFromSubquery, boolean isWhereSubquery, QueryParser qparser) throws Exception{
+			JoinTreeNode jtn,boolean isFromSubquery, boolean isWhereSubquery, QueryParser qparser, AppTest_Parameters dbApparameters) throws Exception{
 		FromListElement jtan = new FromListElement();
 		
 		List<Join> leftTreeList = new ArrayList();
@@ -117,7 +118,7 @@ public class OperateOnJoinJSQL {
 						jList.add(aJ);
 						
 						FromListElement fle =  OperateOnJoinNodesJSQL(jList, frmItem,frmList, 
-								orgSize,allConds, jtn, isFromSubquery, isWhereSubquery,qparser);
+								orgSize,allConds, jtn, isFromSubquery, isWhereSubquery,qparser, dbApparameters);
 						
 						if(leftTreeList.size()==1){		
 							frmList.add(fle);
@@ -130,7 +131,7 @@ public class OperateOnJoinJSQL {
 				//Code for processing other Join nodes
 				if(leftTreeList.size() > 0){
 					FromListElement fle =  OperateOnJoinNodesJSQL(leftTreeList, frmItem,frmList, 
-							orgSize,allConds, jtn, isFromSubquery, isWhereSubquery,qparser);
+							orgSize,allConds, jtn, isFromSubquery, isWhereSubquery,qparser, dbApparameters);
 					if(leftTreeList.size()==1){		
 						frmList.add(fle);
 					}
@@ -164,7 +165,7 @@ public class OperateOnJoinJSQL {
 					}else 
 						frmListToProcess.addAll(frmList);
 
-					FromListElement temp = OperateOnJoinNode(joinNode,rt,lt,frmListToProcess,"",allConds,jtn,isFromSubquery,isWhereSubquery,qparser);		
+					FromListElement temp = OperateOnJoinNode(joinNode,rt,lt,frmListToProcess,"",allConds,jtn,isFromSubquery,isWhereSubquery,qparser, dbApparameters);		
 					ArrayList<String> joinTables=new ArrayList<String>();
 					t.add(temp);
 					frmList.add(temp);
@@ -184,7 +185,7 @@ public class OperateOnJoinJSQL {
 	 * 
 	 */
 	public static FromListElement OperateOnOuterJoins(List<Join> joinList, FromItem frmItem,Vector<FromListElement> frmList, int orgSize,Vector<Node> allConds, 
-			JoinTreeNode jtn,boolean isFromSubquery, boolean isWhereSubquery, QueryParser qparser) throws Exception{
+			JoinTreeNode jtn,boolean isFromSubquery, boolean isWhereSubquery, QueryParser qparser,AppTest_Parameters dbApparameters) throws Exception{
 		
 		//Code for Outer Joins - Start
 		FromListElement jtan = new FromListElement();
@@ -227,14 +228,14 @@ public class OperateOnJoinJSQL {
 				}
 				if(leftTreeList.size() > 0){
 				FromListElement temp = OperateOnJoinNodesJSQL(leftTreeList,frmItem,frmList,leftTreeList.size(),
-						 allConds,jtn, isFromSubquery, isWhereSubquery,qparser);
+						 allConds,jtn, isFromSubquery, isWhereSubquery,qparser,dbApparameters);
 				//leftFle.add(temp);
 				frmList.add(temp);
 				t.add(temp);
 				}
 				if(rightTreeList.size()>0){
 				FromListElement temp1 = OperateOnJoinNodesJSQL(rightTreeList,frmItem,frmList,rightTreeList.size(),
-						 allConds,jtn, isFromSubquery, isWhereSubquery,qparser);
+						 allConds,jtn, isFromSubquery, isWhereSubquery,qparser,  dbApparameters);
 
 				frmList.add(temp1);
 				t.add(temp1);
@@ -270,7 +271,7 @@ public class OperateOnJoinJSQL {
 	 * @throws Exception
 	 */
 	public static FromListElement OperateOnJoinNode(Join joinNode,FromItem rt,FromItem lt, Vector<FromListElement> frmItemList,
-			String aliasName, Vector<Node> allConds, JoinTreeNode jtn, boolean isFromSubquery, boolean isWhereSubquery, QueryParser qParser)
+			String aliasName, Vector<Node> allConds, JoinTreeNode jtn, boolean isFromSubquery, boolean isWhereSubquery, QueryParser qParser, AppTest_Parameters dbApparameters)
 					throws Exception {
 		Vector<Column> joinColumns1 = null;
 		Vector<Column> joinColumns2 = null;
@@ -321,7 +322,7 @@ public class OperateOnJoinJSQL {
 				leftFle.add(temp);
 			} else if (lt instanceof SubSelect) {
 				FromListElement temp;
-				OperateOnSubQueryJSQL.OperateOnSubquery( (SubSelect)lt, allConds, leftChild, true, false,qParser);
+				OperateOnSubQueryJSQL.OperateOnSubquery( (SubSelect)lt, allConds, leftChild, true, false,qParser, dbApparameters);
 				temp=qParser.getFromClauseSubqueries().get(qParser.getFromClauseSubqueries().size()-1).getQueryAliases();
 				t.add(temp);
 				//@author mathew on 28 June 2016, the following line added for enabling recursive parsing of subqueries 
@@ -339,7 +340,7 @@ public class OperateOnJoinJSQL {
 			rightFle.add(temp);
 		} else if (rt instanceof SubSelect) {
 			FromListElement temp;
-			OperateOnSubQueryJSQL.OperateOnSubquery((SubSelect) rt, allConds, rightChild,true,false,qParser);
+			OperateOnSubQueryJSQL.OperateOnSubquery((SubSelect) rt, allConds, rightChild,true,false,qParser, dbApparameters);
 			temp=qParser.getFromClauseSubqueries().get(qParser.getFromClauseSubqueries().size()-1).getQueryAliases();
 			t.add(temp);
 			//@author mathew on 28 June 2016, the following line added for enabling recursive parsing of subqueries 
@@ -647,9 +648,9 @@ public class OperateOnJoinJSQL {
 		    
 			if(frmItemList!= null && !frmItemList.isEmpty()){
 				 fleItem.addTabs(frmItemList.get(0));
-				n = WhereClauseVectorJSQL.getWhereClauseVector(preds, null,fleItem,false,0,qParser);//mahesh:fix this null and 0
+				n = WhereClauseVectorJSQL.getWhereClauseVector(preds, null,fleItem,false,0,qParser,dbApparameters);//mahesh:fix this null and 0
 			}else
-				n = WhereClauseVectorJSQL.getWhereClauseVector(preds, null,fleItem,false,0,qParser);//mahesh:fix this null and 0
+				n = WhereClauseVectorJSQL.getWhereClauseVector(preds, null,fleItem,false,0,qParser,dbApparameters);//mahesh:fix this null and 0
 
 			allConds.add(n);
 
@@ -967,7 +968,7 @@ public class OperateOnJoinJSQL {
  * @return 
  */
 public static FromListElement getFromListForJoinItems(Join joinNode,Join leftJoinNode,FromItem rt,FromItem lt,FromItem leftFrmItm, Vector<FromListElement> frmItemList,
-		String aliasName, Vector<Node> allConds, JoinTreeNode jtn, boolean isFromSubquery, boolean isWhereSubquery, QueryParser qParser) throws Exception{
+		String aliasName, Vector<Node> allConds, JoinTreeNode jtn, boolean isFromSubquery, boolean isWhereSubquery, QueryParser qParser, AppTest_Parameters dbApparameters) throws Exception{
 	Vector<Column> joinColumns1 = null;
 	Vector<Column> joinColumns2 = null;
 	FromListElement jtan = new FromListElement();
@@ -1014,7 +1015,7 @@ public static FromListElement getFromListForJoinItems(Join joinNode,Join leftJoi
 		} else if (lt instanceof SubSelect) {
 			FromListElement temp;
 			//temp = 
-			OperateOnSubQueryJSQL.OperateOnSubquery( (SubSelect)lt, allConds, leftChild, true, false,qParser);
+			OperateOnSubQueryJSQL.OperateOnSubquery( (SubSelect)lt, allConds, leftChild, true, false,qParser, dbApparameters);
 			temp=qParser.getFromClauseSubqueries().get(qParser.getFromClauseSubqueries().size()-1).getQueryAliases();
 			t.add(temp);
 			leftFle.add(temp);
@@ -1030,7 +1031,7 @@ public static FromListElement getFromListForJoinItems(Join joinNode,Join leftJoi
 		rightFle.add(temp);
 	} else if (rt instanceof SubSelect) {
 		FromListElement temp;
-		OperateOnSubQueryJSQL.OperateOnSubquery((SubSelect) rt, allConds, rightChild,true,false,qParser);
+		OperateOnSubQueryJSQL.OperateOnSubquery((SubSelect) rt, allConds, rightChild,true,false,qParser, dbApparameters);
 		temp=qParser.getFromClauseSubqueries().get(qParser.getFromClauseSubqueries().size()-1).getQueryAliases();
 		t.add(temp);
 		rightFle.add(temp);
