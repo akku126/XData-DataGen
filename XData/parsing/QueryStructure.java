@@ -997,7 +997,7 @@ import util.TableMap;
 							((Select)stmt).getWithItemsList() == null){						
 						 plainSelect = (PlainSelect)((Select) stmt).getSelectBody();
 //						ProcessResultSetNode.processResultSetNodeJSQL(plainSelect, debug, this);
-						ProcessSelectClause.ProcessSelect(plainSelect, debug, this, dbAppParameters);
+						ProcessSelectClause.ProcessSelect(plainSelect,  this, dbAppParameters);
 					}
 					
 					//Check if query contains WithItem list - then Query is of the form  WITH S AS ()
@@ -1011,7 +1011,7 @@ import util.TableMap;
 						logger.info("transformed query after substitution of Witt aliases\n"+ alteredWithQuery);
 		
 						//ProcessResultSetNode.processResultSetNodeJSQL((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
-						ProcessSelectClause.ProcessSelect((PlainSelect)((Select) stmt).getSelectBody(), debug, this, dbAppParameters);
+						ProcessSelectClause.ProcessSelect((PlainSelect)((Select) stmt).getSelectBody(),  this, dbAppParameters);
 					}
 					
 					//If it is instance of SetOperationList - UNION,EXCEPT OR INTERSECT
@@ -1444,7 +1444,7 @@ import util.TableMap;
 							leftQuery.query.setQueryString(left.toString());
 						
 						//ProcessResultSetNode.processResultSetNodeJSQL(left, debug, leftQuery);
-						ProcessSelectClause.ProcessSelect(left, debug, leftQuery, dbAppParameters);
+						ProcessSelectClause.ProcessSelect(left, leftQuery, dbAppParameters);
 						this.projectedCols.addAll(leftQuery.projectedCols);
 					}
 					else if(nxtElement instanceof SetOperationList){
@@ -1462,7 +1462,7 @@ import util.TableMap;
 							rightQuery.query.setQueryString(right.toString());
 						
 						//ProcessResultSetNode.processResultSetNodeJSQL(right, debug, rightQuery);			
-						ProcessSelectClause.ProcessSelect(right, debug, rightQuery, dbAppParameters);
+						ProcessSelectClause.ProcessSelect(right, rightQuery, dbAppParameters);
 						if(projectedCols.isEmpty())
 							this.projectedCols.addAll(rightQuery.projectedCols);
 						}

@@ -1,23 +1,16 @@
-package parsing;
+/** @author mathew
+ * 
+ */
 
-import generateConstraints.UtilsRelatedToNode;
+package parsing;
 
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.apache.derby.impl.sql.compile.ColumnReference;
-
-
-
-
-
-
 
 import net.sf.jsqlparser.expression.AliasWithArgs;
 import net.sf.jsqlparser.expression.AllComparisonExpression;
@@ -70,19 +63,17 @@ import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import net.sf.jsqlparser.statement.select.SubJoin;
 import net.sf.jsqlparser.statement.select.SubSelect;
-import parsing.ConjunctQueryStructure;
-import parsing.FromClauseElement;
 import parsing.AggregateFunction;
 import parsing.CaseCondition;
 import parsing.JoinClauseInfo;
 import parsing.Node;
-import parsing.ProcessSelectClause;
-import parsing.QueryStructure;
+import parsing.Query;
+import parsing.Table;
 import parsing.Util;
 
-public class ProcessSelectClause {
-	private static Logger logger = Logger.getLogger(ProcessSelectClause.class.getName());
-	
+public class ProcessSelectClause{
+	private static  Logger logger = Logger.getLogger(ProcessSelectClause.class.getName());
+
 	
 	/** @author mathew on 1st october 2016 
 	 * 
@@ -98,14 +89,13 @@ public class ProcessSelectClause {
 	 * 
 	 */
 
-	public static void ProcessSelect(PlainSelect plainSelect, boolean debug, QueryStructure qStruct,AppTest_Parameters dbAppParameters) throws Exception {
+	public static void ProcessSelect(PlainSelect plainSelect, QueryStructure qStruct,AppTest_Parameters dbAppParameters) throws Exception {
 		logger.info("processing select query"+plainSelect.toString());
-		Vector<Node> joinConditions=new Vector<Node>();
-
+		Vector<Node> joinConditions=new Vector<Node>();		
 		//Get the Node hierarchy
-		qStruct.topLevelRelation = generateRelationHierarchyJSQL(plainSelect);
-		/* processes the from clause and extracts the join conditions, also the components such as tables, subqueries, 
-		 * and subjoins are stored in qStruct.fromListElements
+				qStruct.topLevelRelation = generateRelationHierarchyJSQL(plainSelect);
+		/* processes the from clause and extracts the join conditions, also the components such as tables,
+		 * subqueries, and subjoins are stored in qStruct.fromListElements
 		 */
 		ProcessSelectClause.processFromClause(plainSelect,qStruct,joinConditions, dbAppParameters);
 		for(Node n:joinConditions){
@@ -126,16 +116,8 @@ public class ProcessSelectClause {
 				Vector<Node> allCondsDups=(Vector<Node>) qStruct.allConds.clone();
 				Node NewCond = new Node();
 				NewCond.setType(Node.getAndNodeType());
-
 				NewCond.setLeft(ProcessResultSetNode.getHierarchyOfJoinNode(joinConditions));
-
-				// the following lines commented by mathew 
-//				NewCond.setRight(qStruct.allConds.get(0));
-//				allCondsDups.remove(qStruct.allConds.get(0));
-//				allCondsDups.add(NewCond);
-//				qStruct.allConds.removeAllElements();
-//				qStruct.allConds.addAll(allCondsDups);
-				// following two lines added by mathew				
+				
 				NewCond.setRight(qStruct.allConds.remove(0));
 				qStruct.allConds.add(NewCond);
 			}
@@ -144,7 +126,7 @@ public class ProcessSelectClause {
 			}
 		}
 
-		ProcessSelectClause.modifyTreeForCompareSubQ(qStruct);		
+		ProcessSelectClauseAbstract.modifyTreeForCompareSubQ(qStruct);		
 		
 		/* takes the possibly complex expression of nodes stored in qStruct.allConds, splits it into atomic conditions, 
 		 * disjunct of atomic conditions, separates selection conditions, join conditions, is null conditions, subQuery conditions,
@@ -169,6 +151,7 @@ public class ProcessSelectClause {
 		//System.out.println(qStruct.toString());
 	}
 
+
 	/**	 method copied and adapted by mathew for query structure from parsing.Util.java
 	 * 
 	 * @param qStruct
@@ -182,7 +165,18 @@ public class ProcessSelectClause {
 		}
 	}
 
-
+	/** method copied and adapted by mathew for query structure from parsing.QueryParser.java
+	 * 
+	 * This method gets the case statements in where part of the query and adds it to query parser.
+	 * Removes the where condition from the whereclause so that the where clause predicates are not generated
+	 * for the same. 
+	 * 
+	 * @param whereClause
+	 * @param colExpression
+	 * @param qStruct
+	 * @return
+	 * @throws Exception
+	 */
 	/** method copied and adapted by mathew for query structure from parsing.QueryParser.java
 	 * 
 	 * This method gets the case statements in where part of the query and adds it to query parser.
@@ -288,9 +282,9 @@ public class ProcessSelectClause {
 	 * processes the where clause and extracts the expression of nodes (stores an atomic condition), 
 	 * and stores it in qStruct.allConds
 	 */
-
 	private static void processWhereClause(PlainSelect plainSelect, QueryStructure qStruct,AppTest_Parameters dbAppParameters) throws Exception{
 		// TODO Auto-generated method stub
+		
 		Expression whereClauseExpression = plainSelect.getWhere();
 		//Application Testing -- modified to consider database application constraints on query result
 		if(whereClauseExpression==null && (dbAppParameters.getDbridge_Constraints()==null || dbAppParameters.getDbridge_Constraints()==""))
@@ -301,6 +295,7 @@ public class ProcessSelectClause {
 		else if(whereClauseExpression!=null &&  dbAppParameters.getDbridge_Constraints()!=""){
 			whereClauseExpression = CCJSqlParserUtil.parseCondExpression(whereClauseExpression.toString()+" AND "+dbAppParameters.getDbridge_Constraints());
 		}
+		
 		
 		caseInWhereClause(whereClauseExpression,null,qStruct,plainSelect, dbAppParameters);
 		Node whereClause=ProcessSelectClause.processExpression(whereClauseExpression,qStruct.fromListElements, qStruct,plainSelect,null, dbAppParameters);
@@ -325,8 +320,6 @@ public class ProcessSelectClause {
 		}
 		Node havingClause=ProcessSelectClause.processExpression(hc,qStruct.fromListElements, qStruct,plainSelect,null, dbAppParameters);
 		qStruct.setHavingClause(havingClause);
-		qStruct.setlstHavingClauses(havingClause);
-		
 		logger.info(hc+" having clause "+havingClause);
 	}
 
@@ -411,7 +404,7 @@ public class ProcessSelectClause {
 						}
 						if(selExpItem.getAlias()!=null){
 							if(groupByColumn.getColumn().getColumnName().equalsIgnoreCase(selExpItem.getAlias().getName())){
-								groupByColumn =processExpression(e,qStruct.fromListElements, qStruct,plainSelect,null, dbAppParameters);
+								groupByColumn =processExpression(e,qStruct.fromListElements, qStruct,plainSelect,null,dbAppParameters);
 								logger.info(groupByColumn+" alias name resolved " +selExpItem.getAlias().getName());
 								break;
 							}
@@ -439,7 +432,6 @@ public class ProcessSelectClause {
 	 * table name and column name of the element.
 	 * 
 	 */
-
 	private static void processOrderByList(PlainSelect plainSelect, QueryStructure qStruct,AppTest_Parameters dbAppParameters) throws Exception {
 		if (plainSelect.getOrderByElements() == null||plainSelect.getOrderByElements().isEmpty()) 
 			return;
@@ -478,7 +470,7 @@ public class ProcessSelectClause {
 						}
 						if(selExpItem.getAlias()!=null){
 							if(orderByColumn.getColumn().getColumnName().equalsIgnoreCase(selExpItem.getAlias().getName())){
-								orderByColumn =processExpression(e,qStruct.fromListElements, qStruct,plainSelect,null, dbAppParameters);
+								orderByColumn =processExpression(e,qStruct.fromListElements, qStruct,plainSelect,null,dbAppParameters);
 								logger.info(orderByColumn+" alias name resolved " +selExpItem.getAlias().getName());
 								break;
 							}
@@ -506,7 +498,7 @@ public class ProcessSelectClause {
 	 * 
 	 */
 	private static void processFromClause(PlainSelect plainSelect, QueryStructure qStruct, Vector<Node> joinConditions,AppTest_Parameters dbAppParameters) throws Exception{
-		// TODO Auto-generated method stub
+				// TODO Auto-generated method stub
 		FromItem firstFromItem=plainSelect.getFromItem();
 
 		FromClauseElement leftFLE=null, rightFLE=null;
@@ -542,7 +534,6 @@ public class ProcessSelectClause {
 			}
 			qStruct.fromListElements.addElement(leftFLE);					
 			ProcessSelectClause.processFromListSubSelect(subSelect,subQueryParser,qStruct, dbAppParameters);
-
 			/* The following if block enables resolvement of subquery aliases with projection list arguments.
 			 * eg: (Select col1, col2, .. from ... ) as subQAlias( alias1, alias2, ..). While the complex alias
 			 * is processed, the arugment aliasi is set as the alias name for the corresponding projected column coli
@@ -601,8 +592,8 @@ public class ProcessSelectClause {
 					}
 					qStruct.fromListElements.addElement(rightFLE);
 
-					processFromListSubSelect(subSelect,subQueryParser,qStruct, dbAppParameters);					
-
+					processFromListSubSelect(subSelect,subQueryParser,qStruct, dbAppParameters);				
+					
 				}
 				Expression e=join.getOnExpression();
 				if(e!=null){/*Handling joins with ON Conditions*/
@@ -709,7 +700,6 @@ public class ProcessSelectClause {
 	 */
 	private static void processProjectionList(PlainSelect plainSelect, QueryStructure qStruct,AppTest_Parameters dbAppParameters) throws Exception{
 		// TODO Auto-generated method stub
-
 		List<SelectItem> projectedItems=plainSelect.getSelectItems();
 		for(int i=0;i<projectedItems.size();i++){
 			SelectItem projectedItem=projectedItems.get(i);
@@ -737,7 +727,6 @@ public class ProcessSelectClause {
 				// deals with the case expression
 				if(e instanceof net.sf.jsqlparser.expression.CaseExpression){
 					logger.info("case expression: "+e);
-					Vector<CaseCondition> caseConditionsVector = new Vector<CaseCondition>();
 
 					CaseExpression caseExpr=(CaseExpression) e;
 					
@@ -780,28 +769,7 @@ public class ProcessSelectClause {
 					projectedColumn.setCaseExpression(retCaseExpr);
 					qStruct.projectedCols.add(projectedColumn);
 					logger.info(" Case Expresssion Projected Column Added "+projectedColumn);
-
 					
-					for(int j=0;j < whenClauses.size();j++ ){
-
-						CaseCondition cC = new CaseCondition();
-						Node n = processExpression(((WhenClause)((CaseExpression) e).getWhenClauses().get(j)).getWhenExpression(), qStruct.fromListElements, qStruct,plainSelect,null, dbAppParameters);
-						//cC.setCaseConditionNode(n);
-						//cC.setCaseCondition(n.toString());
-						//cC.setConstantValue(((WhenClause)((CaseExpression) e).getWhenClauses().get(j)).getThenExpression().toString());
-						caseConditionsVector.add(cC);
-						// qStruct.getCaseConditions().add(cC);
-					}
-					//Add the else clause if present as the last item
-					if(((CaseExpression) e).getElseExpression() != null){
-						CaseCondition cC = new CaseCondition();
-						//cC.setCaseConditionNode(n);
-						//cC.setCaseCondition("else");
-						//cC.setConstantValue(((CaseExpression) e).getElseExpression().toString());
-						caseConditionsVector.add(cC);
-					}
-					//Add Case conditions to queryparser
-					//qStruct.getCaseConditionMap().put(1,caseConditionsVector);
 				}
 				else{//case when projected column is not a case expression 
 					Node projectedColumn=processExpression(e,qStruct.fromListElements, qStruct,plainSelect,null, dbAppParameters);
@@ -858,7 +826,6 @@ public class ProcessSelectClause {
 
 		}
 	}
-
 	/** @author mathew
 	 * 
 	 * @param jsqlTable
@@ -918,7 +885,6 @@ public class ProcessSelectClause {
 		FromItem leftFromItem=subJoin.getLeft();
 		FromClauseElement leftFLE=null, rightFLE=null;
 
-		//JSQL parser restricts the left from item of a sub join  to be a Table
 		if(leftFromItem instanceof net.sf.jsqlparser.schema.Table){
 			net.sf.jsqlparser.schema.Table jsqlTable=(net.sf.jsqlparser.schema.Table)leftFromItem;
 			leftFLE=new FromClauseElement();
@@ -947,7 +913,7 @@ public class ProcessSelectClause {
 			}
 			qStruct.fromListElements.addElement(leftFLE);
 
-			ProcessSelectClause.processFromListSubSelect(subSelect,subQueryParser,qStruct, dbAppParameters);					
+			ProcessSelectClause.processFromListSubSelect(subSelect,subQueryParser,qStruct, dbAppParameters);		
 
 		}
 		FromItem rightFromItem=subJoin.getJoin().getRightItem();
@@ -979,7 +945,7 @@ public class ProcessSelectClause {
 			}
 			qStruct.fromListElements.addElement(rightFLE);
 
-			ProcessSelectClause.processFromListSubSelect(subSelect,subQueryParser,qStruct, dbAppParameters);					
+			ProcessSelectClause.processFromListSubSelect(subSelect,subQueryParser,qStruct, dbAppParameters);									
 
 		}
 		Join join=subJoin.getJoin();
@@ -1044,135 +1010,18 @@ public class ProcessSelectClause {
 
 	public static Node processExpression(Object clause, Vector<FromClauseElement> fle,
 			QueryStructure qStruct, PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception {
+		
 		try{
 			if (clause == null) {
 				return null;
 			} else if (clause instanceof Parenthesis){
-				boolean isNot = ((Parenthesis) clause).isNot();
-				Node n= processExpression(((Parenthesis)clause).getExpression(), fle,  qStruct,plainSelect, joinType, dbAppParameters);
-				if(clause instanceof Parenthesis && isNot){
-					Node left = n.getLeft();
-					Node right = n.getRight();
-					if(left != null && left.getNodeType() != null && 
-							left.getNodeType().equals(Node.getBroNodeType())
-							&& left.getOperator() != null && left.getOperator().equalsIgnoreCase("=")){
-						left.setOperator("/=");
-					}
-					if(right != null && right.getNodeType() != null && 
-							right.getNodeType().equals(Node.getBroNodeType())
-							&& right.getOperator() != null && right.getOperator().equalsIgnoreCase("=")){
-						right.setOperator("/=");
-					}
-
-					if(left != null && left.getNodeType() != null && 
-							left.getNodeType().equals(Node.getBroNodeType())
-							&& left.getOperator() != null && left.getOperator().equalsIgnoreCase("=")){
-						left.setOperator("/=");
-					}
-					if(right != null && right.getNodeType() != null && 
-							right.getNodeType().equals(Node.getBroNodeType())
-							&& right.getOperator() != null && right.getOperator().equalsIgnoreCase("=")){
-						right.setOperator("/=");
-					}
-				}
-				 
-				return n;
+				Parenthesis par=((Parenthesis) clause);
+				return processExpressionForParenthesis(par, fle,qStruct, plainSelect, joinType,dbAppParameters);
 			}
 			else if (clause instanceof Function) {
 				Function an = (Function)clause;
-				String funcName = an.getName();
+				return processExpressionForFunction(an, fle,qStruct, plainSelect, joinType,dbAppParameters);
 
-
-				//All these are string manipulation functions and not aggregate function
-				if(funcName.equalsIgnoreCase("ROW")){
-					Node n=new Node(true);
-					n.isComposite=true;
-					n.setType(Node.getCompositeNodeType());
-					if (an.getParameters()!=null){
-						ExpressionList anList = an.getParameters();
-						List<Expression> expList = anList.getExpressions();
-						for(Expression e:expList){
-							Node tempNode = processExpression(e,fle, qStruct,plainSelect,joinType, dbAppParameters);	
-							n.addComponentNode(tempNode);
-						}
-					}				
-					return n;
-				}
-				else if(! (funcName.equalsIgnoreCase("Lower") || funcName.equalsIgnoreCase("substring") || funcName.equalsIgnoreCase("upper")
-						||funcName.equalsIgnoreCase("trim") || funcName.equalsIgnoreCase("postion") || funcName.equalsIgnoreCase("octet_length")
-						|| funcName.equalsIgnoreCase("bit_length") || funcName.equalsIgnoreCase("char_length") || funcName.equalsIgnoreCase("overlay"))){
-
-					AggregateFunction af = new AggregateFunction();
-					if (an.getParameters()!=null){
-						ExpressionList anList = an.getParameters();
-						List<Expression> expList = anList.getExpressions();//FIXME not only 1 expression but all expressions
-						Node n = processExpression(expList.get(0), fle,  qStruct,plainSelect,joinType, dbAppParameters);
-						af.setAggExp(n);
-
-					} else {
-						af.setAggExp(null);
-					}
-
-					af.setFunc(funcName.toUpperCase());
-					af.setAggAliasName(funcName.toUpperCase());
-					af.setDistinct(an.isDistinct());
-					//af.setAggAliasName(exposedName);
-
-					Node agg = new Node();
-					agg.setAgg(af);
-					agg.setType(Node.getAggrNodeType());
-					//Shree added this to set Table, TableNameNo for Aggregate function node - @ node level
-					if(af.getAggExp() != null){
-						agg.setTable(af.getAggExp().getTable());
-						agg.setTableNameNo(af.getAggExp().getTableNameNo());
-						agg.setTableAlias(af.getAggExp().getTableAlias());
-						agg.setColumn(af.getAggExp().getColumn());
-
-					}//Added by Shree for count(*) 
-					else if(af.getFunc().toUpperCase().contains("COUNT") && an.isAllColumns()){				
-						if(af.getAggExp() == null){
-							//Node n1 = Util.getNodeForCount(fle, qStruct);
-							Node n1 = parsing.Util.getNodeForCount(fle, qStruct);
-							af.setAggExp(n1);
-							af.setFunc(funcName.toUpperCase());
-							af.setDistinct(an.isDistinct());
-							
-							if(af.getAggExp()!=null){
-							agg.setTable(af.getAggExp().getTable());
-							agg.setTableNameNo(af.getAggExp().getTableNameNo());
-							agg.setTableAlias(af.getAggExp().getTableAlias());
-							agg.setColumn(af.getAggExp().getColumn());
-							}
-
-							agg.setLeft(null);
-							agg.setRight(null);
-						}
-					}
-					//Storing sub query details
-					//					agg.setQueryType(queryType);
-					//					if(queryType == 1) agg.setQueryIndex(qStruct.getFromClauseSubqueries().size()-1);
-					//					if(queryType == 2) agg.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
-					//					//Adding this to the list of aliased names
-					//					if(exposedName !=null){
-					//						Vector<Node> present = new Vector<Node>();
-					//						if( qStruct.getAliasedToOriginal().get(exposedName) != null)
-					//							present = qStruct.getAliasedToOriginal().get(exposedName);
-					//						present.add(agg);
-					//						qStruct.getAliasedToOriginal().put(exposedName, present);
-					//					}
-			
-					return agg;
-				}
-				else {
-					//String function manipulation
-					Node n=new Node();
-					if (an.getParameters()!=null){
-						ExpressionList anList = an.getParameters();
-						List<Expression> expList = anList.getExpressions();//FIXME not only 1 expression but all expressions
-						n = processExpression(expList.get(0),fle, qStruct,plainSelect,joinType, dbAppParameters);		
-					}
-					return n;
-				}
 			} else if (clause instanceof DoubleValue) {
 				Node n = new Node();
 				n.setType(Node.getValType());
@@ -1242,179 +1091,54 @@ public class ProcessSelectClause {
 				n.setRight(null); 
 				logger.info("DateTimeLiteralExpression Processed"+n);
 				return n; 
-			} else if (clause instanceof Column) {
-				Column columnReference = (Column) clause;
-				String colName	= columnReference.getColumnName().toUpperCase();
-				String tableName  = columnReference.getTable().getFullyQualifiedName();
-
-				Node n = new Node();
-				n.setTableNameNo(tableName);
-				n.setColumn(new parsing.Column(colName, tableName));
-				//List <FromListElement> frmElementList = fle.getTabs();
-				//				 if(qStruct.getQuery().getQueryString().toLowerCase().contains(("as "+tableName.toLowerCase()))){
-				//					}
-				//				 
-				//				if(qStruct.getQuery().getQueryString().toLowerCase().contains(("as "+colName.toLowerCase()))){
-				//					
-				//					Vector <Node> value = qStruct.getAliasedToOriginal().get(colName);
-				//					  
-				//					if(value != null && value.size() > 0){
-				//						n = value.get(0);//FIXME: vector of nodes not a single node
-				//					}
-				//					return n;
-				//  
-				//				}
-				//				
-				//				else{
-				//					n = Util.getColumnFromOccurenceInJC(colName,tableName, fle, qStruct);
-				//					if (n == null) {//then probably the query is correlated				
-				//						n = Util.getColumnFromOccurenceInJC(colName,tableName, qStruct.getQueryAliases(),qStruct);
-				//					}	
-				//				} 
-				//				if(n == null) {
-				//					logger.log(Level.WARNING,"WhereClauseVectorJSQL : Util.getColumnFromOccurenceInJC is not able to find matching Column - Node n = null");
-				//					return null;
-				//				}
-
-				n.setType(Node.getColRefType());
-				if (tableName != null) {
-					n.setTableAlias(tableName);
-				} else {
-					n.setTableAlias("");
-				} 
-
-				if(n.getColumn() != null){
-					//n.getColumn().setAliasName(exposedName);
-					n.setTable(n.getColumn().getTable());
-
-				}
-				//if(n.getTableNameNo() == null || n.getTableNameNo().isEmpty()){
-				//n.setTableNameNo(tableNameNumber);
-				//} 
-				n.setLeft(null);
+			}
+			else if(clause instanceof DateValue){
+				DateValue dateValue=(DateValue) clause;
+				logger.info("its a date"+dateValue.getValue());
+				Node n=new Node();
+				n.setType(Node.getValType());
+				n.setStrConst(dateValue.getValue().toString());
+				n.setLeft(null); 
 				n.setRight(null); 
-				
+				return n; 
 
-
-				if(n.getTableNameNo()==null||n.getTableNameNo().isEmpty()){
-					for(Node m:parsing.Util.getAllProjectedColumns(qStruct.fromListElements, qStruct)){
-						if(m.getColumn().getColumnName().equalsIgnoreCase(n.getColumn().getColumnName())){
-							n.setTable(m.getTable());
-							n.setTableNameNo(m.getTableNameNo());
-							n.setColumn(m.getColumn());
-							
-							break;
-						}
-						else if(m.getType().equals(Node.getValType())&&m.getAliasName().equals(n.getColumn().getColumnName())){
-							n=new Node(m);
-							return n;
-						}
-						else if(m.getType().equals(Node.getCaseNodeType())&& m.getAliasName().equals(n.getColumn().getColumnName())){
-							n=new Node(m);
-							return n;
-						}
-						else if(m.getType().equals(Node.getExtractFuncType())&& m.getAliasName().equals(n.getColumn().getColumnName())){
-							n=new Node(m);
-							return n;
-						}
-					}
+			}
+			else if(clause instanceof IntervalExpression){
+				IntervalExpression dateTimeExpr=(IntervalExpression) clause;
+				Node n=new Node();
+				n.setType(Node.getValType());
+				n.setStrConst(dateTimeExpr.toString());
+				n.setLeft(null); 
+				n.setRight(null); 
+				logger.info("IntervalExpression Processed"+n);
+				return n; 
+			}
+			else if(clause instanceof SignedExpression){
+				SignedExpression sExpr=(SignedExpression) clause;
+				logger.info("its a signed expression"+sExpr);
+				Node n=processExpression(sExpr.getExpression(),qStruct.fromListElements, qStruct,plainSelect,joinType,dbAppParameters);
+				if(n.getType().equals(Node.getValType())){
+					n.setStrConst(sExpr.getSign()+n.getStrConst());
 				}
+				return n; 
 
-
-				n=transformToAbsoluteTableNames(n,fle,false, qStruct);				
-
-				if(n.getType().equals(Node.getValType()))
-					return n;
-				else if(n.getType().equals(Node.getExtractFuncType()))
-					return n;
-				else if(n.getType().equals(Node.getCaseNodeType()))
-					return n;
-
-
-				if(n.getTableNameNo()==null||n.getTableNameNo().isEmpty()){
-					List<SelectItem> projectedItems=plainSelect.getSelectItems();
-					for(int j=0;j<projectedItems.size();j++){
-						SelectItem projectedItem=projectedItems.get(j);
-						if(projectedItem instanceof net.sf.jsqlparser.statement.select.SelectExpressionItem){
-							SelectExpressionItem selExpItem=(net.sf.jsqlparser.statement.select.SelectExpressionItem)projectedItem;
-							Expression e=selExpItem.getExpression();
-							if(e instanceof net.sf.jsqlparser.expression.Parenthesis){
-								net.sf.jsqlparser.expression.Parenthesis p=(net.sf.jsqlparser.expression.Parenthesis) e;
-								e=p.getExpression();
-							}
-							if(selExpItem.getAlias()!=null){
-								if(n.getColumn().getColumnName().equalsIgnoreCase(selExpItem.getAlias().getName())){
-									n =processExpression(e,qStruct.fromListElements, qStruct,plainSelect,joinType, dbAppParameters);
-									break;
-								}
-							}
-						}
-					}
-
-				}
-
-
-
-				return n;
-
+			}
+			else if (clause instanceof Column) {
+				Column columnReference = (Column) clause;	
+				return ProcessExpressionForColumn(columnReference, fle, qStruct, plainSelect, joinType,dbAppParameters);
 			} else if (clause instanceof AndExpression) {
 				BinaryExpression andNode = ((BinaryExpression) clause);
-				if (andNode.getLeftExpression() != null
-						&& andNode.getRightExpression() != null) {
-
-					/*if(andNode.getLeftExpression() instanceof ExtractExpression) {
-						//type new_name = (type) ;
-						return null;
-					}else if(andNode.getRightExpression() instanceof ExtractExpression){
-						return null;
-					}*/
-					Node n = new Node();
-					Node left = new Node();
-					Node right = new Node();
-					n.setType(Node.getAndNodeType());
-					n.setOperator("AND");
-					left = processExpression(andNode.getLeftExpression(), fle, qStruct,plainSelect,joinType, dbAppParameters);
-					right = processExpression(andNode.getRightExpression(), fle, qStruct,plainSelect,joinType, dbAppParameters);
-				
-					n.setLeft(left);
-					n.setRight(right);
-
-					return n;
-				}
+				return ProcessExpressionForAnd(andNode, fle, qStruct, plainSelect, joinType,dbAppParameters);
 
 			} else if (clause instanceof OrExpression) {
 				BinaryExpression orNode = ((BinaryExpression) clause);
-				if (orNode.getLeftExpression() != null
-						&& orNode.getRightExpression() != null) {
-					Node n = new Node();
-					n.setType(Node.getOrNodeType());
-					n.setOperator("OR");
-					n.setLeft(processExpression(orNode.getLeftExpression(),  fle, qStruct,plainSelect,joinType, dbAppParameters));
-					n.setRight(processExpression(orNode.getRightExpression(), fle, qStruct,plainSelect,joinType, dbAppParameters));
-					
-					return n;
-				}
-			} 
+				return ProcessExpressionForOr(orNode, fle, qStruct, plainSelect, joinType,dbAppParameters);
 
+			} 
 			//Added by Bikash ---------------------------------------------------------------------------------
 			else if(clause instanceof LikeExpression){
 				BinaryExpression likeNode=((BinaryExpression)clause);
-				if (likeNode.getLeftExpression() !=null && likeNode.getRightExpression()!=null )
-				{
-					Node n=new Node();
-					if(! likeNode.isNot()){
-						n.setType(Node.getLikeNodeType());
-						n.setOperator("~");
-					}
-					else{
-						n.setType(Node.getLikeNodeType());
-						n.setOperator("!~");
-					}
-					n.setLeft(processExpression(likeNode.getLeftExpression(),fle,qStruct,plainSelect,joinType, dbAppParameters));
-					n.setRight(processExpression(likeNode.getRightExpression(),  fle,qStruct,plainSelect,joinType, dbAppParameters));
-				
-					return n;
-				}
+				return ProcessExpressionForLike(likeNode, fle, qStruct, plainSelect, joinType,dbAppParameters);
 			}
 
 			else if(clause instanceof JdbcParameter){
@@ -1424,995 +1148,874 @@ public class ProcessSelectClause {
 				qStruct.paramCount++;
 				n.setLeft(null);
 				n.setRight(null);
-				
+
 				return n;
 			}
-
-			//**********************************************************************************/
 			else if (clause instanceof Addition){
 				BinaryExpression baoNode = ((BinaryExpression)clause);
-				Node n = new Node();
-				n.setType(Node.getBaoNodeType());
-				n.setOperator("+");
-				n.setLeft(processExpression(baoNode.getLeftExpression(), fle, qStruct,plainSelect,joinType, dbAppParameters));
-				n.setRight(processExpression(baoNode.getRightExpression(),fle, qStruct,plainSelect,joinType, dbAppParameters));
-
-				n=WhereClauseVectorJSQL.getTableDetailsForArithmeticExpressions(n);
-				//Storing sub query details
-				//				n.setQueryType(queryType);
-				
-				return n;
+				return ProcessExpressionForAddition(baoNode, fle, qStruct, plainSelect, joinType,dbAppParameters);
 			}
 			else if (clause instanceof Subtraction){
 				BinaryExpression baoNode = ((BinaryExpression)clause);
-				Node n = new Node();
-				n.setType(Node.getBaoNodeType());
-				n.setOperator("-");
-				n.setLeft(processExpression(baoNode.getLeftExpression(), fle,qStruct,plainSelect,joinType, dbAppParameters));
-				n.setRight(processExpression(baoNode.getRightExpression(), fle, qStruct,plainSelect,joinType, dbAppParameters));
-				n=WhereClauseVectorJSQL.getTableDetailsForArithmeticExpressions(n);
-				//Storing sub query details
-				//				n.setQueryType(queryType);
-			
-				return n;
+				return ProcessExpressionForSubtraction(baoNode, fle, qStruct, plainSelect, joinType,dbAppParameters);
 			}
 			else if (clause instanceof Multiplication){
 				BinaryExpression baoNode = ((BinaryExpression)clause);
-				Node n = new Node();
-				n.setType(Node.getBaoNodeType());
-				n.setOperator("*");
-				n.setLeft(processExpression(baoNode.getLeftExpression(), fle, qStruct,plainSelect,joinType, dbAppParameters));
-				n.setRight(processExpression(baoNode.getRightExpression(),fle, qStruct,plainSelect,joinType, dbAppParameters));
-				n=WhereClauseVectorJSQL.getTableDetailsForArithmeticExpressions(n);
-				//Storing sub query details
-				//				n.setQueryType(queryType);
-				
-				return n;
+				return ProcessExpressionForMultiplication(baoNode, fle, qStruct, plainSelect, joinType,dbAppParameters);
 			}
 			else if (clause instanceof Division){
 				BinaryExpression baoNode = ((BinaryExpression)clause);
-				Node n = new Node();
-				n.setType(Node.getBaoNodeType());
-				n.setOperator("/");
-				n.setLeft(processExpression(baoNode.getLeftExpression(),fle, qStruct,plainSelect,joinType, dbAppParameters));
-				n.setRight(processExpression(baoNode.getRightExpression(),fle, qStruct,plainSelect,joinType, dbAppParameters));
-				n=WhereClauseVectorJSQL.getTableDetailsForArithmeticExpressions(n);
-				//Storing sub query details
-				//				n.setQueryType(queryType);
-				
-				return n;
+				return ProcessExpressionForDivision(baoNode, fle, qStruct, plainSelect, joinType,dbAppParameters);
 			}
 
 			else if (clause instanceof NotEqualsTo) {
 				NotEqualsTo broNode = (NotEqualsTo)clause;
-				/*if(broNode.getLeftExpression() instanceof ExtractExpression) {
-					//type new_name = (type) ;
-					Node n = new Node();
-					return n;
-				}else if(broNode.getRightExpression() instanceof ExtractExpression){
-					Node n = new Node();
-					return n;
-				}*/
-
-				//BinaryRelationalOperatorNode broNode = ((BinaryRelationalOperatorNode) clause);			
-				Node n = new Node();
-				n.setType(Node.getBroNodeType());
-				n.setOperator(QueryStructure.cvcRelationalOperators[2]);
-				n.setLeft(processExpression(broNode.getLeftExpression(), fle, qStruct,plainSelect,joinType, dbAppParameters));
-				n.setRight(processExpression(broNode.getRightExpression(), fle, qStruct,plainSelect,joinType, dbAppParameters));
-
-				//the following added by mathew on 17 oct 2016
-				if(n.getLeft().getType().equals(Node.getAllNodeType())||n.getRight().getType().equals(Node.getAllNodeType())||
-						n.getLeft().getType().equals(Node.getAnyNodeType()) ||
-						n.getRight().getType().equals(Node.getAnyNodeType()))
-					n.setType(Node.getBroNodeSubQType());
-				else if(n.getLeft().getType().equals(Node.getColRefType())&&n.getRight().getType().equals(Node.getColRefType())){
-					if(joinType!=null)
-						n.setJoinType(joinType);
-					else
-						n.setJoinType(JoinClauseInfo.innerJoin);
-				}
-				else if(n.getLeft().getType().equals(Node.getBroNodeSubQType())||n.getRight().getType().equals(Node.getBroNodeSubQType()))
-					n.setType(Node.getBroNodeSubQType());
-				return n;
+				return ProcessExpressionForNotEquals(broNode, fle, qStruct, plainSelect, joinType,dbAppParameters);
 			} 
 			else if (clause instanceof DoubleAnd) {
 				DoubleAnd broNode = (DoubleAnd)clause;	
-
-				Node n = new Node();
-				n.setType(Node.getBroNodeType());
-				n.setOperator(QueryStructure.cvcRelationalOperators[7]);
-				n.setLeft(processExpression(broNode.getLeftExpression(), fle, qStruct,plainSelect,joinType, dbAppParameters));
-				n.setRight(processExpression(broNode.getRightExpression(), fle,qStruct,plainSelect,joinType, dbAppParameters));
-
-				//Storing sub query details
-				//				n.setQueryType(queryType);
-
-				return n;
+				return ProcessExpressionForDoubleAnd(broNode, fle, qStruct, plainSelect, joinType,dbAppParameters);
 			} 
 			else if (clause instanceof IsNullExpression) {
 				IsNullExpression isNullNode = (IsNullExpression) clause;
-				Node n = new Node();
-				n.setType(Node.getIsNullNodeType());
-				n.setLeft(processExpression(isNullNode.getLeftExpression(),fle,qStruct,plainSelect,joinType, dbAppParameters));
-				if(((IsNullExpression) clause).isNot()){
-					n.setOperator("!=");
-				}else{
-					n.setOperator("=");
-				}
-				n.setRight(null);
-				
-				return n;
+				return ProcessExpressionForIsNull(isNullNode, fle, qStruct, plainSelect, joinType,dbAppParameters);
 			} else if (clause instanceof InExpression){ 
-				
 				//handles NOT and NOT IN both
 				InExpression sqn = (InExpression)clause;
-				SubSelect subS=null;
-				Node inNode=new Node();
-				inNode.setType(Node.getInNodeType());
-				Node notNode = new Node();				   
-				Node rhs = new Node();
-				if (sqn. getLeftItemsList() instanceof SubSelect){
-					subS=(SubSelect)sqn.getLeftItemsList();
-				}
-				else if(sqn. getRightItemsList() instanceof SubSelect){ 
-					subS=(SubSelect)sqn.getRightItemsList();
-				}
-				QueryStructure subQueryParser=new QueryStructure(qStruct.getTableMap());
-				rhs.setSubQueryStructure(subQueryParser);	
-				processWhereSubSelect(subS,subQueryParser,qStruct, dbAppParameters);
-				Node lhs = processExpression(sqn. getLeftExpression(), fle, qStruct,plainSelect,joinType, dbAppParameters);
-				inNode.setLeft(lhs);
-				inNode.setRight(rhs);
-				if(!sqn.isNot()){					
-					return inNode;
-				}else{
-					notNode.setType(Node.getNotNodeType());
-					notNode.setRight(null);
-					notNode.setLeft(inNode);
-					return notNode;
-				}
-
-				
-				//Shree commented all code changes done- reverting back - Start
-				
-				//handles NOT and NOT IN both
-				/*InExpression sqn = (InExpression)clause;
-				SubSelect subS=null;
-				Node inNode=new Node();
-				inNode.setType(Node.getBroNodeType());
-				inNode.setOperator("=");
-
-				Node notNode = new Node();	
-				Node rhs = new Node();
-
-				if (sqn. getLeftItemsList() instanceof SubSelect){
-					subS=(SubSelect)sqn.getLeftItemsList();
-				}
-				else if(sqn. getRightItemsList() instanceof SubSelect){ 
-					subS=(SubSelect)sqn.getRightItemsList();
-				}
-				
-				QueryStructure subQueryParser=new QueryStructure(qStruct.getTableMap());
-				rhs.setSubQueryStructure(subQueryParser);	
-				processWhereSubSelect(subS,subQueryParser,qStruct);
-				
-				//Added by Shree for subQ data gen - start
-				rhs.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
-				rhs.setQueryType(2);
-				
-				Node rhsNew = new Node();
-				if(rhs.getSubQueryStructure() != null){
-					//if(rhs.getSubQueryStructure().getAllDnfSelCond() != null && !rhs.getSubQueryStructure().getAllDnfSelCond().isEmpty()){
-						//Get all SubQ condition
-						//FIXME change .get(0) - test for all conditions in subQ
-						//Vector<Node> nd = rhs.getSubQueryStructure().getAllDnfSelCond().get(0);
-						Node nd = rhs.getSubQueryStructure().getLstProjectedCols().get(0);
-						//Construct Node tree from the condition nodes as AND node if more than one condition exists else add the node to rhs
-						if(nd!= null){
-							rhsNew = nd;	
-						}				
-						else{
-							//Call a method that adds all the selection condition as AND nodes to the rhsNew node
-							
-						}
-						rhsNew.setSubQueryStructure(subQueryParser);
-						rhsNew.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
-						rhsNew.setQueryType(2);
-					//}
-				}
-				
-				//Added by Shree - end
-				
-				Node lhs = processExpression(sqn. getLeftExpression(), fle, qStruct,plainSelect,joinType);
-				lhs.setQueryType(2);
-				lhs.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
-				inNode.setQueryType(2);
-				inNode.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
-				inNode.setLeft(lhs);
-				inNode.setRight(rhsNew);
-				
-				//set lhsrhs node with inNode - set rhs to contain the nodes in allDnfSelCond inside subQStructure inside rhs - if vector has more nodes, add them with AND node condition recursively
-				
-				Node sqNode = new Node();
-				sqNode.setLeft(null);
-				sqNode.setRight(null);				
-				sqNode.setType(inNode.getType());
-				//setQueryTypeAndIndex(sqNode,qStruct);
-				
-				//Added by Shree for subQ data gen - start
-				sqNode.setLhsRhs(inNode);
-				sqNode.setType(Node.getInNodeType());
-				
-				 Vector allCon = new Vector<>();  
-				 if( qStruct.getWhereClauseSubqueries().get((qStruct.getWhereClauseSubqueries().size()-1)).getAllDnfSelCond() != null
-						 && !qStruct.getWhereClauseSubqueries().get((qStruct.getWhereClauseSubqueries().size()-1)).getAllDnfSelCond().isEmpty()){
-					 
-					 allCon = qStruct.getWhereClauseSubqueries().get((qStruct.getWhereClauseSubqueries().size()-1)).getAllDnfSelCond().get(0);
-				 }else{
-					 allCon = null;
-				 }
-				 if(allCon != null && !allCon.isEmpty()){
-					 Node condition1 = (Node)allCon.get(allCon.size()-1);
-						condition1.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
-						condition1.setQueryType(2);
-						sqNode.setSubQueryConds(allCon);
-						 
-				 }else{
-					// create the final subquery node and return it
-						sqNode.setType(Node.getInNodeType());
-						sqNode.setLhsRhs(inNode);						
-				 }
-				
-				 
-				//Added by Shree for subQ data gen - end
-				if(!sqn.isNot()){	
-					//return inNode
-					sqNode.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
-					sqNode.setQueryType(2);
-					return sqNode;
-				}else{
-					notNode.setType(Node.getNotNodeType());
-					notNode.setRight(null);
-					notNode.setLeft(sqNode);
-					notNode.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
-					notNode.setQueryType(2);
-					//setQueryTypeAndIndex(notNode,qStruct);
-					return notNode;
-				}*/
-				//Shree commented all code changes done- reverting back - End
+				return ProcessExpressionForIn(sqn, fle, qStruct, plainSelect, joinType,dbAppParameters);
 				
 			} else if (clause instanceof ExistsExpression){
-				
 				ExistsExpression sqn = (ExistsExpression)clause;
-				SubSelect subS = (SubSelect)sqn.getRightExpression();
-				QueryStructure subQueryParser=new QueryStructure(qStruct.getTableMap());
-				Node existsNode=new Node();
-				existsNode.setSubQueryStructure(subQueryParser);
-				existsNode.setType(Node.getExistsNodeType());
-				existsNode.setSubQueryConds(null);
-				processWhereSubSelect(subS,subQueryParser,qStruct, dbAppParameters);
-				Node notNode = new Node();				   
-				if(!((ExistsExpression) clause).isNot()){					
-					return existsNode;
-				}else{
-					notNode.setType(Node.getNotNodeType());
-					notNode.setRight(null);
-					notNode.setLeft(existsNode);
-					return notNode;
-				}
-
-				//Shree commenting all changes done - reverting - Start
-				/*
-				ExistsExpression sqn = (ExistsExpression)clause;
-				SubSelect subS = (SubSelect)sqn.getRightExpression();
-
-
-				QueryStructure subQueryParser=new QueryStructure(qStruct.getTableMap());
-				Node existsNode=new Node();
-				existsNode.setSubQueryStructure(subQueryParser);
-				existsNode.setType(Node.getExistsNodeType());
-				existsNode.setSubQueryConds(null);
-				existsNode.setQueryType(2);
-				existsNode.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
-				processWhereSubSelect(subS,subQueryParser,qStruct);
-				
-				//setQueryTypeAndIndex(existsNode,qStruct);
-				Node notNode = new Node();
-				
-				Node sqNode = new Node();
-				Node rhs = new Node();
-				rhs.setQueryType(2);
-				rhs.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
-				sqNode.setLhsRhs(rhs);
-				sqNode.setType(Node.getExistsNodeType());
-				
-				existsNode.setQueryType(2);
-				existsNode.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);				
-				
-				if(!((ExistsExpression) clause).isNot()){					
-					return existsNode;
-				}else{
-					notNode.setType(Node.getNotNodeType());
-					notNode.setRight(null);
-					notNode.setLeft(sqNode);
-					notNode.setQueryType(2); 
-					notNode.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);			
-					return notNode;
-
-				}
-				*/
-				//Shree commented all changes done - reverting - End
-				
-
+				return ProcessExpressionForExists(sqn, fle, qStruct, plainSelect, joinType,dbAppParameters);
 			}
 			else if (clause instanceof SubSelect) {
-				SubSelect sqn = (SubSelect) clause;
-
-				QueryStructure subQueryParser=new QueryStructure(qStruct.getTableMap());
-				Node node=new Node();
-				processWhereSubSelect(sqn,subQueryParser,qStruct, dbAppParameters);
-				
-				List<SelectItem> rcList = ((PlainSelect)sqn.getSelectBody()).getSelectItems();	
-
-				SelectExpressionItem rc = (SelectExpressionItem)rcList.get(0);
-				
-				//Added by Shree for subQ data gen - start
-				node.setQueryType(2);
-				node.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);								
-				//Added by Shree for subQ data gen - end
-				
-				node = new Node(subQueryParser.getProjectedCols().get(0));
-				node.setSubQueryConds(subQueryParser.getAllSubQueryConds());
-				node.setSubQueryStructure(subQueryParser);
-				node.setType(Node.getColRefType());
-				
-				if(rc.getExpression() instanceof Function){ 
-					//return node;
-				//}
-					Function an = (Function)rc.getExpression();
-					String aggName = an.getName();
-					ExpressionList expL = an.getParameters();
-					AggregateFunction af = new AggregateFunction();
-					Node n = processExpression(expL.getExpressions().get(0),  subQueryParser.getFromListElements(), subQueryParser,plainSelect,joinType, dbAppParameters); 
-					n.getColumnsFromNode().add(n.getColumn());
-					af.setAggExp(n);
-					af.setFunc(aggName.toUpperCase());
-					af.setDistinct(an.isDistinct());				
-
-					Node rhs = new Node();
-					rhs.setAgg(af);
-					rhs.setType(Node.getAggrNodeType());
-					//Shree added this to set table name , table name no in node level 
-					rhs.setTable(af.getAggExp().getTable());
-					rhs.setTableAlias(af.getAggExp().getTableAlias());
-					rhs.setTableNameNo(af.getAggExp().getTableNameNo());
-					
-					rhs.setQueryType(2);
-					rhs.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
-					if(node.getSubQueryStructure() != null && node.getSubQueryStructure().getAllDnfSelCond()  != null && !node.getSubQueryStructure().getAllDnfSelCond().isEmpty()){
-						///Check .get(0) - again
-						rhs.setSubQueryConds(node.getSubQueryStructure().getAllDnfSelCond().get(0));
-					}
-					
-					// create the final subquery node and return it
-					Node sqNode = new Node();
-					if(node.getSubQueryStructure() != null && node.getSubQueryStructure().getAllDnfSelCond()  != null && !node.getSubQueryStructure().getAllDnfSelCond().isEmpty()){				
-						sqNode.setSubQueryConds(node.getSubQueryStructure().getAllDnfSelCond().get(0));
-					}
-					
-					if(qStruct.getWhereClauseSubqueries() != null && !qStruct.getWhereClauseSubqueries().isEmpty()){						
-						if(qStruct.getWhereClauseSubqueries().get(0).getConjuncts() != null && !qStruct.getWhereClauseSubqueries().get(0).getConjuncts().isEmpty() 
-								&& qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).selectionConds != null &&
-								!qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).selectionConds.isEmpty() &&(rhs.getSubQueryConds() != null)){
-							
-							//If subquery condition is a String selection condition, add it as a conjunt
-								qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).selectionConds.addAll(rhs.getSubQueryConds());
-								
-								for(Node nod: rhs.getSubQueryConds()){		
-									
-									if(ConjunctQueryStructure.isStringSelection(nod,1) ){										
-										String str=nod.getRight().getStrConst();
-										qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).stringSelectionConds.add(nod);
-										qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).selectionConds.remove(nod);
-									}
-									else if(ConjunctQueryStructure.isStringSelection(nod,0)){
-										qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).stringSelectionConds.add(nod);
-										qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).selectionConds.remove(nod);
-									}
-								}
-							}							
-							sqNode.setType(Node.getBroNodeSubQType());
-							sqNode.setLhsRhs(rhs);
-							return sqNode;
-					}
-				}
-				else if(rc.getExpression() instanceof Parenthesis && (((Parenthesis)rc.getExpression()).getExpression()) instanceof Column){
-					//the result of subquery must be a single tuple
-					logger.log(Level.WARNING,"the result of subquery must be a single tuple");
-				}
-				else{
-					//It is a scalar subquery that returns only one value
-					Node retNode = new Node();
-					retNode.setQueryType(2);
-					retNode.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
-				
-					retNode.setType(Node.getBroNodeSubQType());
-					retNode.setLhsRhs(node);
-					
-					if(node.getSubQueryStructure() != null && node.getSubQueryStructure().getAllDnfSelCond()  != null && !node.getSubQueryStructure().getAllDnfSelCond().isEmpty()){
-						///Check .get(0) - again
-						retNode.setSubQueryConds(node.getSubQueryStructure().getAllDnfSelCond().get(0));
-					}
-					
-					if(qStruct.getWhereClauseSubqueries() != null && !qStruct.getWhereClauseSubqueries().isEmpty()){
-						
-						if(!qStruct.getWhereClauseSubqueries().get(0).getConjuncts().isEmpty() 
-								&& qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).selectionConds != null 
-								&& !qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).selectionConds.isEmpty()){
-								qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).selectionConds.addAll(node.getSubQueryConds());
-								
-								for(Node nod: node.getSubQueryConds()){		
-									
-									if(ConjunctQueryStructure.isStringSelection(nod,1) ){										
-										String str=nod.getRight().getStrConst();										
-										qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).stringSelectionConds.add(nod);
-										qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).selectionConds.remove(nod);
-									}
-									else if(ConjunctQueryStructure.isStringSelection(nod,0)){
-										qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).stringSelectionConds.add(nod);
-										qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).selectionConds.remove(nod);
-									}
-								}
-							}
-					}
-						return retNode;
-				}
+				SubSelect sqn = (SubSelect) clause;				
+				return ProcessExpressionForSubselect(sqn, fle, qStruct, plainSelect, joinType,dbAppParameters);				
 			}
 			else if(clause instanceof Between){
-
-				//FIXME: Mahesh If aggregate in where (due to aliased) then add to list of having clause of the subquery
-
 				Between bn=(Between)clause;
-				Node n=new Node();
-				n.setType(Node.getAndNodeType());
+				return ProcessExpressionForBetween(bn, fle, qStruct, plainSelect, joinType,dbAppParameters);				
 
-				Node l=new Node();
-				l.setLeft(processExpression(bn.getLeftExpression(),fle,qStruct,plainSelect,joinType, dbAppParameters));
-				l.setOperator(">=");
-				
-				l.setRight(processExpression(bn.getBetweenExpressionStart(),fle,qStruct,plainSelect,joinType, dbAppParameters));
-				l.setType(Node.getBroNodeType());
-				n.setLeft(l);
-
-				Node r=new Node();
-				r.setLeft(processExpression(bn.getLeftExpression(), fle,qStruct,plainSelect,joinType, dbAppParameters));
-				r.setOperator("<=");
-				
-				r.setRight(processExpression(bn.getBetweenExpressionEnd(),fle,qStruct,plainSelect,joinType, dbAppParameters));
-				r.setType(Node.getBroNodeType());
-				n.setRight(r);
-
-				//Storing sub query details
-				//				n.setQueryType(queryType);
-				
-				return n;
-				//throw new Exception("getWhereClauseVector needs more programming \n"+clause.getClass()+"\n"+clause.toString());
-			} else if (clause instanceof EqualsTo){
-
+			} else if (clause instanceof EqualsTo){				
 				BinaryExpression bne = (BinaryExpression)clause;
-				Node n = new Node();
-				Node sqNode = new Node();
-				/*if(bne.getLeftExpression() instanceof ExtractExpression) {
-					return n;
-				}else if(bne.getRightExpression() instanceof ExtractExpression){
-					return n;
-				}*/
-				n.setType(Node.getBroNodeType());
-				n.setOperator("=");
-				Node ndl = processExpression(bne.getLeftExpression(), fle, qStruct,plainSelect,joinType, dbAppParameters);
-				if(ndl != null){
-					n.setLeft(ndl);
-				}
-				Node ndr = processExpression(bne.getRightExpression(), fle, qStruct,plainSelect,joinType, dbAppParameters);
-				if(ndr!= null){
-					n.setRight(ndr);
-				}
+				return ProcessExpressionForEqualsTo(bne, fle, qStruct, plainSelect, joinType,dbAppParameters);
 
-				if((ndl == null && ndr ==null)){
-					return null;
-				}
-				
-				//the following added by mathew on 17 oct 2016
-				if(n.getLeft().getType().equals(Node.getAllNodeType())||n.getRight().getType().equals(Node.getAllNodeType())||
-						n.getLeft().getType().equals(Node.getAnyNodeType()) ||
-						n.getRight().getType().equals(Node.getAnyNodeType()))
-					n.setType(Node.getBroNodeSubQType());
-				
-				else if(n.getLeft().getType().equals(Node.getColRefType())&&n.getRight().getType().equals(Node.getColRefType())){
-					if(joinType!=null)
-						n.setJoinType(joinType);
-					else
-						n.setJoinType(JoinClauseInfo.innerJoin);
-				}
-				n.setType(n.getType());
-				//n.setLhsRhs(n);
-				
-				return n;
 			} else if (clause instanceof GreaterThan){
 				GreaterThan broNode = (GreaterThan)clause;
-				/*if(broNode.getLeftExpression() instanceof ExtractExpression) {
-					//type new_name = (type) ;
-					Node n = new Node();
-					return n;
-				}else if(broNode.getRightExpression() instanceof ExtractExpression){
-					Node n = new Node();
-					return n;
-				}*/
-				//BinaryRelationalOperatorNode broNode = ((BinaryRelationalOperatorNode) clause);			
-				Node n = new Node();
-				n.setType(Node.getBroNodeType());
-				n.setOperator(QueryStructure.cvcRelationalOperators[3]);
-				n.setLeft(processExpression(broNode.getLeftExpression(), fle, qStruct,plainSelect,joinType, dbAppParameters));
-				n.setRight(processExpression(broNode.getRightExpression(),fle, qStruct,plainSelect,joinType, dbAppParameters));
-				//setQueryTypeAndIndex(n,qStruct);
-				n.setQueryType(2);
-				n.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
-				
-				if(n.getLeft() != null && n.getLeft().getSubQueryConds() != null && n.getLeft().getSubQueryConds().size() > 0 && n.getSubQueryConds()!=null){
-					n.setSubQueryConds(n.getLeft().getSubQueryConds());
-					n.getLeft().getSubQueryConds().clear();
-				}
-				else  { 
-					if(n.getRight() != null &&n.getRight().getSubQueryConds() != null && n.getRight().getSubQueryConds().size() >0 && n.getSubQueryConds()!=null){
-						n.setSubQueryConds(n.getRight().getSubQueryConds());
-						n.getRight().getSubQueryConds().clear();
-					}
-				}
-
-				//commented by mathew on 17 october 2016
-				if(((GreaterThan) clause).getRightExpression() instanceof AllComparisonExpression ||
-						((GreaterThan) clause).getLeftExpression() instanceof AllComparisonExpression){
-
-					Node sqNode = new Node();
-					sqNode.setType(Node.getAllNodeType());
-					sqNode.setQueryType(2);
-					sqNode.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
-					
-					sqNode.setLhsRhs(n);
-					return sqNode;
-				}
-
-				if(((GreaterThan) clause).getRightExpression() instanceof AnyComparisonExpression ||
-						((GreaterThan) clause).getLeftExpression() instanceof AnyComparisonExpression){
-					Node sqNode = new Node();
-					sqNode.setType(Node.getAnyNodeType());	
-					sqNode.setQueryType(2);
-					sqNode.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
-					
-					sqNode.setLhsRhs(n);
-					return sqNode; 
-				} 
-				
-				//the following added by mathew on 17 oct 2016
-				if(n.getLeft().getType().equals(Node.getAllNodeType())||n.getRight().getType().equals(Node.getAllNodeType())||
-						n.getLeft().getType().equals(Node.getAnyNodeType()) ||
-						n.getRight().getType().equals(Node.getAnyNodeType()))
-					n.setType(Node.getBroNodeSubQType());
-				else if(n.getLeft().getType().equals(Node.getColRefType())&&n.getRight().getType().equals(Node.getColRefType())){
-					if(joinType!=null)
-						n.setJoinType(joinType);
-					else
-						n.setJoinType(JoinClauseInfo.innerJoin);
-				}
-				//n.setLhsRhs(n);
-				//n.setType(n.getType());
-				//setQueryTypeAndIndex(n,qStruct);
-								
-				return n;
+				return processExpressionForGreaterThan(broNode,  qStruct.fromListElements,qStruct,plainSelect,joinType,dbAppParameters);			
 			}
 			else if (clause instanceof GreaterThanEquals){
 				GreaterThanEquals broNode = (GreaterThanEquals)clause;
-				/*if(broNode.getLeftExpression() instanceof ExtractExpression) {
-					//type new_name = (type) ;
-					Node n = new Node();
-					return n;
-				}else if(broNode.getRightExpression() instanceof ExtractExpression){
-					Node n = new Node();
-					return n;
-				}*/
-				Node n = new Node();
-				n.setType(Node.getBroNodeType());
-				n.setOperator(QueryStructure.cvcRelationalOperators[4]);
-				n.setLeft(processExpression(broNode.getLeftExpression(), fle, qStruct,plainSelect,joinType, dbAppParameters));
-				n.setRight(processExpression(broNode.getRightExpression(), fle, qStruct,plainSelect,joinType, dbAppParameters));
-				Node sqNode = new Node();
-				//Storing sub query details
-				//Code added for ALL / ANY subqueries - Start
-				//FIXME ANy condition needs to be tested - IS this correct???
-				if(n.getLeft() != null && n.getLeft().getSubQueryConds() != null && n.getLeft().getSubQueryConds().size() > 0){
-					n.setSubQueryConds(n.getLeft().getSubQueryConds());
-					n.getLeft().getSubQueryConds().clear();
-				}
-				else{ 
-					if(n.getRight() != null &&n.getRight().getSubQueryConds() != null && n.getRight().getSubQueryConds().size() >0 ){
-						n.setSubQueryConds(n.getRight().getSubQueryConds());
-						n.getRight().getSubQueryConds().clear();
-					}
-				}
-
-				//the following added by mathew on 17 oct 2016
-				if(n.getLeft().getType().equals(Node.getAllNodeType())||n.getRight().getType().equals(Node.getAllNodeType())||
-						n.getLeft().getType().equals(Node.getAnyNodeType()) ||
-						n.getRight().getType().equals(Node.getAnyNodeType()))
-					n.setType(Node.getBroNodeSubQType());
-				else if(n.getLeft().getType().equals(Node.getColRefType())&&n.getRight().getType().equals(Node.getColRefType())){
-					if(joinType!=null)
-						n.setJoinType(joinType);
-					else
-						n.setJoinType(JoinClauseInfo.innerJoin);
-				}
-				return n;
+				return processExpressionForGreaterThanEquals(broNode,  qStruct.fromListElements,qStruct,plainSelect,joinType,dbAppParameters);
 			}
 			else if (clause instanceof MinorThan){
 				BinaryExpression bne = (BinaryExpression)clause;
-				/*if(bne.getLeftExpression() instanceof ExtractExpression) {
-					//type new_name = (type) ;
-					Node n = new Node();
-					return n;
-				}else if(bne.getRightExpression() instanceof ExtractExpression){
-					Node n = new Node();
-					return n;
-				}*/
-				Node n = new Node();
-				n.setType(Node.getBroNodeType());
-				n.setOperator(QueryStructure.cvcRelationalOperators[5]);
-				n.setLeft(processExpression(bne.getLeftExpression(), fle,qStruct,plainSelect,joinType, dbAppParameters));
-				n.setRight(processExpression(bne.getRightExpression(),fle,qStruct,plainSelect,joinType, dbAppParameters));
-
-				if(n.getLeft() != null && n.getLeft().getSubQueryConds() != null && n.getLeft().getSubQueryConds().size() > 0){
-					n.setSubQueryConds(n.getLeft().getSubQueryConds());
-					n.getLeft().getSubQueryConds().clear();
-				}
-				else{ 
-					if(n.getRight() != null &&n.getRight().getSubQueryConds() != null && n.getRight().getSubQueryConds().size() >0 ){
-						n.setSubQueryConds(n.getRight().getSubQueryConds());
-						n.getRight().getSubQueryConds().clear();
-					}
-				}
-
-				//the following added by mathew on 17 oct 2016
-				if(n.getLeft().getType().equals(Node.getAllNodeType())||n.getRight().getType().equals(Node.getAllNodeType())||
-						n.getLeft().getType().equals(Node.getAnyNodeType()) ||
-						n.getRight().getType().equals(Node.getAnyNodeType()))
-					n.setType(Node.getBroNodeSubQType());
-				
-				else if(n.getLeft().getType().equals(Node.getColRefType())&&n.getRight().getType().equals(Node.getColRefType())){
-					if(joinType!=null)
-						n.setJoinType(joinType);
-					else
-						n.setJoinType(JoinClauseInfo.innerJoin);
-				}
-				//n.setLhsRhs(n);
-				//n.setType(n.getType());
-				return n;
+				return processExpressionForMinorThan(bne,  qStruct.fromListElements,qStruct,plainSelect,joinType,dbAppParameters);								
 			} else if (clause instanceof MinorThanEquals){
 				BinaryExpression bne = (BinaryExpression)clause;
-				Node n = new Node();
-				/*if(bne.getLeftExpression() instanceof ExtractExpression) {
-					//type new_name = (type) ;
-					return n;
-				}else if(bne.getRightExpression() instanceof ExtractExpression){
-					return n;
-				}*/
-				n.setType(Node.getBroNodeType());
-				n.setOperator(QueryStructure.cvcRelationalOperators[6]);
-				n.setLeft(processExpression(bne.getLeftExpression(), fle,qStruct,plainSelect,joinType, dbAppParameters));
-				n.setRight(processExpression(bne.getRightExpression(),fle, qStruct,plainSelect,joinType, dbAppParameters));
-
-				if(n.getLeft() != null && n.getLeft().getSubQueryConds() != null && n.getLeft().getSubQueryConds().size() > 0){
-					n.setSubQueryConds(n.getLeft().getSubQueryConds());
-					n.getLeft().getSubQueryConds().clear();
-				}
-				else{ 
-					if(n.getRight() != null &&n.getRight().getSubQueryConds() != null && n.getRight().getSubQueryConds().size() >0 ){
-						n.setSubQueryConds(n.getRight().getSubQueryConds());
-						n.getRight().getSubQueryConds().clear();
-					}
-				}
-
-
-				//the following added by mathew on 17 oct 2016
-				if(n.getLeft().getType().equals(Node.getAllNodeType())||n.getRight().getType().equals(Node.getAllNodeType())||
-						n.getLeft().getType().equals(Node.getAnyNodeType()) ||
-						n.getRight().getType().equals(Node.getAnyNodeType()))
-					n.setType(Node.getBroNodeSubQType());
-				else if(n.getLeft().getType().equals(Node.getColRefType())&&n.getRight().getType().equals(Node.getColRefType())){
-					if(joinType!=null)
-						n.setJoinType(joinType);
-					else
-						n.setJoinType(JoinClauseInfo.innerJoin);
-				}
-				//n.setLhsRhs(n);
-				//n.setType(n.getType());
-				return n;
-			} else if(clause instanceof CaseExpression){
-				
-				CaseExpression caseExpr =  (CaseExpression)clause;								
-				List<Expression> whenClauses = caseExpr.getWhenClauses();
-				Expression switchExpression=caseExpr.getSwitchExpression();
-				Node switchExpressionNode=processExpression(switchExpression, qStruct.fromListElements, qStruct,plainSelect,null, dbAppParameters);
-				parsing.CaseExpression retCaseExpr=new parsing.CaseExpression();
-				ArrayList<CaseCondition> whenConditionals=new ArrayList<CaseCondition>();
-				
-				for(Expression whenClauseExpr:whenClauses){
-					WhenClause whenClause=(WhenClause)whenClauseExpr;
-					logger.info(" when exp: "+whenClause.getWhenExpression()+" then expression "+whenClause.getThenExpression());
-					Node antecedentNode=processExpression(whenClause.getWhenExpression(),qStruct.fromListElements, qStruct,plainSelect,null, dbAppParameters);
-					Node consequentNode=processExpression(whenClause.getThenExpression(),qStruct.fromListElements, qStruct,plainSelect,null, dbAppParameters);
-					if(switchExpression!=null){
-						Node tempNode=new Node();
-						tempNode.setType(Node.getBroNodeType());
-						tempNode.setOperator(QueryStructure.cvcRelationalOperators[1]);
-						tempNode.setLeft(switchExpressionNode);
-						tempNode.setRight(antecedentNode);
-						antecedentNode=tempNode;
-					}
-					CaseCondition cC=new CaseCondition();
-					cC.setWhenNode(antecedentNode);
-					cC.setThenNode(consequentNode);
-					whenConditionals.add(cC);
-					
-				}
-				retCaseExpr.setWhenConditionals(whenConditionals);
-				
-				if(caseExpr.getElseExpression()!=null){
-					CaseCondition cC=new CaseCondition();
-					Node consequestNode=processExpression(caseExpr.getElseExpression(),qStruct.fromListElements, qStruct,plainSelect,null, dbAppParameters);
-					cC.setThenNode(consequestNode);
-					retCaseExpr.setElseConditional(cC);
-				}
-				Node retNode=new Node();
-				retNode.setType(Node.getCaseNodeType());
-				retNode.setCaseExpression(retCaseExpr);
-				return retNode;
-				
+				return processExpressionForMinorThanEquals(bne,  qStruct.fromListElements,qStruct,plainSelect,joinType,dbAppParameters);								
+			} 
+			else if(clause instanceof CaseExpression){				
+				CaseExpression caseExpr =  (CaseExpression)clause;			
+				return processExpressionForCaseExpression(caseExpr,  qStruct.fromListElements,qStruct,plainSelect,dbAppParameters);										
 			}
 			else if (clause instanceof AllComparisonExpression){
-
 				AllComparisonExpression ace = (AllComparisonExpression)clause;
-				SubSelect ss = ace.getSubSelect();
-
-				QueryStructure subQueryParser=new QueryStructure(qStruct.getTableMap());
-				Node allNode=new Node();
-				allNode.setSubQueryStructure(subQueryParser);
-				allNode.setType(Node.getAllNodeType());
-				
-				
-				processWhereSubSelect(ss,subQueryParser,qStruct, dbAppParameters);
-				//Set details required for AND / ALL node correctly
-				if(allNode.getSubQueryStructure() != null && allNode.getSubQueryStructure().getProjectedCols() != null){
-					
-					for(Node projectedCol : allNode.getSubQueryStructure().getProjectedCols()){
-						allNode = projectedCol;
-						allNode.setSubQueryStructure(subQueryParser);
-						allNode.setQueryType(2);
-						allNode.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
-						
-						allNode.setType(Node.getAllNodeType());
-					}
-				}
-				return allNode;				
-
+				return processExpressionForAllComparison(ace,qStruct,dbAppParameters);				
 			}
 			else if (clause instanceof AnyComparisonExpression){
 				AnyComparisonExpression ace = (AnyComparisonExpression)clause;
-				SubSelect ss = ace.getSubSelect();
-
-				QueryStructure subQueryParser=new QueryStructure(qStruct.getTableMap());
-				Node anyNode=new Node();
-					
-				anyNode.setSubQueryStructure(subQueryParser);
-				anyNode.setType(Node.getAnyNodeType());
-				processWhereSubSelect(ss,subQueryParser,qStruct, dbAppParameters);
-				if(anyNode.getSubQueryStructure() != null && anyNode.getSubQueryStructure().getAllDnfSelCond() != null && !anyNode.getSubQueryStructure().getAllDnfSelCond().isEmpty()){
-					anyNode.setSubQueryConds(anyNode.getSubQueryStructure().getAllDnfSelCond().get(0));
-				}
-				anyNode.setQueryType(2);
-				anyNode.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
-			
-				return anyNode;
+				return processExpressionForAnyComparison(ace,qStruct,dbAppParameters);
 			}
 			else if(clause instanceof ExtractExpression){
-				//To extract approximate no: of days in month is considered as 30.
-				/*Assuming the ExtractExpression clause holds name and Column alone*/
 				ExtractExpression exp = (ExtractExpression)clause;
-				Node n=new Node(); // Main node
-				n.setType(Node.getExtractFuncType());
-				if(exp.getName()!=null){
-					n.setStrConst(exp.getName());
-				}
-				if(exp.getExpression()!=null){
-					Node n1=processExpression(exp.getExpression(),fle, qStruct,plainSelect,joinType, dbAppParameters);
-					n.setLeft(n1);
-				}
-				n.setRight(null);				
-				logger.info("Extract expression processed"+n);
-				return n;
+				return processExpressionForExtract(exp,fle, qStruct, plainSelect, joinType,dbAppParameters);						
 			}
-				/*
-				String name = exp.getName();
-				Node table = processExpression(exp.getExpression(),fle, qStruct,plainSelect,joinType);
-				if(name.equalsIgnoreCase("year")){
-					//Formula : 1970+ (col Name/(30*12)) - create 5 nodes
-					n.setOperator("+"); // Main node
-					n.setType(Node.getBaoNodeType());
-					Node n1 = new Node(); //Left of main node - level 1
-					n1.setType(Node.getValType());
-					String s="1970";
-					s=util.Utilities.covertDecimalToFraction(s);
-					n1.setStrConst(s);
-					Node i = new Node();
-					i.setType(Node.getExtractFuncType());
-					n1.setLeft(i);
-					//n1.setLeft(null);
-					n1.setRight(null);
-					n1.setTable(table.getTable());
-					n1.setTableNameNo(table.getTableNameNo());
-					n1.setColumn(table.getColumn());
-					n.setLeft(n1);
-
-					//Call method to get Node :
-
-					//n.setRight(getYearCalc(exp,exposedName,fle,isWhereClause,queryType,qStruct));
-
-
-				}else if(name.equalsIgnoreCase("month")){
-					//Formula 1 : (col Name/30) MOD 12 But as CVC does not support MOD rewrite the formula 
-					// Formula 2: a mod b = a - (a/b) *b => (col Name/30)-((col Name/30)/12) * 12) create 12 nodes
-					n.setOperator("-"); // Main node
-					n.setType(Node.getBaoNodeType());
-
-					//LEFT OF MAIN NODE - considered as level 0
-					Node nl1 = new Node(); 
-					nl1.setOperator("/");
-					nl1.setType(Node.getBaoNodeType());
-					//Left of node at level 1
-					nl1.setLeft(processExpression(exp.getExpression(),fle,qStruct,plainSelect,joinType));
-
-					Node nl1r1 = new Node();
-					nl1r1.setType(Node.getValType());
-					String s="30";
-					s=util.Utilities.covertDecimalToFraction(s);
-					nl1r1.setStrConst(s);
-					Node i = new Node();
-					i.setType(Node.getExtractFuncType());
-					nl1r1.setLeft(i);
-					//nl1r1.setLeft(null);
-					nl1r1.setRight(null);
-					nl1.setRight(nl1r1);
-					n.setTable(table.getTable());
-					n.setTableNameNo(table.getTableNameNo());
-					n.setColumn(table.getColumn());
-					n.setLeft(nl1);
-					//RIGHT OF MAIN NODE  - considered as level 0
-					Node nr1 = new Node();
-					nr1.setOperator("*");
-					nr1.setType(Node.getBaoNodeType());
-					//Left Node at level 1
-					Node nr1l1 = new Node();
-					nr1l1.setOperator("/");
-					nr1l1.setType(Node.getBaoNodeType());
-					//Left Node at level 2
-					Node nr1l2 = new Node();
-					nr1l2.setOperator("/");
-					nr1l2.setType(Node.getBaoNodeType());
-					//Left Node at level 3
-					nr1l2.setLeft(processExpression(exp.getExpression(),fle,qStruct,plainSelect,joinType));
-
-					//Right Node at level 3
-					Node nr1r3 = new Node();
-					nr1r3.setType(Node.getValType());
-					String st="30";
-					st=util.Utilities.covertDecimalToFraction(st);
-					nr1r3.setStrConst(st);
-					Node i1 = new Node();
-					i1.setType(Node.getExtractFuncType());
-					nr1r3.setLeft(i1);
-					nr1r3.setRight(null);
-					nr1l2.setRight(nr1r3);
-
-
-					nr1l1.setLeft(nr1l2);	
-					//Right Node at level 2
-					Node nr1r2 = new Node();
-					nr1r2.setType(Node.getValType());
-					String s1="12";
-					s1=util.Utilities.covertDecimalToFraction(s1);
-					nr1r2.setStrConst(s1);
-					Node i2 = new Node();
-					i2.setType(Node.getExtractFuncType());
-					nr1r2.setLeft(i2);
-					//nr1r2.setLeft(null);
-					nr1r2.setRight(null);
-					nr1l1.setRight(nr1r2);
-					nr1.setLeft(nr1l1);
-
-					//Right Node at level 1
-					Node nr1r1 = new Node();
-					nr1r1.setType(Node.getValType());
-					String s2="12";
-					s2=util.Utilities.covertDecimalToFraction(s2);
-					nr1r1.setStrConst(s2);
-					Node i4 = new Node();
-					i4.setType(Node.getExtractFuncType());
-					nr1r1.setLeft(i4);
-					//nr1r1.setLeft(null);
-					nr1r1.setRight(null);
-					nr1.setRight(nr1r1);
-
-					n.setRight(nr1);
-
-				}else if(name.equalsIgnoreCase("day")){
-					//Formula 1: approximate Date : (column value -((col Value/(30*12))*365) MOD 30)
-					//Formula 2 : eliminating MOD :[ (column value -((col Value/(30*12))*365)) - ([(column value -((col Value/(30*12))*365))/30] * 30) ]
-					n.setOperator("-"); // Main node
-					n.setType(Node.getBaoNodeType());
-					n.setTable(table.getTable());
-					n.setTableNameNo(table.getTableNameNo());
-					n.setColumn(table.getColumn());
-					//Left of main node
-					//						n.setLeft(getDayCalc(exp, exposedName, fle, isWhereClause, queryType, qStruct));
-					//Right of main node
-					Node nr1 = new Node();
-					nr1.setOperator("*");
-					nr1.setType(Node.getBaoNodeType());
-
-					Node nr1l1 = new Node();
-					nr1l1.setOperator("/");
-					nr1l1.setType(Node.getBaoNodeType());
-					//								nr1l1.setLeft(getDayCalc(exp, exposedName, fle, isWhereClause, queryType, ));
-					Node nr1r2 = new Node();
-					nr1r2.setType(Node.getValType());
-					String st="30";
-					st=util.Utilities.covertDecimalToFraction(st);
-					nr1r2.setStrConst(st);
-					Node i = new Node();
-					i.setType(Node.getExtractFuncType());
-					nr1r2.setLeft(i);
-					//nr1r2.setLeft(null);
-					nr1r2.setRight(null);
-					nr1l1.setRight(nr1r2);
-					nr1.setLeft(nr1l1);
-
-					Node nr1r1 = new Node();
-					nr1r1.setType(Node.getValType());
-					String s2="30";
-					s2=util.Utilities.covertDecimalToFraction(s2);
-					nr1r1.setStrConst(s2);
-					Node i1 = new Node();
-					i1.setType(Node.getExtractFuncType());
-					nr1r1.setLeft(i1);
-					//nr1r1.setLeft(null);
-					nr1r1.setRight(null);
-					nr1.setRight(nr1r1);
-					n.setRight(nr1);
-				}
-				return n;
-			}
-
 			else {
 				logger.log(Level.SEVERE,"getWhereClauseVector needs more programming ");
 				throw new Exception("getWhereClauseVector needs more programming ");
-			}*/
+			}
 		}catch(Exception e){
 			logger.log(Level.SEVERE,e.getMessage(),e);
 			throw e;
 		}
 		return null;
 	}
-			
+
+
+	public static Node processExpressionForParenthesis(Parenthesis par, Vector<FromClauseElement> fle, QueryStructure qStruct,
+			PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+
+		boolean isNot = par.isNot();
+		Node n= processExpression(par.getExpression(), fle,  qStruct,plainSelect, joinType,dbAppParameters);
+		if(isNot){
+			Node left = n.getLeft();
+			Node right = n.getRight();
+			if(left != null && left.getNodeType() != null && 
+					left.getNodeType().equals(Node.getBroNodeType())
+					&& left.getOperator() != null && left.getOperator().equalsIgnoreCase("=")){
+				left.setOperator("/=");
+			}
+			if(right != null && right.getNodeType() != null && 
+					right.getNodeType().equals(Node.getBroNodeType())
+					&& right.getOperator() != null && right.getOperator().equalsIgnoreCase("=")){
+				right.setOperator("/=");
+			}
+
+			if(left != null && left.getNodeType() != null && 
+					left.getNodeType().equals(Node.getBroNodeType())
+					&& left.getOperator() != null && left.getOperator().equalsIgnoreCase("=")){
+				left.setOperator("/=");
+			}
+			if(right != null && right.getNodeType() != null && 
+					right.getNodeType().equals(Node.getBroNodeType())
+					&& right.getOperator() != null && right.getOperator().equalsIgnoreCase("=")){
+				right.setOperator("/=");
+			}
+		}
+		return n;
+	}
+
+	public static Node ProcessExpressionForColumn(Column columnReference, Vector<FromClauseElement> fle,
+			QueryStructure qStruct, PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		String colName	= columnReference.getColumnName().toUpperCase();
+		String tableName  = columnReference.getTable().getFullyQualifiedName();
+
+		Node n = new Node();
+		n.setTableNameNo(tableName);
+		n.setColumn(new parsing.Column(colName, tableName));
+		n.setType(Node.getColRefType());
+		if (tableName != null) {
+			n.setTableAlias(tableName);
+		} else {
+			n.setTableAlias("");
+		} 
+
+		if(n.getColumn() != null){
+			n.setTable(n.getColumn().getTable());
+		}
+
+		n.setLeft(null);
+		n.setRight(null); 
+
+
+		if(n.getTableNameNo()==null||n.getTableNameNo().isEmpty()){
+			for(Node m:parsing.Util.getAllProjectedColumns(qStruct.fromListElements, qStruct)){
+				if(m.getColumn()!=null&&m.getColumn().getColumnName().equalsIgnoreCase(n.getColumn().getColumnName())){
+					n.setTable(m.getTable());
+					n.setTableNameNo(m.getTableNameNo());
+					n.setColumn(m.getColumn());
+					break;
+				}
+				else if(m.getType().equals(Node.getValType())&&m.getAliasName().equals(n.getColumn().getColumnName())){
+					n=new Node(m);
+					return n;
+				}
+				else if(m.getType().equals(Node.getCaseNodeType())&& m.getAliasName().equals(n.getColumn().getColumnName())){
+					n=new Node(m);
+					return n;
+				}
+				else if(m.getType().equals(Node.getExtractFuncType())&& m.getAliasName().equals(n.getColumn().getColumnName())){
+					n=new Node(m);
+					return n;
+				}
+			}
+		}
+
+
+		n=transformToAbsoluteTableNames(n,fle,false, qStruct);				
+
+		if(n.getType().equals(Node.getValType()))
+			return n;
+		else if(n.getType().equals(Node.getExtractFuncType()))
+			return n;
+		else if(n.getType().equals(Node.getCaseNodeType()))
+			return n;
+
+
+		if(n.getTableNameNo()==null||n.getTableNameNo().isEmpty()){
+			List<SelectItem> projectedItems=plainSelect.getSelectItems();
+			for(int j=0;j<projectedItems.size();j++){
+				SelectItem projectedItem=projectedItems.get(j);
+				if(projectedItem instanceof net.sf.jsqlparser.statement.select.SelectExpressionItem){
+					SelectExpressionItem selExpItem=(net.sf.jsqlparser.statement.select.SelectExpressionItem)projectedItem;
+					Expression e=selExpItem.getExpression();
+					if(e instanceof net.sf.jsqlparser.expression.Parenthesis){
+						net.sf.jsqlparser.expression.Parenthesis p=(net.sf.jsqlparser.expression.Parenthesis) e;
+						e=p.getExpression();
+					}
+					if(selExpItem.getAlias()!=null){
+						if(n.getColumn().getColumnName().equalsIgnoreCase(selExpItem.getAlias().getName())){
+							n =processExpression(e,qStruct.fromListElements, qStruct,plainSelect,joinType,dbAppParameters);
+							break;
+						}
+					}
+				}
+			}
+
+		}
+
+		return n;
+	}
+
+	public static Node ProcessExpressionForOr(BinaryExpression orNode, Vector<FromClauseElement> fle, QueryStructure qStruct,
+			PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		if (orNode.getLeftExpression() != null
+				&& orNode.getRightExpression() != null) {
+			Node n = new Node();
+			n.setType(Node.getOrNodeType());
+			n.setOperator("OR");
+			n.setLeft(processExpression(orNode.getLeftExpression(),  fle, qStruct,plainSelect,joinType,dbAppParameters));
+			n.setRight(processExpression(orNode.getRightExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters));
+
+			return n;
+		}
+		return null;
+	}
+
+	public static Node ProcessExpressionForLike(BinaryExpression likeNode, Vector<FromClauseElement> fle,
+			QueryStructure qStruct, PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		if (likeNode.getLeftExpression() !=null && likeNode.getRightExpression()!=null )
+		{
+			Node n=new Node();
+			if(! likeNode.isNot()){
+				n.setType(Node.getLikeNodeType());
+				n.setOperator("~");
+			}
+			else{
+				n.setType(Node.getLikeNodeType());
+				n.setOperator("!~");
+			}
+			n.setLeft(processExpression(likeNode.getLeftExpression(),fle,qStruct,plainSelect,joinType,dbAppParameters));
+			n.setRight(processExpression(likeNode.getRightExpression(),  fle,qStruct,plainSelect,joinType,dbAppParameters));
+
+			return n;
+		}
+		return null;
+	}
+
+	public static Node ProcessExpressionForAnd(BinaryExpression andNode, Vector<FromClauseElement> fle,
+			QueryStructure qStruct, PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		if (andNode.getLeftExpression() != null
+				&& andNode.getRightExpression() != null) {
+			Node n = new Node();
+			Node left = new Node();
+			Node right = new Node();
+			n.setType(Node.getAndNodeType());
+			n.setOperator("AND");
+			left = processExpression(andNode.getLeftExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters);
+			right = processExpression(andNode.getRightExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters);
+
+
+			n.setLeft(left);
+			n.setRight(right);
+
+			return n;
+		}
+		return null;
+	}
+
+	public static Node ProcessExpressionForAddition(BinaryExpression baoNode, Vector<FromClauseElement> fle,
+			QueryStructure qStruct, PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		Node n = new Node();
+		n.setType(Node.getBaoNodeType());
+		n.setOperator("+");
+		n.setLeft(processExpression(baoNode.getLeftExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters));
+		n.setRight(processExpression(baoNode.getRightExpression(),fle, qStruct,plainSelect,joinType,dbAppParameters));
+		n=WhereClauseVectorJSQL.getTableDetailsForArithmeticExpressions(n);
+		return n;
+	}
+
+	public static Node ProcessExpressionForSubtraction(BinaryExpression baoNode, Vector<FromClauseElement> fle,
+			QueryStructure qStruct, PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		Node n = new Node();
+		n.setType(Node.getBaoNodeType());
+		n.setOperator("-");
+		n.setLeft(processExpression(baoNode.getLeftExpression(), fle,qStruct,plainSelect,joinType,dbAppParameters));
+		n.setRight(processExpression(baoNode.getRightExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters));
+		n=WhereClauseVectorJSQL.getTableDetailsForArithmeticExpressions(n);
+		return n;
+	}
+
+	public static Node ProcessExpressionForMultiplication(BinaryExpression baoNode, Vector<FromClauseElement> fle,
+			QueryStructure qStruct, PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		Node n = new Node();
+		n.setType(Node.getBaoNodeType());
+		n.setOperator("*");
+		n.setLeft(processExpression(baoNode.getLeftExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters));
+		n.setRight(processExpression(baoNode.getRightExpression(),fle, qStruct,plainSelect,joinType,dbAppParameters));
+		n=WhereClauseVectorJSQL.getTableDetailsForArithmeticExpressions(n);
+		return n;
+	}
+
+	public static Node ProcessExpressionForDivision(BinaryExpression baoNode, Vector<FromClauseElement> fle,
+			QueryStructure qStruct, PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		Node n = new Node();
+		n.setType(Node.getBaoNodeType());
+		n.setOperator("/");
+		n.setLeft(processExpression(baoNode.getLeftExpression(),fle, qStruct,plainSelect,joinType,dbAppParameters));
+		n.setRight(processExpression(baoNode.getRightExpression(),fle, qStruct,plainSelect,joinType,dbAppParameters));
+		n=WhereClauseVectorJSQL.getTableDetailsForArithmeticExpressions(n);
+		return n;
+	}
+
+	public static Node ProcessExpressionForNotEquals(NotEqualsTo broNode, Vector<FromClauseElement> fle,
+			QueryStructure qStruct, PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		Node n = new Node();
+		n.setType(Node.getBroNodeType());
+		n.setOperator(QueryStructure.cvcRelationalOperators[2]);
+		n.setLeft(processExpression(broNode.getLeftExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters));
+		n.setRight(processExpression(broNode.getRightExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters));
+
+		//the following added by mathew on 17 oct 2016
+		if(n.getLeft().getType().equals(Node.getAllNodeType())||n.getRight().getType().equals(Node.getAllNodeType())||
+				n.getLeft().getType().equals(Node.getAnyNodeType()) ||
+				n.getRight().getType().equals(Node.getAnyNodeType()))
+			n.setType(Node.getBroNodeSubQType());
+		else if(n.getLeft().getType().equals(Node.getColRefType())&&n.getRight().getType().equals(Node.getColRefType())){
+			if(joinType!=null)
+				n.setJoinType(joinType);
+			else
+				n.setJoinType(JoinClauseInfo.innerJoin);
+		}
+		else if(n.getLeft().getType().equals(Node.getBroNodeSubQType())||n.getRight().getType().equals(Node.getBroNodeSubQType()))
+			n.setType(Node.getBroNodeSubQType());
+		return n;
+	}
+
+	public static Node ProcessExpressionForDoubleAnd(DoubleAnd broNode, Vector<FromClauseElement> fle, QueryStructure qStruct,
+			PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		Node n = new Node();
+		n.setType(Node.getBroNodeType());
+		n.setOperator(QueryStructure.cvcRelationalOperators[7]);
+		n.setLeft(processExpression(broNode.getLeftExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters));
+		n.setRight(processExpression(broNode.getRightExpression(), fle,qStruct,plainSelect,joinType,dbAppParameters));
+
+		return n;
+	}
+
+	public static Node ProcessExpressionForIsNull(IsNullExpression isNullNode, Vector<FromClauseElement> fle,
+			QueryStructure qStruct, PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		Node n = new Node();
+		n.setType(Node.getIsNullNodeType());
+		n.setLeft(processExpression(isNullNode.getLeftExpression(),fle,qStruct,plainSelect,joinType,dbAppParameters));
+		if(isNullNode.isNot()){
+			n.setOperator("!=");
+		}else{
+			n.setOperator("=");
+		}
+		n.setRight(null);
+		return n;
+	}
+
+	public static Node ProcessExpressionForIn(InExpression sqn, Vector<FromClauseElement> fle, QueryStructure qStruct,
+			PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		SubSelect subS=null;
+		Node inNode=new Node();
+		inNode.setType(Node.getInNodeType());
+		Node notNode = new Node();				   
+		Node rhs = new Node();
+		if(sqn.getRightItemsList() instanceof ExpressionList){			
+			Node lhs = processExpression(sqn. getLeftExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters);
+			ExpressionList exprList=(ExpressionList)sqn.getRightItemsList();
+			List<Expression> expList=exprList.getExpressions();
+			rhs=new Node(true);
+			rhs.isComposite=true;
+			rhs.setType(Node.getCompositeNodeType());
+			for(Expression exp:expList){
+				Node tempNode = processExpression(exp,fle, qStruct,plainSelect,joinType,dbAppParameters);	
+				rhs.addComponentNode(tempNode);				
+				inNode.setLeft(lhs);
+				inNode.setRight(rhs);
+			}
+			if(!sqn.isNot()){					
+				logger.info(" Composite In node"+inNode);
+				return inNode;
+			}else{
+				notNode.setType(Node.getNotNodeType());
+				notNode.setRight(null);
+				notNode.setLeft(inNode);
+				logger.info(" Composite In node"+notNode);
+				return notNode;
+
+			}			
+		}
+		else if (sqn. getLeftItemsList() instanceof SubSelect){
+			subS=(SubSelect)sqn.getLeftItemsList();
+		}
+		else if(sqn. getRightItemsList() instanceof SubSelect){ 
+			subS=(SubSelect)sqn.getRightItemsList();
+		}
+		QueryStructure subQueryParser=new QueryStructure(qStruct.getTableMap());
+		rhs.setSubQueryStructure(subQueryParser);	
+		processWhereSubSelect(subS,subQueryParser,qStruct,dbAppParameters);
+
+		Node lhs = processExpression(sqn. getLeftExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters);
+
+		inNode.setLeft(lhs);
+		inNode.setRight(rhs);
+
+		if(!sqn.isNot()){					
+			return inNode;
+		}else{
+			notNode.setType(Node.getNotNodeType());
+			notNode.setRight(null);
+			notNode.setLeft(inNode);
+			return notNode;
+
+		}
+	}
+
+	public static Node ProcessExpressionForExists(ExistsExpression sqn, Vector<FromClauseElement> fle, QueryStructure qStruct,
+			PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+
+		SubSelect subS = (SubSelect)sqn.getRightExpression();
+		QueryStructure subQueryParser=new QueryStructure(qStruct.getTableMap());
+		Node existsNode=new Node();
+		existsNode.setSubQueryStructure(subQueryParser);
+		existsNode.setType(Node.getExistsNodeType());
+		existsNode.setSubQueryConds(null);
+		processWhereSubSelect(subS,subQueryParser,qStruct,dbAppParameters);
+
+
+		Node notNode = new Node();				   
+
+		if(!sqn.isNot()){					
+			return existsNode;
+		}else{
+			notNode.setType(Node.getNotNodeType());
+			notNode.setRight(null);
+			notNode.setLeft(existsNode);
+			return notNode;
+
+		}
+	}
+
+	public static Node ProcessExpressionForSubselect(SubSelect sqn, Vector<FromClauseElement> fle, QueryStructure qStruct,
+			PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		QueryStructure subQueryParser=new QueryStructure(qStruct.getTableMap());
+		Node node=new Node();
+		node.setSubQueryStructure(subQueryParser);
+		node.setType(Node.getBroNodeSubQType());
+		processWhereSubSelect(sqn,subQueryParser,qStruct,dbAppParameters);
+
+		List<SelectItem> rcList = ((PlainSelect)sqn.getSelectBody()).getSelectItems();	
+
+		SelectExpressionItem rc = (SelectExpressionItem)rcList.get(0);
+
+		if(rc.getExpression() instanceof Function){ 
+			return node;
+		}
+		else if(rc.getExpression() instanceof Column || rc.getExpression() instanceof Expression||
+				(((Parenthesis)rc.getExpression()).getExpression()) instanceof Column){
+			//the result of subquery must be a single tuple
+			logger.log(Level.WARNING,"the result of subquery must be a single tuple");
+		}
+		return node;
+	}
+
+	public static Node ProcessExpressionForBetween(Between bn, Vector<FromClauseElement> fle, QueryStructure qStruct,
+			PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		Node n=new Node();
+		n.setType(Node.getAndNodeType());
+
+		Node l=new Node();
+		l.setLeft(processExpression(bn.getLeftExpression(),fle,qStruct,plainSelect,joinType,dbAppParameters));
+		l.setOperator(">=");
+		l.setRight(processExpression(bn.getBetweenExpressionStart(),fle,qStruct,plainSelect,joinType,dbAppParameters));
+		l.setType(Node.getBroNodeType());
+		n.setLeft(l);
+
+		Node r=new Node();
+		r.setLeft(processExpression(bn.getLeftExpression(), fle,qStruct,plainSelect,joinType,dbAppParameters));
+		r.setOperator("<=");
+		r.setRight(processExpression(bn.getBetweenExpressionEnd(),fle,qStruct,plainSelect,joinType,dbAppParameters));
+		r.setType(Node.getBroNodeType());
+		n.setRight(r);
+
+		return n;
+	}
+
+	public static Node processExpressionForGreaterThan(GreaterThan broNode, Vector<FromClauseElement> fle,
+			QueryStructure qStruct, PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		Node n = new Node();
+		n.setType(Node.getBroNodeType());
+		n.setOperator(QueryStructure.cvcRelationalOperators[3]);
+		n.setLeft(processExpression(broNode.getLeftExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters));
+		n.setRight(processExpression(broNode.getRightExpression(),fle, qStruct,plainSelect,joinType,dbAppParameters));
+
+		if(n.getLeft() != null && n.getLeft().getSubQueryConds() != null && n.getLeft().getSubQueryConds().size() > 0 && n.getSubQueryConds()!=null){
+			n.setSubQueryConds(n.getLeft().getSubQueryConds());
+			n.getLeft().getSubQueryConds().clear();
+		}
+		else  { 
+			if(n.getRight() != null &&n.getRight().getSubQueryConds() != null && n.getRight().getSubQueryConds().size() >0 && n.getSubQueryConds()!=null){
+				n.setSubQueryConds(n.getRight().getSubQueryConds());
+				n.getRight().getSubQueryConds().clear();
+			}
+		}
+
+		/* commented by mathew on 17 october 2016
+		if(((GreaterThan) clause).getRightExpression() instanceof AllComparisonExpression ||
+				((GreaterThan) clause).getLeftExpression() instanceof AllComparisonExpression){
+
+			Node sqNode = new Node();
+			sqNode.setType(Node.getAllNodeType());
+			if(n.getLeft().getSubQueryConds() != null && n.getLeft().getSubQueryConds().size() > 0){
+				sqNode.setSubQueryConds(n.getLeft().getSubQueryConds());
+				n.getLeft().getSubQueryConds().clear();
+		}
+			else{
+				if(n.getRight()!=null&&n.getRight().getSubQueryConds()!=null&&n.getRight().getSubQueryConds().size()>0 && sqNode.getSubQueryConds()!=null)
+				{						sqNode.setSubQueryConds(n.getRight().getSubQueryConds());
+				n.getRight().getSubQueryConds().clear();
+				}
+		} 
+			sqNode.setLhsRhs(n);
+			return sqNode;
+		} 
+
+		if(((GreaterThan) clause).getRightExpression() instanceof AnyComparisonExpression ||
+				((GreaterThan) clause).getLeftExpression() instanceof AnyComparisonExpression){
+			Node sqNode = new Node();
+			sqNode.setType(Node.getAnyNodeType());
+			if(n.getLeft().getSubQueryConds() != null && n.getLeft().getSubQueryConds().size() > 0){
+				sqNode.setSubQueryConds(n.getLeft().getSubQueryConds());
+				n.getLeft().getSubQueryConds().clear();
+			} 
+			else{ 
+				if(n.getRight()!=null&&n.getRight().getSubQueryConds()!=null&&n.getRight().getSubQueryConds().size()>0 && sqNode.getSubQueryConds()!=null)
+				{						sqNode.setSubQueryConds(n.getRight().getSubQueryConds());
+				sqNode.setSubQueryConds(n.getRight().getSubQueryConds());
+				n.getRight().getSubQueryConds().clear();
+				}
+			} 
+			sqNode.setLhsRhs(n);
+			return sqNode; 
+		} */ 
 		
+		//the following added by mathew on 17 oct 2016
+		if(n.getLeft().getType().equals(Node.getAllNodeType())||n.getRight().getType().equals(Node.getAllNodeType())||
+				n.getLeft().getType().equals(Node.getAnyNodeType()) ||
+				n.getRight().getType().equals(Node.getAnyNodeType()))
+			n.setType(Node.getBroNodeSubQType());
+		else if(n.getLeft().getType().equals(Node.getColRefType())&&n.getRight().getType().equals(Node.getColRefType())){
+			if(joinType!=null)
+				n.setJoinType(joinType);
+			else
+				n.setJoinType(JoinClauseInfo.innerJoin);
+		}
+		
+		return n;	
+		}
+
+	public static Node processExpressionForGreaterThanEquals(GreaterThanEquals broNode,
+			Vector<FromClauseElement> fles, QueryStructure qStruct, PlainSelect plainSelect,String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		Node n = new Node();
+		n.setType(Node.getBroNodeType());
+		n.setOperator(QueryStructure.cvcRelationalOperators[4]);
+		n.setLeft(processExpression(broNode.getLeftExpression(), fles, qStruct,plainSelect,joinType,dbAppParameters));
+		n.setRight(processExpression(broNode.getRightExpression(), fles, qStruct,plainSelect,joinType,dbAppParameters));
+
+		//Storing sub query details
+		//Code added for ALL / ANY subqueries - Start
+		//FIXME ANy condition needs to be tested - IS this correct???
+		if(n.getLeft() != null && n.getLeft().getSubQueryConds() != null && n.getLeft().getSubQueryConds().size() > 0){
+			n.setSubQueryConds(n.getLeft().getSubQueryConds());
+			n.getLeft().getSubQueryConds().clear();
+		}
+		else{ 
+			if(n.getRight() != null &&n.getRight().getSubQueryConds() != null && n.getRight().getSubQueryConds().size() >0 ){
+				n.setSubQueryConds(n.getRight().getSubQueryConds());
+				n.getRight().getSubQueryConds().clear();
+			}
+		}
+
+		//the following added by mathew on 17 oct 2016
+		if(n.getLeft().getType().equals(Node.getAllNodeType())||n.getRight().getType().equals(Node.getAllNodeType())||
+				n.getLeft().getType().equals(Node.getAnyNodeType()) ||
+				n.getRight().getType().equals(Node.getAnyNodeType()))
+			n.setType(Node.getBroNodeSubQType());
+		else if(n.getLeft().getType().equals(Node.getColRefType())&&n.getRight().getType().equals(Node.getColRefType())){
+			if(joinType!=null)
+				n.setJoinType(joinType);
+			else
+				n.setJoinType(JoinClauseInfo.innerJoin);
+		}
+
+		return n;
+	}
+
+	public static Node processExpressionForMinorThan(BinaryExpression bne, Vector<FromClauseElement> fle,
+			QueryStructure qStruct, PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		Node n = new Node();
+		n.setType(Node.getBroNodeType());
+		n.setOperator(QueryStructure.cvcRelationalOperators[5]);
+		n.setLeft(processExpression(bne.getLeftExpression(), fle,qStruct,plainSelect,joinType,dbAppParameters));
+		n.setRight(processExpression(bne.getRightExpression(),fle,qStruct,plainSelect,joinType,dbAppParameters));
+
+		if(n.getLeft() != null && n.getLeft().getSubQueryConds() != null && n.getLeft().getSubQueryConds().size() > 0){
+			n.setSubQueryConds(n.getLeft().getSubQueryConds());
+			n.getLeft().getSubQueryConds().clear();
+		}
+		else{ 
+			if(n.getRight() != null &&n.getRight().getSubQueryConds() != null && n.getRight().getSubQueryConds().size() >0 ){
+				n.setSubQueryConds(n.getRight().getSubQueryConds());
+				n.getRight().getSubQueryConds().clear();
+			}
+		}
+
+		//the following added by mathew on 17 oct 2016
+		if(n.getLeft().getType().equals(Node.getAllNodeType())||n.getRight().getType().equals(Node.getAllNodeType())||
+				n.getLeft().getType().equals(Node.getAnyNodeType()) ||
+				n.getRight().getType().equals(Node.getAnyNodeType()))
+			n.setType(Node.getBroNodeSubQType());
+		else if(n.getLeft().getType().equals(Node.getColRefType())&&n.getRight().getType().equals(Node.getColRefType())){
+			if(joinType!=null)
+				n.setJoinType(joinType);
+			else
+				n.setJoinType(JoinClauseInfo.innerJoin);
+		}
+		return n;
+	}
+
+	public static Node processExpressionForMinorThanEquals(BinaryExpression bne, Vector<FromClauseElement> fle,
+			QueryStructure qStruct, PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		Node n = new Node();
+		n.setType(Node.getBroNodeType());
+		n.setOperator(QueryStructure.cvcRelationalOperators[6]);
+		n.setLeft(processExpression(bne.getLeftExpression(), fle,qStruct,plainSelect,joinType,dbAppParameters));
+		n.setRight(processExpression(bne.getRightExpression(),fle, qStruct,plainSelect,joinType,dbAppParameters));
+
+		if(n.getLeft() != null && n.getLeft().getSubQueryConds() != null && n.getLeft().getSubQueryConds().size() > 0){
+			n.setSubQueryConds(n.getLeft().getSubQueryConds());
+			n.getLeft().getSubQueryConds().clear();
+		}
+		else{ 
+			if(n.getRight() != null &&n.getRight().getSubQueryConds() != null && n.getRight().getSubQueryConds().size() >0 ){
+				n.setSubQueryConds(n.getRight().getSubQueryConds());
+				n.getRight().getSubQueryConds().clear();
+			}
+		}
+
+
+		//the following added by mathew on 17 oct 2016
+		if(n.getLeft().getType().equals(Node.getAllNodeType())||n.getRight().getType().equals(Node.getAllNodeType())||
+				n.getLeft().getType().equals(Node.getAnyNodeType()) ||
+				n.getRight().getType().equals(Node.getAnyNodeType()))
+			n.setType(Node.getBroNodeSubQType());
+		else if(n.getLeft().getType().equals(Node.getColRefType())&&n.getRight().getType().equals(Node.getColRefType())){
+			if(joinType!=null)
+				n.setJoinType(joinType);
+			else
+				n.setJoinType(JoinClauseInfo.innerJoin);
+		}
+		return n;
+	}
+
+	public static Node processExpressionForCaseExpression(CaseExpression caseExpr, Vector<FromClauseElement> fromListElements,
+			QueryStructure qStruct, PlainSelect plainSelect,AppTest_Parameters dbAppParameters) throws Exception{
+
+		List<Expression> whenClauses = caseExpr.getWhenClauses();
+		Expression switchExpression=caseExpr.getSwitchExpression();
+		Node switchExpressionNode=processExpression(switchExpression, qStruct.fromListElements, qStruct,plainSelect,null,dbAppParameters);
+		parsing.CaseExpression retCaseExpr=new parsing.CaseExpression();
+		ArrayList<CaseCondition> whenConditionals=new ArrayList<CaseCondition>();
+		
+		for(Expression whenClauseExpr:whenClauses){
+			WhenClause whenClause=(WhenClause)whenClauseExpr;
+			logger.info(" when exp: "+whenClause.getWhenExpression()+" then expression "+whenClause.getThenExpression());
+			Node antecedentNode=processExpression(whenClause.getWhenExpression(),qStruct.fromListElements, qStruct,plainSelect,null,dbAppParameters);
+			Node consequentNode=processExpression(whenClause.getThenExpression(),qStruct.fromListElements, qStruct,plainSelect,null,dbAppParameters);
+			if(switchExpression!=null){
+				Node tempNode=new Node();
+				tempNode.setType(Node.getBroNodeType());
+				tempNode.setOperator(QueryStructure.cvcRelationalOperators[1]);
+				tempNode.setLeft(switchExpressionNode);
+				tempNode.setRight(antecedentNode);
+				antecedentNode=tempNode;
+			}
+			CaseCondition cC=new CaseCondition();
+			cC.setWhenNode(antecedentNode);
+			cC.setThenNode(consequentNode);
+			whenConditionals.add(cC);
+			
+		}
+		retCaseExpr.setWhenConditionals(whenConditionals);
+		
+		if(caseExpr.getElseExpression()!=null){
+			CaseCondition cC=new CaseCondition();
+			Node consequestNode=processExpression(caseExpr.getElseExpression(),qStruct.fromListElements, qStruct,plainSelect,null,dbAppParameters);
+			cC.setThenNode(consequestNode);
+			retCaseExpr.setElseConditional(cC);
+		}
+		Node retNode=new Node();
+		retNode.setType(Node.getCaseNodeType());
+		retNode.setCaseExpression(retCaseExpr);
+		return retNode;
+	}
+
+	public static  Node processExpressionForAllComparison(AllComparisonExpression ace, QueryStructure qStruct,AppTest_Parameters dbAppParameters) throws Exception{
+		SubSelect ss = ace.getSubSelect();
+
+		QueryStructure subQueryParser=new QueryStructure(qStruct.getTableMap());
+		Node allNode=new Node();
+		allNode.setSubQueryStructure(subQueryParser);
+		allNode.setType(Node.getAllNodeType());
+		processWhereSubSelect(ss,subQueryParser,qStruct,dbAppParameters);
+
+		return allNode;				
+	}
+
+	public static Node processExpressionForAnyComparison(AnyComparisonExpression ace, QueryStructure qStruct,AppTest_Parameters dbAppParameters) throws Exception{
+		SubSelect ss = ace.getSubSelect();
+
+		QueryStructure subQueryParser=new QueryStructure(qStruct.getTableMap());
+		Node anyNode=new Node();
+		anyNode.setSubQueryStructure(subQueryParser);
+		anyNode.setType(Node.getAnyNodeType());
+		processWhereSubSelect(ss,subQueryParser,qStruct, dbAppParameters);
+
+		return anyNode;
+	}
+
+	public static Node processExpressionForExtract(ExtractExpression exp, Vector<FromClauseElement> fle,
+			QueryStructure qStruct, PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		
+		Node n=new Node(); // Main node
+		n.setType(Node.getExtractFuncType());
+		if(exp.getName()!=null){
+			n.setStrConst(exp.getName());
+		}
+		if(exp.getExpression()!=null){
+			Node n1=processExpression(exp.getExpression(),fle, qStruct,plainSelect,joinType,dbAppParameters);
+			n.setLeft(n1);
+		}
+		n.setRight(null);				
+		logger.info("Extract expression processed"+n);
+		return n;
+
+	}
+
+	public static Node ProcessExpressionForEqualsTo(BinaryExpression bne, Vector<FromClauseElement> fle, QueryStructure qStruct,
+			PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		Node n = new Node();
+		n.setType(Node.getBroNodeType());
+		n.setOperator("=");
+		Node ndl = processExpression(bne.getLeftExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters);
+		if(ndl != null){
+			n.setLeft(ndl);
+		}
+		Node ndr = processExpression(bne.getRightExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters);
+		if(ndr!= null){
+			n.setRight(ndr);
+		}
+
+
+		if((ndl == null && ndr ==null)){
+			return null;
+		}
+
+		//the following added by mathew on 17 oct 2016
+		if(n.getLeft().getType().equals(Node.getAllNodeType())||n.getRight().getType().equals(Node.getAllNodeType())||
+				n.getLeft().getType().equals(Node.getAnyNodeType()) ||
+				n.getRight().getType().equals(Node.getAnyNodeType()))
+			n.setType(Node.getBroNodeSubQType());
+		else if(n.getLeft().getType().equals(Node.getColRefType())&&n.getRight().getType().equals(Node.getColRefType())){
+			if(joinType!=null)
+				n.setJoinType(joinType);
+			else
+				n.setJoinType(JoinClauseInfo.innerJoin);
+		}
+		return n;
+	}
+
+	public static Node processExpressionForFunction(Function an, Vector<FromClauseElement> fle, QueryStructure qStruct,
+			PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
+		// TODO Auto-generated method stub
+		String funcName = an.getName();
+
+
+		//All these are string manipulation functions and not aggregate function
+		if(funcName.equalsIgnoreCase("ROW")){
+			Node n=new Node(true);
+			n.isComposite=true;
+			n.setType(Node.getCompositeNodeType());
+			if (an.getParameters()!=null){
+				ExpressionList anList = an.getParameters();
+				List<Expression> expList = anList.getExpressions();
+				for(Expression e:expList){
+					Node tempNode = processExpression(e,fle, qStruct,plainSelect,joinType,dbAppParameters);	
+					n.addComponentNode(tempNode);
+				}
+			}				
+			return n;
+		}
+		else if(! (funcName.equalsIgnoreCase("Lower") || funcName.equalsIgnoreCase("substring") || funcName.equalsIgnoreCase("upper")
+				||funcName.equalsIgnoreCase("trim") || funcName.equalsIgnoreCase("postion") || funcName.equalsIgnoreCase("octet_length")
+				|| funcName.equalsIgnoreCase("bit_length") || funcName.equalsIgnoreCase("char_length") || funcName.equalsIgnoreCase("overlay"))){
+
+			AggregateFunction af = new AggregateFunction();
+			if (an.getParameters()!=null){
+				ExpressionList anList = an.getParameters();
+				List<Expression> expList = anList.getExpressions();//FIXME not only 1 expression but all expressions
+
+				Node n = processExpression(expList.get(0), fle,  qStruct,plainSelect,joinType,dbAppParameters);
+				af.setAggExp(n);
+
+			} else {
+				af.setAggExp(null);
+			}
+
+			af.setFunc(funcName.toUpperCase());
+			af.setAggAliasName(funcName.toUpperCase());
+			af.setDistinct(an.isDistinct());
+
+			Node agg = new Node();
+			agg.setAgg(af);
+			agg.setType(Node.getAggrNodeType());
+			//Shree added this to set Table, TableNameNo for Aggregate function node - @ node level
+			if(af.getAggExp() != null){
+				agg.setTable(af.getAggExp().getTable());
+				agg.setTableNameNo(af.getAggExp().getTableNameNo());
+				agg.setTableAlias(af.getAggExp().getTableAlias());
+				agg.setColumn(af.getAggExp().getColumn());
+
+
+			}//Added by Shree for count(*) 
+			else if(af.getFunc().toUpperCase().contains("COUNT") && an.isAllColumns()){				
+				if(af.getAggExp() == null){
+					Node n1 = parsing.Util.getNodeForCount(fle, qStruct);
+					af.setAggExp(n1);
+					af.setFunc(funcName.toUpperCase());
+					af.setDistinct(an.isDistinct());
+
+					if(af.getAggExp()!=null){
+						agg.setTable(af.getAggExp().getTable());
+						agg.setTableNameNo(af.getAggExp().getTableNameNo());
+						agg.setTableAlias(af.getAggExp().getTableAlias());
+						agg.setColumn(af.getAggExp().getColumn());
+					}
+
+					agg.setLeft(null);
+					agg.setRight(null);
+				}
+			}
+
+			return agg;
+		}
+		else {
+			//String function manipulation
+			Node n=new Node();
+			if (an.getParameters()!=null){
+				ExpressionList anList = an.getParameters();
+				List<Expression> expList = anList.getExpressions();//FIXME not only 1 expression but all expressions
+				n = processExpression(expList.get(0),fle, qStruct,plainSelect,joinType,dbAppParameters);		
+			}
+			return n;
+		}	
+	}
+
 	/** @author mathew
 	 * 
 	 * @param subSelect
@@ -2447,9 +2050,8 @@ public class ProcessSelectClause {
  * 
  * deals with the case when a subquery is encountered while processing the where clause
  */
-	public static void processWhereSubSelect(SubSelect subSelect, QueryStructure subQueryParser,QueryStructure parentQueryParser,AppTest_Parameters dbAppParameters) throws Exception {
-		// TODO Auto-generated method stub
 
+	public static void processWhereSubSelect(SubSelect subSelect, QueryStructure subQueryParser,QueryStructure parentQueryParser,AppTest_Parameters dbAppParameters) throws Exception {
 		logger.info(" Processing subselect, selbody:"+subSelect.getSelectBody().toString());
 
 		parentQueryParser.getWhereClauseSubqueries().add(subQueryParser);
@@ -2460,12 +2062,6 @@ public class ProcessSelectClause {
 
 	}
 	
-	public static QueryStructure findRootQueryStructure(QueryStructure qStruct){
-		if(qStruct.parentQueryParser==null)
-			return qStruct;
-		else 
-			return findRootQueryStructure(qStruct.parentQueryParser);
-	}
 	
 	
 	/** @author mathew 
@@ -2745,7 +2341,7 @@ public class ProcessSelectClause {
 
 		return n;
 	}
-	 
+	
 	 //Check if the following methods are needed and why are they added to avoid extra tuples
 	 /**
 		 * This method returns a Node with join conditions as node inside node for sending to conjuncts
@@ -2893,8 +2489,4 @@ public class ProcessSelectClause {
 				}
 			}
 		}
-		
-	
-		
-		
 }

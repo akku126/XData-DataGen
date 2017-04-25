@@ -21,6 +21,7 @@ public class ParseForDataGeneration {
 		public QueryStructure parseForDataGeneration(QueryStructure qs) throws Exception{
 			
 			for(ConjunctQueryStructure con : qs.getConjuncts()){
+				
 				Vector<Node> newSubQCond = new Vector<Node>();
 				Vector<Node> subQCondToRemove = new Vector<Node>();
 			
@@ -342,8 +343,13 @@ public class ParseForDataGeneration {
 						 				
 					}
 				}
-				con.allSubQueryConds.addAll(newSubQCond);
 				con.allSubQueryConds.removeAll(subQCondToRemove);
+				if(con.allSubQueryConds != null && !con.allSubQueryConds.isEmpty()){
+					con.allSubQueryConds.addAll(newSubQCond);
+				}else{
+					con.allSubQueryConds = newSubQCond;
+				}
+				
 			}
 			return qs;
 		}

@@ -301,6 +301,12 @@ public class PreProcessingActivity {
 					cvc.initializeOtherDetails();
 					cvc.setConstraintSolver(Configuration.getProperty("smtsolver"));
 					
+					if(Configuration.getProperty("smtsolver").equalsIgnoreCase("cvc3")){
+						cvc.setSolverSpecificCommentCharacter("%");
+					}else{
+						cvc.setSolverSpecificCommentCharacter(";");
+					}
+					
 					/** Segregate selection conditions in each query block */
 					RelatedToPreprocessing.segregateSelectionConditions(cvc);
 					
