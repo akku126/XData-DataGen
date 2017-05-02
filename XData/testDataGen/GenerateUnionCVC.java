@@ -1,10 +1,11 @@
 package testDataGen;
 
+import generateConstraints.ConstraintGenerator;
 import generateConstraints.GenerateCVCConstraintForNode;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GenerateConstraintsForConjunct;
 import generateConstraints.GenerateConstraintsForWhereClauseSubQueryBlock;
-import generateConstraints.GetCVC3HeaderAndFooter;
+import generateConstraints.GetSolverHeaderAndFooter;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -279,17 +280,17 @@ public class GenerateUnionCVC implements Serializable{
 	//	genCVCleft.dnfSubQuery=genCVCleft.qParser.getAllDnfSubQuery();
 	//	genCVCleft.EqClass=genCVCleft.qParser.getEqClass();
 		genCVCleft.outerBlock.setConjunctsQs(new ArrayList<ConjunctQueryStructure>(genCVCleft.getqStructure().getConjuncts()));
-		RelatedToParameters.setupDataStructuresForParamConstraints(genCVCleft.outerBlock);
-		GetCVC3HeaderAndFooter.generateCVC3_Header(genCVCleft);
+		RelatedToParameters.setupDataStructuresForParamConstraints(genCVCleft,genCVCleft.outerBlock);
+		GetSolverHeaderAndFooter.generateSolver_Header(genCVCleft);
 		genCVCleft.setForeignKeysModified(new ArrayList<ForeignKey>(genCVCleft.getqStructure().getForeignKeyVectorModified()));
 //		genCVCleft.dnfStrCond=new Vector<Vector<Node>>();
 //		genCVCleft.seggregateDnfSelConditions();	
 /*		for(Conjunct conjunct : genCVCleft.outerBlock.getConjuncts()){
 			conjunct.seggregateSelectionConds();
-		}
-		RelatedToPreprocessing.segregateSelectionConditions(genCVCleft);
+		}*/
 		
-		for (Vector<Node> leftStrConds : genCVCleft.getDnfStrCond()) {
+		
+		/*for (Vector<Node> leftStrConds : genCVCleft.getDnfStrCond()) {
 			//Vector<Node> leftSelConds = iterator.next();
 			Vector<Node> StrCond = null;
 			for(Vector<Node> rightStrConds: genCVCright.getDnfStrCond()){
@@ -340,12 +341,12 @@ public class GenerateUnionCVC implements Serializable{
 			}
 			if(SelCond==null){
 				dnfSelConds.add(leftSelConds);
-			}
+			}*/
 			
 		//End transfered
 		
 		
-		
+		RelatedToPreprocessing.segregateSelectionConditions(genCVCleft);
 		
 		genCVCright=new GenerateCVC1();
 		genCVCright.setFne(false);
@@ -389,15 +390,18 @@ public class GenerateUnionCVC implements Serializable{
 	//	genCVCright.root = genCVCright.qParser.getRoot();		
 	//	genCVCright.aggConstraints = new Vector<Node>();
 	//	genCVCright.aggConstraints.removeAllElements();		
-		RelatedToParameters.setupDataStructuresForParamConstraints(genCVCright.outerBlock);
-		GetCVC3HeaderAndFooter.generateCVC3_Header(genCVCright);
-		genCVCright.setForeignKeysModified(new ArrayList(genCVCright.getqStructure().getForeignKeyVectorModified()));
+
+		genCVCleft.outerBlock.setConjunctsQs(new ArrayList<ConjunctQueryStructure>(genCVCright.getqStructure().getConjuncts()));
+		RelatedToParameters.setupDataStructuresForParamConstraints(genCVCright,genCVCright.outerBlock);
+		GetSolverHeaderAndFooter.generateSolver_Header(genCVCright);
+		genCVCleft.setForeignKeysModified(new ArrayList<ForeignKey>(genCVCright.getqStructure().getForeignKeyVectorModified()));
+		RelatedToPreprocessing.segregateSelectionConditions(genCVCright);
 	//	genCVCright.dnfStrCond=new Vector<Vector<Node>>();
 	//	genCVCright.seggregateDnfSelConditions();
 /*		for(Conjunct conjunct : genCVCright.outerBlock.getConjuncts()){
 			conjunct.seggregateSelectionConds();
 		}*/
-		//RelatedToPreprocessing.segregateSelectionConditions(genCVCright);
+		//
 		/*Create New CVC Object with combined Constraints*/
 //		cvc.initializeQueryDetails(qParser);
 //		cvc.setQuery(cvc.getqParser().getQuery());
@@ -468,7 +472,7 @@ public class GenerateUnionCVC implements Serializable{
 		Iterator<String> j = temp.keySet().iterator();
 			while(j.hasNext()){
 				String key = j.next();
-				if(hm.containsKey(key)){
+				if(hm != null && hm.containsKey(key)){
 					hm.put(key, hm.get(key)+temp.get(key));
 				}
 				else{
@@ -706,6 +710,7 @@ public class GenerateUnionCVC implements Serializable{
 	
 	private Vector<String> genNonEmptyResult() throws Exception{
 		Vector<String> NonEmptyConstraints=new Vector<String>();
+		ConstraintGenerator constraintGen = new ConstraintGenerator();
 		ArrayList<Node>left=genCVCleft.outerBlock.getProjectedCols();
 		ArrayList<Node>right=genCVCright.outerBlock.getProjectedCols();
 		String str="ASSERT NOT (";
@@ -776,15 +781,15 @@ public class GenerateUnionCVC implements Serializable{
 				}
 				for(int k=0; k<conjunct.getSelectionConds().size();k++)
 				{
-					str+=GenerateCVCConstraintForNode.genPositiveCondsForPred(genCVCright.outerBlock,conjunct.getSelectionConds().get(k),hm) + " AND ";
+					str+=constraintGen.genPositiveCondsForPred(genCVCright,genCVCright.outerBlock,conjunct.getSelectionConds().get(k),hm) + " AND ";
 				}
 				for(int k=0; k<conjunct.getJoinCondsAllOther().size();k++)
 				{
-					str+=GenerateCVCConstraintForNode.genPositiveCondsForPred(genCVCright.outerBlock,conjunct.getJoinCondsAllOther().get(k),hm) + " AND ";
+					str+=constraintGen.genPositiveCondsForPred(genCVCright,genCVCright.outerBlock,conjunct.getJoinCondsAllOther().get(k),hm) + " AND ";
 				}
 				for(int k=0; k<conjunct.getJoinCondsForEquivalenceClasses().size();k++)
 				{
-					str+=GenerateCVCConstraintForNode.genPositiveCondsForPred(genCVCright.outerBlock,conjunct.getJoinCondsForEquivalenceClasses().get(k),hm) + " AND ";
+					str+=constraintGen.genPositiveCondsForPred(genCVCright,genCVCright.outerBlock,conjunct.getJoinCondsForEquivalenceClasses().get(k),hm) + " AND ";
 				}
 				
 				//for(int k=0;k<conjunct.getAllSubQueryConds().size();k++){
@@ -836,15 +841,15 @@ public class GenerateUnionCVC implements Serializable{
 				}
 				for(int k=0; k<conjunct.getSelectionConds().size();k++)
 				{
-					str+=GenerateCVCConstraintForNode.genPositiveCondsForPred(genCVCright.outerBlock,conjunct.getSelectionConds().get(k),hm) + " AND ";
+					str+=constraintGen.genPositiveCondsForPred(genCVCright,genCVCright.outerBlock,conjunct.getSelectionConds().get(k),hm) + " AND ";
 				}
 				for(int k=0; k<conjunct.getJoinCondsAllOther().size();k++)
 				{
-					str+=GenerateCVCConstraintForNode.genPositiveCondsForPred(genCVCright.outerBlock,conjunct.getJoinCondsAllOther().get(k),hm) + " AND ";
+					str+=constraintGen.genPositiveCondsForPred(genCVCright,genCVCright.outerBlock,conjunct.getJoinCondsAllOther().get(k),hm) + " AND ";
 				}
 				for(int k=0; k<conjunct.getJoinCondsForEquivalenceClasses().size();k++)
 				{
-					str+=GenerateCVCConstraintForNode.genPositiveCondsForPred(genCVCright.outerBlock,conjunct.getJoinCondsForEquivalenceClasses().get(k),hm) + " AND ";
+					str+=constraintGen.genPositiveCondsForPred(genCVCright,genCVCright.outerBlock,conjunct.getJoinCondsForEquivalenceClasses().get(k),hm) + " AND ";
 				}
 				//for(int k=0;k<conjunct.getAllSubQueryConds().size();k++){
 					str+=GenerateConstraintsForWhereClauseSubQueryBlock.getConstraintsForWhereClauseSubQueryBlock(genCVCright,genCVCright.outerBlock,conjunct);
