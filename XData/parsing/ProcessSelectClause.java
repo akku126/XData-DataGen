@@ -287,12 +287,12 @@ public class ProcessSelectClause{
 		
 		Expression whereClauseExpression = plainSelect.getWhere();
 		//Application Testing -- modified to consider database application constraints on query result
-		if(whereClauseExpression==null && (dbAppParameters.getDbridge_Constraints()==null || dbAppParameters.getDbridge_Constraints()==""))
+		if(whereClauseExpression==null && (dbAppParameters == null || (dbAppParameters != null && ( dbAppParameters.getDbridge_Constraints()==null || dbAppParameters.getDbridge_Constraints()==""))))
 			return;
-		else if(whereClauseExpression==null && (dbAppParameters.getDbridge_Constraints()!=null || dbAppParameters.getDbridge_Constraints()!="")){
+		else if(whereClauseExpression==null && (dbAppParameters != null && (dbAppParameters.getDbridge_Constraints()!=null || dbAppParameters.getDbridge_Constraints()!=""))){
 			whereClauseExpression = CCJSqlParserUtil.parseCondExpression(dbAppParameters.getDbridge_Constraints());
 		}
-		else if(whereClauseExpression!=null &&  dbAppParameters.getDbridge_Constraints()!=""){
+		else if(whereClauseExpression!=null && dbAppParameters != null && dbAppParameters.getDbridge_Constraints()!=""){
 			whereClauseExpression = CCJSqlParserUtil.parseCondExpression(whereClauseExpression.toString()+" AND "+dbAppParameters.getDbridge_Constraints());
 		}
 		
@@ -1368,6 +1368,8 @@ public class ProcessSelectClause{
 			n.setLeft(processExpression(orNode.getLeftExpression(),  fle, qStruct,plainSelect,joinType,dbAppParameters));
 			n.setRight(processExpression(orNode.getRightExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters));
 
+			n.setQueryType(2);
+			n.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
 			return n;
 		}
 		return null;
@@ -1389,6 +1391,8 @@ public class ProcessSelectClause{
 			n.setLeft(processExpression(likeNode.getLeftExpression(),fle,qStruct,plainSelect,joinType,dbAppParameters));
 			n.setRight(processExpression(likeNode.getRightExpression(),  fle,qStruct,plainSelect,joinType,dbAppParameters));
 
+			n.setQueryType(2);
+			n.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
 			return n;
 		}
 		return null;
@@ -1407,6 +1411,8 @@ public class ProcessSelectClause{
 			right = processExpression(andNode.getRightExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters);
 
 
+			n.setQueryType(2);
+			n.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
 			n.setLeft(left);
 			n.setRight(right);
 
@@ -1467,6 +1473,8 @@ public class ProcessSelectClause{
 		n.setLeft(processExpression(broNode.getLeftExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters));
 		n.setRight(processExpression(broNode.getRightExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters));
 
+		n.setQueryType(2);
+		n.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
 		//the following added by mathew on 17 oct 2016
 		if(n.getLeft().getType().equals(Node.getAllNodeType())||n.getRight().getType().equals(Node.getAllNodeType())||
 				n.getLeft().getType().equals(Node.getAnyNodeType()) ||
@@ -1555,10 +1563,15 @@ public class ProcessSelectClause{
 		inNode.setLeft(lhs);
 		inNode.setRight(rhs);
 
+		inNode.setQueryType(2);
+		inNode.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
 		if(!sqn.isNot()){					
 			return inNode;
 		}else{
 			notNode.setType(Node.getNotNodeType());
+
+			notNode.setQueryType(2);
+			notNode.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
 			notNode.setRight(null);
 			notNode.setLeft(inNode);
 			return notNode;
@@ -1578,6 +1591,9 @@ public class ProcessSelectClause{
 		processWhereSubSelect(subS,subQueryParser,qStruct,dbAppParameters);
 
 
+		existsNode.setQueryType(2);
+	    existsNode.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
+		
 		Node notNode = new Node();				   
 
 		if(!sqn.isNot()){					
@@ -1585,6 +1601,9 @@ public class ProcessSelectClause{
 		}else{
 			notNode.setType(Node.getNotNodeType());
 			notNode.setRight(null);
+
+			notNode.setQueryType(2);
+			notNode.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
 			notNode.setLeft(existsNode);
 			return notNode;
 
@@ -1598,19 +1617,61 @@ public class ProcessSelectClause{
 		node.setSubQueryStructure(subQueryParser);
 		node.setType(Node.getBroNodeSubQType());
 		processWhereSubSelect(sqn,subQueryParser,qStruct,dbAppParameters);
+		
+		node.setQueryType(2);
+		node.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
+		
 
 		List<SelectItem> rcList = ((PlainSelect)sqn.getSelectBody()).getSelectItems();	
 
 		SelectExpressionItem rc = (SelectExpressionItem)rcList.get(0);
-
+		node.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
 		if(rc.getExpression() instanceof Function){ 
 			return node;
 		}
-		else if(rc.getExpression() instanceof Column || rc.getExpression() instanceof Expression||
-				(((Parenthesis)rc.getExpression()).getExpression()) instanceof Column){
+		else if(rc.getExpression() instanceof Parenthesis && (((Parenthesis)rc.getExpression()).getExpression()) instanceof Column){
 			//the result of subquery must be a single tuple
 			logger.log(Level.WARNING,"the result of subquery must be a single tuple");
 		}
+
+		else{
+			//It is a scalar subquery that returns only one value
+			Node retNode = new Node();
+			retNode.setQueryType(2);
+			retNode.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
+		
+			retNode.setType(Node.getBroNodeSubQType());
+			retNode.setLhsRhs(node);
+			
+			if(node.getSubQueryStructure() != null && node.getSubQueryStructure().getAllDnfSelCond()  != null && !node.getSubQueryStructure().getAllDnfSelCond().isEmpty()){
+				///Check .get(0) - again
+				retNode.setSubQueryConds(node.getSubQueryStructure().getAllDnfSelCond().get(0));
+			}
+			
+			if(qStruct.getWhereClauseSubqueries() != null && !qStruct.getWhereClauseSubqueries().isEmpty()){
+				
+				if(!qStruct.getWhereClauseSubqueries().get(0).getConjuncts().isEmpty() 
+						&& qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).selectionConds != null 
+						&& !qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).selectionConds.isEmpty()){
+						qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).selectionConds.addAll(retNode.getSubQueryConds());
+						
+						for(Node nod: retNode.getSubQueryConds()){		
+							
+							if(ConjunctQueryStructure.isStringSelection(nod,1) ){										
+								String str=nod.getRight().getStrConst();										
+								qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).stringSelectionConds.add(nod);
+								qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).selectionConds.remove(nod);
+							}
+							else if(ConjunctQueryStructure.isStringSelection(nod,0)){
+								qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).stringSelectionConds.add(nod);
+								qStruct.getWhereClauseSubqueries().get(0).getConjuncts().get(0).selectionConds.remove(nod);
+							}
+						}
+					}
+			}
+				return retNode;
+		}
+
 		return node;
 	}
 
@@ -1618,6 +1679,9 @@ public class ProcessSelectClause{
 			PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
 		Node n=new Node();
 		n.setType(Node.getAndNodeType());
+		n.setQueryType(2);
+		n.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
+		
 
 		Node l=new Node();
 		l.setLeft(processExpression(bn.getLeftExpression(),fle,qStruct,plainSelect,joinType,dbAppParameters));
@@ -1640,6 +1704,11 @@ public class ProcessSelectClause{
 			QueryStructure qStruct, PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
 		Node n = new Node();
 		n.setType(Node.getBroNodeType());
+		
+		n.setQueryType(2);
+		n.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
+		
+
 		n.setOperator(QueryStructure.cvcRelationalOperators[3]);
 		n.setLeft(processExpression(broNode.getLeftExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters));
 		n.setRight(processExpression(broNode.getRightExpression(),fle, qStruct,plainSelect,joinType,dbAppParameters));
@@ -1714,6 +1783,9 @@ public class ProcessSelectClause{
 		Node n = new Node();
 		n.setType(Node.getBroNodeType());
 		n.setOperator(QueryStructure.cvcRelationalOperators[4]);
+		n.setQueryType(2);
+		n.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
+
 		n.setLeft(processExpression(broNode.getLeftExpression(), fles, qStruct,plainSelect,joinType,dbAppParameters));
 		n.setRight(processExpression(broNode.getRightExpression(), fles, qStruct,plainSelect,joinType,dbAppParameters));
 
@@ -1751,6 +1823,9 @@ public class ProcessSelectClause{
 		Node n = new Node();
 		n.setType(Node.getBroNodeType());
 		n.setOperator(QueryStructure.cvcRelationalOperators[5]);
+		n.setQueryType(2);
+		n.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
+	
 		n.setLeft(processExpression(bne.getLeftExpression(), fle,qStruct,plainSelect,joinType,dbAppParameters));
 		n.setRight(processExpression(bne.getRightExpression(),fle,qStruct,plainSelect,joinType,dbAppParameters));
 
@@ -1783,6 +1858,10 @@ public class ProcessSelectClause{
 			QueryStructure qStruct, PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
 		Node n = new Node();
 		n.setType(Node.getBroNodeType());
+		n.setQueryType(2);
+		n.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
+		
+
 		n.setOperator(QueryStructure.cvcRelationalOperators[6]);
 		n.setLeft(processExpression(bne.getLeftExpression(), fle,qStruct,plainSelect,joinType,dbAppParameters));
 		n.setRight(processExpression(bne.getRightExpression(),fle, qStruct,plainSelect,joinType,dbAppParameters));
@@ -1864,6 +1943,8 @@ public class ProcessSelectClause{
 		allNode.setType(Node.getAllNodeType());
 		processWhereSubSelect(ss,subQueryParser,qStruct,dbAppParameters);
 
+		allNode.setQueryType(2);
+		allNode.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
 		return allNode;				
 	}
 
@@ -1876,6 +1957,8 @@ public class ProcessSelectClause{
 		anyNode.setType(Node.getAnyNodeType());
 		processWhereSubSelect(ss,subQueryParser,qStruct, dbAppParameters);
 
+		anyNode.setQueryType(2);
+		anyNode.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
 		return anyNode;
 	}
 
@@ -1927,6 +2010,9 @@ public class ProcessSelectClause{
 			else
 				n.setJoinType(JoinClauseInfo.innerJoin);
 		}
+
+		n.setQueryType(2);
+		n.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
 		return n;
 	}
 
