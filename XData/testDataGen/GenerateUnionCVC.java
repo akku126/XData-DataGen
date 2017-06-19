@@ -1,11 +1,11 @@
 package testDataGen;
 
-import generateConstraints.ConstraintGenerator;
+//import generateConstraints.ConstraintGenerator;
 import generateConstraints.GenerateCVCConstraintForNode;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GenerateConstraintsForConjunct;
 import generateConstraints.GenerateConstraintsForWhereClauseSubQueryBlock;
-import generateConstraints.GetSolverHeaderAndFooter;
+import generateConstraints.GetCVC3HeaderAndFooter;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -32,26 +32,26 @@ import parsing.QueryStructure;
 import parsing.Table;
 
 public class GenerateUnionCVC implements Serializable{
-	
+
 	QueryParser qParser;
 	QueryParser leftqParser;
 	QueryParser rightqParser;
-	
+
 	QueryStructure qStructure;
 	QueryStructure leftqStructure;
 	QueryStructure rightqStructure;
-	
+
 	GenerateCVC1 genCVC;
 	GenerateCVC1 genCVCleft;
 	GenerateCVC1 genCVCright; 
-	
+
 	private static Logger logger = Logger.getLogger(GenerateUnionCVC.class.getName());
 	/*public GenerateUnionCVC(GenerateCVC1 cvc,QueryParser qParser) throws Exception{
 		this.qParser=qParser;
 		this.genCVC=cvc;
 		leftqParser=qParser.leftQuery;
 		rightqParser=qParser.rightQuery;
-		
+
 		genCVCleft=new GenerateCVC1();
 		genCVCleft.setFne(false);
 		genCVCleft.setIpdb(false);
@@ -102,15 +102,15 @@ public class GenerateUnionCVC implements Serializable{
 		//	conjunct.seggregateSelectionConds();
 		//}
 		RelatedToPreprocessing.segregateSelectionConditions(genCVCleft);
-		
-		
-		
-			
+
+
+
+
 		//End transfered
-		
-		
-		
-		
+
+
+
+
 		genCVCright=new GenerateCVC1();
 		genCVCright.setFne(false);
 		genCVCright.setIpdb(false);		
@@ -120,7 +120,7 @@ public class GenerateUnionCVC implements Serializable{
 		genCVCright.setQuery(genCVCright.getqParser().getQuery());
 		genCVCright.setQueryString(genCVCright.getQuery().getQueryString());
 		genCVCright.setRepeatedRelationCount(genCVCright.getQuery().getRepeatedRelationCount());
-		
+
 		genCVCright.setNoOfOutputTuples((HashMap<String,Integer>)genCVCright.getQuery().getRepeatedRelationCount().clone());
 		//genCVCright.setAssignmentId(cvc.getAssignmentId());
 		//genCVCright.setQuestionId(cvc.getQuestionId());
@@ -180,21 +180,21 @@ public class GenerateUnionCVC implements Serializable{
 //		cvc.setForeignKeys(new ArrayList(getForeignKeysForApp()));
 //		cvc.constraintsWithParameters = new HashMap<String, Node>();
 //		cvc.outerBlock.setParamMap(getParamMapForApp());		
-		
+
 		//Data structures for Aggregation
 		//TODO add propoer function for following datatype
 //		cvc.outerBlock.setAggFunc(new ArrayList(getAggFuncForApp()));
 //		cvc.outerBlock.setGroupByNodes(new ArrayList(getGroupByNodesForApp()));
-		
+
 //		cvc.outerBlock.setHavingClause(getHavingClauseForApp());
 	//	cvc.allSubQueryConds = getAllSubQueryCondsForApp();
 	//	cvc.allCondsExceptSubQuery = getAllCondsExceptSubQueryForApp();
 //		cvc.root = qParser.getRoot();
-		
+
 //		cvc.aggConstraints = new Vector<Node>();
 //		cvc.aggConstraints.removeAllElements();		
 		//End transfered
-		
+
 //		RelatedToParameters.setupDataStructuresForParamConstraints(cvc.outerBlock);
 		//cvc.setupDataStructuresForParamConstraints();		
 //		GetCVC3HeaderAndFooter.generateCVC3_Header(cvc);
@@ -205,9 +205,9 @@ public class GenerateUnionCVC implements Serializable{
 	//	cvc.dnfStrCond=getdnfStrCondForApp();
 	//	cvc.dnfSubQuery=getdnfSubQueryForApp();
 //		cvc.setForeignKeysModified(new ArrayList(getForeignKeyModifiedForApp()));
-	
+
 		genCVC.setRepeatedRelationCount(getRepeatedRelationCountForApp());
-		
+
 		genCVC.setRepeatedRelNextTuplePos(getRepeatedRelNextTuplePosForApp());
 		Vector<Table> tmp = getResultSetTables();
 		ArrayList<Table> temp = new ArrayList<Table>();
@@ -224,20 +224,20 @@ public class GenerateUnionCVC implements Serializable{
 		tempFKey.addAll(tmpFKey);
 		genCVC.setForeignKeysModified(tempFKey);
 	}*/
-	
+
 	private Vector<ForeignKey> getForeignKeyModifiedForApp(){
 		Vector<ForeignKey> fk=new Vector<ForeignKey>();
 		fk.addAll(genCVCleft.getForeignKeysModified());
 		fk.addAll(genCVCright.getForeignKeysModified());
 		return fk;
 	}
-	
+
 	public GenerateUnionCVC(GenerateCVC1 cvc,QueryStructure qStructure) throws Exception{
 		this.qStructure=qStructure;
 		this.genCVC=cvc;
 		leftqStructure=qStructure.leftQuery;
 		rightqStructure=qStructure.rightQuery;
-		
+
 		genCVCleft=new GenerateCVC1();
 		genCVCleft.setFne(false);
 		genCVCleft.setIpdb(false);
@@ -254,42 +254,42 @@ public class GenerateUnionCVC implements Serializable{
 		RelatedToPreprocessing.populateData(genCVCleft);
 		genCVCleft.setTableMap(cvc.getTableMap());
 		genCVCleft.initializeOtherDetails();
-	//	genCVCleft.allConds = genCVCleft.qParser.getAllConds();
-	//	genCVCleft.selectionConds = genCVCleft.qParser.getSelectionConds();
-	//	genCVCleft.stringSelectionConds = new Vector<Node>();
-	//	genCVCleft.likeConds=new Vector<Node>();
-	//	genCVCleft.isNullConds= qParser.getIsNullConds();
-	//	genCVCleft.getOuterBlock().aggConstraints=new Vector<Node>();
-	//	genCVCleft.equivalenceClasses = genCVCleft.qParser.getEquivalenceClasses();
-	//	genCVCleft.joinConds = genCVCleft.qParser.getJoinConds();
+		//	genCVCleft.allConds = genCVCleft.qParser.getAllConds();
+		//	genCVCleft.selectionConds = genCVCleft.qParser.getSelectionConds();
+		//	genCVCleft.stringSelectionConds = new Vector<Node>();
+		//	genCVCleft.likeConds=new Vector<Node>();
+		//	genCVCleft.isNullConds= qParser.getIsNullConds();
+		//	genCVCleft.getOuterBlock().aggConstraints=new Vector<Node>();
+		//	genCVCleft.equivalenceClasses = genCVCleft.qParser.getEquivalenceClasses();
+		//	genCVCleft.joinConds = genCVCleft.qParser.getJoinConds();
 		genCVCleft.setForeignKeys(new ArrayList<Node>(genCVCleft.getqStructure().getForeignKeys()));	
 		genCVCleft.outerBlock.setProjectedCols(new ArrayList<Node>(genCVCleft.getqStructure().getProjectedCols()));
-	//	genCVCleft.constraintsWithParameters = new HashMap<String, Node>();
+		//	genCVCleft.constraintsWithParameters = new HashMap<String, Node>();
 		//Data structures for Aggregation
 		genCVCleft.outerBlock.setAggFunc(new ArrayList<AggregateFunction>(genCVCleft.getqStructure().getAggFunc()));
 		genCVCleft.outerBlock.setGroupByNodes(new ArrayList<Node>(genCVCleft.getqStructure().getGroupByNodes()));
 		genCVCleft.outerBlock.setHavingClause(genCVCleft.getqStructure().getHavingClause());
-	//	genCVCleft.allSubQueryConds = genCVCleft.qParser.getAllSubQueryConds();
-	//	genCVCleft.allCondsExceptSubQuery = genCVCleft.qParser.getAllCondsExceptSubQuery();
-	//	genCVCleft.root = genCVCleft.getqParser().getRoot();		
-	//	genCVCleft.aggConstraints = new Vector<Node>();
-	//	genCVCleft.aggConstraints.removeAllElements();	
+		//	genCVCleft.allSubQueryConds = genCVCleft.qParser.getAllSubQueryConds();
+		//	genCVCleft.allCondsExceptSubQuery = genCVCleft.qParser.getAllCondsExceptSubQuery();
+		//	genCVCleft.root = genCVCleft.getqParser().getRoot();		
+		//	genCVCleft.aggConstraints = new Vector<Node>();
+		//	genCVCleft.aggConstraints.removeAllElements();	
 		//DNF
-	//	genCVCleft.dnfSelCond=genCVCleft.qParser.getAllDnfSelCond();
-	//	genCVCleft.dnfLikeCond=genCVCleft.qParser.getDnfLikeConds();
-	//	genCVCleft.dnfSubQuery=genCVCleft.qParser.getAllDnfSubQuery();
-	//	genCVCleft.EqClass=genCVCleft.qParser.getEqClass();
+		//	genCVCleft.dnfSelCond=genCVCleft.qParser.getAllDnfSelCond();
+		//	genCVCleft.dnfLikeCond=genCVCleft.qParser.getDnfLikeConds();
+		//	genCVCleft.dnfSubQuery=genCVCleft.qParser.getAllDnfSubQuery();
+		//	genCVCleft.EqClass=genCVCleft.qParser.getEqClass();
 		genCVCleft.outerBlock.setConjunctsQs(new ArrayList<ConjunctQueryStructure>(genCVCleft.getqStructure().getConjuncts()));
-		RelatedToParameters.setupDataStructuresForParamConstraints(genCVCleft,genCVCleft.outerBlock);
-		GetSolverHeaderAndFooter.generateSolver_Header(genCVCleft);
+		RelatedToParameters.setupDataStructuresForParamConstraints(genCVCleft.outerBlock);
+		GetCVC3HeaderAndFooter.generateCVC3_Header(genCVCleft);
 		genCVCleft.setForeignKeysModified(new ArrayList<ForeignKey>(genCVCleft.getqStructure().getForeignKeyVectorModified()));
-//		genCVCleft.dnfStrCond=new Vector<Vector<Node>>();
-//		genCVCleft.seggregateDnfSelConditions();	
-/*		for(Conjunct conjunct : genCVCleft.outerBlock.getConjuncts()){
+		//		genCVCleft.dnfStrCond=new Vector<Vector<Node>>();
+		//		genCVCleft.seggregateDnfSelConditions();	
+		/*		for(Conjunct conjunct : genCVCleft.outerBlock.getConjuncts()){
 			conjunct.seggregateSelectionConds();
 		}*/
-		
-		
+
+
 		/*for (Vector<Node> leftStrConds : genCVCleft.getDnfStrCond()) {
 			//Vector<Node> leftSelConds = iterator.next();
 			Vector<Node> StrCond = null;
@@ -302,14 +302,14 @@ public class GenerateUnionCVC implements Serializable{
 			if(StrCond==null){
 				dnfStrCond.add(leftStrConds);
 			}
-			
+
 		}
 		return dnfStrCond;
 	}*/
-	
-/*	private  Vector<Vector<Node>> getdnfLikeCondForApp(){
+
+		/*	private  Vector<Vector<Node>> getdnfLikeCondForApp(){
 		Vector<Vector<Node>> dnfLikeCond=new Vector<Vector<Node>>();
-		
+
 		for (Vector<Node> leftLikeConds : genCVCleft.getDnfLikeCond()) {
 			//Vector<Node> leftSelConds = iterator.next();
 			Vector<Node> LikeCond = null;
@@ -322,14 +322,14 @@ public class GenerateUnionCVC implements Serializable{
 			if(LikeCond==null){
 				dnfLikeCond.add(leftLikeConds);
 			}
-			
+
 		}
 		return dnfLikeCond;
 	}*/
-	
-/*	private  Vector<Vector<Node>> getDNFSelCondsForApp(){
+
+		/*	private  Vector<Vector<Node>> getDNFSelCondsForApp(){
 		Vector<Vector<Node>> dnfSelConds=new Vector<Vector<Node>>();
-		
+
 		for (Vector<Node> leftSelConds : genCVCleft.getDnfSelCond()) {
 			//Vector<Node> leftSelConds = iterator.next();
 			Vector<Node> SelCond = null;
@@ -342,12 +342,12 @@ public class GenerateUnionCVC implements Serializable{
 			if(SelCond==null){
 				dnfSelConds.add(leftSelConds);
 			}*/
-			
+
 		//End transfered
-		
-		
+
+
 		RelatedToPreprocessing.segregateSelectionConditions(genCVCleft);
-		
+
 		genCVCright=new GenerateCVC1();
 		genCVCright.setFne(false);
 		genCVCright.setIpdb(false);	
@@ -358,21 +358,21 @@ public class GenerateUnionCVC implements Serializable{
 		genCVCright.setQuery(genCVCright.getqStructure().getQuery());
 		genCVCright.setQueryString(genCVCright.getQuery().getQueryString());
 		genCVCright.setRepeatedRelationCount(genCVCright.getQuery().getRepeatedRelationCount());
-		
+
 		genCVCright.setNoOfOutputTuples((HashMap<String,Integer>)genCVCright.getQuery().getRepeatedRelationCount().clone());
 		//genCVCright.setAssignmentId(cvc.getAssignmentId());
 		//genCVCright.setQuestionId(cvc.getQuestionId());
 		RelatedToPreprocessing.populateData(genCVCright);
 		genCVCright.setTableMap(cvc.getTableMap());
 		genCVCright.initializeOtherDetails();
-//		genCVCright.allConds = genCVCright.qParser.getAllConds();
-//		genCVCright.selectionConds = genCVCright.qParser.getSelectionConds();
-//		genCVCright.stringSelectionConds = new Vector<Node>();
-//		genCVCright.likeConds=new Vector<Node>();
-//		genCVCright.isNullConds= qParser.getIsNullConds();
-//		genCVCright.aggConstraints=new Vector<Node>();			
-//		genCVCright.equivalenceClasses = genCVCright.qParser.getEquivalenceClasses();
-//		genCVCright.joinConds = genCVCright.qParser.getJoinConds();
+		//		genCVCright.allConds = genCVCright.qParser.getAllConds();
+		//		genCVCright.selectionConds = genCVCright.qParser.getSelectionConds();
+		//		genCVCright.stringSelectionConds = new Vector<Node>();
+		//		genCVCright.likeConds=new Vector<Node>();
+		//		genCVCright.isNullConds= qParser.getIsNullConds();
+		//		genCVCright.aggConstraints=new Vector<Node>();			
+		//		genCVCright.equivalenceClasses = genCVCright.qParser.getEquivalenceClasses();
+		//		genCVCright.joinConds = genCVCright.qParser.getJoinConds();
 		genCVCright.setForeignKeys(new ArrayList(genCVCright.getqStructure().getForeignKeys()));	
 		genCVCright.outerBlock.setProjectedCols(new ArrayList(genCVCright.getqStructure().getProjectedCols()));
 		//genCVCright.constraintsWithParameters = new HashMap<String, Node>();
@@ -385,67 +385,67 @@ public class GenerateUnionCVC implements Serializable{
 		genCVCright.outerBlock.setAggFunc(new ArrayList(genCVCright.getqStructure().getAggFunc()));
 		genCVCright.outerBlock.setGroupByNodes(new ArrayList(genCVCright.getqStructure().getGroupByNodes()));
 		genCVCright.outerBlock.setHavingClause(genCVCright.getqStructure().getHavingClause());
-	//	genCVCright.allSubQueryConds = genCVCright.qParser.getAllSubQueryConds();
-	//	genCVCright.allCondsExceptSubQuery = genCVCright.qParser.getAllCondsExceptSubQuery();
-	//	genCVCright.root = genCVCright.qParser.getRoot();		
-	//	genCVCright.aggConstraints = new Vector<Node>();
-	//	genCVCright.aggConstraints.removeAllElements();		
+		//	genCVCright.allSubQueryConds = genCVCright.qParser.getAllSubQueryConds();
+		//	genCVCright.allCondsExceptSubQuery = genCVCright.qParser.getAllCondsExceptSubQuery();
+		//	genCVCright.root = genCVCright.qParser.getRoot();		
+		//	genCVCright.aggConstraints = new Vector<Node>();
+		//	genCVCright.aggConstraints.removeAllElements();		
 
 		genCVCleft.outerBlock.setConjunctsQs(new ArrayList<ConjunctQueryStructure>(genCVCright.getqStructure().getConjuncts()));
-		RelatedToParameters.setupDataStructuresForParamConstraints(genCVCright,genCVCright.outerBlock);
-		GetSolverHeaderAndFooter.generateSolver_Header(genCVCright);
+		RelatedToParameters.setupDataStructuresForParamConstraints(genCVCright.outerBlock);
+		GetCVC3HeaderAndFooter.generateCVC3_Header(genCVCright);
 		genCVCleft.setForeignKeysModified(new ArrayList<ForeignKey>(genCVCright.getqStructure().getForeignKeyVectorModified()));
 		RelatedToPreprocessing.segregateSelectionConditions(genCVCright);
-	//	genCVCright.dnfStrCond=new Vector<Vector<Node>>();
-	//	genCVCright.seggregateDnfSelConditions();
-/*		for(Conjunct conjunct : genCVCright.outerBlock.getConjuncts()){
+		//	genCVCright.dnfStrCond=new Vector<Vector<Node>>();
+		//	genCVCright.seggregateDnfSelConditions();
+		/*		for(Conjunct conjunct : genCVCright.outerBlock.getConjuncts()){
 			conjunct.seggregateSelectionConds();
 		}*/
 		//
 		/*Create New CVC Object with combined Constraints*/
-//		cvc.initializeQueryDetails(qParser);
-//		cvc.setQuery(cvc.getqParser().getQuery());
-//		cvc.setQueryString(cvc.getQuery().getQueryString());
-//		cvc.setRepeatedRelationCount(getRepeatedRelationCountForApp());		
-//		cvc.setResultsetTables(new ArrayList(getResultSetTables()));
-//		cvc.setResultsetColumns(getResultSetColumns());
-//		cvc.setNoOfOutputTuples(getNoOfOutputTuplesForApp());
-//		cvc.allConds = getAllCondsForApp();
-//		cvc.selectionConds = getSelectionCondsForApp();
-//		cvc.stringSelectionConds=getStringSelectionCondsForApp();
-//		cvc.likeConds=getLikeCondsForApp();
-//		cvc.isNullConds= getIsNullCondsForApp();
-//		cvc.outerBlock.setAggConstraints(new ArrayList(getAggConstraintsForApp()));
-//		cvc.equivalenceClasses = getEquivalenceClassesForApp();
-//		cvc.joinConds = getJoinCondsForApp();
-//		cvc.setForeignKeys(new ArrayList(getForeignKeysForApp()));
-//		cvc.constraintsWithParameters = new HashMap<String, Node>();
-//		cvc.outerBlock.setParamMap(getParamMapForApp());		
-		
+		//		cvc.initializeQueryDetails(qParser);
+		//		cvc.setQuery(cvc.getqParser().getQuery());
+		//		cvc.setQueryString(cvc.getQuery().getQueryString());
+		//		cvc.setRepeatedRelationCount(getRepeatedRelationCountForApp());		
+		//		cvc.setResultsetTables(new ArrayList(getResultSetTables()));
+		//		cvc.setResultsetColumns(getResultSetColumns());
+		//		cvc.setNoOfOutputTuples(getNoOfOutputTuplesForApp());
+		//		cvc.allConds = getAllCondsForApp();
+		//		cvc.selectionConds = getSelectionCondsForApp();
+		//		cvc.stringSelectionConds=getStringSelectionCondsForApp();
+		//		cvc.likeConds=getLikeCondsForApp();
+		//		cvc.isNullConds= getIsNullCondsForApp();
+		//		cvc.outerBlock.setAggConstraints(new ArrayList(getAggConstraintsForApp()));
+		//		cvc.equivalenceClasses = getEquivalenceClassesForApp();
+		//		cvc.joinConds = getJoinCondsForApp();
+		//		cvc.setForeignKeys(new ArrayList(getForeignKeysForApp()));
+		//		cvc.constraintsWithParameters = new HashMap<String, Node>();
+		//		cvc.outerBlock.setParamMap(getParamMapForApp());		
+
 		//Data structures for Aggregation
 		//TODO add propoer function for following datatype
-//		cvc.outerBlock.setAggFunc(new ArrayList(getAggFuncForApp()));
-//		cvc.outerBlock.setGroupByNodes(new ArrayList(getGroupByNodesForApp()));
-		
-//		cvc.outerBlock.setHavingClause(getHavingClauseForApp());
-	//	cvc.allSubQueryConds = getAllSubQueryCondsForApp();
-	//	cvc.allCondsExceptSubQuery = getAllCondsExceptSubQueryForApp();
-//		cvc.root = qParser.getRoot();
-		
-//		cvc.aggConstraints = new Vector<Node>();
-//		cvc.aggConstraints.removeAllElements();		
+		//		cvc.outerBlock.setAggFunc(new ArrayList(getAggFuncForApp()));
+		//		cvc.outerBlock.setGroupByNodes(new ArrayList(getGroupByNodesForApp()));
+
+		//		cvc.outerBlock.setHavingClause(getHavingClauseForApp());
+		//	cvc.allSubQueryConds = getAllSubQueryCondsForApp();
+		//	cvc.allCondsExceptSubQuery = getAllCondsExceptSubQueryForApp();
+		//		cvc.root = qParser.getRoot();
+
+		//		cvc.aggConstraints = new Vector<Node>();
+		//		cvc.aggConstraints.removeAllElements();		
 		//End transfered
-		
-//		RelatedToParameters.setupDataStructuresForParamConstraints(cvc.outerBlock);
+
+		//		RelatedToParameters.setupDataStructuresForParamConstraints(cvc.outerBlock);
 		//cvc.setupDataStructuresForParamConstraints();		
-//		GetCVC3HeaderAndFooter.generateCVC3_Header(cvc);
-	//	cvc.seggregateSelectionConds();	
-//		cvc.outerBlock.setConjuncts(new ArrayList(getConjunctsForApp()));
-	//	cvc.dnfSelCond=getDNFSelCondsForApp();
-	//	cvc.dnfLikeCond=getdnfLikeCondForApp();
-	//	cvc.dnfStrCond=getdnfStrCondForApp();
-	//	cvc.dnfSubQuery=getdnfSubQueryForApp();
-//		cvc.setForeignKeysModified(new ArrayList(getForeignKeyModifiedForApp()));
+		//		GetCVC3HeaderAndFooter.generateCVC3_Header(cvc);
+		//	cvc.seggregateSelectionConds();	
+		//		cvc.outerBlock.setConjuncts(new ArrayList(getConjunctsForApp()));
+		//	cvc.dnfSelCond=getDNFSelCondsForApp();
+		//	cvc.dnfLikeCond=getdnfLikeCondForApp();
+		//	cvc.dnfStrCond=getdnfStrCondForApp();
+		//	cvc.dnfSubQuery=getdnfSubQueryForApp();
+		//		cvc.setForeignKeysModified(new ArrayList(getForeignKeyModifiedForApp()));
 		genCVC.setRepeatedRelationCount(getRepeatedRelationCountForApp());
 		genCVC.setRepeatedRelNextTuplePos(getRepeatedRelNextTuplePosForApp());
 		Vector<Table> tmp = getResultSetTables();
@@ -463,57 +463,57 @@ public class GenerateUnionCVC implements Serializable{
 		tempFKey.addAll(tmpFKey);
 		genCVC.setForeignKeysModified(tempFKey);
 	}
-	
+
 	private HashMap<String, Integer> getRepeatedRelationCountForApp() {
 		HashMap<String, Integer> hm = new HashMap<String, Integer>();
 		hm = (HashMap<String,Integer>)genCVCleft.getRepeatedRelationCount().clone();
-		
+
 		HashMap<String, Integer> temp = genCVCright.getRepeatedRelationCount(); 
 		Iterator<String> j = temp.keySet().iterator();
-			while(j.hasNext()){
-				String key = j.next();
-				if(hm != null && hm.containsKey(key)){
-					hm.put(key, hm.get(key)+temp.get(key));
-				}
-				else{
-					hm.put(key, temp.get(key));
-				}
+		while(j.hasNext()){
+			String key = j.next();
+			if(hm != null && hm.containsKey(key)){
+				hm.put(key, hm.get(key)+temp.get(key));
 			}
-		
+			else{
+				hm.put(key, temp.get(key));
+			}
+		}
+
 		return hm;
 	}
-	
+
 	private HashMap<String, Integer[]> getRepeatedRelNextTuplePosForApp() {
 		HashMap<String, Integer[]> hm = new HashMap<String, Integer[]>();
 		hm = (HashMap<String,Integer[]>)genCVCleft.getRepeatedRelNextTuplePos().clone();
-		
+
 		HashMap<String, Integer[]> temp = genCVCright.getRepeatedRelNextTuplePos(); 
 		Iterator<String> j = temp.keySet().iterator();
-			while(j.hasNext()){
-				String key = j.next();
-				if(hm.containsKey(key)){
-					hm.put(key.substring(0, key.length()-2) + (hm.size() + 1), temp.get(key));
-				}
-				else{
-					hm.put(key, temp.get(key));
-				}
+		while(j.hasNext()){
+			String key = j.next();
+			if(hm.containsKey(key)){
+				hm.put(key.substring(0, key.length()-2) + (hm.size() + 1), temp.get(key));
 			}
-		
+			else{
+				hm.put(key, temp.get(key));
+			}
+		}
+
 		return hm;
 	}
-	
+
 	private HashMap<String, Integer> getNoOfOutputTuplesForApp() {
 		// TODO Auto-generated method stub
-		
+
 		HashMap <String,Integer>hm=(HashMap<String,Integer>)genCVC.getRepeatedRelationCount().clone();
 		Iterator <String>iterator = hm.keySet().iterator();		   
 		while (iterator.hasNext()) {  
-		   String key = iterator.next().toString();  
-		   Integer value = hm.get(key);  
-		   //hm.put(key,value+1);		   
-		   hm.put(key,2);
-		   
-		   
+			String key = iterator.next().toString();  
+			Integer value = hm.get(key);  
+			//hm.put(key,value+1);		   
+			hm.put(key,2);
+
+
 		}
 		ArrayList<Table>v=genCVC.getResultsetTables();
 		Iterator <Table>it=v.iterator();
@@ -523,10 +523,10 @@ public class GenerateUnionCVC implements Serializable{
 		}
 		return hm;
 	}
-	
+
 	private Vector<Table> getResultSetTables() {
 		Vector<Table> retVal = new Vector<Table>();
-		
+
 		for(int j=0;j<genCVCleft.getResultsetTables().size();j++){
 			Table t = genCVCleft.getResultsetTables().get(j);
 			if(!retVal.contains(t)){
@@ -541,10 +541,10 @@ public class GenerateUnionCVC implements Serializable{
 		}		
 		return retVal;
 	}
-	
+
 	private Vector<Column> getResultSetColumns() {
 		Vector<Column> retVal = new Vector<Column>();
-		
+
 		for(int j=0;j<genCVCleft.getResultsetColumns().size();j++){
 			Column c = genCVCleft.getResultsetColumns().get(j);
 			if(!retVal.contains(c)){
@@ -559,7 +559,7 @@ public class GenerateUnionCVC implements Serializable{
 		}		
 		return retVal;
 	}
-	
+
 
 
 	private Vector<Node> getAllCondsForApp() {
@@ -568,7 +568,7 @@ public class GenerateUnionCVC implements Serializable{
 		ac.addAll(genCVCright.getqStructure().getAllConds());		
 		return ac;
 	}
-	
+
 	private Vector<ConjunctQueryStructure> getConjunctsForApp() {
 		Vector<ConjunctQueryStructure> cngts = new Vector<ConjunctQueryStructure>();
 		ArrayList<ConjunctQueryStructure> leftConjuncts=genCVCleft.outerBlock.getConjunctsQs();
@@ -589,21 +589,21 @@ public class GenerateUnionCVC implements Serializable{
 		}
 		return cngts;
 	}
-	
-	
-	
+
+
+
 	private Vector<Node> getSelectionCondsForApp() {
 		Vector<Node> ac = new Vector<Node>();
 		ac.addAll(genCVCleft.getqStructure().getSelectionConds());
 		ac.addAll(genCVCright.getqStructure().getSelectionConds());
 		return ac;
 	}
-	
-/*	private Vector<Node> getStringSelectionCondsForApp() {
+
+	/*	private Vector<Node> getStringSelectionCondsForApp() {
 		Vector<Node> ac = new Vector<Node>();
 		ac.addAll(genCVCleft.stringSelectionConds);
 		ac.addAll(genCVCright.stringSelectionConds);
-		
+
 		HashMap <String,Node>hm=new HashMap<String,Node>();
 		for(int i=0;i<ac.size();i++){
 			if(!hm.containsKey(ac.get(i).toString())){
@@ -617,8 +617,8 @@ public class GenerateUnionCVC implements Serializable{
 		}
 		return ac;
 	}*/
-	
-/*	private Vector<Node> getLikeCondsForApp() {
+
+	/*	private Vector<Node> getLikeCondsForApp() {
 		Vector<Node> ac = new Vector<Node>();
 		ac.addAll(genCVCleft.likeConds);
 		ac.addAll(genCVCright.likeConds);
@@ -643,7 +643,7 @@ public class GenerateUnionCVC implements Serializable{
 		ac.addAll(genCVCright.qParser.getJoinConds());
 		return ac;
 	}*/
-	
+
 	private Vector<Node> getForeignKeysForApp() {
 		Vector<Node> ac = new Vector<Node>();
 		ac.addAll(genCVCleft.getqStructure().getForeignKeys());
@@ -667,15 +667,15 @@ public class GenerateUnionCVC implements Serializable{
 		temp.putAll(genCVCright.outerBlock.getParamMap());
 		return temp;
 	}
-	
-	
+
+
 	private Vector<Node> getAggConstraintsForApp() {
 		Vector<Node> ac = new Vector<Node>();
 		ac.addAll(genCVCleft.outerBlock.getAggConstraints());
 		ac.addAll(genCVCright.outerBlock.getAggConstraints());
 		return ac;
 	}
-	
+
 	private Vector<AggregateFunction> getAggFuncForApp(){
 		Vector<AggregateFunction> ac = new Vector<AggregateFunction>();
 		ac.addAll(genCVCleft.getqStructure().getAggFunc());
@@ -695,7 +695,7 @@ public class GenerateUnionCVC implements Serializable{
 		return ac;*/
 		return null;
 	}
-/*	private Vector<Node> getAllSubQueryCondsForApp() {
+	/*	private Vector<Node> getAllSubQueryCondsForApp() {
 		Vector<Node> ac = new Vector<Node>();
 		ac.addAll(genCVCleft.qParser.getAllSubQueryConds());
 		ac.addAll(genCVCright.qParser.getAllSubQueryConds());		
@@ -707,10 +707,10 @@ public class GenerateUnionCVC implements Serializable{
 		ac.addAll(genCVCright.qParser.getAllCondsExceptSubQuery());		
 		return ac;
 	}*/
-	
+
 	private Vector<String> genNonEmptyResult() throws Exception{
 		Vector<String> NonEmptyConstraints=new Vector<String>();
-		ConstraintGenerator constraintGen = new ConstraintGenerator();
+		//ConstraintGenerator constraintGen = new ConstraintGenerator();
 		ArrayList<Node>left=genCVCleft.outerBlock.getProjectedCols();
 		ArrayList<Node>right=genCVCright.outerBlock.getProjectedCols();
 		String str="ASSERT NOT (";
@@ -762,38 +762,38 @@ public class GenerateUnionCVC implements Serializable{
 					str+=GenerateCVCConstraintForNode.cvcMapNode(n1, "1") + "=";
 					char index='i';
 					if(hm.containsKey(n2.getTable().getTableName())){
-						 index=hm.get(n2.getTable().getTableName());
+						index=hm.get(n2.getTable().getTableName());
 					}
 					else
 					{
-						 Iterator it=hm.entrySet().iterator();
-						 index='i';
-						 while(it.hasNext()){
-							 Map.Entry pairs = (Map.Entry)it.next();
-							 char temp=(Character) pairs.getValue();
-							 if(temp>index)
-								 index=temp;
-						 }
-						 index++;
-						 hm.put(n2.getTable().getTableName(),index);
+						Iterator it=hm.entrySet().iterator();
+						index='i';
+						while(it.hasNext()){
+							Map.Entry pairs = (Map.Entry)it.next();
+							char temp=(Character) pairs.getValue();
+							if(temp>index)
+								index=temp;
+						}
+						index++;
+						hm.put(n2.getTable().getTableName(),index);
 					}
 					str+=GenerateCVCConstraintForNode.cvcMapNode(n2, index+"")+" AND ";
 				}
 				for(int k=0; k<conjunct.getSelectionConds().size();k++)
 				{
-					str+=constraintGen.genPositiveCondsForPred(genCVCright,genCVCright.outerBlock,conjunct.getSelectionConds().get(k),hm) + " AND ";
+					str+=GenerateCVCConstraintForNode.genPositiveCondsForPred(genCVCright.outerBlock,conjunct.getSelectionConds().get(k),hm) + " AND ";
 				}
 				for(int k=0; k<conjunct.getJoinCondsAllOther().size();k++)
 				{
-					str+=constraintGen.genPositiveCondsForPred(genCVCright,genCVCright.outerBlock,conjunct.getJoinCondsAllOther().get(k),hm) + " AND ";
+					str+=GenerateCVCConstraintForNode.genPositiveCondsForPred(genCVCright.outerBlock,conjunct.getJoinCondsAllOther().get(k),hm) + " AND ";
 				}
 				for(int k=0; k<conjunct.getJoinCondsForEquivalenceClasses().size();k++)
 				{
-					str+=constraintGen.genPositiveCondsForPred(genCVCright,genCVCright.outerBlock,conjunct.getJoinCondsForEquivalenceClasses().get(k),hm) + " AND ";
+					str+=GenerateCVCConstraintForNode.genPositiveCondsForPred(genCVCright.outerBlock,conjunct.getJoinCondsForEquivalenceClasses().get(k),hm) + " AND ";
 				}
-				
+
 				//for(int k=0;k<conjunct.getAllSubQueryConds().size();k++){
-					str+=GenerateConstraintsForWhereClauseSubQueryBlock.getConstraintsForWhereClauseSubQueryBlock(genCVCright,genCVCright.outerBlock,conjunct);
+				str+=GenerateConstraintsForWhereClauseSubQueryBlock.getConstraintsForWhereClauseSubQueryBlock(genCVCright,genCVCright.outerBlock,conjunct);
 				//}
 				str=str.substring(0, str.length()-5);
 				str+=" ) ";
@@ -803,9 +803,9 @@ public class GenerateUnionCVC implements Serializable{
 			str=str.substring(0, str.length()-4);
 			Iterator it=hm.entrySet().iterator();
 			while(it.hasNext()){
-			    Map.Entry pairs = (Map.Entry)it.next();
+				Map.Entry pairs = (Map.Entry)it.next();
 				str1+=" "+pairs.getValue()+": O_"+pairs.getKey()+"_INDEX_INT,";
-			 }
+			}
 			str1=str1.substring(0, str1.length()-1);
 			str1+=") :"+str+";";
 			NonEmptyConstraints.add(str1);
@@ -822,37 +822,37 @@ public class GenerateUnionCVC implements Serializable{
 					str+=GenerateCVCConstraintForNode.cvcMapNode(n1, "1") + "=";
 					char index='i';
 					if(hm.containsKey(n2.getTable().getTableName())){
-						 index=hm.get(n2.getTable().getTableName());
+						index=hm.get(n2.getTable().getTableName());
 					}
 					else
 					{
-						 Iterator it=hm.entrySet().iterator();
-						 index='i';
-						 while(it.hasNext()){
-							 Map.Entry pairs = (Map.Entry)it.next();
-							 char temp=(Character) pairs.getValue();
-							 if(temp>index)
-								 index=temp;
-						 }
-						 index++;
-						 hm.put(n2.getTable().getTableName(),index);
+						Iterator it=hm.entrySet().iterator();
+						index='i';
+						while(it.hasNext()){
+							Map.Entry pairs = (Map.Entry)it.next();
+							char temp=(Character) pairs.getValue();
+							if(temp>index)
+								index=temp;
+						}
+						index++;
+						hm.put(n2.getTable().getTableName(),index);
 					}
 					str+=GenerateCVCConstraintForNode.cvcMapNode(n2, index+"")+" AND ";
 				}
 				for(int k=0; k<conjunct.getSelectionConds().size();k++)
 				{
-					str+=constraintGen.genPositiveCondsForPred(genCVCright,genCVCright.outerBlock,conjunct.getSelectionConds().get(k),hm) + " AND ";
+					str+=GenerateCVCConstraintForNode.genPositiveCondsForPred(genCVCright.outerBlock,conjunct.getSelectionConds().get(k),hm) + " AND ";
 				}
 				for(int k=0; k<conjunct.getJoinCondsAllOther().size();k++)
 				{
-					str+=constraintGen.genPositiveCondsForPred(genCVCright,genCVCright.outerBlock,conjunct.getJoinCondsAllOther().get(k),hm) + " AND ";
+					str+=GenerateCVCConstraintForNode.genPositiveCondsForPred(genCVCright.outerBlock,conjunct.getJoinCondsAllOther().get(k),hm) + " AND ";
 				}
 				for(int k=0; k<conjunct.getJoinCondsForEquivalenceClasses().size();k++)
 				{
-					str+=constraintGen.genPositiveCondsForPred(genCVCright,genCVCright.outerBlock,conjunct.getJoinCondsForEquivalenceClasses().get(k),hm) + " AND ";
+					str+=GenerateCVCConstraintForNode.genPositiveCondsForPred(genCVCright.outerBlock,conjunct.getJoinCondsForEquivalenceClasses().get(k),hm) + " AND ";
 				}
 				//for(int k=0;k<conjunct.getAllSubQueryConds().size();k++){
-					str+=GenerateConstraintsForWhereClauseSubQueryBlock.getConstraintsForWhereClauseSubQueryBlock(genCVCright,genCVCright.outerBlock,conjunct);
+				str+=GenerateConstraintsForWhereClauseSubQueryBlock.getConstraintsForWhereClauseSubQueryBlock(genCVCright,genCVCright.outerBlock,conjunct);
 				//}
 				str=str.substring(0, str.length()-5);
 				str+=" ) ";
@@ -862,9 +862,9 @@ public class GenerateUnionCVC implements Serializable{
 			str=str.substring(0, str.length()-4);
 			Iterator it=hm.entrySet().iterator();
 			while(it.hasNext()){
-			    Map.Entry pairs = (Map.Entry)it.next();
+				Map.Entry pairs = (Map.Entry)it.next();
 				str1+=" "+pairs.getValue()+": O_"+pairs.getKey()+"_INDEX_INT,";
-			 }
+			}
 			str1=str1.substring(0, str1.length()-1);
 			str1+=") :"+str+";";
 			NonEmptyConstraints.add(str1);
@@ -873,13 +873,13 @@ public class GenerateUnionCVC implements Serializable{
 			NonEmptyConstraints.add(str);
 		return NonEmptyConstraints;
 	}
-	
+
 	private String getAppConstraints(boolean isLeft) throws Exception{
 		String appConstraints = "%------------------------\n%UNION CONSTRAINTS\n%---------------------\n\n";
-		
-		
+
+
 		if(genCVC.getqStructure().setOperator.equalsIgnoreCase("UNION") ){
-			
+
 			appConstraints="%------------------------\n%UNION CONSTRAINTS\n%---------------------\n\n";
 			appConstraints+="%-----------------Projecting Column--------------%\n";
 			ArrayList<Node>left=genCVCleft.outerBlock.getProjectedCols();
@@ -896,7 +896,7 @@ public class GenerateUnionCVC implements Serializable{
 				String cond="ASSERT ("+GenerateCVCConstraintForNode.cvcMapNode(n, "1") +"/=" +GenerateCVCConstraintForNode.cvcMapNode(n, "2") +");";				
 				appConstraints+=cond+"\n";
 			}
-			
+
 			appConstraints+="\n%--------------Second Tuple -----------------%\n";
 			for(int i=0;i<left.size();i++){
 				Node n1=left.get(i);
@@ -904,17 +904,17 @@ public class GenerateUnionCVC implements Serializable{
 				String cond="ASSERT ("+GenerateCVCConstraintForNode.cvcMapNode(n1, "2") +"=" +GenerateCVCConstraintForNode.cvcMapNode(n2, "2") +");";
 				appConstraints+=cond+"\n";
 			}
-			
+
 			//Modified by Amol to handle DNF selection conditions.
 			appConstraints+="\n\n\n";
 			//appConstraints+="%---------------Selection Cond----------------%\n";
-			
+
 			String leftcond="";
 			for (ConjunctQueryStructure conjunct : genCVCleft.outerBlock.getConjunctsQs()){
 				leftcond += GenerateConstraintsForConjunct.getConstraintsForConjuct(genCVCleft, genCVCleft.outerBlock,conjunct);
 				leftcond +="\n\n";
 			}
-/*			for(Vector<Node> selconds : genCVCleft.dnfSelCond){
+			/*			for(Vector<Node> selconds : genCVCleft.dnfSelCond){
 				for(int k=0; k<selconds.size(); k++){
 					leftcond+= genCVCleft.genPositiveCondsForPred(selconds.get(k),2)+" AND ";
 				}
@@ -928,7 +928,7 @@ public class GenerateUnionCVC implements Serializable{
 				rightcond += GenerateConstraintsForConjunct.getConstraintsForConjuct(genCVCright, genCVCright.outerBlock,conjunct);
 				rightcond +="\n\n";
 			}
-/*			for(Vector<Node> selconds : genCVCright.dnfSelCond){
+			/*			for(Vector<Node> selconds : genCVCright.dnfSelCond){
 				for(int k=0; k<selconds.size(); k++){
 					rightcond+= genCVCright.genPositiveCondsForPred(selconds.get(k),2)+" AND ";
 				}
@@ -937,7 +937,7 @@ public class GenerateUnionCVC implements Serializable{
 			}
 			rightcond=rightcond.substring(0, rightcond.length()-4);*/
 			appConstraints+=rightcond+";\n";
-/*			for(int k=0; k<genCVCleft.selectionConds.size(); k++){
+			/*			for(int k=0; k<genCVCleft.selectionConds.size(); k++){
 				String cond="ASSERT ";
 				if(isLeft){
 					cond+="NOT ";
@@ -953,7 +953,7 @@ public class GenerateUnionCVC implements Serializable{
 				cond+=genCVCright.genPositiveCondsForPred(genCVCright.selectionConds.get(k),2)+";";
 				appConstraints+=cond+"\n";
 			}*/
-			
+
 			/*appConstraints+="\n\n%--------------String Selection Cond-----------------%\n";
 			for(int k=0; k<genCVCleft.stringSelectionConds.size(); k++){
 				String cond="ASSERT ";
@@ -971,16 +971,16 @@ public class GenerateUnionCVC implements Serializable{
 				cond+=genCVCright.genPositiveCondsForPred(genCVCright.stringSelectionConds.get(k),2)+";";
 				appConstraints+=cond+"\n";
 			}*/
-			
+
 		}else if(genCVC.getqStructure().setOperator.equalsIgnoreCase("EXCEPT")){
 			//TODO
 		}
 		return appConstraints;
 	}
-	
-	
+
+
 	public void generateDataForApp() throws Exception {
-		
+
 		genCVC.inititalizeForDatasetQs();
 		genCVCleft.inititalizeForDatasetQs();
 		genCVCright.inititalizeForDatasetQs();
@@ -998,31 +998,31 @@ public class GenerateUnionCVC implements Serializable{
 		StringConstraints.add(AllConstraints.get(1));
 		genCVC.setStringConstraints(StringConstraints);
 		GenerateCommonConstraintsForQuery.generateDataSetForConstraints(genCVC);
-	/*	genCVCleft.resultsetColumns=genCVC.resultsetColumns;
+		/*	genCVCleft.resultsetColumns=genCVC.resultsetColumns;
 		genCVCleft.resultsetTables=genCVC.resultsetTables;
 		genCVCleft.noOfOutputTuples=genCVC.noOfOutputTuples;
 		//genCVC.appConstraints = getAppConstraints(true);
 		genCVCleft.generateDataForQueryWithoutAgg();*/
-/*		genCVCleft.appConstraints=genCVC.appConstraints;	
+		/*		genCVCleft.appConstraints=genCVC.appConstraints;	
 		genCVCleft.populateData(qParser.getQuery());
 		genCVCleft.generateDataForQueryWithoutAgg();
 		genCVCright.appConstraints=genCVC.appConstraints;
 		genCVCright.populateData(qParser.getQuery());
 		genCVCright.generateDataForQueryWithoutAgg();*/
-/*		if(!genCVC.isDatasetGenerated()){			
+		/*		if(!genCVC.isDatasetGenerated()){			
 			genCVC.appConstraints = getAppConstraints(true);
 			genCVCleft.generateDataForQueryWithoutAgg();
 			genCVCright.generateDataForQueryWithoutAgg();
 		}	*/	
-		
+
 		//Generate left subquery constraints
-		
-		
-		
+
+
+
 	}
-	
+
 	//Generate the constraint to ensure left side generated tuples would match with right side tuples.
-	
+
 	public Vector<String> getMatchingConstraints() throws Exception{
 
 		Vector<String> NonEmptyConstraints=new Vector<String>();
@@ -1041,7 +1041,7 @@ public class GenerateUnionCVC implements Serializable{
 					Node n2=right.get(i);
 					str+=GenerateCVCConstraintForNode.cvcMapNode(n1, ""+(l+1)) +"=" +GenerateCVCConstraintForNode.cvcMapNode(n2, ""+(j+1))+" AND ";
 				}
-			
+
 				/*str+="( ";
 				boolean flag=true;
 				for(Vector<Node> selconds : genCVCleft.dnfSelCond){
@@ -1083,7 +1083,7 @@ public class GenerateUnionCVC implements Serializable{
 					Node n2=right.get(i);
 					str+=GenerateCVCConstraintForNode.cvcMapNode(n1, ""+(l+1)) +"=" +GenerateCVCConstraintForNode.cvcMapNode(n2, ""+(j+1))+" AND ";
 				}
-/*				str+="( ";
+				/*				str+="( ";
 				boolean flag=true;
 				for(Vector<Node> selconds : genCVCright.dnfSelCond){
 					for(int k=0; k<selconds.size(); k++){
@@ -1093,11 +1093,11 @@ public class GenerateUnionCVC implements Serializable{
 					str+=" OR ";
 					flag=false;
 				}
-				
+
 				str+=")";
 				if(flag)
 					str=str.substring(0,str.length()-3);*/
-				
+
 
 			}
 			str=str.substring(0, str.length()-4);
@@ -1112,10 +1112,10 @@ public class GenerateUnionCVC implements Serializable{
 		NonEmptyConstraints.add(rightcond);
 		return NonEmptyConstraints;
 	}
-	
+
 	public void generateToKill() throws Exception {
-		
-		
+
+
 		//Killing left subquery mutations
 		genCVCleft.outerBlock.setNonEmptyConstraints(new ArrayList(getNonMatchingConstraints()));
 		genCVCleft.setForeignKeys(genCVC.getForeignKeys());
@@ -1136,13 +1136,13 @@ public class GenerateUnionCVC implements Serializable{
 		genCVCright.setCount(genCVCleft.getCount());
 		SelectionMutationsInOuterQueryBlock.generateDataForkillingSelectionMutationsInOuterQueryBlock(genCVCright);
 		//genCVCright.generateDataForKillingSelectionMutantsWithoutAgg();
-/*		genCVC.appConstraints = getAppConstraints(true);		
+		/*		genCVC.appConstraints = getAppConstraints(true);		
 		genCVC.generateDataForKillingEquiClassMutants();
 		if(!genCVC.isDatasetGenerated()){			
 			genCVC.appConstraints = getAppConstraints(true);
 			genCVC.generateDataForKillingEquiClassMutants();
 		}
-		
+
 		//Killing Selection Class Mutants
 		genCVC.appConstraints = getAppConstraints(false);		
 		genCVC.generateDataForKillingSelectionMutantsWithoutAgg();
@@ -1158,7 +1158,7 @@ public class GenerateUnionCVC implements Serializable{
 			genCVC.appConstraints = getAppConstraints(true);
 			genCVC.generateDataForKillingStringSelectionMutantsWithoutAgg();
 		}
-			
+
 		//Killing String Like Class Mutants
 		genCVC.appConstraints = getAppConstraints(false);		
 		genCVC.generateDataForKillingLikeMutantsWithoutAgg();
@@ -1166,9 +1166,9 @@ public class GenerateUnionCVC implements Serializable{
 			genCVC.appConstraints = getAppConstraints(true);
 			genCVC.generateDataForKillingLikeMutantsWithoutAgg();
 		}
-		*/
-		
-		
+		 */
+
+
 	}
 
 	public QueryParser getqParser() {
@@ -1218,25 +1218,25 @@ public class GenerateUnionCVC implements Serializable{
 	public void setGenCVCright(GenerateCVC1 genCVCright) {
 		this.genCVCright = genCVCright;
 	}
-	
+
 	//copy function to work on copies instead of touching the original one
 	public GenerateUnionCVC copy() throws Exception{
 		//TODO: change implementation to provide faster copy
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutputStream out = new ObjectOutputStream(bos);
-        out.writeObject(this);
-        out.flush();
-        out.close();
-        
-        ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
-        GenerateUnionCVC obj = (GenerateUnionCVC)in.readObject();
+		ObjectOutputStream out = new ObjectOutputStream(bos);
+		out.writeObject(this);
+		out.flush();
+		out.close();
+
+		ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
+		GenerateUnionCVC obj = (GenerateUnionCVC)in.readObject();
 		return obj;
 	}
-	
+
 	//Commented out methods for experimenting
 	/*	private  Vector<Vector<Node>> getdnfSubQueryForApp(){
 	Vector<Vector<Node>> dnfSubQuery=new Vector<Vector<Node>>();
-	
+
 	for (Vector<Node> leftdnfSubQuery : genCVCleft.getDnfSubQuery()) {
 		//Vector<Node> leftSelConds = iterator.next();
 		Vector<Node> SubQuery = null;
@@ -1249,14 +1249,14 @@ public class GenerateUnionCVC implements Serializable{
 		if(SubQuery==null){
 			dnfSubQuery.add(leftdnfSubQuery);
 		}
-		
+
 	}
 	return dnfSubQuery;
 }*/
 
-/*	private  Vector<Vector<Node>> getdnfStrCondForApp(){
+	/*	private  Vector<Vector<Node>> getdnfStrCondForApp(){
 	Vector<Vector<Node>> dnfStrCond=new Vector<Vector<Node>>();
-	
+
 	for (Vector<Node> leftStrConds : genCVCleft.getDnfStrCond()) {
 		//Vector<Node> leftSelConds = iterator.next();
 		Vector<Node> StrCond = null;
@@ -1269,14 +1269,14 @@ public class GenerateUnionCVC implements Serializable{
 		if(StrCond==null){
 			dnfStrCond.add(leftStrConds);
 		}
-		
+
 	}
 	return dnfStrCond;
 }*/
 
-/*	private  Vector<Vector<Node>> getdnfLikeCondForApp(){
+	/*	private  Vector<Vector<Node>> getdnfLikeCondForApp(){
 	Vector<Vector<Node>> dnfLikeCond=new Vector<Vector<Node>>();
-	
+
 	for (Vector<Node> leftLikeConds : genCVCleft.getDnfLikeCond()) {
 		//Vector<Node> leftSelConds = iterator.next();
 		Vector<Node> LikeCond = null;
@@ -1289,14 +1289,14 @@ public class GenerateUnionCVC implements Serializable{
 		if(LikeCond==null){
 			dnfLikeCond.add(leftLikeConds);
 		}
-		
+
 	}
 	return dnfLikeCond;
 }*/
 
-/*	private  Vector<Vector<Node>> getDNFSelCondsForApp(){
+	/*	private  Vector<Vector<Node>> getDNFSelCondsForApp(){
 	Vector<Vector<Node>> dnfSelConds=new Vector<Vector<Node>>();
-	
+
 	for (Vector<Node> leftSelConds : genCVCleft.getDnfSelCond()) {
 		//Vector<Node> leftSelConds = iterator.next();
 		Vector<Node> SelCond = null;
@@ -1309,7 +1309,7 @@ public class GenerateUnionCVC implements Serializable{
 		if(SelCond==null){
 			dnfSelConds.add(leftSelConds);
 		}
-		
+
 	}
 	return dnfSelConds;
 }*/
