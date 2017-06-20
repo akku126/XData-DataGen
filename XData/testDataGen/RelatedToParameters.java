@@ -108,10 +108,15 @@ public class RelatedToParameters {
 		Iterator<ArrayList<String>> itr = queryBlock.getParamsNodeMap().keySet().iterator();
 		int val = 0;
 		boolean isMaxOrMin = false;
-		//Application Testing		
-		ArrayList<String> xdata_param_constraints = cvc.getDBAppparams().getDbridge_Param_Constraints();			
-		HashMap<String,String> xdata_param_selMap = cvc.getDBAppparams().getDbridge_param_sel_map();
-		HashMap<String,String> params_Datatype = (HashMap<String, String>) cvc.getDBAppparams().getParameters_Datatype().clone(); 
+		ArrayList<String> xdata_param_constraints=new ArrayList<String>();
+		HashMap<String,String> xdata_param_selMap=new HashMap<String,String>();
+		HashMap<String,String> params_Datatype=new HashMap<String,String>();
+		//Application Testing	
+		if(cvc.getDBAppparams()!=null){
+			xdata_param_constraints = cvc.getDBAppparams().getDbridge_Param_Constraints();			
+			xdata_param_selMap = cvc.getDBAppparams().getDbridge_param_sel_map();
+			params_Datatype = (HashMap<String, String>) cvc.getDBAppparams().getParameters_Datatype().clone();
+		}
 		//end
 		while(itr.hasNext()){
 			ArrayList<String> params = itr.next();
@@ -197,7 +202,7 @@ public class RelatedToParameters {
 									//tempstr=tempstr.replace("NOT ", "");
 								}
 									
-								if(cvc.getDBAppparams().getParameters_Datatype_Copy().get(keyValue).toLowerCase().contains("string")){
+								if(cvc.getDBAppparams()!=null && cvc.getDBAppparams().getParameters_Datatype_Copy().get(keyValue).toLowerCase().contains("string")){
 									//need to call string constraint solver
 									 newconsformat = "(O_";
 									String tableName ="";
