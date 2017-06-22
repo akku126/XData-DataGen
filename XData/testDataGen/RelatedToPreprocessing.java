@@ -547,7 +547,7 @@ public class RelatedToPreprocessing {
 		}
 		catch(Exception e)
 		{
-			logger.log(Level.INFO," "+e.getMessage(),e);
+			//logger.log(Level.INFO," "+e.getMessage(),e);
 		}finally{
 			try {
 				if(input2 != null)
@@ -602,7 +602,7 @@ public class RelatedToPreprocessing {
 		}
 		catch(Exception e)
 		{
-			logger.log(Level.INFO,""+e.getMessage(),e);
+			//logger.log(Level.INFO,""+e.getMessage(),e);
 		}finally{
 			try {
 				if(input4 != null)
