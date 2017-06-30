@@ -9,7 +9,9 @@ import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
+
 import parsing.Node;
 import parsing.AppTest_Parameters;
 import util.Configuration;
@@ -141,6 +143,26 @@ public class Generatedataset_DBApps {
 		
 		
 		
+		
+	}
+
+/*
+ * entry point for XDataPro
+ */
+
+	public void generateTestData(String xdataquery, String xdataConstraints,
+			ArrayList<String> paramConstraints,
+			HashMap<String, String> param_sel_map,
+			HashMap<String, String> paramDatatype, String datasetcounter) {
+		
+		ArrayList<String>  resultSetIndexArray = new ArrayList<String>();
+		ArrayList<String> xdata_resultset_constraints = new ArrayList<String>();
+		try {
+			generateDatasetForQueryPlusConstraints(xdataquery,xdataConstraints,paramConstraints,resultSetIndexArray,xdata_resultset_constraints,param_sel_map,paramDatatype,datasetcounter);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 	}
 	
