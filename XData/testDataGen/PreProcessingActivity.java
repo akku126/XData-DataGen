@@ -233,7 +233,7 @@ public class PreProcessingActivity {
 			input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/queries.txt"));
 			/**Read the input query */
 			while (( queryString = input.readLine()) != null){
-				queryStr.append(queryString);
+				queryStr.append(queryString+"\n");
 			}
 			if(queryStr != null){
 				/**Create a new query parser

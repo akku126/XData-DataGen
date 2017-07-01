@@ -19,7 +19,7 @@ public static void initLogger() {
 		
 		try{
 			String logFileName=Configuration.getProperty("logFile");
-			FileHandler fileHandler=new FileHandler(logFileName,10000,10,true);
+			FileHandler fileHandler=new FileHandler(logFileName,1000000,10,true);
 			fileHandler.setFormatter(textFormatter);
 			fileHandler.setLevel(Level.ALL);
 			logger.addHandler(fileHandler);

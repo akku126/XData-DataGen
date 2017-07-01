@@ -929,9 +929,22 @@ import util.TableMap;
 			return query;
 		}
 
-	    /* rename of old method parseQuery
-	     *       
-	     */
+	   
+		
+		public void buildQueryStructure(String queryId, String queryString)  throws Exception {
+			AppTest_Parameters dbAppParameters=new AppTest_Parameters();
+			buildQueryStructure(queryId, queryString,dbAppParameters);
+		}
+		
+		
+		/**
+		 * Parses the given query and builds query structure for data generation
+		 * @param queryId Query Id 
+		 * @param queryString Query String
+		 * @param dbAppParameters Application parameters
+		 * @throws Exception
+		 */
+		
 		public void buildQueryStructure(String queryId, String queryString,AppTest_Parameters dbAppParameters ) throws Exception {
 			
 			try{

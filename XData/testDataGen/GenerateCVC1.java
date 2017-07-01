@@ -1,7 +1,7 @@
 
 package testDataGen;
 
-import generateConstraints.GetSolverHeaderAndFooter;
+import generateConstraints.GetCVC3HeaderAndFooter;
 import generateConstraints.TupleRange;
 
 import java.io.ByteArrayInputStream;
@@ -487,9 +487,9 @@ public class GenerateCVC1 implements Serializable{
 			
 			if(Configuration.getProperty("smtsolver").equalsIgnoreCase("cvc3")){
 					/**Generate CVC3 Header, This is need to initialize the CVC3 Data Type field of each column of each table */
-					this.setCVC3_HEADER( GetSolverHeaderAndFooter.generateSolver_Header(this) );
+					this.setCVC3_HEADER( GetCVC3HeaderAndFooter.generateCVC3_Header(this) );
 			}else{
-				this.setSMTLIB_HEADER(GetSolverHeaderAndFooter.generateSolver_Header(this));
+				this.setSMTLIB_HEADER(GetCVC3HeaderAndFooter.generateCVC3_Header(this));
 			}
 		}catch (TimeoutException e){
 			logger.log(Level.SEVERE,e.getMessage(),e);		
