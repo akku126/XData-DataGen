@@ -239,6 +239,8 @@ public class GenerateUnionCVC implements Serializable{
 		rightqStructure=qStructure.rightQuery;
 
 		genCVCleft=new GenerateCVC1();
+		RelatedToPreprocessing.uploadBranchQueriesDetails(genCVCleft);
+		genCVCleft.getBranchQueries().intitializeDetails(genCVCleft);
 		genCVCleft.setFne(false);
 		genCVCleft.setIpdb(false);
 		genCVCleft.setConnection(cvc.getConnection());
@@ -349,6 +351,8 @@ public class GenerateUnionCVC implements Serializable{
 		RelatedToPreprocessing.segregateSelectionConditions(genCVCleft);
 
 		genCVCright=new GenerateCVC1();
+		RelatedToPreprocessing.uploadBranchQueriesDetails(genCVCright);
+		genCVCright.getBranchQueries().intitializeDetails(genCVCright);
 		genCVCright.setFne(false);
 		genCVCright.setIpdb(false);	
 		genCVCright.setConnection(cvc.getConnection());
