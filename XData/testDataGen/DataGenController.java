@@ -61,8 +61,8 @@ public class DataGenController{
 		//TODO: This is for application testing, a flag should be set
 		//for calling this function
 		RelatedToPreprocessing.uploadBranchQueriesDetails(cvc);
-		
-		
+		//System.out.println("After brancg query>>>>>>>");
+		logger.log(Level.INFO,"After brancg query>>>>>>>");
 		/** To store input query string */
 		cvc.setTableMap(tableMap);
 		String queryString = "";
@@ -73,7 +73,7 @@ public class DataGenController{
 			input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/queries.txt"));
 			/**Read the input query */
 			while (( queryString = input.readLine()) != null){
-				queryStr.append(queryString);
+				queryStr.append(queryString+"\n");
 			}
 			if(queryStr != null){
 				/**Create a new query parser*/

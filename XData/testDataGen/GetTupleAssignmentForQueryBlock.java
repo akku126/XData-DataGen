@@ -117,7 +117,6 @@ public class GetTupleAssignmentForQueryBlock {
 	 * @param gta
 	 */
 	private static void assignmentFromJoinGraphVericesToRelationsInQuery(GenerateCVC1 cvc, QueryBlockDetails queryBlock, GetTupleAssignment gta) {
-
 		/** get vertices of the join graph*/
 		Vector<JoinGraphNode> relations = new Vector<JoinGraphNode>();
 		relations = gta.getJoinGraph().getAllVertex();
@@ -192,10 +191,13 @@ public class GetTupleAssignmentForQueryBlock {
 
 				/** update the repeated relation position */
 				int thisTablePos=Integer.parseInt(tableNameNo.substring(tableNameNo.length()-1));
-				for(int i=thisTablePos+1;i <= cvc.getRepeatedRelationCount().get(tableName);i++){
-					Integer[] j = cvc.getRepeatedRelNextTuplePos().get(tableName+(thisTablePos+1));
-					j[1] = j[1] + count - 1;
-					cvc.getRepeatedRelNextTuplePos().put(tableName+(thisTablePos+1), j);
+				if(cvc.getRepeatedRelationCount().get(tableName)!=null)
+				{
+					for(int i=thisTablePos+1;i <= cvc.getRepeatedRelationCount().get(tableName);i++){
+						Integer[] j = cvc.getRepeatedRelNextTuplePos().get(tableName+(thisTablePos+1));
+						j[1] = j[1] + count - 1;
+						cvc.getRepeatedRelNextTuplePos().put(tableName+(thisTablePos+1), j);
+					}
 				}
 
 				/**  update number of tuples based on noOfGroups and noOftuples for each relation occurrence */
