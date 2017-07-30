@@ -992,13 +992,13 @@ import util.TableMap;
 	     */
 		public void buildQueryStructureJSQL(String queryId, String queryString, boolean debug,AppTest_Parameters dbAppParameters)
 				throws Exception {
-			logger.info("beginning to parse query");
+			logger.fine("beginning to parse query");
 			try{
 				if(this.query==null)
 					this.query = new Query(queryId, queryString);
 				else
 					this.query.setQueryString(queryString);
-				
+				logger.fine("querystring is : "+queryString);
 				CCJSqlParserManager pm = new CCJSqlParserManager();
 				Statement stmt = pm.parse(new StringReader(queryString));
 				//SQLParser sqlParser = new SQLParser();

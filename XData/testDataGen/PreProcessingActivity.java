@@ -362,8 +362,9 @@ public class PreProcessingActivity {
 				boolean flag=false;
 				
 				String mutationType = TagDatasets.MutationType.ORIGINAL.getMutationType() + TagDatasets.QueryBlock.NONE.getQueryBlock();
+				logger.log(Level.INFO," mutationType = "+ mutationType);
 				flag=GenerateDataForOriginalQuery.generateDataForOriginalQuery(unionCVC.genCVCleft, mutationType);
-				
+				logger.log(Level.INFO," flag variable value = "+ flag);
 				if(flag==false) {
 					GenerateDataForOriginalQuery.generateDataForOriginalQuery(unionCVC.genCVCright, mutationType);
 				}

@@ -1166,16 +1166,16 @@ public static void foreignKeyClosure(QueryParser qParser) {
 	//Changed by Biplab the original code is commented out above
 	Vector<Table> fkClosure = new Vector<Table>();
 	LinkedList<Table> fkClosureQueue = new LinkedList<Table>();
-	logger.log(Level.INFO,"FOREIGN KEY GRAPH : \n"+qParser.getTableMap().foreignKeyGraph);
+	logger.log(Level.FINE,"FOREIGN KEY GRAPH : \n"+qParser.getTableMap().foreignKeyGraph);
 	for (String tableName : qParser.getQuery().getFromTables().keySet()) {
 		fkClosure.add( qParser.getTableMap().getTables().get(tableName.toUpperCase()));
 		fkClosureQueue.addLast(qParser.getTableMap().getTables().get(tableName.toUpperCase()));
-		logger.log(Level.INFO,"fkClosureQueue.add tables: \n "+qParser.getTableMap().getTables().get(tableName.toUpperCase()));
+		logger.log(Level.FINE,"fkClosureQueue.add tables: \n "+qParser.getTableMap().getTables().get(tableName.toUpperCase()));
 	}
 	while(!fkClosureQueue.isEmpty())
 	{
 		Table table = fkClosureQueue.removeFirst();
-		logger.log(Level.INFO,"fkClosureQueue Not Empty and contains table \n"+table.getTableName());
+		logger.log(Level.FINE,"fkClosureQueue Not Empty and contains table \n"+table.getTableName());
 		for(Table tempTable : qParser.getTableMap().foreignKeyGraph.getAllVertex())
 		{  
 			Map<Table,Vector<ForeignKey>> neighbours = qParser.getTableMap().foreignKeyGraph.getNeighbours(tempTable);
@@ -1504,7 +1504,7 @@ public static void foreignKeyInNode(QueryStructure qParser) {
 public static void FKClosure(QueryStructure qStruct){
 	Graph<Table, ForeignKey> foreignKeyGraph=qStruct.getTableMap().foreignKeyGraph;
 	boolean updateFlag;
-	logger.info("New Foreign Key Closure algorithm");
+	logger.fine("New Foreign Key Closure algorithm");
 	/**
 	 *  computes the least fix point of the binary operation OP on the set of foreign key dependencies, where
 	 *  OP(FK1, FK2)=FK3 s.t. FK3.foreignKeyColumns=FK1.foreignKeyColumns
@@ -1597,17 +1597,17 @@ public static void foreignKeyClosure(QueryStructure qParser) {
 	FKClosure(qParser);//added by mathew to enable foreignKey Closure
 	Vector<Table> fkClosure = new Vector<Table>();
 	LinkedList<Table> fkClosureQueue = new LinkedList<Table>();
-	logger.log(Level.INFO,"FOREIGN KEY GRAPH : \n"+qParser.getTableMap().foreignKeyGraph);		
+	logger.log(Level.FINE,"FOREIGN KEY GRAPH : \n"+qParser.getTableMap().foreignKeyGraph);		
 	//for (String tableName : qParser.getQuery().getFromTables().keySet()) {	
 	for (String tableName : qParser.getLstRelations()) {
 		fkClosure.add( qParser.getTableMap().getTables().get(tableName.toUpperCase()));
 		fkClosureQueue.addLast(qParser.getTableMap().getTables().get(tableName.toUpperCase()));
-		logger.log(Level.INFO,"fkClosureQueue.add tables: \n "+qParser.getTableMap().getTables().get(tableName.toUpperCase()));
+		logger.log(Level.FINE,"fkClosureQueue.add tables: \n "+qParser.getTableMap().getTables().get(tableName.toUpperCase()));
 	}
 	while(!fkClosureQueue.isEmpty())
 	{
 		Table table = fkClosureQueue.removeFirst();
-		logger.log(Level.INFO,"fkClosureQueue Not Empty and contains table \n"+table.getTableName());
+		logger.log(Level.FINE,"fkClosureQueue Not Empty and contains table \n"+table.getTableName());
 		for(Table tempTable : qParser.getTableMap().foreignKeyGraph.getAllVertex())
 		{  
 			Map<Table,Vector<ForeignKey>> neighbours = qParser.getTableMap().foreignKeyGraph.getNeighbours(tempTable);

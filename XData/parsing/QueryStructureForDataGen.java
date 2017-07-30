@@ -299,7 +299,7 @@ public class QueryStructureForDataGen{
 		while(!fkClosureQueue.isEmpty())
 		{
 			Table table = fkClosureQueue.removeFirst();
-			logger.log(Level.INFO,"fkClosureQueue Not Empty and contains table \n"+table.getTableName());
+			logger.log(Level.FINE,"fkClosureQueue Not Empty and contains table \n"+table.getTableName());
 			for(Table tempTable : qStructure.getTableMap().foreignKeyGraph.getAllVertex())
 			{  
 				Map<Table,Vector<ForeignKey>> neighbours = qStructure.getTableMap().foreignKeyGraph.getNeighbours(tempTable);

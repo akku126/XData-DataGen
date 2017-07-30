@@ -182,7 +182,7 @@ public class Disjunct {
 				for (int k = 0; k < tempAllJoinConds.size(); k++) {
 					temp1 = tempAllJoinConds.get(k);
 					temp2 = ec.get(j);
-					Disjunct.logger.log(Level.INFO,"Comparing " + temp1.toString()
+					Disjunct.logger.log(Level.FINE,"Comparing " + temp1.toString()
 							+ " and " + temp2.toString());
 
 					if (temp1.getLeft() != null) {

@@ -38,7 +38,7 @@ public class EquivalenceClass {
 					for (int k = 0; k < tempAllJoinConds1.size(); k++) {
 						temp3 = tempAllJoinConds1.get(k);
 						temp4 = ec1.get(j);
-						logger.log(Level.INFO,"Comparing " + temp3.toString()
+						logger.log(Level.FINE,"Comparing " + temp3.toString()
 								+ " and " + temp4.toString());
 						if (temp3.getLeft() != null) {
 							if (temp3.getLeft().getColumn().getColumnName()
@@ -149,7 +149,7 @@ public class EquivalenceClass {
 				for (int k = 0; k < tempAllJoinConds.size(); k++) {
 					temp1 = tempAllJoinConds.get(k);
 					temp2 = ec.get(j);
-					logger.log(Level.INFO,"Comparing " + temp1.toString()
+					logger.log(Level.FINE,"Comparing " + temp1.toString()
 							+ " and " + temp2.toString());
 
 					String col1, col2, tab1, tab2, col3, tab3;

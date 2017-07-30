@@ -252,7 +252,7 @@ public class QueryStructureDatagen extends QueryStructure{
 		
 		Vector<Table> fkClosure = new Vector<Table>();
 		LinkedList<Table> fkClosureQueue = new LinkedList<Table>();
-		logger.log(Level.INFO,"FOREIGN KEY GRAPH : \n"+qStructure.getTableMap().foreignKeyGraph);
+		logger.log(Level.FINE,"FOREIGN KEY GRAPH : \n"+qStructure.getTableMap().foreignKeyGraph);
 		for (String tableName : qStructure.getQuery().getFromTables().keySet()) {
 			fkClosure.add( qStructure.getTableMap().getTables().get(tableName.toUpperCase()));
 			fkClosureQueue.addLast(qStructure.getTableMap().getTables().get(tableName.toUpperCase()));
@@ -278,7 +278,7 @@ public class QueryStructureDatagen extends QueryStructure{
 		while(!fkClosureQueue.isEmpty())
 		{
 			Table table = fkClosureQueue.removeFirst();
-			logger.log(Level.INFO,"fkClosureQueue Not Empty and contains table \n"+table.getTableName());
+			logger.log(Level.FINE,"fkClosureQueue Not Empty and contains table \n"+table.getTableName());
 			for(Table tempTable : qStructure.getTableMap().foreignKeyGraph.getAllVertex())
 			{  
 				Map<Table,Vector<ForeignKey>> neighbours = qStructure.getTableMap().foreignKeyGraph.getNeighbours(tempTable);

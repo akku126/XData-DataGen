@@ -729,7 +729,7 @@ public class QueryParser implements Serializable{
     
 	public void parseQueryJSQL(String queryId, String queryString, boolean debug, AppTest_Parameters dbApparameters)
 			throws Exception {
-		logger.info("beginning to parse query");
+		logger.fine("beginning to parse query");
 		try{
 			if(this.query==null)
 				this.query = new Query(queryId, queryString);

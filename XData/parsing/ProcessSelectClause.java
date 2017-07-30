@@ -90,7 +90,7 @@ public class ProcessSelectClause{
 	 */
 
 	public static void ProcessSelect(PlainSelect plainSelect, QueryStructure qStruct,AppTest_Parameters dbAppParameters) throws Exception {
-		logger.info("processing select query"+plainSelect.toString());
+		logger.fine("processing select query"+plainSelect.toString());
 		Vector<Node> joinConditions=new Vector<Node>();		
 		//Get the Node hierarchy
 				qStruct.topLevelRelation = generateRelationHierarchyJSQL(plainSelect);
@@ -863,7 +863,7 @@ public class ProcessSelectClause{
 		qStruct.getQuery().addFromTable(table);
 		qStruct.getQuery().putBaseRelation(aliasName, tableName);
 		
-		logger.info("Table added"+frmListElement);
+		logger.fine("Table added"+frmListElement);
 	}
 
 	/** @author mathew

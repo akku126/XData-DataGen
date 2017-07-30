@@ -387,7 +387,7 @@ public class ConjunctQueryStructure implements Serializable{
 					temp1 = tempAllJoinConds.get(k);
 					temp2 = ec.get(j);
 
-					ConjunctQueryStructure.logger.log(Level.INFO,"Comparing " + temp1.toString()+ " and " + temp2.toString());
+					ConjunctQueryStructure.logger.log(Level.FINE,"Comparing " + temp1.toString()+ " and " + temp2.toString());
 
 					if (temp1.getLeft() != null) {
 						if (temp1.getLeft().getColumn().getColumnName()
