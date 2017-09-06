@@ -24,6 +24,7 @@ import parsing.RelationHierarchyNode;
 import parsing.Table;
 import util.Configuration;
 import util.TagDatasets;
+import util.Utilities;
 
 /**
  * This class contains functions to do pre processing actions before actual data generation is done
@@ -343,7 +344,7 @@ public class PreProcessingActivity {
 			
 			if(setOp.equalsIgnoreCase("UNION")) {
 				
-				cvcCopy= cvc.copy();
+				cvcCopy= (GenerateCVC1)Utilities.copy(cvc);
 				cvcCopy.setConnection(cvc.getConnection());
 				//**create object for handling set operations
 				GenerateUnionCVC unionCVC= new GenerateUnionCVC(cvcCopy, cvcCopy.getqStructure());
@@ -375,7 +376,7 @@ public class PreProcessingActivity {
 				
 				//killing mutations in subqueries of set operators
 				
-				cvcCopy=cvc.copy();
+				cvcCopy=(GenerateCVC1)Utilities.copy(cvc);
 				cvcCopy.setConnection(cvc.getConnection());
 				unionCVC= new GenerateUnionCVC(cvcCopy, cvcCopy.getqStructure());
 				
@@ -393,7 +394,7 @@ public class PreProcessingActivity {
 				MutationsInOuterBlock.generateDataForKillingMutantsInOuterQueryBlock(cvcUnion);
 				count=cvcUnion.getCount();
 				
-				cvcCopy=cvc.copy();
+				cvcCopy=(GenerateCVC1)Utilities.copy(cvc);
 				cvcCopy.setConnection(cvc.getConnection());
 				unionCVC= new GenerateUnionCVC(cvcCopy, cvcCopy.getqStructure());
 				
@@ -418,7 +419,7 @@ public class PreProcessingActivity {
 				
 				
 			} else if (setOp.equalsIgnoreCase("INTERSECT")) {
-				cvcCopy = cvc.copy();
+				cvcCopy = (GenerateCVC1)Utilities.copy(cvc);
 				cvcCopy.setConnection(cvc.getConnection());
 				GenerateUnionCVC unionCVC= new GenerateUnionCVC(cvcCopy, cvcCopy.getqStructure());
 				GenerateCVC1 cvcIntersect= convertSetQuerytoSubquery(unionCVC.genCVCleft,unionCVC.genCVCright, Node.getExistsNodeType());
@@ -434,7 +435,7 @@ public class PreProcessingActivity {
 				count=cvcIntersect.getCount();
 				
 			} else if (setOp.equalsIgnoreCase("EXCEPT")) {
-				cvcCopy = cvc.copy();
+				cvcCopy = (GenerateCVC1)Utilities.copy(cvc);
 				cvcCopy.setConnection(cvc.getConnection());
 				GenerateUnionCVC unionCVC= new GenerateUnionCVC(cvcCopy, cvcCopy.getqStructure());
 				GenerateCVC1 cvcExcept= convertSetQuerytoSubquery(unionCVC.genCVCleft,unionCVC.genCVCright, Node.getNotExistsNodeType());
@@ -451,7 +452,7 @@ public class PreProcessingActivity {
 			}
 			
 			//Data generation for SETOP
-			cvcCopy=cvc.copy();
+			cvcCopy= (GenerateCVC1)Utilities.copy(cvc);
 			cvcCopy.setConnection(cvc.getConnection());
 			cvcCopy.setCount(count);
 			GenerateUnionCVC unionCVC = new GenerateUnionCVC(cvcCopy, cvcCopy.getqStructure());

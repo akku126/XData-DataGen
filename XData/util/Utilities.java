@@ -7,11 +7,16 @@ import java.util.logging.Logger;
 
 import parsing.Column;
 import parsing.Node;
+import testDataGen.GenerateCVC1;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.URLEncoder;
 
 public class Utilities {
@@ -161,6 +166,23 @@ public class Utilities {
 		}
 		
 		
+	}
+	
+	public static Object copy(Object o) throws Exception{
+		//TODO: change implementation to provide faster copy
+		Object obj;
+		try(ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+			try(ObjectOutputStream out = new ObjectOutputStream(bos)){
+				out.writeObject(o);
+				out.flush();
+			}
+			
+			try(ObjectInputStream in = new ObjectInputStream(
+					new ByteArrayInputStream(bos.toByteArray()))){
+				obj = in.readObject();
+			}
+		}
+		return obj;
 	}
 	
 	

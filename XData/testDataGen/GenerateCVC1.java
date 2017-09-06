@@ -1497,20 +1497,6 @@ public class GenerateCVC1 implements Serializable{
 	    }
 	}*/
 	
-	public GenerateCVC1 copy() throws Exception{
-		//TODO: change implementation to provide faster copy
-		ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutputStream out = new ObjectOutputStream(bos);
-        out.writeObject(this);
-        out.flush();
-        out.close();
-        
-        ObjectInputStream in = new ObjectInputStream(
-                new ByteArrayInputStream(bos.toByteArray()));
-        GenerateCVC1    obj = (GenerateCVC1)in.readObject();
-		return obj;
-	}
-
 
 	public int getAssignId() {
 		// TODO Auto-generated method stub
