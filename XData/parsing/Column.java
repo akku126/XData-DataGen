@@ -375,11 +375,11 @@ public class Column	implements Serializable{
 			return false;
 		if (references != other.references)
 			return false;
-		if (table == null) {
+		/*if (table == null) {
 			if (other.table != null)
 				return false;
 		} else if (!table.equals(other.table))
-			return false;
+			return false;*/
 		if (tableName == null) {
 			if (other.tableName != null)
 				return false;

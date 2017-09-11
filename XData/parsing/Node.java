@@ -867,24 +867,7 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 	}
 
 
-	/*@Override
-	public boolean equals(Object obj) {
-	    if(!(obj instanceof Node) && !(obj instanceof String))
-	    {
-	        return false;
-	    }
-	    else
-	    {
-	        if(obj instanceof Node)
-	            return func.toLowerCase().equals(((AggregateFunction)obj).getFunc().toLowerCase()) && aggExp.getColumn().toString().toLowerCase().equals(((AggregateFunction)obj).getAggExp().getColumn().toString().toLowerCase()) 
-	            		&& aggExp.getColumn().getTableName().toString().toLowerCase().equals(((AggregateFunction)obj).getAggExp().getColumn().getTableName().toString().toLowerCase()) ;
-	        	return this.toString().toLowerCase().equals(((Node)obj).toString().toLowerCase());
-	        else
-	            return this.toString().toLowerCase().equals(((String)obj).toLowerCase());
-	    }
-
-	}*/
-
+	
 	/**
 	 * Added by Mahesh
 	 */
@@ -1004,7 +987,7 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 		if (table == null) {
 			if (other.table != null)
 				return false;
-		} else if (!table.equals(other.table))
+		} else if (!table.getTableName().equals(other.table.getTableName()))
 			return false;
 		/*if (tableAlias == null) {
 			if (other.tableAlias != null)

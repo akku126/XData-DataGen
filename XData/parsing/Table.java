@@ -236,73 +236,47 @@ public class Table implements Serializable{
 	}
 
 	//Added by Mahesh
-	/*@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result
-				+ ((aliasName == null) ? 0 : aliasName.hashCode());
-		result = prime * result + ((columns == null) ? 0 : columns.hashCode());
-		result = prime * result
-				+ ((columnsIndex == null) ? 0 : columnsIndex.hashCode());
-		result = prime * result + ((fKeys == null) ? 0 : fKeys.hashCode());
-		result = prime * result + ((hm == null) ? 0 : hm.hashCode());
-		result = prime * result + (isExportedTable ? 1231 : 1237);
-		result = prime * result
-				+ ((primaryKey == null) ? 0 : primaryKey.hashCode());
-		result = prime * result
-				+ ((tableName == null) ? 0 : tableName.hashCode());
-		return new Integer(result).hashCode();
-	}
-*/
-	/*@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Table other = (Table) obj;
-		if (aliasName == null) {
-			if (other.aliasName != null)
-				return false;
-		} else if (!aliasName.equals(other.aliasName))
-			return false;
-		if (columns == null) {
-			if (other.columns != null)
-				return false;
-		} else if (!columns.equals(other.columns))
-			return false;
-		if (columnsIndex == null) {
-			if (other.columnsIndex != null)
-				return false;
-		} else if (!columnsIndex.equals(other.columnsIndex))
-			return false;
-		if (fKeys == null) {
-			if (other.fKeys != null)
-				return false;
-		} else if (!fKeys.equals(other.fKeys))
-			return false;
-		if (hm == null) {
-			if (other.hm != null)
-				return false;
-		} else if (!hm.equals(other.hm))
-			return false;
-		if (isExportedTable != other.isExportedTable)
-			return false;
-		if (primaryKey == null) {
-			if (other.primaryKey != null)
-				return false;
-		} else if (!primaryKey.equals(other.primaryKey))
-			return false;
-		if (tableName == null) {
-			if (other.tableName != null)
-				return false;
-		} else if (!tableName.equals(other.tableName))
-			return false;
-		return true;
-	}
-*/
+	//@Override
+//	public int hashCode() {
+//		final int prime = 31;
+//		int result = 1;
+//		result = prime * result
+//				+ ((aliasName == null) ? 0 : aliasName.hashCode());
+//		result = prime * result + ((columns == null) ? 0 : columns.hashCode());
+//		result = prime * result
+//				+ ((columnsIndex == null) ? 0 : columnsIndex.hashCode());
+//		result = prime * result + ((fKeys == null) ? 0 : fKeys.hashCode());
+//		result = prime * result + ((hm == null) ? 0 : hm.hashCode());
+//		result = prime * result + (isExportedTable ? 1231 : 1237);
+//		result = prime * result
+//				+ ((primaryKey == null) ? 0 : primaryKey.hashCode());
+//		result = prime * result
+//				+ ((tableName == null) ? 0 : tableName.hashCode());
+//		return new Integer(result).hashCode();
+//	}
+//
+//	@Override
+//	public boolean equals(Object obj) {
+//		if (this == obj)
+//			return true;
+//		if (obj == null)
+//			return false;
+//		if (getClass() != obj.getClass())
+//			return false;
+//		Table other = (Table) obj;
+//		if (aliasName == null) {
+//			if (other.aliasName != null)
+//				return false;
+//		} else if (!aliasName.equals(other.aliasName))
+//			return false;
+//		
+//		if (tableName == null) {
+//			if (other.tableName != null)
+//				return false;
+//		} else if (!tableName.equals(other.tableName))
+//			return false;
+//		return true;
+//	}
+
 
 }
