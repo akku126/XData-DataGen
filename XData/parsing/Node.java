@@ -38,7 +38,7 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 	private static String stringFuncType= "STRING FUNCTION NODE";
 	private static String extractFuncType ="EXTRACT NODE";
 	private static String caseNodeType ="CASE NODE";
-	private static String compositeNodeType=" COMPOSITE NODE";
+	private static String compositeNodeType="COMPOSITE NODE";
 	
 	AggregateFunction agg;
 
@@ -999,6 +999,14 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 				return false;
 		} else if (!tableNameNo.equals(other.tableNameNo))
 			return false;
+		if(strConst == null){
+			if(other.strConst !=null)
+				return false;
+		} else {
+			if(!other.strConst.equals(strConst))
+				return false;
+		}
+		
 		/*if (type == null) {
 			if (other.type != null)
 				return false;
