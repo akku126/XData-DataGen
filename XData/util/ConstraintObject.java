@@ -14,23 +14,14 @@ public class ConstraintObject {
 	private static Logger logger = Logger.getLogger(ConstraintObject.class.getName());
 	
 	
-	//This variable holds the generated constraint String(which can have AND'ed / OR'ed constraints) that has  
-	//conjunction with or constraints and vice versa.  
-	//This can also hold some simple assert constraints with which more constraints will be concatenated 
-	private String existingConstraint;
-	
-	//Experimental variable to hold the column level constraint as a whole - with pos, index, table name and column name - to hold (left operator right)  or (operator left right) 
-	//Will not be feasible as even left and right differs for CVC/SMT 
-	private String baseConstraintString;
-	
 	//This holds the left side constraints usually constraint on column with pos, index and table name.
-	private String leftConstraint;
+	private String leftConstraint="";
 	
 	//This holds the right side constraints usually constraint on column with pos, index and table name.
-	private String rightConstraint;
+	private String rightConstraint="";
 	
 	//This holds the operator with which left and right constraints are related
-	private String operator;
+	private String operator="";
 	
 	/**
 	 * 
@@ -46,22 +37,6 @@ public class ConstraintObject {
 	 */
 	public static void setLogger(Logger logger) {
 		ConstraintObject.logger = logger;
-	}
-	
-	/**
-	 * 
-	 * @return the assertConstraint
-	 */
-	public String getAssertConstraint() {
-		return existingConstraint;
-	}
-	
-	/**
-	 * 
-	 * @param assertConstraint the assertConstraint to set
-	 */
-	public void setAssertConstraint(String assertConstraint) {
-		this.existingConstraint = assertConstraint;
 	}
 	
 	/**

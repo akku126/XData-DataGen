@@ -23,62 +23,62 @@ public class MutationsInOuterBlock {
 		logger.log(Level.INFO,"---------------------------------\n");
 		try{
 			/**killing equivalence class mutations in in outer query blocks*/
-			EquivalenceMutationInOuterQueryBlock.generateDataForkillingEquivalenceClassMutationsInOuterQueryBlockGen(cvc);
+			EquivalenceMutationInOuterQueryBlock.generateDataForkillingEquivalenceClassMutationsInOuterQueryBlock(cvc);
 	
 			/** killing join predicate mutations in outer query blocks */
-			JoinMutationsInOuterQueryBlock.generateDataForkillingJoinMutationsInOuterQueryBlockGen(cvc);
+			JoinMutationsInOuterQueryBlock.generateDataForkillingJoinMutationsInOuterQueryBlock(cvc);
 	
 			/** killing selection mutations in outer query blocks*/
-			SelectionMutationsInOuterQueryBlock.generateDataForkillingSelectionMutationsInOuterQueryBlockGen(cvc);
+			SelectionMutationsInOuterQueryBlock.generateDataForkillingSelectionMutationsInOuterQueryBlock(cvc);
 	
 			/** killing string selection mutations in outer query blocks*/
-			StringSelectionMutationsInOuterQueryBlock.generateDataForkillingStringSelectionMutationsInOuterQueryBlockGen(cvc);
+			StringSelectionMutationsInOuterQueryBlock.generateDataForkillingStringSelectionMutationsInOuterQueryBlock(cvc);
 	
 			/** killing like mutations in outer query blocks*/
-			LikeMutationsInOuterQueryBlock.generateDataForkillingLikeMutationsInOuterQueryBlockGen(cvc);
+			LikeMutationsInOuterQueryBlock.generateDataForkillingLikeMutationsInOuterQueryBlock(cvc);
 	
 			//** killing like pattern mutation in outer query blocks*/
-			PatternMutationOuterQueryBlock.generateDataForkillingMutationsGen(cvc);
+			PatternMutationOuterQueryBlock.generateDataForkillingMutations(cvc);
 			
 			/** killing null mutations in outer query blocks*/
 			//NullMutationsInOuterBlock.generateDataForkillingSelectionMutationsInOuterQueryBlock(cvc);
 			
 			/** killing aggregate function mutations in outer query blocks*/
-			AggMutationsInOuterQueryBlock.generateDataForkillingAggMutationsInOuterQueryBlockGen(cvc);
+			AggMutationsInOuterQueryBlock.generateDataForkillingAggMutationsInOuterQueryBlock(cvc);
 	
 			
-			WhereClauseSubQueryConnectiveMutations.killWhereClauseSubQueryConnectiveMutationsGen(cvc);
+			WhereClauseSubQueryConnectiveMutations.killWhereClauseSubQueryConnectiveMutations(cvc);
 			
 			/**Killing missing join condition with reference relations **/
 			//MissingJoinMutations.generateDataForkillingMissingJoinMutations(cvc);
 			
 			/** killing having clause mutations in outer query blocks*/
-			ConstrainedAggregationMutationsInOuterQueryBlock.generateDataForkillingConstrainedAggregationInOuterQueryBlockGen(cvc);
+			ConstrainedAggregationMutationsInOuterQueryBlock.generateDataForkillingConstrainedAggregationInOuterQueryBlock(cvc);
 	
 			/** kill distinct mutations in outer query blocks*/
-			DistinctMutationsInOuterQueryBlock.generateDataForkillingDistinctMutationsInOuterQueryBlockGen(cvc);
+			DistinctMutationsInOuterQueryBlock.generateDataForkillingDistinctMutationsInOuterQueryBlock(cvc);
 
 			/** Kill mutations for CASE statements in outer query block*/
-			CaseMutationsInOuterQueryBlock.generateDataForKillingCaseMutationsInOuterQueryBlockGen(cvc);
+			CaseMutationsInOuterQueryBlock.generateDataForKillingCaseMutationsInOuterQueryBlock(cvc);
 			
 			/**Partial group by mutations were here and then moved to last to add foreign key referenced attributes to groupby ***/
 			
 			
 			/** Killing extra group by attribute mutations in outer query blocks */
-			ExtraGroupByMutationsInOuterQueryBlock.generateDataForkillingExtraGroupByMutationsInOuterQueryBlockGen(cvc);
-			ExtraGroupByMutationsInOuterQueryBlock.generateDataForkillingExtraGroupByMutationsInOuterQueryBlock2Gen(cvc);
+			ExtraGroupByMutationsInOuterQueryBlock.generateDataForkillingExtraGroupByMutationsInOuterQueryBlock(cvc);
+			ExtraGroupByMutationsInOuterQueryBlock.generateDataForkillingExtraGroupByMutationsInOuterQueryBlock2(cvc);
 	
 			/** Killing common name mutations in outer query blocks*/
-			UnintendedJoinsMutationsInOuterQueryBlock.generateDataForkillingUnintendedJoinsMutationsInOuterQueryBlockGen(cvc);
+			UnintendedJoinsMutationsInOuterQueryBlock.generateDataForkillingUnintendedJoinsMutationsInOuterQueryBlock(cvc);
 			
 			/** Killing mutations resulting from column replacement */
-			ColumnReplacementMutations.generateDataForkillingColumnReplacementMutationsInProjectionGen(cvc);	
+			ColumnReplacementMutations.generateDataForkillingColumnReplacementMutationsInProjection(cvc);	
 			
 			/** partial group by mutations in outer query blocks*/
-			PartialGroupByMutationsInOuterQueryBlock_case1.generateDataForkillingParialGroupByMutationsInOuterQueryBlockGen(cvc);
+			PartialGroupByMutationsInOuterQueryBlock_case1.generateDataForkillingParialGroupByMutationsInOuterQueryBlock(cvc);
 	
 			/** Killing partial group by mutations in outer query blocks*/
-			PartialGroupByMutationsInOuterQueryBlock_case2.generateDataForkillingParialGroupByMutationsInOuterQueryBlockGen(cvc);
+			PartialGroupByMutationsInOuterQueryBlock_case2.generateDataForkillingParialGroupByMutationsInOuterQueryBlock(cvc);
 	
 		}catch (TimeoutException e){
 			logger.log(Level.SEVERE,e.getMessage(),e);		

@@ -1,5 +1,6 @@
 package testDataGen;
 
+import generateConstraints.ConstraintGenerator;
 import generateConstraints.Constraints;
 import generateConstraints.GenerateConstraintsForCaseConditions;
 import generateConstraints.GenerateConstraintsForConjunct;
@@ -24,6 +25,7 @@ import parsing.QueryParser;
 import parsing.QueryStructure;
 import parsing.RelationHierarchyNode;
 import parsing.Table;
+import util.ConstraintObject;
 
 /**
  * This class stores details of a query block
@@ -289,17 +291,17 @@ public class QueryBlockDetails implements Serializable{
 
 		String constraintString = "";
 		try{
-			constraintString += "%---------------------------------------------\n%CONSTRAINTS OF THIS BLOCK \n%--------------------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine(" CONSTRAINTS OF THIS BLOCK ");
 			constraintString +=  getConstraintsForQueryBlockExceptSubQuries(cvc, qb);
-			constraintString += "%---------------------------------------------\n%END OF CONSTRAINTS OF THIS BLOCK \n%--------------------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine(" END OF CONSTRAINTS OF THIS BLOCK ");
 	
 	
 			/** Add constraints related to From clause subqueries block */
 			for(QueryBlockDetails qbt: qb.getFromClauseSubQueries()){
 	
-				constraintString += "\n%---------------------------------\n% FROM CLAUSE SUBQUERY BLOCK\n%---------------------------------\n";
+				constraintString += ConstraintGenerator.addCommentLine(" FROM CLAUSE SUBQUERY BLOCK ");
 				constraintString += getConstraintsForQueryBlock(cvc, qbt);			
-				constraintString += "\n%---------------------------------\n% END OF FROM CLAUSE SUBQUERY BLOCK\n%---------------------------------\n";
+				constraintString += ConstraintGenerator.addCommentLine(" END OF FROM CLAUSE SUBQUERY BLOCK ");
 			}
 		}catch(Exception e){
 			logger.log(Level.SEVERE, e.getMessage(), e);
@@ -320,9 +322,9 @@ public class QueryBlockDetails implements Serializable{
 		String constraintString = "";
 		QueryBlockDetails qb = cvc.getOuterBlock();
 		try{
-			constraintString += "%---------------------------------------------\n%CONSTRAINTS OF THIS BLOCK \n%--------------------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine(" CONSTRAINTS OF THIS BLOCK ");
 		//	constraintString +=  getConstraintsForQueryBlockExceptSubQuriesSMT(cvc, qb);
-			constraintString += "%---------------------------------------------\n%END OF CONSTRAINTS OF THIS BLOCK \n%--------------------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine(" END OF CONSTRAINTS OF THIS BLOCK ");
 	
 	
 			/** Add constraints related to From clause subqueries block */
@@ -351,17 +353,17 @@ public class QueryBlockDetails implements Serializable{
 
 		String constraintString = "";
 		try{
-			constraintString += "%---------------------------------------------\n%CONSTRAINTS OF THIS BLOCK \n%--------------------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine(" CONSTRAINTS OF THIS BLOCK ");
 			constraintString +=  getConstraintsForQueryBlockExceptSubQuries(cvc, qb, n);
-			constraintString += "%---------------------------------------------\n%END OF CONSTRAINTS OF THIS BLOCK \n%--------------------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine(" END OF CONSTRAINTS OF THIS BLOCK ");
 	
 	
 			/** Add constraints related to From clause subqueries block */
 			for(QueryBlockDetails qbt: qb.getFromClauseSubQueries()){
 	
-				constraintString += "\n%---------------------------------\n% FROM CLAUSE SUBQUERY BLOCK\n%---------------------------------\n";
+				constraintString += ConstraintGenerator.addCommentLine(" FROM CLAUSE SUBQUERY BLOCK ");
 				constraintString += getConstraintsForQueryBlock(cvc, qbt);			
-				constraintString += "\n%---------------------------------\n% END OF FROM CLAUSE SUBQUERY BLOCK\n%---------------------------------\n";
+				constraintString += ConstraintGenerator.addCommentLine(" END OF FROM CLAUSE SUBQUERY BLOCK ");
 			}
 		}catch(Exception e){
 			logger.log(Level.SEVERE, e.getMessage(), e);
@@ -382,17 +384,17 @@ public class QueryBlockDetails implements Serializable{
 		String constraintString = "";
 		QueryBlockDetails qb = cvc.getOuterBlock();
 		try{
-			constraintString += "%---------------------------------------------\n%CONSTRAINTS OF THIS BLOCK \n%--------------------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine(" CONSTRAINTS OF THIS BLOCK ");
 			//constraintString +=  getConstraintsForQueryBlockExceptSubQuriesSMT(cvc, qb, n);
-			constraintString += "%---------------------------------------------\n%END OF CONSTRAINTS OF THIS BLOCK \n%--------------------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine(" END OF CONSTRAINTS OF THIS BLOCK ");
 	
 	
 			/** Add constraints related to From clause subqueries block */
 			for(QueryBlockDetails qbt: qb.getFromClauseSubQueries()){
 	
-				constraintString += "\n%---------------------------------\n% FROM CLAUSE SUBQUERY BLOCK\n%---------------------------------\n";
+				constraintString += ConstraintGenerator.addCommentLine(" FROM CLAUSE SUBQUERY BLOCK ");
 			//	constraintString += getConstraintsForQueryBlockSMT(cvc, qbt);			
-				constraintString += "\n%---------------------------------\n% END OF FROM CLAUSE SUBQUERY BLOCK\n%---------------------------------\n";
+				constraintString += ConstraintGenerator.addCommentLine(" END OF FROM CLAUSE SUBQUERY BLOCK ");
 			}
 		}catch(Exception e){
 			logger.log(Level.SEVERE, e.getMessage(), e);
@@ -416,22 +418,25 @@ public class QueryBlockDetails implements Serializable{
 		try{
 			/** Add the positive conditions for each conjunct of this query block */
 			for(ConjunctQueryStructure conjunct : qb.getConjunctsQs()){
-				constraintString += "\n%---------------------------------\n% CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------\n";
+				constraintString += ConstraintGenerator.addCommentLine(" CONSTRAINTS FOR THIS CONJUNCT ");
 				//constraintString += GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, qb, conjunct);
 				constraints=Constraints.orConstraints(constraints, GenerateConstraintsForConjunct.getConstraintsInConjuct(cvc, qb, conjunct));
 				
 				/**FIXME: Handle OR + Where clause Sub query Correctly
 				 * Right Now we assume that if there is Where sub query then no ORing of conds
 				 * Use Amol generalized approach*/
-				constraintString += "\n%---------------------------------\n% WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n%---------------------------------\n";
-				constraintString += GenerateConstraintsForWhereClauseSubQueryBlock.getConstraintsForWhereClauseSubQueryBlock(cvc, qb, conjunct);
-				constraintString += "\n%---------------------------------\n% END OF WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n%---------------------------------\n";
+				constraintString += ConstraintGenerator.addCommentLine(" WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS ");
+ 				constraintString += GenerateConstraintsForWhereClauseSubQueryBlock.getConstraintsForWhereClauseSubQueryBlock(cvc, qb, conjunct);
+				constraintString += ConstraintGenerator.addCommentLine(" END OF WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS ");
 				
-				//constraintString += "\n%---------------------------------\n% END OF CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------\n";
+				//constraintString += ConstraintGenerator.addCommentLine("END OF CONSTRAINTS FOR THIS CONJUNCT ");
 			}
-			constraintString += Constraints.getConstraint(constraints);
-			String stringConstraints= Constraints.getStringConstraints(constraints);
-			cvc.getStringConstraints().add(stringConstraints);
+			constraintString += Constraints.getConstraint(cvc,constraints);
+			//String stringConstraints= Constraints.getStringConstraints(cvc,constraints);
+			ArrayList<String> strConstraints =  Constraints.getStringConstraints(cvc,constraints);
+			for(String constraint : strConstraints){
+				cvc.getStringConstraints().add(constraint.toString());
+			}
 			
 			//constraintString += getCaseConditionConstraints(cvc);
 			constraintString += getGroupByAndHavingClauseConstraints(cvc, qb);
@@ -458,25 +463,29 @@ public class QueryBlockDetails implements Serializable{
 		try{
 			/** Add the positive conditions for each conjunct of this query block */
 			for(ConjunctQueryStructure conjunct : qb.getConjunctsQs()){
-				constraintString += "\n%---------------------------------\n% CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------\n";
+				constraintString += ConstraintGenerator.addCommentLine(" CONSTRAINTS FOR THIS CONJUNCT ");
 				//constraintString += GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, qb, conjunct);
 				constraints=Constraints.orConstraints(constraints, GenerateConstraintsForConjunct.getConstraintsInConjuct(cvc, qb, conjunct));
 				
 				/**FIXME: Handle OR + Where clause Sub query Correctly
 				 * Right Now we assume that if there is Where sub query then no ORing of conds
 				 * Use Amol generalized approach*/
-				constraintString += "\n%---------------------------------\n% WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n%---------------------------------\n";
+				constraintString += ConstraintGenerator.addCommentLine(" WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS ");
 				constraintString += GenerateConstraintsForWhereClauseSubQueryBlock.getConstraintsForWhereClauseSubQueryBlock(cvc, qb, conjunct);
-				constraintString += "\n%---------------------------------\n% END OF WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n%---------------------------------\n";
+				constraintString += ConstraintGenerator.addCommentLine(" END OF WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS ");
 				
-				//constraintString += "\n%---------------------------------\n% END OF CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------\n";
+				//constraintString += ConstraintGenerator.addCommentLine(" END OF CONSTRAINTS FOR THIS CONJUNCT\n");
 				
 			}
 			//FOR CASE CONDITION IN WHERE CLAUSE - ADD CONSTRAINTS APPENDING AND HERE
 			
-			constraintString += Constraints.getConstraint(constraints);
-			String stringConstraints= Constraints.getStringConstraints(constraints);
-			cvc.getStringConstraints().add(stringConstraints);
+			constraintString += Constraints.getConstraint(cvc,constraints);
+			//String stringConstraints= Constraints.getStringConstraints(cvc,constraints);
+			//cvc.getStringConstraints().add(stringConstraints);
+			ArrayList<String> strConstraints =  Constraints.getStringConstraints(cvc,constraints);
+			for(String constraint : strConstraints){
+				cvc.getStringConstraints().add(constraint.toString());
+			}
 			
 			//constraintString += getCaseConditionConstraints(cvc);
 			constraintString += getGroupByClauseConstraints(cvc, qb, n);
@@ -501,18 +510,18 @@ public class QueryBlockDetails implements Serializable{
 		String constraintString = "";
 		try{
 			/**Add constraints related to parameters in the query block*/
-			constraintString += "\n%---------------------------------\n%PARAMETERIZED CLAUSE CONSTRAINTS\n%---------------------------------\n";		 
+			constraintString += ConstraintGenerator.addCommentLine("PARAMETERIZED CLAUSE CONSTRAINTS ");		 
 			constraintString += RelatedToParameters.getConstraintsForParameters( cvc, qb);
-			constraintString += "\n%---------------------------------\n%END OF PARAMETERIZED CLAUSE CONSTRAINTS\n%---------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine("END OF PARAMETERIZED CLAUSE CONSTRAINTS ");
 			
 			/**Application constraints if any*/
-			constraintString += "\n%---------------------------------\n%APPLICATION CONSTRAINTS\n%---------------------------------\n";		
+			constraintString += ConstraintGenerator.addCommentLine("APPLICATION CONSTRAINTS ");		
 			/*FIXME: constraintString += NonEmptyConstraints;*/
-			constraintString += "\n%---------------------------------\n%END OF APPLICATION CONSTRAINTS\n%---------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine("END OF APPLICATION CONSTRAINTS ");
 			
-			constraintString += "\n%---------------------------------\n% UNIQUE  KEY CONSTRAINTS \n%---------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine(" UNIQUE  KEY CONSTRAINTS ");
 			constraintString += GenerateUniqueKeyConstraints.generateUniqueConstraints(cvc, qb, qb.getUniqueElements());
-			constraintString += "\n%---------------------------------\n%END OF UNIQUE  KEY CONSTRAINTS \n%---------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine("END OF UNIQUE  KEY CONSTRAINTS ");
 		}catch(Exception e){
 			logger.log(Level.SEVERE, e.getMessage(), e);
 			throw e;
@@ -533,18 +542,18 @@ public class QueryBlockDetails implements Serializable{
 		String constraintString = "";
 		try{
 			/** get group by constraints */
-			constraintString += "\n%---------------------------------\n%GROUP BY CLAUSE CONSTRAINTS\n%---------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine("GROUP BY CLAUSE CONSTRAINTS");
 			constraintString += GenerateGroupByConstraints.getGroupByConstraints(cvc, qb);
-			constraintString += "\n%---------------------------------\n%END OF GROUP BY CLAUSE CONSTRAINTS\n%---------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine("END OF GROUP BY CLAUSE CONSTRAINTS");
 	
 	
 			/** Generate havingClause constraints */
-			constraintString += "\n%---------------------------------\n%HAVING CLAUSE CONSTRAINTS\n%---------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine("HAVING CLAUSE CONSTRAINTS");
 			for(int j=0; j< qb.getNoOfGroups();j ++)
 				for(int k=0; k < qb.getAggConstraints().size();k++){
 					constraintString += GenerateConstraintsForHavingClause.getHavingClauseConstraints(cvc, qb, qb.getAggConstraints().get(k), qb.getFinalCount(), j);
 				}
-			constraintString += "\n%---------------------------------\n%END OF HAVING CLAUSE CONSTRAINTS\n%---------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine("END OF HAVING CLAUSE CONSTRAINTS");
 		}catch(Exception e){
 			logger.log(Level.SEVERE, e.getMessage(), e);
 			throw e;
@@ -564,9 +573,9 @@ public class QueryBlockDetails implements Serializable{
 		String constraintString = "";
 		try{
 			/** get group by constraints */
-			constraintString += "\n%---------------------------------\n%GROUP BY CLAUSE CONSTRAINTS\n%---------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine("GROUP BY CLAUSE CONSTRAINTS");
 			constraintString += GenerateGroupByConstraints.getGroupByConstraints(cvc, qb, n);
-			constraintString += "\n%---------------------------------\n%END OF GROUP BY CLAUSE CONSTRAINTS\n%---------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine("END OF GROUP BY CLAUSE CONSTRAINTS");
 			
 		}catch(Exception e){
 			logger.log(Level.SEVERE, e.getMessage(), e);
@@ -587,9 +596,9 @@ public class QueryBlockDetails implements Serializable{
 		
 		try{
 			
-			constraintString += "\n%---------------------------------\n%CASE CONDITION CONSTRAINTS\n%---------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine("CASE CONDITION CONSTRAINTS");
 			constraintString += GenerateConstraintsForCaseConditions.getCaseConditionConstraintsForOriginalQuery(cvc,cvc.getOuterBlock());
-			constraintString += "\n%---------------------------------\n%END OF CASE CONDITION CONSTRAINTS\n%---------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine("END OF CASE CONDITION CONSTRAINTS");
 			
 		}catch(Exception e){
 			logger.log(Level.SEVERE, e.getMessage(), e);

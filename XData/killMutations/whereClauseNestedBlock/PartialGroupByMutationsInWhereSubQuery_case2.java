@@ -1,5 +1,6 @@
 package killMutations.whereClauseNestedBlock;
 
+import generateConstraints.ConstraintGenerator;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GenerateConstraintsForConjunct;
 import generateConstraints.GenerateConstraintsForHavingClause;
@@ -83,9 +84,9 @@ public class PartialGroupByMutationsInWhereSubQuery_case2 {
 					
 					/** Add constraints for all the From clause nested sub query blocks */
 					for(QueryBlockDetails qb: cvc.getOuterBlock().getFromClauseSubQueries()){						
-						cvc.getConstraints().add("\n%---------------------------------\n% FROM CLAUSE SUBQUERY\n%---------------------------------\n");
+						cvc.getConstraints().add(ConstraintGenerator.addCommentLine(" FROM CLAUSE SUBQUERY "));
 						cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlock(cvc, qb) );
-						cvc.getConstraints().add("\n%---------------------------------\n% END OF FROM CLAUSE SUBQUERY\n%---------------------------------\n");						
+						cvc.getConstraints().add(ConstraintGenerator.addCommentLine(" END OF FROM CLAUSE SUBQUERY "));						
 					}
 					
 					/**add the negative constraints for all the other conjuncts of outer query block */
@@ -118,26 +119,26 @@ public class PartialGroupByMutationsInWhereSubQuery_case2 {
 						for(int i=0; i < con.getAllSubQueryConds().size(); i++){
 
 							Node subQ = con.getAllSubQueryConds().get(i);
-							constraintString +="\n%---------------------------------------------------\n%CONSTRAINTS FOR WHERE CLAUSE SUBQUERY CONNECTIVE \n%---------------------------------------------------\n\n";
+							constraintString +=ConstraintGenerator.addCommentLine("CONSTRAINTS FOR WHERE CLAUSE SUBQUERY CONNECTIVE ");
 							constraintString += GenerateConstraintsForWhereClauseSubQueryBlock.getConstraintsForWhereSubQueryConnective(cvc, cvc.getOuterBlock(), subQ);
 
-							constraintString += "\n%---------------------------------------------------\n%CONSTRAINTS FOR CONDITIONS INSIDE WHERE CLAUSE SUBQUERY CONNECTIVE \n%---------------------------------------------------\n\n";
+							constraintString += ConstraintGenerator.addCommentLine("CONSTRAINTS FOR CONDITIONS INSIDE WHERE CLAUSE SUBQUERY CONNECTIVE ");
 
 							constraintString += GenerateConstraintsForWhereClauseSubQueryBlock.getCVCForCondsInSubQ(cvc, cvc.getOuterBlock(), subQ);				
 
-							constraintString += "\n%---------------------------------------------------\n%END OF CONSTRAINTS FOR CONDITIONS INSIDE WHERE CLAUSE SUBQUERY CONNECTIVE \n%---------------------------------------------------\n\n";
+							constraintString += ConstraintGenerator.addCommentLine("END OF CONSTRAINTS FOR CONDITIONS INSIDE WHERE CLAUSE SUBQUERY CONNECTIVE ");
 						}
 					}
 
 					cvc.getConstraints().add(constraintString);
 					
 					/** Generate havingClause constraints for this sub query block*/
-					cvc.getConstraints().add("\n%---------------------------------\n%HAVING CLAUSE CONSTRAINTS FOR SUBQUERY BLOCK\n%---------------------------------\n");
+					cvc.getConstraints().add(ConstraintGenerator.addCommentLine("HAVING CLAUSE CONSTRAINTS FOR SUBQUERY BLOCK "));
 					for(int j=0; j< qbt.getNoOfGroups();j ++)
 						for(int k=0; k < qbt.getAggConstraints().size();k++){
 							cvc.getConstraints().add( GenerateConstraintsForHavingClause.getHavingClauseConstraints(cvc, qbt, qbt.getAggConstraints().get(k), qbt.getFinalCount(), j));
 						}
-					cvc.getConstraints().add("\n%---------------------------------\n%END OF HAVING CLAUSE CONSTRAINTS FOR SUBQUERY BLOCK\n%---------------------------------\n");
+					cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF HAVING CLAUSE CONSTRAINTS FOR SUBQUERY BLOCK "));
 
 					/** get the equivalence classes in which this group by node is present */
 					Vector<Vector<Node>> equivalenceClassGroupBy = new Vector<Vector<Node>>();
@@ -167,14 +168,14 @@ public class PartialGroupByMutationsInWhereSubQuery_case2 {
 					}
 					
 					/** add same group by constraints for this query block */
-					cvc.getConstraints().add("\n%-----------------------------------------------------------------------------------------\n%GROUP BY ATTRIBUTES MUST BE SAME IN SAME GROUP  INSIDE WHERE CLAUSE SUBQUERY BLOCK\n%--------------------------------------------------------------\n");
+					cvc.getConstraints().add(ConstraintGenerator.addCommentLine("GROUP BY ATTRIBUTES MUST BE SAME IN SAME GROUP  INSIDE WHERE CLAUSE SUBQUERY BLOCK "));
 					/**If there are multiple groups then we should ensure that these are distinct across multiple group*/
 					cvc.getConstraints().add( GenerateGroupByConstraints.getGroupByConstraints(cvc, groupNodes, true, qbt.getNoOfGroups()) );
 
 					/** add  constraints to kill this mutation */
-					cvc.getConstraints().add( "\n%-----------------------------------------------------------------------------------------\n%CONSTRAINTS TO KILL PARTIAL GROUP BY MUTATIONS WITH SINGLE GROUPS INSIDE WHERE CLAUSE SUBQUERY BLOCK\n%--------------------------------------------------------------\n");
+					cvc.getConstraints().add( ConstraintGenerator.addCommentLine("CONSTRAINTS TO KILL PARTIAL GROUP BY MUTATIONS WITH SINGLE GROUPS INSIDE WHERE CLAUSE SUBQUERY BLOCK "));
 					cvc.getConstraints().add( GenerateConstraintsForPartialGroup_case2.getConstraintsForPartialSingleGroup(cvc, qbt, tempgroupByNode) );
-					cvc.getConstraints().add( "\n%-----------------------------------------------------------------------------------------\n%END OF CONSTRAINTS TO KILL PARTIAL GROUP BY MUTATIONS WITH SINGLE GROUPS INSIDE WHERE CLAUSE SUBQUERY BLOCK\n%--------------------------------------------------------------\n");
+					cvc.getConstraints().add( ConstraintGenerator.addCommentLine("END OF CONSTRAINTS TO KILL PARTIAL GROUP BY MUTATIONS WITH SINGLE GROUPS INSIDE WHERE CLAUSE SUBQUERY BLOCK "));
 
 					/**FIXME: If any nodes in the equivalence classes of this group by attribute are unique and that table contains only a single tuple then it violates foreignkey relationship
 					 * This group by node may involve in joins with outer block or other sub query node, let say 'x'

@@ -1,5 +1,6 @@
 package generateConstraints;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
@@ -9,6 +10,7 @@ import parsing.ForeignKey;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
+import util.ConstraintObject;
 
 /**
  * This class generates constraints for killing partial group by mutations in a single group
@@ -32,13 +34,14 @@ public class GenerateConstraintsForPartialGroup_case2 {
 
 		/** This group by attribute must be distinct across multiple groups */
 		String diffValue = "";
-
-		diffValue += "\n%-----------------------------------------------------------------------------------------\n%KILLING GROUP BY ATTRIBUTE IS DIFF ACROSS MULTIPLE GROUPS\n%--------------------------------------------------------------\n";
-
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+		diffValue += ConstraintGenerator.addCommentLine("KILLING GROUP BY ATTRIBUTE IS DIFF ACROSS MULTIPLE GROUPS");
+		ArrayList< ConstraintObject> constrList = new ArrayList<ConstraintObject>();
+		
 		for(int i=1; i<= queryBlock.getNoOfGroups(); i++){
 			if ( queryBlock.getNoOfGroups() == 1 ) 
 				continue;
-			diffValue += "ASSERT ";
+			//diffValue += "ASSERT ";
 
 			/** Get the table for groupbyNode */			
 			Column g = groupByNode.getColumn();
@@ -51,22 +54,32 @@ public class GenerateConstraintsForPartialGroup_case2 {
 			int Index = cvc.getTableMap().getTable(t).getColumnIndex(g.getColumnName());			
 
 
-			if( i != queryBlock.getNoOfGroups())/**If this group is not the last group */
-				diffValue +=  " DISTINCT ( O_"+t+"["+((i-1)*noOfTuples + 1 + offset -1)+"]."+Index+ ",  O_"+t+"["+((i)*noOfTuples + 1+ offset -1)+"]."+Index+") OR ";
-			else 
-				diffValue += " DISTINCT ( O_"+t+"["+(i*noOfTuples+ offset -1)+"]."+Index+ ",  O_"+t+"["+(1  + offset -1)+"]."+Index+") OR ";
+			if( i != queryBlock.getNoOfGroups())/**If this group is not the last group */{
+				//diffValue +=  " DISTINCT ( O_"+t+"["+((i-1)*noOfTuples + 1 + offset -1)+"]."+Index+ ",  O_"+t+"["+((i)*noOfTuples + 1+ offset -1)+"]."+Index+") OR ";
+				ConstraintObject constrObj = new ConstraintObject();
+				constrObj.setLeftConstraint(constrGen.getDistinctConstraint(t, g, ((i-1)*noOfTuples + 1 + offset -1), Index, t, g, ((i)*noOfTuples + 1+ offset -1), Index));
+				constrList.add(constrObj);
+				
+			}
+			else {
+				//diffValue += " DISTINCT ( O_"+t+"["+(i*noOfTuples+ offset -1)+"]."+Index+ ",  O_"+t+"["+(1  + offset -1)+"]."+Index+") OR ";
+				ConstraintObject constrObj = new ConstraintObject();
+				constrObj.setLeftConstraint(constrGen.getDistinctConstraint(t, g, (i*noOfTuples+ offset -1), Index, t, g, (1  + offset -1), Index));
+				constrList.add(constrObj);
+			}
 
-			int lastIndex = diffValue.lastIndexOf("OR");
-			diffValue = diffValue.substring(0, lastIndex-1) + " ;\n ";					
+			diffValue += constrGen.generateOrConstraintsWithAssert(constrList)+"\n";
+			//int lastIndex = diffValue.lastIndexOf("OR");
+			//diffValue = diffValue.substring(0, lastIndex-1) + " ;\n ";					
 		}	
 
 		/** This group by node must be distinct in atleast two tuples in the same group*/
-		diffValue += "\n%-----------------------------------------------------------------------------------------\n%KILLING GROUP BY ATTRIBUTES MUST BE DIFF IN SAME GROUP\n%--------------------------------------------------------------\n";
+		diffValue += ConstraintGenerator.addCommentLine("KILLING GROUP BY ATTRIBUTES MUST BE DIFF IN SAME GROUP");
 
 		/** add constraints for the tuples to be distinct within group*/
 		diffValue += getGroupByConstraintsForDiffValue(cvc, queryBlock, groupByNode);
 
-		diffValue += "\n%-----------------------------------------------------------------------------------------\n%END OF KILLING GROUP BY ATTRIBUTES MUST BE DIFF IN SAME GROUP\n%--------------------------------------------------------------\n";
+		diffValue += ConstraintGenerator.addCommentLine("END OF KILLING GROUP BY ATTRIBUTES MUST BE DIFF IN SAME GROUP");
 
 		return diffValue;
 	}
@@ -83,12 +96,13 @@ public class GenerateConstraintsForPartialGroup_case2 {
 
 		if(groupByNode == null)
 			return "";
-
+		ConstraintGenerator constrGen = new ConstraintGenerator();
 		String distinct = "";
 
+		ArrayList< ConstraintObject> constrList = new ArrayList<ConstraintObject>();
 		for(int i=1; i <= queryBlock.getNoOfGroups(); i++){/** we have to generate these constraints for each group */
 
-			distinct += "ASSERT ";
+			//distinct += "ASSERT ";
 
 			/** Get the table for groupbyNode */
 			Column g = groupByNode.getColumn();
@@ -104,15 +118,21 @@ public class GenerateConstraintsForPartialGroup_case2 {
 			int group = (i-1)*count;/**get group number*/
 
 			for(int k=1; k<=count;k++){
-				for(int l=k+1; l<=count;l++)/** Ensure that this attribute differs in atleast one two tuples*/
-					distinct += " DISTINCT (O_"+t+"["+(group+k-1+offset)+"]."+Index+ " , O_"+t+"["+(group+l-1+offset)+"]."+Index+") OR ";
+				for(int l=k+1; l<=count;l++)/** Ensure that this attribute differs in atleast one two tuples*/{
+					
+					ConstraintObject constrObj = new ConstraintObject();
+					constrObj.setLeftConstraint(constrGen.getDistinctConstraint(t, g, (group+k-1+offset), Index, t, g, (group+l-1+offset), Index));
+					constrList.add(constrObj);
+					//distinct += " DISTINCT (O_"+t+"["+(group+k-1+offset)+"]."+Index+ " , O_"+t+"["+(group+l-1+offset)+"]."+Index+") OR ";
+				}
 			}
-
-			if( distinct.endsWith("ASSERT "))
-				distinct += " TRUE ;\n";
+			distinct += constrGen.generateOrConstraintsWithAssert(constrList);
+			
+			if( constrList == null || (constrList!= null && constrList.isEmpty()))
+				distinct += constrGen.getAssertTrue();
 			else{
-				int lastIndex = distinct.lastIndexOf("OR");
-				distinct = distinct.substring(0, lastIndex-1) + ";\n ";
+				//int lastIndex = distinct.lastIndexOf("OR");
+				distinct = distinct +  "\n ";
 			}
 		}
 
@@ -129,6 +149,7 @@ public class GenerateConstraintsForPartialGroup_case2 {
 	public static String adjustNoOfTuplesForiegnKeyTables(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Node node, Vector<Vector<Node>> equivalence) {
 
 		String out ="";
+		ConstraintGenerator constrGen = new ConstraintGenerator();
 		//check if the node is outside of this query block
 		for(Vector<Node> ec: equivalence){
 			for(Node n: ec){
@@ -197,7 +218,8 @@ public class GenerateConstraintsForPartialGroup_case2 {
 							cvc.getNoOfOutputTuples().put(pTable, cvc.getNoOfOutputTuples().get(pTable) + 1);
 
 						//generate the constraint
-						out += "ASSERT O_"+fTable+"["+(i*j+ fOffset -1)+"]."+fIndex+ " = O_"+pTable+"["+(ptupleOffset + 1)+"]."+pIndex+";\n";
+						out += constrGen.getAssertConstraint(fTable,fColumn, (i*j+ fOffset -1),fIndex, pTable,pColumn, (ptupleOffset + 1), pIndex, " = ");
+								//"ASSERT O_"+fTable+"["+(i*j+ fOffset -1)+"]."+fIndex+ " = O_"+pTable+"["+(ptupleOffset + 1)+"]."+pIndex+";\n";
 					}
 				}
 			}

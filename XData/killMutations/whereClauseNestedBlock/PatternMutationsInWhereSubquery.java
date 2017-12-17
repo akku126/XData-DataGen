@@ -1,5 +1,6 @@
 package killMutations.whereClauseNestedBlock;
 
+import generateConstraints.ConstraintGenerator;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GenerateConstraintsForConjunct;
 import generateConstraints.GenerateConstraintsForWhereClauseSubQueryBlock;
@@ -94,11 +95,12 @@ public class PatternMutationsInWhereSubquery {
 
 								/** Add constraints for all the From clause nested sub query blocks except this sub query block */
 								for(QueryBlockDetails qb: cvc.getOuterBlock().getFromClauseSubQueries()){								
-									cvc.getConstraints().add("\n%---------------------------------\n% FROM CLAUSE SUBQUERY\n%---------------------------------\n");
+									cvc.getConstraints().add(ConstraintGenerator.addCommentLine("FROM CLAUSE SUBQUERY "));
 
 									cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlock(cvc, qb) );
 
-									cvc.getConstraints().add("\n%---------------------------------\n% END OF FROM CLAUSE SUBQUERY\n%---------------------------------\n");								}
+									cvc.getConstraints().add(ConstraintGenerator.addCommentLine(" END OF FROM CLAUSE SUBQUERY "));								
+									}
 
 								
 

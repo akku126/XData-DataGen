@@ -515,7 +515,7 @@ public class UtilsRelatedToNode {
 	public static Vector<Node> getSelectionCondMutations(Node selectionCond) throws Exception{
 		
 		Vector<Node> scMutants = new Vector<Node>();
-		
+		ConstraintGenerator constGen = new ConstraintGenerator();
 		Node scm = null;
 		scm = selectionCond.clone();
 		scm.setOperator("=");					
@@ -547,7 +547,9 @@ public class UtilsRelatedToNode {
 		
 		int epsilon = (int) Math.pow(10, scale);
 		String strConst = right.getStrConst();
-		strConst = "(" + strConst + " + 1/" + epsilon + ")";
+		strConst = constGen.getStrConstWithScale(strConst,epsilon,"+");
+				
+		
 		right.setStrConst(strConst);
 		scMutants.add(scm);
 		
@@ -564,7 +566,9 @@ public class UtilsRelatedToNode {
 		}
 		epsilon = (int) Math.pow(10, scale);
 		strConst = right.getStrConst();
-		strConst = "(" + strConst + " - 1/" + epsilon + ")";
+		strConst = constGen.getStrConstWithScale(strConst,epsilon,"-");
+				
+		
 		right.setStrConst(strConst);
 		scMutants.add(scm);
 
@@ -608,7 +612,7 @@ public class UtilsRelatedToNode {
 	public static Vector<CaseCondition> getCaseCondMutations(CaseCondition caseCond) throws Exception{
 		
 		Vector<CaseCondition> scMutants = new Vector<CaseCondition>();
-		
+		ConstraintGenerator constGen = new ConstraintGenerator();
 		CaseCondition scm = new CaseCondition();
 		
 			scm = caseCond.clone();
@@ -641,7 +645,8 @@ public class UtilsRelatedToNode {
 			
 			int epsilon = (int) Math.pow(10, scale);
 			String strConst = right.getStrConst();
-			strConst = "(" + strConst + " + 1/" + epsilon + ")";
+			//strConst = "(" + strConst + " + 1/" + epsilon + ")";
+			strConst = constGen.getStrConstWithScale(strConst,epsilon,"+");
 			right.setStrConst(strConst);
 			scMutants.add(scm);
 			
@@ -658,7 +663,8 @@ public class UtilsRelatedToNode {
 			}
 			epsilon = (int) Math.pow(10, scale);
 			strConst = right.getStrConst();
-			strConst = "(" + strConst + " - 1/" + epsilon + ")";
+			strConst = constGen.getStrConstWithScale(strConst,epsilon,"-");
+			//strConst = "(" + strConst + " - 1/" + epsilon + ")";
 			right.setStrConst(strConst);
 			scMutants.add(scm);
 		

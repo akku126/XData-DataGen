@@ -2,7 +2,8 @@
 
 package testDataGen;
 
-import generateConstraints.GetCVC3HeaderAndFooter;
+import generateConstraints.ConstraintGenerator;
+import generateConstraints.GetSolverHeaderAndFooter;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -91,17 +92,18 @@ public class GetTupleAssignmentUsingSolver {
 
 	public boolean getTupleAssignment() throws Exception{
 		long startAssgn = System.currentTimeMillis();
+		GenerateCVC1 cvc = new GenerateCVC1();
 		String constraints = "";
 
-		constraints += "%DATA TYPES \n \n";
+		constraints += ConstraintGenerator.addCommentLine("DATA TYPES \n \n");
 		/**get data types needed*/
 		constraints += getDataTypes();		
 
-		constraints += "%VARIABLE NAMES \n \n";
+		constraints += ConstraintGenerator.addCommentLine("VARIABLE NAMES \n \n");
 		/**get the variables needed*/
 		constraints += getVariableTypes();		
 
-		constraints += "%FUNCTION DEFINITIONS \n \n";
+		constraints += ConstraintGenerator.addCommentLine("FUNCTION DEFINITIONS \n \n");
 		/**get the function definitions*/
 		constraints += getFunctionDataTypes();
 
@@ -109,7 +111,7 @@ public class GetTupleAssignmentUsingSolver {
 		constraints += getConstraintsForGraph();		
 
 		/**get the footer for the CVC solver*/
-		constraints += GetCVC3HeaderAndFooter.generateCvc3_Footer();
+		constraints += GetSolverHeaderAndFooter.generateSolver_Footer(cvc);
 
 		long endAssgn = System.currentTimeMillis();
 

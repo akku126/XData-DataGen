@@ -43,8 +43,8 @@ public class GenerateConstraintsForPartialMultipleGroup {
 		
 		/** Stores constraints for the group by nodes to have same value across multiple groups*/
 		String multiGroupSameValue = "";
-		
-		multiGroupSameValue += "\n%-----------------------------------------------------------------------------------------\n%ALL OTHER GROUP BY ATTRIBUTES MUST BE SAME ACROSS MULTIPLE GROUPS\n%--------------------------------------------------------------\n";
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+		multiGroupSameValue += ConstraintGenerator.addCommentLine("ALL OTHER GROUP BY ATTRIBUTES MUST BE SAME ACROSS MULTIPLE GROUPS");
 		
 		/** Add constraints such that all group by nodes of this query block except the given groupByNode, are equal across multiple groups  */
 		for(Node groupbyNode: queryBlock.getGroupByNodes()){
@@ -88,21 +88,25 @@ public class GenerateConstraintsForPartialMultipleGroup {
 			/**Generate constraints for each group */
 			for(int i=1; i <= queryBlock.getNoOfGroups(); i++){				
 						
-				if( queryBlock.getNoOfGroups() != 1 && i != queryBlock.getNoOfGroups())/**If this group is not the last group */
-					multiGroupSameValue +=  "ASSERT O_"+t+"["+((i-1)*noOfTuples + 1 + offset -1)+"]."+Index+ " = O_"+t+"["+((i)*noOfTuples + 1+ offset -1)+"]."+Index+";\n";
-				else if( queryBlock.getNoOfGroups() > 1) /** Iff multiple groups are present */
-					multiGroupSameValue += "ASSERT O_"+t+"["+(i*noOfTuples+ offset -1)+"]."+Index+ " = O_"+t+"["+(1  + offset -1)+"]."+Index+";\n";	
+				if( queryBlock.getNoOfGroups() != 1 && i != queryBlock.getNoOfGroups())/**If this group is not the last group */{
+					multiGroupSameValue +=  constrGen.getAssertConstraint(t,g, ((i-1)*noOfTuples + 1 + offset -1),Index, t, g,((i)*noOfTuples + 1+ offset -1),Index, " = ");
+					//"ASSERT O_"+t+"["+((i-1)*noOfTuples + 1 + offset -1)+"]."+Index+ " = O_"+t+"["+((i)*noOfTuples + 1+ offset -1)+"]."+Index+";\n";
+				}
+				else if( queryBlock.getNoOfGroups() > 1) /** Iff multiple groups are present */{
+					multiGroupSameValue += constrGen.getAssertConstraint(t,g, (i*noOfTuples+ offset -1),Index, t,g, (1  + offset -1),Index, " = ");
+					//"ASSERT O_"+t+"["+(i*noOfTuples+ offset -1)+"]."+Index+ " = O_"+t+"["+(1  + offset -1)+"]."+Index+";\n";
+				}
 			}
 		}
 		
 		
-		multiGroupSameValue += "\n%-----------------------------------------------------------------------------------------\n%END OF ALL OTHER GROUP BY ATTRIBUTES MUST BE SAME ACROSS MULTIPLE GROUPS\n%--------------------------------------------------------------\n";
+		multiGroupSameValue += ConstraintGenerator.addCommentLine("END OF ALL OTHER GROUP BY ATTRIBUTES MUST BE SAME ACROSS MULTIPLE GROUPS ");
 
 		
 		/** To store constraints for this group by Node to have different value across multiple groups */
 		String multiGroupDiffValue = "";
 		
-		multiGroupDiffValue += "\n%-----------------------------------------------------------------------------------------\n%KILLING GROUP BY ATTRIBUTES MUST BE DIFF ACROSS MULTIPLE GROUPS\n%--------------------------------------------------------------\n";
+		multiGroupDiffValue += ConstraintGenerator.addCommentLine("KILLING GROUP BY ATTRIBUTES MUST BE DIFF ACROSS MULTIPLE GROUPS ");
 
 		/** Get the table tables for groupByNode */	
 		Column g = groupByNode.getColumn();
@@ -127,13 +131,18 @@ public class GenerateConstraintsForPartialMultipleGroup {
 		/**Generate constraints for each group */
 		for(int i=1; i <= queryBlock.getNoOfGroups(); i++){	
 			
-			if( queryBlock.getNoOfGroups() != 1 && i != queryBlock.getNoOfGroups())/**If this group is not the last group */
-				multiGroupDiffValue +=  "ASSERT  DISTINCT("+ "O_"+t+"["+((i-1)*count + 1 + offset -1)+"]."+Index+ " ,  O_"+t+"["+((i)*count + 1+ offset -1)+"]."+Index+");\n";
-			else if( queryBlock.getNoOfGroups() > 1) /** Iff multiple groups are present */
-				multiGroupDiffValue += "ASSERT DISTINCT( O_"+t+"["+(i*count+ offset -1)+"]."+Index+ ",  O_"+t+"["+(1  + offset -1)+"]."+Index+");\n";			
+			if( queryBlock.getNoOfGroups() != 1 && i != queryBlock.getNoOfGroups())/**If this group is not the last group */{
+				multiGroupDiffValue += constrGen.getAssertDistinctConstraint(t,g,((i-1)*count + 1 + offset -1),Index,t,g,((i)*count + 1+ offset -1),Index);
+				//"ASSERT  DISTINCT("+ "O_"+t+"["+((i-1)*count + 1 + offset -1)+"]."+Index+ " ,  O_"+t+"["+((i)*count + 1+ offset -1)+"]."+Index+");\n";
+			}
+			else if( queryBlock.getNoOfGroups() > 1) /** Iff multiple groups are present */{
+				
+				multiGroupDiffValue += constrGen.getAssertDistinctConstraint(t,g,(i*count+ offset -1),Index,t,g,(1  + offset -1),Index);
+				//"ASSERT DISTINCT( O_"+t+"["+(i*count+ offset -1)+"]."+Index+ ",  O_"+t+"["+(1  + offset -1)+"]."+Index+");\n";
+			}
 		}
 		 
-			multiGroupDiffValue += "\n%-----------------------------------------------------------------------------------------\n%END OF KILLING GROUP BY ATTRIBUTES MUST BE DIFF ACROSS MULTIPLE GROUPS\n%--------------------------------------------------------------\n";
+			multiGroupDiffValue += ConstraintGenerator.addCommentLine("END OF KILLING GROUP BY ATTRIBUTES MUST BE DIFF ACROSS MULTIPLE GROUPS ");
 		
 		
 		return multiGroupSameValue + "\n" + multiGroupDiffValue;

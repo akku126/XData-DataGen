@@ -1,5 +1,6 @@
 package testDataGen;
 
+import generateConstraints.ConstraintGenerator;
 import generateConstraints.GenerateCVCConstraintForNode;
 import generateConstraints.GenerateConstraintsForHavingClause;
 
@@ -450,6 +451,7 @@ public class RelatedToParameters {
 											 retVal+= entry.getKey() +" : "+ "STR"+entry.getKey()+"; \n";
 											 retVal+= "ASSERT ("+entry.getKey()+" = "+"xyz"+");"+"\n";
 										 }
+
 										 
 										 
 									 }
@@ -466,7 +468,7 @@ public class RelatedToParameters {
 	 * Adds constraints to hash map "constraintsWithParameters" for parameterized aggregation or selection conditions
 	 * @param queryBlock
 	 */
-	public static void setupDataStructuresForParamConstraints(QueryBlockDetails queryBlock) {
+	public static void setupDataStructuresForParamConstraints(GenerateCVC1 cvc,QueryBlockDetails queryBlock) {
 
 
 		if( queryBlock.getHavingClause() != null){
@@ -487,7 +489,8 @@ public class RelatedToParameters {
 
 
 	public static String getConstraintsForParameters(GenerateCVC1 cvc, QueryBlockDetails queryBlock) throws Exception{
-
+		ConstraintGenerator constraintGen = new ConstraintGenerator();
+		
 		if( queryBlock.getConstraintsWithParameters() == null || queryBlock.getConstraintsWithParameters().size()==0){
 			return "";
 		}
@@ -502,12 +505,12 @@ public class RelatedToParameters {
 
 			if(key.contains("AGG"))
 
-				retVal += GenerateConstraintsForHavingClause.getCVCForHavingConstraintRepeated( cvc, queryBlock, n, queryBlock.getFinalCount(), key, 0)+";\n";
+				retVal += GenerateConstraintsForHavingClause.getCVCForHavingConstraintRepeated( cvc, queryBlock, n, queryBlock.getFinalCount(),  0)+"\n"; //key
 
 			else if(key.contains("SEL"))
 
 				for(int l=0; l < queryBlock.getFinalCount(); l++){
-					retVal += "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred( queryBlock, n, l, key)+";\n";
+					retVal += constraintGen.genPositiveCondsForPredWithAssert(queryBlock, n, l, key)+"\n";
 
 				}
 		}

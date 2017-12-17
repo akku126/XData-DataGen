@@ -1,5 +1,6 @@
 package killMutations.outerQueryBlock;
 
+import generateConstraints.ConstraintGenerator;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GenerateConstraintsToKillDistinctMutations;
 
@@ -125,9 +126,9 @@ public class DistinctMutationsInOuterQueryBlock {
 			/** Add constraints for all the blocks of the query */
 			cvc.getConstraints().add(QueryBlockDetails.getConstraintsForQueryBlock(cvc));
 	
-			cvc.getConstraints().add("\n%---------------------------------\n% DISTINCT CONSTRAINTS FOR OUTER BLOCK OF QUERY\n%---------------------------------\n");
+			cvc.getConstraints().add(ConstraintGenerator.addCommentLine(" DISTINCT CONSTRAINTS FOR OUTER BLOCK OF QUERY"));
 			cvc.getConstraints().add( (GenerateConstraintsToKillDistinctMutations.getDistinctConstraints(cvc, qbt)) );
-			cvc.getConstraints().add("\n%---------------------------------\n% END OF DISTINCT CONSTRAINTS FOR OUTER BLOCK OF QUERY\n%---------------------------------\n");
+			cvc.getConstraints().add(ConstraintGenerator.addCommentLine(" END OF DISTINCT CONSTRAINTS FOR OUTER BLOCK OF QUERY"));
 	
 			/** Call the method for the data generation*/
 			GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc);

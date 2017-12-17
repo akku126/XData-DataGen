@@ -1,5 +1,6 @@
 package killMutations.whereClauseNestedBlock;
 
+import generateConstraints.ConstraintGenerator;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GenerateConstraintsForConjunct;
 import generateConstraints.GenerateConstraintsToKillDistinctMutations;
@@ -117,9 +118,9 @@ public class DistinctMutationsInWhereSubQuery {
 				
 				
 				
-				cvc.getConstraints().add("\n%---------------------------------\n% DISTINCT CONSTRAINTS FOR WHERE CLAUSE SUBQUERY\n%---------------------------------\n");
+				cvc.getConstraints().add(ConstraintGenerator.addCommentLine("DISTINCT CONSTRAINTS FOR WHERE CLAUSE SUBQUERY "));
 				cvc.getConstraints().add( (GenerateConstraintsToKillDistinctMutations.getDistinctConstraints(cvc, qbt)) );
-				cvc.getConstraints().add("\n%---------------------------------\n% END OF DISTINCT CONSTRAINTS FOR WHERE CLAUSE SUBQUERY\n%---------------------------------\n");
+				cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF DISTINCT CONSTRAINTS FOR WHERE CLAUSE SUBQUERY "));
 
 				/** Call the method for the data generation*/
 				GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc);

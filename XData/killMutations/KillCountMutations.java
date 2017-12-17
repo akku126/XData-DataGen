@@ -3,6 +3,7 @@ package killMutations;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import generateConstraints.ConstraintGenerator;
 import generateConstraints.CountMutations;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import testDataGen.GenerateCVC1;
@@ -49,9 +50,9 @@ public class KillCountMutations {
 		cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlock(cvc) );		
 		
 		/**add constraints related to count mutation*/
-		cvc.getConstraints().add("\n%-----------------------------------------------------\n%CONSTRAINTS FOR KILLING COUNT MUTATIONS \n%--------------------------------------------------------------\n");
+		cvc.getConstraints().add(ConstraintGenerator.addCommentLine("CONSTRAINTS FOR KILLING COUNT MUTATIONS "));
 		cvc.getConstraints().add(constString);
-		cvc.getConstraints().add("\n%-----------------------------------------------------\n%END OF CONSTRAINTS FOR KILLING COUNT MUTATIONS \n%--------------------------------------------------------------\n");
+		cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF CONSTRAINTS FOR KILLING COUNT MUTATIONS "));
 		/** Call the method for the data generation*/
 		GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc);
 	}
@@ -85,9 +86,9 @@ public static void killCountMutationsSMT(GenerateCVC1 cvc,	QueryBlockDetails qbt
 		//cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlock(cvc) );		
 		
 		/**add constraints related to count mutation*/
-		cvc.getConstraints().add("\n%-----------------------------------------------------\n%CONSTRAINTS FOR KILLING COUNT MUTATIONS \n%--------------------------------------------------------------\n");
+		cvc.getConstraints().add(ConstraintGenerator.addCommentLine("CONSTRAINTS FOR KILLING COUNT MUTATIONS "));
 		cvc.getConstraints().add("");//constString);
-		cvc.getConstraints().add("\n%-----------------------------------------------------\n%END OF CONSTRAINTS FOR KILLING COUNT MUTATIONS \n%--------------------------------------------------------------\n");
+		cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF CONSTRAINTS FOR KILLING COUNT MUTATIONS "));
 		/** Call the method for the data generation*/
 		//GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc);
 	}

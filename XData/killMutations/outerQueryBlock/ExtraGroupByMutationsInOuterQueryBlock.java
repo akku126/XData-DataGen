@@ -1,5 +1,6 @@
 package killMutations.outerQueryBlock;
 
+import generateConstraints.ConstraintGenerator;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GenerateConstraintsForHavingClause;
 import generateConstraints.GenerateConstraintsToKillExtraGroupByMutations;
@@ -103,9 +104,9 @@ public class ExtraGroupByMutationsInOuterQueryBlock {
 			GenerateCommonConstraintsForQuery.generateNullandDBConstraints(cvc,false);
 			
 			/**Get the constraints to kill this mutation*/
-			cvc.getConstraints().add("\n%---------------------------------\n%CONSTRAINTS TO KILL EXTRA GROUP BY ATTRIBUTES\n%---------------------------------\n");
+			cvc.getConstraints().add(ConstraintGenerator.addCommentLine("CONSTRAINTS TO KILL EXTRA GROUP BY ATTRIBUTES "));
 			cvc.getConstraints().add(GenerateConstraintsToKillExtraGroupByMutations.getExtraGroupByConstraints(cvc, outer, extraColumn,tableOccurrence));
-			cvc.getConstraints().add("\n%---------------------------------\n%END OF CONSTRAINTS TO KILL EXTRA GROUP BY ATTRIBUTES\n%---------------------------------\n");
+			cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF CONSTRAINTS TO KILL EXTRA GROUP BY ATTRIBUTES "));
 	
 			/** Call the method for the data generation*/
 			//GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc);
@@ -163,7 +164,7 @@ public class ExtraGroupByMutationsInOuterQueryBlock {
 			ArrayList<Column> extraColumn = GenerateConstraintsToKillExtraGroupByMutations.getExtraColumns(cvc,outer, tableOccurrence);
 			
 			HashSet<HashSet<Node>> temp = (HashSet<HashSet<Node>>) ((HashSet<HashSet<Node>>) outer.getUniqueElementsAdd()).clone();
-			
+			ConstraintGenerator constrGen = new ConstraintGenerator();
 			for(Column col: extraColumn){
 				
 				Boolean firstRun = true;
@@ -207,7 +208,7 @@ public class ExtraGroupByMutationsInOuterQueryBlock {
 							for(int k=0; k < qb.getAggConstraints().size();k++){
 								String constraint = GenerateConstraintsForHavingClause.getHavingClauseConstraints(cvc, qb, qb.getAggConstraints().get(k), qb.getFinalCount(), j);
 								havingEachGroupConstraint += constraint;
-								havingEachGroupNegConstraint += negateConstraint(constraint);
+								havingEachGroupNegConstraint += constrGen.getNegatedConstraint(constraint);
 							}
 						
 						// Constraint for both groups taken together
@@ -228,23 +229,23 @@ public class ExtraGroupByMutationsInOuterQueryBlock {
 							cvc.setNoOfTuples(noOfTuples);
 							String constraint = GenerateConstraintsForHavingClause.getHavingClauseConstraints(cvc, qb, qb.getAggConstraints().get(k), qb.getFinalCount() * qb.getNoOfGroups(), 0);
 							havingUnionConstraint += constraint;
-							havingUnionNegConstraint += negateConstraint(constraint); 
+							havingUnionNegConstraint += constrGen.getNegatedConstraint(constraint); 
 						}
 					}
 					
 					if(i == 0){
 						/** Generate havingClause constraints */
-						cvc.getConstraints().add("\n%---------------------------------\n%HAVING CLAUSE CONSTRAINTS\n%---------------------------------\n");
+						cvc.getConstraints().add(ConstraintGenerator.addCommentLine("HAVING CLAUSE CONSTRAINTS"));
 						cvc.getConstraints().add(havingEachGroupConstraint);
 						cvc.getConstraints().add(havingUnionNegConstraint);
-						cvc.getConstraints().add("\n%---------------------------------\n%END OF HAVING CLAUSE CONSTRAINTS\n%---------------------------------\n");
+						cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF HAVING CLAUSE CONSTRAINTS "));
 					}
 					else{
 						/** Generate havingClause constraints */
-						cvc.getConstraints().add("\n%---------------------------------\n%HAVING CLAUSE CONSTRAINTS\n%---------------------------------\n");
+						cvc.getConstraints().add(ConstraintGenerator.addCommentLine("HAVING CLAUSE CONSTRAINTS "));
 						cvc.getConstraints().add(havingUnionConstraint);
 						cvc.getConstraints().add(havingEachGroupNegConstraint);
-						cvc.getConstraints().add("\n%---------------------------------\n%END OF HAVING CLAUSE CONSTRAINTS\n%---------------------------------\n");
+						cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF HAVING CLAUSE CONSTRAINTS" ));
 						
 					}
 					

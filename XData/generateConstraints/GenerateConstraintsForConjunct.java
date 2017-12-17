@@ -1,5 +1,6 @@
 package generateConstraints;
 
+import java.io.Console;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Vector;
@@ -12,6 +13,7 @@ import parsing.Node;
 import parsing.Table;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
+import util.ConstraintObject;
 
 /**
  * This method is used to get positive constraints for the given conjunct of the query block
@@ -37,7 +39,7 @@ public class GenerateConstraintsForConjunct {
 		if(conjunct == null)
 			return constraintString;
 
-		constraintString += "\n%---------------------------------\n% EQUIVALENCE CLASS CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" EQUIVALENCE CLASS CONSTRAINTS");
 
 		/** Get the equivalence class constraints for this conjunct*/
 		Vector<Vector<Node>> equivalenceClasses = conjunct.getEquivalenceClasses();
@@ -51,12 +53,14 @@ public class GenerateConstraintsForConjunct {
 		}
 
 
-		constraintString += "\n%---------------------------------\n% SELECTION CLASS CONSTRAINTS\n%---------------------------------\n";
-
+		constraintString +=  ConstraintGenerator.addCommentLine(" SELECTION CLASS CONSTRAINTS");
+		ConstraintGenerator constraintGen = new ConstraintGenerator();
+		ArrayList<ConstraintObject> constrList = new ArrayList<ConstraintObject>();
+		
 		/** Get the constraints for the selection conditions of the form A.x = Constant of this conjunct */
 		Vector<Node> selectionConds = conjunct.getSelectionConds();
 		for(int k=0; k< selectionConds.size(); k++){
-
+			
 			//String tableNo = selectionConds.get(k).getLeft().getTableNameNo();
 			String tableNo = "";
 			if(selectionConds.get(k).getType().equalsIgnoreCase(Node.getBaoNodeType())){
@@ -81,13 +85,16 @@ public class GenerateConstraintsForConjunct {
 			int offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
 
 			int count = cvc.getNoOfTuples().get(tableNo) * queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */
-			for(int l=1;l<=count;l++)
-				constraintString += "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n";
+			for(int l=1;l<=count;l++){
+				ConstraintObject constrnObj = new ConstraintObject();
+				constrnObj.setLeftConstraint(constraintGen.genPositiveCondsForPred(queryBlock,selectionConds.get(k).getLeft(), (l+offset-1)));
+				constrnObj.setRightConstraint(constraintGen.genPositiveCondsForPred(queryBlock,selectionConds.get(k).getRight(), (l+offset-1)));
+				constrnObj.setOperator(selectionConds.get(k).getOperator());
+				constrList.add(constrnObj);
+			}				
+				//constraintString += "ASSERT " + constraintGen.genPositiveCondsForPred(cvc,queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n";
 		}
-
-
-
-		constraintString += "\n%---------------------------------\n% ALL CLASS CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" ALL CLASS CONSTRAINTS");
 
 		/** Get the constraints for the non equi-join conditions */
 		//Vector<Node> allConds = conjunct.getAllConds();
@@ -97,12 +104,12 @@ public class GenerateConstraintsForConjunct {
 
 
 
-		constraintString += "\n%---------------------------------\n% STRING SELECTION CLASS CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" STRING SELECTION CLASS CONSTRAINTS");
 
 		/**get the constraints for the conditions of the form A.x=cons where cons is a string constant */
 		Vector<Node> stringSelectionConds = conjunct.getStringSelectionConds();
 		for(int k=0; k<stringSelectionConds.size(); k++){
-
+			ConstraintObject conObj = new ConstraintObject();			
 			//String tableNo = stringSelectionConds.get(k).getLeft().getTableNameNo();
 			String tableNo = "";
 			if(stringSelectionConds.get(k).getType().equalsIgnoreCase(Node.getBaoNodeType())){
@@ -126,40 +133,61 @@ public class GenerateConstraintsForConjunct {
 			int offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
 
 			int count = cvc.getNoOfTuples().get(tableNo) * queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;
-			for(int l=1;l<=count;l++)
-				cvc.getStringConstraints().add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1)+";" +"\n" );
-		}
+			for(int l=1;l<=count;l++){
+				//cvc.getStringConstraints().add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1)+";" +"\n" );
+		//}			
+				/*conObj.setLeftConstraint(constraintGen.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1));
+				constrList.add(conObj);*/
+				cvc.getStringConstraints().add(constraintGen.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1));
+			}
+			}
+		/*if(constrList != null && constrList.size()>0){
+				constraintString += constraintGen.generateANDConstraintsWithAssert(constrList); // "ASSERT " + constraintGen.genPositiveCondsForPred(cvc,queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n";
+		}*/
 
 
-		constraintString += "\n%---------------------------------\n% LIKE CLAUSE CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" LIKE CLAUSE CONSTRAINTS");
 
 		/** Generate constraints for the like conditions of this conjunct*/
 		Vector<Node> likeConds = conjunct.getLikeConds();
 		for(int k=0; k<likeConds.size(); k++){
-
+			ConstraintObject conObj = new ConstraintObject();			
 			String tableNo = likeConds.get(k).getLeft().getTableNameNo();
 			int offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
 
 			int count = cvc.getNoOfTuples().get(tableNo) * queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;
-			for(int l=1;l<=count;l++)
-				cvc.getStringConstraints().add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, likeConds.get(k),l+offset-1)+";\n" );
+			for(int l=1;l<=count;l++){
+				//cvc.getStringConstraints().add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, likeConds.get(k),l+offset-1)+";\n" );
+		//}
+				conObj.setLeftConstraint(constraintGen.genPositiveCondsForPred(queryBlock, likeConds.get(k),l+offset-1));
+
+				constrList.add(conObj);
+			}
+			}
+			
+			//constraintString += constraintGen.generateANDConstraintsWithAssert(cvc, constrList); // "ASSERT " + constraintGen.genPositiveCondsForPred(cvc,queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n";
+		if(constrList != null && constrList.size()>0){
+			constraintString +=constraintGen.generateANDConstraints(constrList);
 		}
-
-
-		constraintString += "\n%---------------------------------\n% WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n%---------------------------------\n";
+		
+		constraintString +=  ConstraintGenerator.addCommentLine(" WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS");
 		constraintString += GenerateConstraintsForWhereClauseSubQueryBlock.getConstraintsForWhereClauseSubQueryBlock(cvc, queryBlock, conjunct);
-		constraintString += "\n%---------------------------------\n% END OF WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" END OF WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS");
 
 		Constraints finalConstraints=new Constraints();
 		finalConstraints.constraints.add("");
 		finalConstraints.stringConstraints.add("");
 		for(DisjunctQueryStructure disjunct:conjunct.disjuncts){
 			Constraints constraints=GenerateConstraintsForDisjunct.getConstraintsForDisjuct(cvc, queryBlock, disjunct);
-			finalConstraints=Constraints.mergeConstraints(finalConstraints,constraints);
+			finalConstraints=Constraints.mergeConstraints(cvc,finalConstraints,constraints);
 		}
 		if(!conjunct.disjuncts.isEmpty()){
-			constraintString+="\n"+Constraints.getConstraint(finalConstraints) + "\n";
-			cvc.getStringConstraints().add(Constraints.getStringConstraints(finalConstraints));
+			constraintString+="\n"+Constraints.getConstraint(cvc,finalConstraints) + "\n";
+			//cvc.getStringConstraints().add(Constraints.getStringConstraints(cvc,finalConstraints));
+			ArrayList<String> strConstraints =  Constraints.getStringConstraints(cvc,finalConstraints);
+			for(String constraint : strConstraints){
+				cvc.getStringConstraints().add(constraint.toString());
+			}
 		}
 		
 		return constraintString;
@@ -177,6 +205,8 @@ public class GenerateConstraintsForConjunct {
 				constraintString += GenerateJoinPredicateConstraints.getConstraintsForEquiJoins1(cvc, queryBlock, n1,n2);
 			}
 		}
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+		ArrayList<ConstraintObject> constrObjList = new ArrayList<ConstraintObject>();
 		
 		Vector<Node> selectionConds = conjunct.getSelectionConds();
 		for(int k=0; k< selectionConds.size(); k++){
@@ -206,9 +236,17 @@ public class GenerateConstraintsForConjunct {
 			int offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
 
 			int count = cvc.getNoOfTuples().get(tableNo) * queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */
-			for(int l=1;l<=count;l++)
-				constraintString += GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, selectionConds.get(k),l+offset-1) +" AND ";
+			for(int l=1;l<=count;l++){
+				//constraintString += GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, selectionConds.get(k),l+offset-1) +" AND ";
+				ConstraintObject constrnObj = new ConstraintObject();
+				constrnObj.setLeftConstraint(constrGen.genPositiveCondsForPred(queryBlock,selectionConds.get(k).getLeft(), (l+offset-1)));
+				constrnObj.setRightConstraint(constrGen.genPositiveCondsForPred(queryBlock,selectionConds.get(k).getRight(), (l+offset-1)));
+				constrnObj.setOperator(selectionConds.get(k).getOperator());
+				constrObjList.add(constrnObj);
+			}
+			
 		}
+		
 		
 		//FOR CASE CONDITION IN WHERE CLAUSE - ADD CONSTRAINTS APPENDING AND HERE
 				if(cvc.getqStructure().getCaseConditionMap() != null && !cvc.getqStructure().getCaseConditionMap().isEmpty()){
@@ -217,8 +255,12 @@ public class GenerateConstraintsForConjunct {
 						if(!constraintString.equalsIgnoreCase("") && constraintString.length() > 7)
 							constraintString = constraintString.substring(0,constraintString.length()-4);
 					}*/
-					constraintString += (GenerateConstraintsForCaseConditions.getCaseConditionConstraintsForOriginalQuery(cvc,cvc.getOuterBlock()));
-					constraintString += " AND ";
+				////	constraintString += (GenerateConstraintsForCaseConditions.getCaseConditionConstraintsForOriginalQuery(cvc,cvc.getOuterBlock()));
+					//constraintString += " AND ";
+					
+					ConstraintObject constrnObj = new ConstraintObject();
+					constrnObj.setLeftConstraint(GenerateConstraintsForCaseConditions.getCaseConditionConstraintsForOriginalQuery(cvc,cvc.getOuterBlock()));
+					constrObjList.add(constrnObj);
 				}
 				
 				 
@@ -226,32 +268,27 @@ public class GenerateConstraintsForConjunct {
 		//Vector<Node> allConds = conjunct.getAllConds();
 		Vector<Node> allConds = conjunct.getJoinCondsAllOther();
 		for(int k=0; k<allConds.size(); k++) {
+			
 			String nonEquiJoinConstraint = GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds);
 			
-			if(nonEquiJoinConstraint.startsWith("ASSERT")) {
-				//Changed by shree for non-equi join conditions in selection clause
-				//if(constraintString != null && constraintString.length()>6 && constraintString.substring(constraintString.length()-5,constraintString.length()).equalsIgnoreCase(" AND ")){
-					nonEquiJoinConstraint= nonEquiJoinConstraint.substring(7,nonEquiJoinConstraint.length()-2);
-				   
-				/*}else{
-					 nonEquiJoinConstraint = nonEquiJoinConstraint.replace("ASSERT"," AND ");
-				}
-			}
-			
-			if(nonEquiJoinConstraint.contains(";")){
-				nonEquiJoinConstraint = nonEquiJoinConstraint.replace(";", " ");
-			}
-			if(nonEquiJoinConstraint.contains("ASSERT")){
-				
-					nonEquiJoinConstraint = nonEquiJoinConstraint.replace("ASSERT"," AND");*/
-			}
-			constraintString += nonEquiJoinConstraint +" AND ";
+			ConstraintObject constrnObj = new ConstraintObject();
+			constrnObj.setLeftConstraint(nonEquiJoinConstraint);
+			constrObjList.add(constrnObj);
 		}
 		
-		if(!constraintString.equalsIgnoreCase("")){
+			/*if(nonEquiJoinConstraint.startsWith("ASSERT")) {
+				nonEquiJoinConstraint= nonEquiJoinConstraint.substring(7,nonEquiJoinConstraint.length()-2);
+			
+			//if(nonEquiJoinConstraint.contains(";")){
+			//	nonEquiJoinConstraint = nonEquiJoinConstraint.replace(";", " ");
+			}
+			constraintString += nonEquiJoinConstraint +" AND ";*/
+		//}
+		
+	/*	if(!constraintString.equalsIgnoreCase("")){
 			constraintString=constraintString.substring(0,constraintString.length()-5);
 		}
-		constraints.constraints.add(constraintString);
+		constraints.constraints.add(constraintString);*/
 		
 		String stringConstraint="";
 		
@@ -281,8 +318,13 @@ public class GenerateConstraintsForConjunct {
 			int offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
 
 			int count = cvc.getNoOfTuples().get(tableNo) * queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;
-			for(int l=1;l<=count;l++)
-				stringConstraint += GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1) +" AND ";
+			for(int l=1;l<=count;l++){
+				stringConstraint = constrGen.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1);
+				/*ConstraintObject constObj = new ConstraintObject();
+				constObj.setLeftConstraint(stringConstraint);
+				constrObjList.add(constObj);*/
+				constraints.stringConstraints.add(stringConstraint);
+			}
 		}
 		
 		
@@ -297,18 +339,26 @@ public class GenerateConstraintsForConjunct {
 
 			int count = cvc.getNoOfTuples().get(tableNo) * queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;
 			for(int l=1;l<=count;l++)
-				stringConstraint+= GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, likeConds.get(k),l+offset-1)+" AND ";
+			//	stringConstraint+= GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, likeConds.get(k),l+offset-1)+" AND ";
+			stringConstraint = constrGen.genPositiveCondsForPred(queryBlock, likeConds.get(k),l+offset-1);
+			ConstraintObject constObj = new ConstraintObject();
+			constObj.setLeftConstraint(stringConstraint);		
+			constrObjList.add(constObj);
 		}
 		
-		if(!stringConstraint.equalsIgnoreCase("")){
+		/*if(!stringConstraint.equalsIgnoreCase("")){
 			stringConstraint = stringConstraint.substring(0, stringConstraint.length()-5);
 		}
 		constraints.stringConstraints.add(stringConstraint);
+		*/
+		
+		constraintString =constrGen.generateANDConstraints(constrObjList);
+		constraints.constraints.add(constraintString);
 		
 		for(DisjunctQueryStructure disjunct:conjunct.disjuncts){
-			constraints = Constraints.mergeConstraints(constraints,GenerateConstraintsForDisjunct.getConstraintsForDisjuct(cvc, queryBlock, disjunct));
+			constraints = Constraints.mergeConstraints(cvc,constraints,GenerateConstraintsForDisjunct.getConstraintsForDisjuct(cvc, queryBlock, disjunct));
 		}
-		
+
 		return constraints;
 	}
 
@@ -327,7 +377,7 @@ public class GenerateConstraintsForConjunct {
 		if(conjunct == null)
 			return constraintString;
 
-		constraintString += "\n%---------------------------------\n% EQUIVALENCE CLASS CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" EQUIVALENCE CLASS CONSTRAINTS");
 
 		/** Get the equivalence class constraints for this conjunct*/
 		Vector<Vector<Node>> equivalenceClasses = conjunct.getEquivalenceClasses();
@@ -341,7 +391,7 @@ public class GenerateConstraintsForConjunct {
 		}
 
 
-		constraintString += "\n%---------------------------------\n% SELECTION CLASS CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" SELECTION CLASS CONSTRAINTS");
 
 		/** Get the constraints for the selection conditions of the form A.x = Constant of this conjunct */
 		Vector<Node> selectionConds = conjunct.getSelectionConds();
@@ -367,13 +417,18 @@ public class GenerateConstraintsForConjunct {
 			int offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
 
 			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
-			for(int l=1;l<=count;l++)
-				constraintString += "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n";
+			for(int l=1;l<=count;l++){
+				
+				constraintString +=  ConstraintGenerator.genPositiveCondsForPred(queryBlock, selectionConds.get(k),l+offset-1)+"\n" ;
+				
+				//constraintString += "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n";
+				
+			}
 		}
 
 
 
-		constraintString += "\n%---------------------------------\n% STRING SELECTION CLASS CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" STRING SELECTION CLASS CONSTRAINTS");
 
 		/**get the constraints for the conditions of the form A.x=cons where cons is a string constant */
 		Vector<Node> stringSelectionConds = conjunct.getStringSelectionConds();
@@ -400,11 +455,12 @@ public class GenerateConstraintsForConjunct {
 
 			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
 			for(int l=1;l<=count;l++)
-				cvc.getStringConstraints().add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1)+";" +"\n" );
+				cvc.getStringConstraints().add(ConstraintGenerator.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1) +"\n" );
+				//GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1)+";" +"\n" );
 		}
 
 
-		constraintString += "\n%---------------------------------\n% LIKE CLAUSE CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" LIKE CLAUSE CONSTRAINTS");
 
 		/** Generate constraints for the like conditions of this conjunct*/
 		Vector<Node> likeConds = conjunct.getLikeConds();
@@ -415,13 +471,13 @@ public class GenerateConstraintsForConjunct {
 
 			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
 			for(int l=1;l<=count;l++)
-				cvc.getStringConstraints().add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, likeConds.get(k),l+offset-1)+";\n" );
+				cvc.getStringConstraints().add(ConstraintGenerator.genPositiveCondsForPred(queryBlock, likeConds.get(k),l+offset-1)+";\n" );
 		}
 
 
-		constraintString += "\n%---------------------------------\n% WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS");
 		constraintString += GenerateConstraintsForWhereClauseSubQueryBlock.getConstraintsForWhereClauseSubQueryBlock(cvc, queryBlock, conjunct);
-		constraintString += "\n%---------------------------------\n% END OF WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" END OF WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS");
 
 
 		return constraintString;
@@ -442,7 +498,7 @@ public class GenerateConstraintsForConjunct {
 		if(conjunct == null)
 			return constraintString;
 
-		constraintString += "\n%---------------------------------\n% EQUIVALENCE CLASS CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" EQUIVALENCE CLASS CONSTRAINTS");
 
 		/** Get the equivalence class constraints for this conjunct*/
 		Vector<Vector<Node>> equivalenceClasses = conjunct.getEquivalenceClasses();
@@ -456,7 +512,7 @@ public class GenerateConstraintsForConjunct {
 		}
 
 
-		constraintString += "\n%---------------------------------\n% ALL CLASS CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" ALL CLASS CONSTRAINTS");
 
 		/** Get the constraints for the non equi-join conditions */
 		//Vector<Node> allConds = conjunct.getAllConds();
@@ -466,7 +522,7 @@ public class GenerateConstraintsForConjunct {
 
 
 
-		constraintString += "\n%---------------------------------\n% STRING SELECTION CLASS CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" STRING SELECTION CLASS CONSTRAINTS");
 
 		/**get the constraints for the conditions of the form A.x=cons where cons is a string constant */
 		Vector<Node> stringSelectionConds = conjunct.getStringSelectionConds();
@@ -493,11 +549,12 @@ public class GenerateConstraintsForConjunct {
 
 			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
 			for(int l=1;l<=count;l++)
-				cvc.getStringConstraints().add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1)+";" +"\n" );
+				cvc.getStringConstraints().add( ConstraintGenerator.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1)+";" +"\n" );
+						//"ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1)+";" +"\n" );
 		}
 
 
-		constraintString += "\n%---------------------------------\n% LIKE CLAUSE CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" LIKE CLAUSE CONSTRAINTS");
 
 		/** Generate constraints for the like conditions of this conjunct*/
 		Vector<Node> likeConds = conjunct.getLikeConds();
@@ -508,13 +565,14 @@ public class GenerateConstraintsForConjunct {
 
 			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
 			for(int l=1;l<=count;l++)
-				cvc.getStringConstraints().add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, likeConds.get(k),l+offset-1)+";\n" );
+				cvc.getStringConstraints().add(ConstraintGenerator.genPositiveCondsForPred(queryBlock, likeConds.get(k),l+offset-1)+";\n" );
+						//"ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, likeConds.get(k),l+offset-1)+";\n" );
 		}
 
 
-		constraintString += "\n%---------------------------------\n% WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS");
 		constraintString += GenerateConstraintsForWhereClauseSubQueryBlock.getConstraintsForWhereClauseSubQueryBlock(cvc, queryBlock, conjunct);
-		constraintString += "\n%---------------------------------\n% END OF WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" END OF WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS");
 
 
 		return constraintString;
@@ -535,7 +593,7 @@ public class GenerateConstraintsForConjunct {
 		if(conjunct == null)
 			return constraintString;
 
-		constraintString += "\n%---------------------------------\n% EQUIVALENCE CLASS CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" EQUIVALENCE CLASS CONSTRAINTS");
 
 		/** Get the equivalence class constraints for this conjunct*/
 		Vector<Vector<Node>> equivalenceClasses = conjunct.getEquivalenceClasses();
@@ -549,7 +607,7 @@ public class GenerateConstraintsForConjunct {
 		}
 
 
-		constraintString += "\n%---------------------------------\n% SELECTION CLASS CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" SELECTION CLASS CONSTRAINTS");
 
 		/** Get the constraints for the selection conditions of the form A.x = Constant of this conjunct */
 		Vector<Node> selectionConds = conjunct.getSelectionConds();
@@ -576,12 +634,13 @@ public class GenerateConstraintsForConjunct {
 
 			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
 			for(int l=1;l<=count;l++)
-				constraintString += "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n";
+				constraintString += ConstraintGenerator.genPositiveCondsForPred(queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n";
+				//"ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n";
 		}
 
 
 
-		constraintString += "\n%---------------------------------\n% ALL CLASS CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" ALL CLASS CONSTRAINTS");
 
 		/** Get the constraints for the non equi-join conditions */
 		//Vector<Node> allConds = conjunct.getAllConds();
@@ -591,7 +650,7 @@ public class GenerateConstraintsForConjunct {
 
 
 
-		constraintString += "\n%---------------------------------\n% LIKE CLAUSE CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" LIKE CLAUSE CONSTRAINTS");
 
 		/** Generate constraints for the like conditions of this conjunct*/
 		Vector<Node> likeConds = conjunct.getLikeConds();
@@ -602,13 +661,14 @@ public class GenerateConstraintsForConjunct {
 
 			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
 			for(int l=1;l<=count;l++)
-				cvc.getStringConstraints().add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, likeConds.get(k),l+offset-1)+";\n" );
+				cvc.getStringConstraints().add(ConstraintGenerator.genPositiveCondsForPred(queryBlock, likeConds.get(k),l+offset-1)+";\n" );
+						//"ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, likeConds.get(k),l+offset-1)+";\n" );
 		}
 
 
-		constraintString += "\n%---------------------------------\n% WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS");
 		constraintString += GenerateConstraintsForWhereClauseSubQueryBlock.getConstraintsForWhereClauseSubQueryBlock(cvc, queryBlock, conjunct);
-		constraintString += "\n%---------------------------------\n% END OF WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" END OF WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS");
 
 
 		return constraintString;
@@ -629,7 +689,7 @@ public class GenerateConstraintsForConjunct {
 		if(conjunct == null)
 			return constraintString;
 
-		constraintString += "\n%---------------------------------\n% EQUIVALENCE CLASS CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" EQUIVALENCE CLASS CONSTRAINTS");
 
 		/** Get the equivalence class constraints for this conjunct*/
 		Vector<Vector<Node>> equivalenceClasses = conjunct.getEquivalenceClasses();
@@ -643,7 +703,7 @@ public class GenerateConstraintsForConjunct {
 		}
 
 
-		constraintString += "\n%---------------------------------\n% SELECTION CLASS CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" SELECTION CLASS CONSTRAINTS");
 
 		/** Get the constraints for the selection conditions of the form A.x = Constant of this conjunct */
 		Vector<Node> selectionConds = conjunct.getSelectionConds();
@@ -670,12 +730,13 @@ public class GenerateConstraintsForConjunct {
 
 			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
 			for(int l=1;l<=count;l++)
-				constraintString += "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n";
+				constraintString += ConstraintGenerator.genPositiveCondsForPred(queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n";
+				//"ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n";
 		}
 
 
 
-		constraintString += "\n%---------------------------------\n% ALL CLASS CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" ALL CLASS CONSTRAINTS");
 
 		/** Get the constraints for the non equi-join conditions */
 		//Vector<Node> allConds = conjunct.getAllConds();
@@ -685,7 +746,7 @@ public class GenerateConstraintsForConjunct {
 
 
 
-		constraintString += "\n%---------------------------------\n% STRING SELECTION CLASS CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" STRING SELECTION CLASS CONSTRAINTS");
 
 		/**get the constraints for the conditions of the form A.x=cons where cons is a string constant */
 		Vector<Node> stringSelectionConds = conjunct.getStringSelectionConds();
@@ -713,13 +774,14 @@ public class GenerateConstraintsForConjunct {
 
 			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
 			for(int l=1;l<=count;l++)
-				cvc.getStringConstraints().add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1)+";" +"\n" );
+				cvc.getStringConstraints().add(ConstraintGenerator.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1)+";" +"\n" );
+						//"ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1)+";" +"\n" );
 		}
 
 
-		constraintString += "\n%---------------------------------\n% WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS");
 		constraintString += GenerateConstraintsForWhereClauseSubQueryBlock.getConstraintsForWhereClauseSubQueryBlock(cvc, queryBlock, conjunct);
-		constraintString += "\n%---------------------------------\n% END OF WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" END OF WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS");
 
 
 		return constraintString;
@@ -740,7 +802,7 @@ public class GenerateConstraintsForConjunct {
 		if(conjunct == null)
 			return constraintString;
 
-		constraintString += "\n%---------------------------------\n% EQUIVALENCE CLASS CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" EQUIVALENCE CLASS CONSTRAINTS");
 
 		/** Get the equivalence class constraints for this conjunct*/
 		Vector<Vector<Node>> equivalenceClasses = conjunct.getEquivalenceClasses();
@@ -754,7 +816,7 @@ public class GenerateConstraintsForConjunct {
 		}
 
 
-		constraintString += "\n%---------------------------------\n% SELECTION CLASS CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" SELECTION CLASS CONSTRAINTS");
 
 		/** Get the constraints for the selection conditions of the form A.x = Constant of this conjunct */
 		Vector<Node> selectionConds = conjunct.getSelectionConds();
@@ -781,12 +843,13 @@ public class GenerateConstraintsForConjunct {
 
 			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
 			for(int l=1;l<=count;l++)
-				constraintString += "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n";
+				constraintString +=ConstraintGenerator.genPositiveCondsForPred(queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n"; 
+				//"ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n";
 		}
 
 
 
-		constraintString += "\n%---------------------------------\n% ALL CLASS CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" ALL CLASS CONSTRAINTS");
 
 		/** Get the constraints for the non equi-join conditions */
 		//Vector<Node> allConds = conjunct.getAllConds();
@@ -796,7 +859,7 @@ public class GenerateConstraintsForConjunct {
 
 
 
-		constraintString += "\n%---------------------------------\n% STRING SELECTION CLASS CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" STRING SELECTION CLASS CONSTRAINTS");
 
 		/**get the constraints for the conditions of the form A.x=cons where cons is a string constant */
 		Vector<Node> stringSelectionConds = conjunct.getStringSelectionConds();
@@ -824,11 +887,12 @@ public class GenerateConstraintsForConjunct {
 
 			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
 			for(int l=1;l<=count;l++)
-				cvc.getStringConstraints().add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1)+";" +"\n" );
+				cvc.getStringConstraints().add(ConstraintGenerator.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1)+";" +"\n" );
+						//"ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1)+";" +"\n" );
 		}
 
 
-		constraintString += "\n%---------------------------------\n% LIKE CLAUSE CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=  ConstraintGenerator.addCommentLine(" LIKE CLAUSE CONSTRAINTS");
 
 		/** Generate constraints for the like conditions of this conjunct*/
 		Vector<Node> likeConds = conjunct.getLikeConds();
@@ -839,7 +903,8 @@ public class GenerateConstraintsForConjunct {
 
 			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
 			for(int l=1;l<=count;l++)
-				cvc.getStringConstraints().add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, likeConds.get(k),l+offset-1)+";\n" );
+				cvc.getStringConstraints().add(ConstraintGenerator.genPositiveCondsForPred(queryBlock, likeConds.get(k),l+offset-1)+";\n" );
+						//"ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, likeConds.get(k),l+offset-1)+";\n" );
 		}
 
 		return constraintString;
@@ -849,22 +914,23 @@ public class GenerateConstraintsForConjunct {
 		String constraintString = "";
 		
 		Vector<String> OrConstraints=new Vector<String>();		
+		ArrayList<ConstraintObject> OrConstrList = new ArrayList<ConstraintObject>(); 
 		Vector<Node> joinConds = conjunct.getJoinCondsAllOther();
-		
+		ConstraintGenerator constrGen = new ConstraintGenerator();
 		for(Node n : joinConds){
 			Node left = n.getLeft();
 			Node right = n.getRight();
 			
 			int leftTuples = cvc.getNoOfOutputTuples().get(left.getTable().getTableName());
 			int rightTuples = cvc.getNoOfOutputTuples().get(right.getTable().getTableName());
-			OrConstraints.add(GenerateJoinPredicateConstraints.genNegativeCondsEqClassForAllTuplePairs(cvc, queryBlock, right, left, rightTuples, leftTuples));
+			OrConstrList = GenerateJoinPredicateConstraints.genNegativeCondsEqClassForAllTuplePairs(cvc, queryBlock, right, left, rightTuples, leftTuples);
 		}
-		
-		for(String s: OrConstraints){
+		constraintString += constrGen.generateOrConstraints(OrConstrList);
+		/*for(String s: OrConstraints){
 			constraintString += "(" + s + ") OR ";
 		}
 		
-		constraintString = constraintString.substring(0, constraintString.length()-3);
+		constraintString = constraintString.substring(0, constraintString.length()-3);*/
 		
 		return constraintString.trim();
 	}
@@ -963,8 +1029,8 @@ public class GenerateConstraintsForConjunct {
 
 				/**get table details*/
 				String tableNo = negativeStringSelConds.get(i).getLeft().getTableNameNo();
-
-				OrStringConstraints.add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, negativeStringSelConds.get(i),k)+";" );
+				OrStringConstraints.add( ConstraintGenerator.genPositiveCondsForPred(queryBlock, negativeStringSelConds.get(i),k)+"\n" );
+				//OrStringConstraints.add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, negativeStringSelConds.get(i),k)+";" );
 			}
 
 
@@ -978,21 +1044,22 @@ public class GenerateConstraintsForConjunct {
 
 				/**get table details*/
 				String tableNo = negativeLikeConds.get(i).getLeft().getTableNameNo();
-				OrStringConstraints.add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, negativeLikeConds.get(i), k)+";");
+				OrStringConstraints.add( ConstraintGenerator.genPositiveCondsForPred(queryBlock, negativeLikeConds.get(i), k)+"\n" );
+				//OrStringConstraints.add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, negativeLikeConds.get(i), k)+";");
 			}
 			
 			if(!OrStringConstraints.isEmpty()) {
-				Vector<String> tempVector = cvc.getStringSolver().solveOrConstraints( new Vector<String>(OrStringConstraints), cvc.getResultsetColumns(), cvc.getTableMap());		
+				//Vector<String> tempVector = cvc.getStringSolver().solveOrConstraints( new Vector<String>(OrStringConstraints), cvc.getResultsetColumns(), cvc.getTableMap());		
 				
-				for(int i = 0; i < tempVector.size(); i++){
+				/*for(int i = 0; i < tempVector.size(); i++){
 					String cond = tempVector.get(i).trim();
 					cond = cond.replace("ASSERT", "");
 					cond = cond.replace("\n", "");
 					cond = cond.replace(";", "");
 					cond = cond.trim();
 					OrConstraints.add(cond);
-				}
-				
+				}*/
+				OrConstraints.addAll(OrStringConstraints);
 				OrStringConstraints.clear();					
 			}
 			
@@ -1019,7 +1086,7 @@ public class GenerateConstraintsForConjunct {
 		
 		String constraintString = "";
 
-		constraintString += "%--------------------------------\n%NEGATIVE CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------------\n";
+		constraintString += ConstraintGenerator.addCommentLine(" NEGATIVE CONSTRAINTS FOR THIS CONJUNCT ");
 		
 		Vector<String> OrConstraints=new Vector<String>();
 		Vector<String> OrStringConstraints = new Vector<String>();
@@ -1044,7 +1111,7 @@ public class GenerateConstraintsForConjunct {
 					Node eceNulled = ec.get(j);			/** This is R.a - to be nulled */
 
 
-					String CVCStr = "%DataSet Generated By Nulling: "+ eceNulled.toString() + "\n";
+					String CVCStr =ConstraintGenerator.addCommentLine("DataSet Generated By Nulling: "+ eceNulled.toString() + "\n");
 					Table tableNulled = eceNulled.getTable();
 					Column colNulled = eceNulled.getColumn();
 
@@ -1123,7 +1190,7 @@ public class GenerateConstraintsForConjunct {
 						P.removeAll(nullableFKs);
 
 						/** Generate positiveConds for members in P*/ 
-						GenerateJoinPredicateConstraints.genPositiveConds(P);
+						GenerateJoinPredicateConstraints.genPositiveConds(cvc,P);
 				 	} 
 
 					/**Now generate negative conditions for Nulled relation
@@ -1142,10 +1209,7 @@ public class GenerateConstraintsForConjunct {
 						for(int k=0;k<P.size(); k++){
 							OrConstraints.add( GenerateJoinPredicateConstraints.genNegativeConds( cvc, queryBlock, colNulled, P.get(k)));
 						}
-					} 
-					
-					
-					
+					} 					
 				}
 			}
 		}
@@ -1177,7 +1241,7 @@ public class GenerateConstraintsForConjunct {
 
 			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
 			for(int l = 1; l <= count; l++)
-				OrConstraints.add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, negativeSelConds.get(k),l+offset-1)+";" +"\n" );
+				OrConstraints.add( ConstraintGenerator.genPositiveCondsForPred(queryBlock, negativeSelConds.get(k),l+offset-1)+"\n" );
 		}
 
 
@@ -1197,7 +1261,7 @@ public class GenerateConstraintsForConjunct {
 
 			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
 			for(int l = 1; l <= count; l++)
-				OrStringConstraints.add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, negativeStringSelConds.get(k),l+offset-1)+";" +"\n" );
+				OrStringConstraints.add( ConstraintGenerator.genPositiveCondsForPred(queryBlock, negativeStringSelConds.get(k),l+offset-1)+"\n" );
 		}
 
 
@@ -1215,7 +1279,7 @@ public class GenerateConstraintsForConjunct {
 
 			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
 			for(int l=1;l<=count;l++)
-				OrStringConstraints.add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, negativeLikeConds.get(k),l+offset-1)+";" +"\n" );
+				OrStringConstraints.add( ConstraintGenerator.genPositiveCondsForPred(queryBlock, negativeLikeConds.get(k),l+offset-1)+"\n" );
 		}
 
 
@@ -1266,13 +1330,10 @@ public class GenerateConstraintsForConjunct {
 		}
 		
 		}
-		
-		
-		
-		
+
 		if(!OrConstraints.isEmpty() && OrConstraints.size() != 0)
 			constraintString += processOrConstraints(OrConstraints);
-		constraintString += "\n%--------------------------------\n%END OF NEGATIVE CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------------";
+		constraintString += ConstraintGenerator.addCommentLine(" END OF NEGATIVE CONSTRAINTS FOR THIS CONJUNCT ");
 
 		if(!OrStringConstraints.isEmpty() && OrStringConstraints.size() != 0 )
 			cvc.getStringConstraints().add(processOrConstraints(OrStringConstraints));
@@ -1285,7 +1346,7 @@ public class GenerateConstraintsForConjunct {
 		
 		String constraintString = "";
 
-		//constraintString += "%--------------------------------\n%NEGATIVE CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------------\n";
+		//constraintString += ConstraintGenerator.addCommentLine("NEGATIVE CONSTRAINTS FOR THIS CONJUNCT ");
 		
 		Vector<String> OrConstraints=new Vector<String>();
 		Vector<String> OrStringConstraints = new Vector<String>();
@@ -1297,7 +1358,7 @@ public class GenerateConstraintsForConjunct {
 		/**get constraint*/
 		String constraint = GenerateJoinPredicateConstraints.getNegativeConstraintsForNonEquiJoins(cvc, queryBlock, allConds) ;
 
-		constraint=UtilRelatedToConstraints.removeAssert(constraint);
+	//	constraint=UtilRelatedToConstraints.removeAssert(constraint);
 		
 		if(!constraint.equalsIgnoreCase("")){
 			constraints.constraints.add(constraint);
@@ -1305,6 +1366,8 @@ public class GenerateConstraintsForConjunct {
 
 		/** Now generate Negative constraints for selection conditions */
 		Vector<Node> selectionConds = conjunct.getSelectionConds();
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+		ArrayList<ConstraintObject> constrList = new ArrayList<ConstraintObject>();
 
 		/**get negative conditions for these nodes*/
 		Vector<Node> negativeSelConds = GenerateCVCConstraintForNode.getNegativeConditions(selectionConds);
@@ -1319,11 +1382,18 @@ public class GenerateConstraintsForConjunct {
 
 			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
 			for(int l = 1; l <= count; l++){
-				constraint+=GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, negativeSelConds.get(k),l+offset-1) + " AND ";
+				//constraint+=GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, negativeSelConds.get(k),l+offset-1) + " AND ";
+				
+				ConstraintObject constrObj = new ConstraintObject();
+				constrObj.setLeftConstraint(ConstraintGenerator.genPositiveCondsForPred(queryBlock, negativeSelConds.get(k),l+offset-1));
+				constrList.add(constrObj);
+				
 			}
+			constraint += constrGen.generateANDConstraints(constrList);
+			
 			
 			if(!constraint.equalsIgnoreCase("")){
-				constraint=constraint.substring(0, constraint.length()-5);
+				//constraint=constraint.substring(0, constraint.length()-5);
 				constraints.constraints.add(constraint);
 			}
 			
@@ -1335,8 +1405,7 @@ public class GenerateConstraintsForConjunct {
 
 		/**get negative conditions for these nodes*/
 		Vector<Node> negativeStringSelConds = GenerateCVCConstraintForNode.getNegativeConditions(stringSelectionConds);
-
-
+		constrList = new ArrayList<ConstraintObject>();
 		/**Generate constraints for the negative conditions*/
 		for(int k = 0; k < negativeStringSelConds.size(); k++){
 
@@ -1345,10 +1414,17 @@ public class GenerateConstraintsForConjunct {
 			int offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
 
 			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
-			for(int l = 1; l <= count; l++)
-					constraint += GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, negativeStringSelConds.get(k),l+offset-1) + " AND ";
+			for(int l = 1; l <= count; l++){
+					//constraint += GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, negativeStringSelConds.get(k),l+offset-1);
+					ConstraintObject constrObj = new ConstraintObject();
+					constrObj.setLeftConstraint(ConstraintGenerator.genPositiveCondsForPred(queryBlock, negativeStringSelConds.get(k),l+offset-1));
+					constrList.add(constrObj);
+					
+				}
+				constraint += constrGen.generateANDConstraints(constrList);
+			
 			if(!constraint.equalsIgnoreCase("")){
-				constraint=constraint.substring(0, constraint.length()-5);
+				//constraint=constraint.substring(0, constraint.length()-5);
 				constraints.stringConstraints.add(constraint);
 			}
 			constraint="";
@@ -1364,13 +1440,18 @@ public class GenerateConstraintsForConjunct {
 			/**get table details*/
 			String tableNo = negativeLikeConds.get(k).getLeft().getTableNameNo();
 			int offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
-
-			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
-			for(int l=1;l<=count;l++)
-				constraint=GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, negativeLikeConds.get(k),l+offset-1) +" AND ";
 			
+			constrList = new ArrayList<ConstraintObject>();
+			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
+			for(int l=1;l<=count;l++){
+				ConstraintObject constrObj = new ConstraintObject();
+				constrObj.setLeftConstraint(ConstraintGenerator.genPositiveCondsForPred(queryBlock, negativeLikeConds.get(k),l+offset-1));
+				constrList.add(constrObj);
+				
+			}
+			constraint += constrGen.generateANDConstraints(constrList);
 			if(!constraint.equalsIgnoreCase("")){
-				constraint=constraint.substring(0, constraint.length()-5);
+				//constraint=constraint.substring(0, constraint.length()-5);
 				constraints.stringConstraints.add(constraint);
 			}
 
@@ -1420,7 +1501,7 @@ public class GenerateConstraintsForConjunct {
 				}
 				
 				constraintString += negativeConstraint;
-				UtilRelatedToConstraints.removeAssert(constraintString);
+				//UtilRelatedToConstraints.removeAssert(constraintString);
 				
 				if(!constraintString.equalsIgnoreCase("")){
 					constraints.constraints.add(constraintString);
@@ -1435,13 +1516,22 @@ public class GenerateConstraintsForConjunct {
 	public static String processAndConstraintsNotExists(Vector<String> andConstraints){
 
 		String str = "";
-
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+		ArrayList<ConstraintObject> constraintList = new ArrayList<ConstraintObject>();
+	
 		for(String constraint: andConstraints)
 			if(constraint.length() != 0) {
-				str += "(" + constraint + ") AND ";
+				//str += "(" + constraint + ") AND ";
+				ConstraintObject constObj = new ConstraintObject();
+				constObj.setLeftConstraint(constraint.trim());
+				constraintList.add(constObj);
 			}
 
-		str = str.substring(0,str.length() - 4);
+		//str = str.substring(0,str.length() - 4);
+		if(constraintList != null && !constraintList.isEmpty()){
+			str += constrGen.generateANDConstraints(constraintList);
+		}
+
 
 		return str.trim();
 	}
@@ -1449,63 +1539,91 @@ public class GenerateConstraintsForConjunct {
 	public static String processOrConstraintsNotExistsWithoutAssert(Vector<String> OrConstraints){
 
 		String str = "";
-
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+		ArrayList<ConstraintObject> constraintList = new ArrayList<ConstraintObject>();
+	
 		for(String constraint: OrConstraints)
 			if(constraint.length() != 0) {
-				str += "(" + constraint + ") OR ";
+				//str += "(" + constraint + ") OR ";
+				ConstraintObject constObj = new ConstraintObject();
+				constObj.setLeftConstraint(constraint.trim());
+				constraintList.add(constObj);
 			}
 
-		str = str.substring(0,str.length()-4);
+		//str = str.substring(0,str.length()-4);
+		if(constraintList != null && !constraintList.isEmpty()){
+			str += constrGen.generateOrConstraints(constraintList);
+		}
 
 		return str.trim();
 	}
 	
 	public static String processOrConstraintsWithoutAssertNotExists(Vector<String> OrConstraints){
 
-		String str = "ASSERT ";
-
+		String str = "";//ASSERT ";
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+		ArrayList<ConstraintObject> constraintList = new ArrayList<ConstraintObject>();
+		
 		for(String constraint: OrConstraints)
 			if( constraint.length() != 0) {
-				str += "(" + constraint.trim() + ") OR ";
+				//str += "(" + constraint.trim() + ") OR ";
+				ConstraintObject constObj = new ConstraintObject();
+				constObj.setLeftConstraint(constraint.trim());
+				constraintList.add(constObj);
 			}
 
-		str = str.substring(0,str.length()-4);
-		str+=";";
-
+	//	str = str.substring(0,str.length()-4);
+	//	str+=";";
+		if(constraintList != null && !constraintList.isEmpty()){
+			str += constrGen.generateOrConstraintsWithAssert(constraintList);
+		}
 		return str;
 	}
 	
 	public static String processOrConstraintsNotExists(Vector<String> OrConstraints){
 
-		String str = "ASSERT ";
-
+		String str = "";//ASSERT ";
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+		ArrayList<ConstraintObject> constraintList = new ArrayList<ConstraintObject>();
 		for(String constraint: OrConstraints)
 			if( constraint.length() != 0) {
-				int index = constraint.indexOf(";");
-				String temp = constraint.substring(6, index);
-				str += "(" + temp.trim() + ") OR ";
+				//int index = constraint.indexOf(";");
+				//String temp = constraint.substring(6, index);
+				//str += "(" + temp.trim() + ") OR ";
+				ConstraintObject constObj = new ConstraintObject();
+				constObj.setLeftConstraint(constraint);
+				constraintList.add(constObj);
 			}
 
-		str = str.substring(0,str.length()-4);
-		str+=";";
-
+		//str = str.substring(0,str.length()-4);
+		//str+=";";
+		if(constraintList != null && !constraintList.isEmpty()){
+			str += constrGen.generateOrConstraintsWithAssert(constraintList);
+		}
 		return str;
 	}
 	
 
 	public static String processOrConstraints(Vector<String> OrConstraints){
 
-		String str = "ASSERT ";
-
+		String str = "";//"ASSERT ";
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+		ArrayList<ConstraintObject> constraintList = new ArrayList<ConstraintObject>();
 		/**If any of these conditions is violated then its ok*/
 		for(String constraint: OrConstraints)
-			if( constraint.length() != 0)
+			if( constraint.length() != 0){
 				
-				str += constraint.trim().substring(6,constraint.trim().length()-1)+" OR ";
-
-		str = str.substring(0,str.length()-4);
-		str+=";";
-
+				ConstraintObject constObj = new ConstraintObject();
+				constObj.setLeftConstraint(constraint);
+				constraintList.add(constObj);
+			
+				//str += constraint;//constraint.trim().substring(6,constraint.trim().length()-1)+" OR ";
+			}
+		//str = str.substring(0,str.length()-4);
+		//str+=";";
+		if(constraintList != null && !constraintList.isEmpty()){
+			str += constrGen.generateOrConstraintsWithAssert(constraintList);
+		}
 		return str;
 	}
 	

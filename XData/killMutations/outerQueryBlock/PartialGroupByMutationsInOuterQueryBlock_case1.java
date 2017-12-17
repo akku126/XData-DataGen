@@ -1,5 +1,6 @@
 package killMutations.outerQueryBlock;
 
+import generateConstraints.ConstraintGenerator;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GenerateConstraintsForConjunct;
 import generateConstraints.GenerateConstraintsForHavingClause;
@@ -98,40 +99,40 @@ public class PartialGroupByMutationsInOuterQueryBlock_case1 {
 				
 				/** Add constraints for all the From clause nested sub query blocks */
 				for(QueryBlockDetails qb: cvc.getOuterBlock().getFromClauseSubQueries()){						
-					cvc.getConstraints().add("\n%---------------------------------\n% FROM CLAUSE SUBQUERY\n%---------------------------------\n");
+					cvc.getConstraints().add(ConstraintGenerator.addCommentLine("FROM CLAUSE SUBQUERY "));
 	
 					cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlock(cvc, qb) );
 	
-					cvc.getConstraints().add("\n%---------------------------------\n% END OF FROM CLAUSE SUBQUERY\n%---------------------------------\n");						
+					cvc.getConstraints().add(ConstraintGenerator.addCommentLine(" END OF FROM CLAUSE SUBQUERY "));						
 				}
 				
 				/** get constraints for this sub query block except group by clause constraints*/
 				/** Add the positive conditions for each conjunct of this query block */
 				for(ConjunctQueryStructure conjunct : outer.getConjunctsQs()){
-					cvc.getConstraints().add("\n%---------------------------------\n% CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------\n");
+					cvc.getConstraints().add(ConstraintGenerator.addCommentLine("CONSTRAINTS FOR THIS CONJUNCT "));
 					cvc.getConstraints().add( GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, outer, conjunct) );
-					cvc.getConstraints().add("\n%---------------------------------\n% END OF CONSTRAINTS FOR THIS CONJUNCT\n%---------------------------------\n");				
+					cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF CONSTRAINTS FOR THIS CONJUNCT "));				
 				}
 				
 				/**Add other related constraints for outer query block */
 				cvc.getConstraints().add( QueryBlockDetails.getOtherConstraintsForQueryBlock(cvc, outer) );
 				
 				/** add same group by constraints for this query block */
-				cvc.getConstraints().add( "\n%-----------------------------------------------------------------------------------------\n%GROUP BY ATTRIBUTES MUST BE SAME IN SAME GROUP\n%--------------------------------------------------------------\n");				
+				cvc.getConstraints().add(ConstraintGenerator.addCommentLine("GROUP BY ATTRIBUTES MUST BE SAME IN SAME GROUP "));				
 				cvc.getConstraints().add( GenerateGroupByConstraints.getGroupByConstraints(cvc, groupbyNodes, false, outer.getNoOfGroups()) );
 				
 				/** Generate havingClause constraints for this sub query block*/
-				cvc.getConstraints().add("\n%---------------------------------\n%HAVING CLAUSE CONSTRAINTS FOR SUBQUERY BLOCK\n%---------------------------------\n");
+				cvc.getConstraints().add(ConstraintGenerator.addCommentLine("HAVING CLAUSE CONSTRAINTS FOR SUBQUERY BLOCK "));
 				for(int j=0; j< outer.getNoOfGroups();j ++)
 					for(int k=0; k < outer.getAggConstraints().size();k++){
 						cvc.getConstraints().add( GenerateConstraintsForHavingClause.getHavingClauseConstraints(cvc, outer, outer.getAggConstraints().get(k), outer.getFinalCount(), j));
 					}
-				cvc.getConstraints().add("\n%---------------------------------\n%END OF HAVING CLAUSE CONSTRAINTS FOR SUBQUERY BLOCK\n%---------------------------------\n");
+				cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF HAVING CLAUSE CONSTRAINTS FOR SUBQUERY BLOCK "));
 				GenerateCommonConstraintsForQuery.generateNullandDBConstraints(cvc, false);
 				/** add  constraints to kill this mutation */
-				cvc.getConstraints().add( "\n%-----------------------------------------------------------------------------------------\n%CONSTRAINTS TO KILL PARTIAL GROUP BY MUTATIONS WITH MULTIPLE GROUPS\n%--------------------------------------------------------------\n");
+				cvc.getConstraints().add( ConstraintGenerator.addCommentLine("CONSTRAINTS TO KILL PARTIAL GROUP BY MUTATIONS WITH MULTIPLE GROUPS"));
 				cvc.getConstraints().add( GenerateConstraintsForPartialMultipleGroup.getConstraintsForPartialMultipleGroup(cvc, outer, tempgroupByNode) );
-				cvc.getConstraints().add( "\n%-----------------------------------------------------------------------------------------\n%END OF CONSTRAINTS TO KILL PARTIAL GROUP BY MUTATIONS WITH MULTIPLE GROUPS\n%--------------------------------------------------------------\n");
+				cvc.getConstraints().add( ConstraintGenerator.addCommentLine("END OF CONSTRAINTS TO KILL PARTIAL GROUP BY MUTATIONS WITH MULTIPLE GROUPS"));
 				
 				/** Call the method for the data generation*/
 				GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc,false);

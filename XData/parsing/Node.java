@@ -744,7 +744,65 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 		}
 	}
 
+/**
+ * 
+ * @param base
+ * @param paramMap
+ * @return
+ */
+	public String toSMTString(int base, HashMap<String, String> paramMap){
+		if(this.getType().equalsIgnoreCase(Node.getAggrNodeType())){
+			return this.getAgg().getFunc();
+		}
+		else if(this.getType().equalsIgnoreCase(Node.getValType())){ //this value has to be a number
+			String s = paramMap.get(this.getStrConst());
+			if(s!=null){
+				if(s.contains("PARAM"))
+					return paramMap.get(this.getStrConst());
+				else{
+					if(base == 16)
+						return Utilities.getHexVal(Integer.parseInt(paramMap.get(this.getStrConst())),5);
+					else //if (base == 10)
+						return Integer.parseInt(paramMap.get(this.getStrConst())) + "";
+				}  
+			}
 
+			if(base == 16)
+				return Utilities.getHexVal(Integer.parseInt(this.getStrConst()),5);
+			else //if (base == 10)
+				return Integer.parseInt(this.getStrConst()) + "";
+		}
+		else{
+			if(this.getOperator().equalsIgnoreCase("<")){
+				if(base == 16)
+					return "BVLT(" + this.getLeft().toSMTString(base, paramMap)  + "," + this.getRight().toSMTString(base, paramMap) + ");";
+				else //if(base == 10)
+					return this.getOperator() +" "+this.getLeft().toSMTString(base, paramMap) + " " + this.getRight().toSMTString(base, paramMap);
+			} 
+			else if(this.getOperator().equalsIgnoreCase("<=")){
+				if(base == 16)
+					return "BVLE(" + this.getLeft().toSMTString(base, paramMap)  + "," + this.getRight().toSMTString(base, paramMap) + ");";
+				else //if(base == 10)
+					return this.getOperator() +" "+this.getLeft().toSMTString(base, paramMap) + " "+ this.getRight().toSMTString(base, paramMap);
+			} 
+			else if(this.getOperator().equalsIgnoreCase(">")){
+				if(base == 16)	
+					return "BVGT(" + this.getLeft().toSMTString(base, paramMap)  + "," + this.getRight().toSMTString(base, paramMap) + ");";
+				else //if(base == 10)
+					return this.getOperator() +" "+this.getLeft().toSMTString(base, paramMap) + " "+ this.getRight().toSMTString(base, paramMap);
+			} 
+			else if(this.getOperator().equalsIgnoreCase(">=")){
+				if(base == 16)
+					return "BVGE(" + this.getLeft().toSMTString(base, paramMap)  + "," + this.getRight().toSMTString(base, paramMap) + ");";
+				else //if(base == 10)
+					return this.getOperator() +" "+this.getLeft().toSMTString(base, paramMap) + " "+ this.getRight().toSMTString(base, paramMap);
+			}  
+			else
+				return "(" + this.getOperator() +" "+this.getLeft().toSMTString(base, paramMap)  +" " + this.getRight().toSMTString(base, paramMap) + ")";
+		}
+	}
+
+	
 	public static void printPredicateVector(Vector<Node> v){
 		for(int i=0;i< v.size();i++){
 			System.out.print(v.get(i).toString()+", ");
@@ -867,7 +925,24 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 	}
 
 
-	
+	/*@Override
+	public boolean equals(Object obj) {
+	    if(!(obj instanceof Node) && !(obj instanceof String))
+	    {
+	        return false;
+	    }
+	    else
+	    {
+	        if(obj instanceof Node)
+	            return func.toLowerCase().equals(((AggregateFunction)obj).getFunc().toLowerCase()) && aggExp.getColumn().toString().toLowerCase().equals(((AggregateFunction)obj).getAggExp().getColumn().toString().toLowerCase()) 
+	            		&& aggExp.getColumn().getTableName().toString().toLowerCase().equals(((AggregateFunction)obj).getAggExp().getColumn().getTableName().toString().toLowerCase()) ;
+	        	return this.toString().toLowerCase().equals(((Node)obj).toString().toLowerCase());
+	        else
+	            return this.toString().toLowerCase().equals(((String)obj).toLowerCase());
+	    }
+
+	}*/
+
 	/**
 	 * Added by Mahesh
 	 */

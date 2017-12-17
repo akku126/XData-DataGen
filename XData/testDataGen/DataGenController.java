@@ -61,8 +61,8 @@ public class DataGenController{
 		//TODO: This is for application testing, a flag should be set
 		//for calling this function
 		RelatedToPreprocessing.uploadBranchQueriesDetails(cvc);
-		//System.out.println("After brancg query>>>>>>>");
-		logger.log(Level.INFO,"After brancg query>>>>>>>");
+		
+		
 		/** To store input query string */
 		cvc.setTableMap(tableMap);
 		String queryString = "";

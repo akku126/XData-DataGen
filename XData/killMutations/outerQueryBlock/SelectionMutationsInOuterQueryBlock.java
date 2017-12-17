@@ -1,5 +1,6 @@
 package killMutations.outerQueryBlock;
 
+import generateConstraints.ConstraintGenerator;
 import generateConstraints.Constraints;
 import generateConstraints.GenerateCVCConstraintForNode;
 import generateConstraints.GenerateCommonConstraintsForQuery;
@@ -9,6 +10,7 @@ import generateConstraints.GenerateJoinPredicateConstraints;
 import generateConstraints.UtilRelatedToConstraints;
 import generateConstraints.UtilsRelatedToNode;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Vector;
 import java.util.concurrent.TimeoutException;
@@ -21,6 +23,7 @@ import parsing.DisjunctQueryStructure;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
+import util.ConstraintObject;
 import util.TagDatasets;
 
 /**
@@ -32,14 +35,7 @@ public class SelectionMutationsInOuterQueryBlock {
 
 	private static Logger logger = Logger.getLogger(SelectionMutationsInOuterQueryBlock.class.getName());
 	
-	public static void  generateDataForkillingSelectionMutationsInOuterQueryBlockGen(GenerateCVC1 cvc) throws Exception{
-		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
-			generateDataForkillingSelectionMutationsInOuterQueryBlock(cvc);
-		}
-		else{
-			//generateDataForkillingSelectionMutationsInOuterQueryBlockSMT(cvc);
-		}
-	}
+
 	/**
 	 * Generates data to kill selection conditions mutations inside outer block
 	 * @param cvc
@@ -63,7 +59,7 @@ public class SelectionMutationsInOuterQueryBlock {
 				Constraints constraints=new Constraints();
 				for(ConjunctQueryStructure innerConjunct:qbt.getConjunctsQs()){
 					if(conjunct!=innerConjunct){
-						constraints = Constraints.mergeConstraints(constraints, GenerateConstraintsForConjunct.generateNegativeConstraintsForConjunct(cvc, qbt, innerConjunct));
+						constraints = Constraints.mergeConstraints(cvc,constraints, GenerateConstraintsForConjunct.generateNegativeConstraintsForConjunct(cvc, qbt, innerConjunct));
 					}
 				}
 				
@@ -115,11 +111,11 @@ public class SelectionMutationsInOuterQueryBlock {
 	
 							*//** Add constraints for all the From clause nested sub query blocks *//*
 							for(QueryBlockDetails qb: cvc.getOuterBlock().getFromClauseSubQueries()){
-								cvc.getConstraints().add("\n%---------------------------------\n% FROM CLAUSE SUBQUERY\n%---------------------------------\n");
+								cvc.getConstraints().add(ConstraintGenerator.addCommentLine("FROM CLAUSE SUBQUERY "));
 	
 								cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlock(cvc, qb) );
 	
-								cvc.getConstraints().add("\n%---------------------------------\n% END OF FROM CLAUSE SUBQUERY\n%---------------------------------\n");
+								cvc.getConstraints().add(ConstraintGenerator.addCommentLine(" END OF FROM CLAUSE SUBQUERY "));
 							}
 	
 	
@@ -133,17 +129,17 @@ public class SelectionMutationsInOuterQueryBlock {
 									cvc.getConstraints().add( GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, qbt, inner) );	
 	
 							*//** get group by constraints *//*
-							cvc.getConstraints().add("\n%---------------------------------\n%GROUP BY CLAUSE CONSTRAINTS FOR OUTER QUERY BLOCK\n%---------------------------------\n");
+							cvc.getConstraints().add(ConstraintGenerator.addCommentLine("GROUP BY CLAUSE CONSTRAINTS FOR OUTER QUERY BLOCK "));
 							cvc.getConstraints().add( GenerateGroupByConstraints.getGroupByConstraints( cvc, qbt) );
 	
 	
 							*//** Generate havingClause constraints *//*
-							cvc.getConstraints().add("\n%---------------------------------\n%HAVING CLAUSE CONSTRAINTS FOR OUTER QUERY BLOCK\n%---------------------------------\n");
+							cvc.getConstraints().add(ConstraintGenerator.addCommentLine("HAVING CLAUSE CONSTRAINTS FOR OUTER QUERY BLOCK "));
 							for(int l=0; l< qbt.getNoOfGroups(); l++)
 								for(int k=0; k < qbt.getAggConstraints().size();k++){
 									cvc.getConstraints().add(GenerateConstraintsForHavingClause.getHavingClauseConstraints(cvc, qbt, qbt.getAggConstraints().get(k), qbt.getFinalCount(), l) );
 							}
-							cvc.getConstraints().add("\n%---------------------------------\n%END OF HAVING CLAUSE CONSTRAINTS FOR OUTER QUERY BLOCK\n%---------------------------------\n");
+							cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF HAVING CLAUSE CONSTRAINTS FOR OUTER QUERY BLOCK "));
 	
 							*//** add other constraints of outer query block *//*
 							cvc.getConstraints().add( QueryBlockDetails.getOtherConstraintsForQueryBlock(cvc, qbt) );
@@ -212,20 +208,27 @@ public class SelectionMutationsInOuterQueryBlock {
 						
 						localConstraints = GenerateConstraintsForConjunct.getConstraintsInConjuct(cvc, cvc.getOuterBlock(), conjunct);
 						
-						localConstraints = Constraints.mergeConstraints(localConstraints,constraints);
+						localConstraints = Constraints.mergeConstraints(cvc,localConstraints,constraints);
 						
 	/*					for(Disjunct disjunct:conjunct.disjuncts){
 							localConstraints=Constraints.mergeConstraints(localConstraints,GenerateConstraintsForDisjunct.getConstraintsForDisjuct(cvc, cvc.getOuterBlock(), disjunct));
 						}
 						*/
-						cvc.getConstraints().add(Constraints.getConstraint(localConstraints));
-						cvc.getStringConstraints().add(Constraints.getStringConstraints(localConstraints));
+						//cvc.getConstraints().add(Constraints.getConstraint(localConstraints));
+						//cvc.getStringConstraints().add(Constraints.getStringConstraints(localConstraints));
+						cvc.getConstraints().add(Constraints.getConstraint(cvc,localConstraints));
+						cvc.getStringConstraints().addAll(Constraints.getStringConstraints(cvc,localConstraints));
+						ArrayList<String> strConstraints =  Constraints.getStringConstraints(cvc,localConstraints);
+						for(String constraint : strConstraints){
+							cvc.getStringConstraints().add(constraint.toString());
+						}
 						GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc);
 					}
 				}
 				selectionConds.set(i,sc);
 			}
-			
+			ArrayList<ConstraintObject> constrList = new ArrayList<ConstraintObject>();
+			ConstraintGenerator constrGen = new ConstraintGenerator();
 			for(DisjunctQueryStructure disjunct:conjunct.disjuncts){
 				String constraintString="";
 				
@@ -236,9 +239,14 @@ public class SelectionMutationsInOuterQueryBlock {
 				for(int k=0; k<equivalenceClasses.size(); k++){
 					Vector<Node> ec = equivalenceClasses.get(k);
 					for(int i=0;i<ec.size()-1;i++){
+						
 						Node n1 = ec.get(i);
 						Node n2 = ec.get(i+1);
-						constraintString += GenerateJoinPredicateConstraints.getConstraintsForEquiJoins(cvc, cvc.getOuterBlock(), n1,n2) +" AND ";
+						ConstraintObject constrObj = new ConstraintObject();
+						constrObj.setLeftConstraint( GenerateJoinPredicateConstraints.getConstraintsForEquiJoins(cvc, cvc.getOuterBlock(), n1,n2) );
+						constrList.add(constrObj);
+					
+						//constraintString +=+" AND ";
 					}
 				}
 				
@@ -249,20 +257,25 @@ public class SelectionMutationsInOuterQueryBlock {
 					int offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
 	
 					int count = cvc.getNoOfTuples().get(tableNo) * qbt.getNoOfGroups();/** We should generate the constraints across all groups */
-					for(int l=1;l<=count;l++)
-						constraintString += GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, selectionConds.get(k),l+offset-1) +" AND ";
+					for(int l=1;l<=count;l++){
+						//constraintString += GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, selectionConds.get(k),l+offset-1) +" AND ";
+						ConstraintObject constrObj = new ConstraintObject();
+						constrObj.setLeftConstraint(constrGen.genPositiveCondsForPred(qbt, selectionConds.get(k),l+offset-1));
+						constrList.add(constrObj);
+					}
 				}
 				
 				Vector<Node> allConds = conjunct.getAllConds();
-				for(int k=0; k<allConds.size(); k++)
-					constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, qbt, allConds) +" AND ";
-				
-				if(!constraintString.equalsIgnoreCase("")){
-					constraintString=constraintString.substring(0,constraintString.length()-5);
-					localConstraints.constraints.add(constraintString);
+				for(int k=0; k<allConds.size(); k++){
+					//constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, qbt, allConds) +" AND ";
+					ConstraintObject constrObj = new ConstraintObject();
+					constrObj.setLeftConstraint(GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, qbt, allConds));
+					constrList.add(constrObj);
 				}
 			
 				
+			
+				//constrList = new ArrayList<ConstraintObject>();
 				String stringConstraint="";
 				
 				Vector<Node> stringSelectionConds = conjunct.getStringSelectionConds();
@@ -272,8 +285,13 @@ public class SelectionMutationsInOuterQueryBlock {
 					int offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
 	
 					int count = cvc.getNoOfTuples().get(tableNo) * qbt.getNoOfGroups();/** We should generate the constraints across all groups */;
-					for(int l=1;l<=count;l++)
-						stringConstraint += GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, stringSelectionConds.get(k),l+offset-1) +" AND ";
+					for(int l=1;l<=count;l++){
+						//stringConstraint += GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, stringSelectionConds.get(k),l+offset-1) +" AND ";
+						//ConstraintObject constrObj = new ConstraintObject();
+						//constrObj.setLeftConstraint(constrGen.genPositiveCondsForPred(qbt, stringSelectionConds.get(k),l+offset-1));
+						//constrList.add(constrObj);
+						localConstraints.stringConstraints.add(constrGen.genPositiveCondsForPred(qbt, stringSelectionConds.get(k),l+offset-1)); 
+					}
 				}
 				
 				Vector<Node> likeConds = conjunct.getLikeConds();
@@ -283,24 +301,33 @@ public class SelectionMutationsInOuterQueryBlock {
 					int offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
 	
 					int count = cvc.getNoOfTuples().get(tableNo) * qbt.getNoOfGroups();/** We should generate the constraints across all groups */;
-					for(int l=1;l<=count;l++)
-						stringConstraint+= GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, likeConds.get(k),l+offset-1)+" AND ";
+					for(int l=1;l<=count;l++){
+						//stringConstraint+= GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, likeConds.get(k),l+offset-1)+" AND ";
+						ConstraintObject constrObj = new ConstraintObject();
+						constrObj.setLeftConstraint(constrGen.genPositiveCondsForPred(qbt, likeConds.get(k),l+offset-1));
+						constrList.add(constrObj);
+					}
 				}
-				
-				if(!stringConstraint.equalsIgnoreCase("")){
-					stringConstraint = stringConstraint.substring(0, stringConstraint.length()-5);
+			//	stringConstraint += constrGen.generateANDConstraints(constrList);
+				//if(!stringConstraint.equalsIgnoreCase("")){
+					//stringConstraint = stringConstraint.substring(0, stringConstraint.length()-5);
 	
-				}
-				localConstraints.stringConstraints.add(stringConstraint); 
+				//}
 				
-				localConstraints=Constraints.mergeConstraints(localConstraints, constraints);
+				constraintString += constrGen.generateANDConstraints(constrList);
+				if(!constraintString.equalsIgnoreCase("")){
+					//constraintString=constraintString.substring(0,constraintString.length()-5);
+					localConstraints.constraints.add(constraintString);
+				}
+				
+				localConstraints=Constraints.mergeConstraints(cvc,localConstraints, constraints);
 				
 				DisjunctQueryStructure killDisjunct = null;
 				for(DisjunctQueryStructure innerDisjunct:conjunct.disjuncts){
 					if(innerDisjunct.equals(disjunct))
 						killDisjunct=innerDisjunct;
 					else{
-						localConstraints=Constraints.mergeConstraints(localConstraints,GenerateConstraintsForDisjunct.getConstraintsForDisjuct(cvc, qbt, innerDisjunct));
+						localConstraints=Constraints.mergeConstraints(cvc,localConstraints,GenerateConstraintsForDisjunct.getConstraintsForDisjuct(cvc, qbt, innerDisjunct));
 					}
 				}
 				
@@ -329,6 +356,9 @@ public class SelectionMutationsInOuterQueryBlock {
 	
 				Vector<Node> scMutants = UtilsRelatedToNode.getSelectionCondMutations(sc);
 				
+				ConstraintGenerator constrGen = new ConstraintGenerator();
+				ArrayList<ConstraintObject> constrList = new ArrayList<ConstraintObject>();
+				
 				/** Generate data set to kill each mutation*/
 				for(int j=0; j<scMutants.size(); j++){
 					/**If this mutation is not same as that of original condition*/
@@ -355,20 +385,31 @@ public class SelectionMutationsInOuterQueryBlock {
 	
 						int count = cvc.getNoOfTuples().get(tableNo) * qbt.getNoOfGroups();/** We should generate the constraints across all groups */
 						for(int l=1;l<=count;l++) {
-							constraintString += GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, scMutants.get(j),l+offset-1) +" AND ";
+							//constraintString += GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, scMutants.get(j),l+offset-1) +" AND ";
+							
+							ConstraintObject constrObj = new ConstraintObject();
+							constrObj.setLeftConstraint(constrGen.genPositiveCondsForPred(qbt, scMutants.get(j) ,l+offset-1));
+							constrList.add(constrObj);
 						}
 						
 						Vector<Node> allConds = disjunct.getAllConds();
 						
 						/**get constraint*/
-						String constraint = GenerateJoinPredicateConstraints.getNegativeConstraintsForNonEquiJoins(cvc, qbt, allConds) ;
-	
-						constraint=UtilRelatedToConstraints.removeAssert(constraint);
+						String constraint = "";//GenerateJoinPredicateConstraints.getNegativeConstraintsForNonEquiJoins(cvc, qbt, allConds) ;
 						
-						if(!constraint.equalsIgnoreCase("")){
-							constraintString += "(" + constraint + ") AND ";
-						}
+						ConstraintObject constrObj1 = new ConstraintObject();
+						constrObj1.setLeftConstraint(GenerateJoinPredicateConstraints.getNegativeConstraintsForNonEquiJoins(cvc, qbt, allConds) );
+						constrList.add(constrObj1);
 						
+						//constraint=UtilRelatedToConstraints.removeAssert(constraint);
+						
+						//if(!constraint.equalsIgnoreCase("")){
+						//	constraintString += "(" + constraint + ") AND ";
+						//}
+						constraintString += constrGen.generateANDConstraints(constrList);
+						constraint = constraintString;
+						
+						constrList = new ArrayList<ConstraintObject>();
 						Vector<Node> negativeSelConds = new Vector<Node>();
 						for(int k=0;k<selectionConds.size();k++){
 							Node node=selectionConds.get(k);
@@ -390,12 +431,21 @@ public class SelectionMutationsInOuterQueryBlock {
 	
 							count = cvc.getNoOfTuples().get(tableNo)* qbt.getNoOfGroups();/** We should generate the constraints across all groups */;;
 							for(int l = 1; l <= count; l++){
-								constraintString+=GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, negativeSelConds.get(k),l+offset-1) + " AND ";
+								
+								
+								ConstraintObject constrObj = new ConstraintObject();
+								constrObj.setLeftConstraint(constrGen.genPositiveCondsForPred(qbt, negativeSelConds.get(k),l+offset-1) );
+								constrList.add(constrObj);
+								
+								//constraintString+=GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, negativeSelConds.get(k),l+offset-1) + " AND ";
 							}
 						}
+						constraintString += constrGen.generateANDConstraints(constrList);
+						constraint = constraintString;
 						
+						constrList = new ArrayList<ConstraintObject>();
 						if(!constraint.equalsIgnoreCase("")){
-							constraint=constraint.substring(0, constraint.length()-5);
+							//constraint=constraint.substring(0, constraint.length()-5);
 							localConstraints.constraints.add(constraint);
 						}
 						
@@ -414,16 +464,20 @@ public class SelectionMutationsInOuterQueryBlock {
 							offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
 	
 							count = cvc.getNoOfTuples().get(tableNo)* qbt.getNoOfGroups();/** We should generate the constraints across all groups */;;
-							for(int l = 1; l <= count; l++)
-									constraint += GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, negativeStringSelConds.get(k),l+offset-1) + " AND ";
+							for(int l = 1; l <= count; l++){
+									//constraint += GenerateCVCConstraintForNode + " AND ";
+									ConstraintObject constrObj = new ConstraintObject();
+									constrObj.setLeftConstraint(constrGen.genPositiveCondsForPred(qbt, negativeStringSelConds.get(k),l+offset-1));
+									constrList.add(constrObj);		
+							}
 						}
-						
+						constraint +=  constrGen.generateANDConstraints(constrList);
 						/**Generate negative constraints for like conditions */
 						Vector<Node> likeConds = disjunct.getLikeConds();
 	
 						/**get negative conditions for these nodes*/
 						Vector<Node> negativeLikeConds = GenerateCVCConstraintForNode.getNegativeConditions(likeConds);
-	
+						constrList = new ArrayList<ConstraintObject>();
 						constraint="";
 						for(int k=0; k<likeConds.size(); k++){
 	
@@ -432,23 +486,33 @@ public class SelectionMutationsInOuterQueryBlock {
 							offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
 	
 							count = cvc.getNoOfTuples().get(tableNo)* qbt.getNoOfGroups();/** We should generate the constraints across all groups */;;
-							for(int l=1;l<=count;l++)
-								constraint+=GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, negativeLikeConds.get(k),l+offset-1) +" AND ";
+							for(int l=1;l<=count;l++){
+								//constraint+=GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, negativeLikeConds.get(k),l+offset-1) +" AND ";
+							
+								ConstraintObject constrObj = new ConstraintObject();
+								constrObj.setLeftConstraint(constrGen.genPositiveCondsForPred(qbt, negativeLikeConds.get(k),l+offset-1));
+								constrList.add(constrObj);
+							}
 						}
+						constraint += constrGen.generateANDConstraints(constrList);
 						
 						if(!constraint.equalsIgnoreCase("")){
 							constraint=constraint.substring(0, constraint.length()-5);
 							localConstraints.stringConstraints.add(constraint);
 						}
 						
-						localConstraints = Constraints.mergeConstraints(localConstraints, constraints);
+						localConstraints = Constraints.mergeConstraints(cvc,localConstraints, constraints);
 						
 						for(ConjunctQueryStructure conjunct:disjunct.conjuncts){
-							localConstraints=Constraints.mergeConstraints(localConstraints,GenerateConstraintsForConjunct.generateNegativeConstraintsForConjunct(cvc, cvc.getOuterBlock(), conjunct));
+							localConstraints=Constraints.mergeConstraints(cvc,localConstraints,GenerateConstraintsForConjunct.generateNegativeConstraintsForConjunct(cvc, cvc.getOuterBlock(), conjunct));
 						}
 	
-						cvc.getConstraints().add(Constraints.getConstraint(localConstraints));
-						cvc.getStringConstraints().add(Constraints.getStringConstraints(localConstraints));
+						cvc.getConstraints().add(Constraints.getConstraint(cvc,localConstraints));
+					//	cvc.getStringConstraints().add(Constraints.getStringConstraints(cvc,localConstraints));
+						ArrayList<String> strConstraints =  Constraints.getStringConstraints(cvc,localConstraints);
+						for(String constraintobj : strConstraints){
+							cvc.getStringConstraints().add(constraintobj.toString());
+						}
 						GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc);
 					}
 				}
@@ -458,6 +522,8 @@ public class SelectionMutationsInOuterQueryBlock {
 				String constraintString="";
 				localConstraints.constraints.removeAllElements();
 				localConstraints.stringConstraints.removeAllElements();
+				ArrayList<ConstraintObject> constrList = new ArrayList<ConstraintObject>();
+				ConstraintGenerator constrGen = new ConstraintGenerator();
 				
 				Vector<Vector<Node>> equivalenceClasses = conjunct.getEquivalenceClasses();
 				for(int k=0; k<equivalenceClasses.size(); k++){
@@ -465,21 +531,33 @@ public class SelectionMutationsInOuterQueryBlock {
 					for(int i=0;i<ec.size()-1;i++){
 						Node n1 = ec.get(i);
 						Node n2 = ec.get(i+1);
-						constraintString += GenerateJoinPredicateConstraints.genNegativeConds(cvc, cvc.getOuterBlock(), n1,n2) +" AND ";
+						
+						ConstraintObject constrObj = new ConstraintObject();
+						constrObj.setLeftConstraint( GenerateJoinPredicateConstraints.genNegativeConds(cvc, cvc.getOuterBlock(), n1,n2) );
+						constrList.add(constrObj);
+						
+						
+						//constraintString += GenerateJoinPredicateConstraints.genNegativeConds(cvc, cvc.getOuterBlock(), n1,n2) +" AND ";
 					}
 				}
-				
+				constraintString += constrGen.generateANDConstraints(constrList);
 				Vector<Node> allConds = disjunct.getAllConds();
+				constrList = new ArrayList<ConstraintObject>();
 				
 				/**get constraint*/
-				String constraint = GenerateJoinPredicateConstraints.getNegativeConstraintsForNonEquiJoins(cvc, qbt, allConds) ;
+				String constraint = "";//GenerateJoinPredicateConstraints.getNegativeConstraintsForNonEquiJoins(cvc, qbt, allConds) ;
 	
+				ConstraintObject constrObj1 = new ConstraintObject();
+				constrObj1.setLeftConstraint(GenerateJoinPredicateConstraints.getNegativeConstraintsForNonEquiJoins(cvc, qbt, allConds) );
+				constrList.add(constrObj1);
 				
-				constraint=UtilRelatedToConstraints.removeAssert(constraint);
+				//constraint = constrGen.generateANDConstraints(constrList);
 				
-				if(!constraint.equalsIgnoreCase("")){
-					constraintString+=constraint + " AND ";
-				}
+				//constraint=UtilRelatedToConstraints.removeAssert(constraint);
+				
+				//if(!constraint.equalsIgnoreCase("")){
+					//constraintString+=constraint + " AND ";
+				//}
 	
 				/** Now generate Negative constraints for selection conditions */
 				Vector<Node> selConds = disjunct.getSelectionConds();
@@ -495,12 +573,18 @@ public class SelectionMutationsInOuterQueryBlock {
 					int offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
 	
 					int count = cvc.getNoOfTuples().get(tableNo)* qbt.getNoOfGroups();/** We should generate the constraints across all groups */;;
-					for(int l = 1; l <= count; l++)
-						constraintString += GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, negativeSelConds.get(k),l+offset-1) + " AND ";
+					for(int l = 1; l <= count; l++){
+						//constraintString += GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, negativeSelConds.get(k),l+offset-1) + " AND ";
+					
+						ConstraintObject constrObj = new ConstraintObject();
+						constrObj.setLeftConstraint(GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, negativeSelConds.get(k),l+offset-1));
+						constrList.add(constrObj);
+					}
+					constraintString += constrGen.generateANDConstraints(constrList);
 				}
 	
 				if(!constraintString.equalsIgnoreCase("")){
-					constraintString=constraintString.substring(0, constraint.length()-5);
+					//constraintString=constraintString.substring(0, constraint.length()-5);
 				}
 				
 				localConstraints.constraints.add(constraintString);
@@ -520,8 +604,13 @@ public class SelectionMutationsInOuterQueryBlock {
 					int offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
 	
 					int count = cvc.getNoOfTuples().get(tableNo)* qbt.getNoOfGroups();/** We should generate the constraints across all groups */;;
-					for(int l = 1; l <= count; l++)
-						stringConstraint += GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, negativeStringSelConds.get(k),l+offset-1) +" AND ";
+					for(int l = 1; l <= count; l++){
+						//stringConstraint += GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, negativeStringSelConds.get(k),l+offset-1) +" AND ";
+						ConstraintObject constrObj = new ConstraintObject();
+						constrObj.setLeftConstraint(constrGen.genPositiveCondsForPred(qbt, negativeStringSelConds.get(k),l+offset-1) );
+						constrList.add(constrObj);
+					}
+					
 				}
 	
 	
@@ -538,19 +627,24 @@ public class SelectionMutationsInOuterQueryBlock {
 					int offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
 	
 					int count = cvc.getNoOfTuples().get(tableNo)* qbt.getNoOfGroups();/** We should generate the constraints across all groups */;;
-					for(int l=1;l<=count;l++)
-						stringConstraint += GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, negativeLikeConds.get(k),l+offset-1) +" AND ";
+					for(int l=1;l<=count;l++){
+						//stringConstraint += GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, negativeLikeConds.get(k),l+offset-1) +" AND ";
+						ConstraintObject constrObj = new ConstraintObject();
+						constrObj.setLeftConstraint(constrGen.genPositiveCondsForPred(qbt, negativeLikeConds.get(k),l+offset-1) );
+						constrList.add(constrObj);
+					}
 				}
+				stringConstraint += constrGen.generateANDConstraints(constrList);
 				
-				if(!stringConstraint.equalsIgnoreCase("")){
-					stringConstraint = stringConstraint.substring(0, stringConstraint.length()-5);
-				}
+				//if(!stringConstraint.equalsIgnoreCase("")){
+				//	stringConstraint = stringConstraint.substring(0, stringConstraint.length()-5);
+			//	}
 				localConstraints.stringConstraints.add(stringConstraint);
 				
-				localConstraints = Constraints.mergeConstraints(localConstraints, constraints);
+				localConstraints = Constraints.mergeConstraints(cvc,localConstraints, constraints);
 				for(ConjunctQueryStructure innerConjunct:disjunct.conjuncts){
 					if(innerConjunct!=conjunct){
-						localConstraints = Constraints.mergeConstraints(localConstraints, GenerateConstraintsForConjunct.generateNegativeConstraintsForConjunct(cvc, qbt, innerConjunct));
+						localConstraints = Constraints.mergeConstraints(cvc,localConstraints, GenerateConstraintsForConjunct.generateNegativeConstraintsForConjunct(cvc, qbt, innerConjunct));
 					}
 				}
 				killSelectionMutationsInConjunct(cvc,conjunct,localConstraints);

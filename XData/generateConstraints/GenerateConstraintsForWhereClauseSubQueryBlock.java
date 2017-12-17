@@ -37,16 +37,16 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 			for(int i=0; i < conjunct.getAllSubQueryConds().size(); i++){
 
 				Node subQ = conjunct.getAllSubQueryConds().get(i);
-				constraintString +="\n%---------------------------------------------------\n%CONSTRAINTS FOR WHERE CLAUSE SUBQUERY CONNECTIVE \n%---------------------------------------------------\n\n";
+				constraintString +=ConstraintGenerator.addCommentLine("CONSTRAINTS FOR WHERE CLAUSE SUBQUERY CONNECTIVE ");
 				constraintString += getConstraintsForWhereSubQueryConnective(cvc, queryBlock, subQ);
 
-				constraintString += "\n%---------------------------------------------------\n%CONSTRAINTS FOR CONDITIONS INSIDE WHERE CLAUSE SUBQUERY CONNECTIVE \n%---------------------------------------------------\n\n";
+				constraintString +=ConstraintGenerator.addCommentLine("CONSTRAINTS FOR CONDITIONS INSIDE WHERE CLAUSE SUBQUERY CONNECTIVE ");
 
 				constraintString += getCVCForCondsInSubQ(cvc, queryBlock, subQ);
 
 				constraintString += getConstraintsForGroupByAndHavingInSubQ(cvc, queryBlock, subQ);
 
-				constraintString += "\n%---------------------------------------------------\n%END OF CONSTRAINTS FOR CONDITIONS INSIDE WHERE CLAUSE SUBQUERY CONNECTIVE \n%---------------------------------------------------\n\n";
+				constraintString += ConstraintGenerator.addCommentLine("END OF CONSTRAINTS FOR CONDITIONS INSIDE WHERE CLAUSE SUBQUERY CONNECTIVE ");
 			}
 		}
 
@@ -87,19 +87,19 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 		int noOfGroups = subQuery.getNoOfGroups();
 
 		/**get group by constraints */
-		constraintString += "\n%---------------------------------\n%GROUP BY CLAUSE CONSTRAINTS\n%---------------------------------\n";
+		constraintString +=ConstraintGenerator.addCommentLine("GROUP BY CLAUSE CONSTRAINTS ");
 		constraintString += GenerateGroupByConstraints.getGroupByConstraints(cvc, subQuery.getGroupByNodes(), true, noOfGroups);
-		constraintString += "\n%---------------------------------\n%END OF GROUP BY CLAUSE CONSTRAINTS\n%---------------------------------\n";
+		constraintString += ConstraintGenerator.addCommentLine("END OF GROUP BY CLAUSE CONSTRAINTS ");
 
 
 
 		/** Generate havingClause constraints */
-		constraintString += "\n%---------------------------------\n%HAVING CLAUSE CONSTRAINTS\n%---------------------------------\n";
+		constraintString += ConstraintGenerator.addCommentLine("HAVING CLAUSE CONSTRAINTS ");
 		for(int j=0; j< noOfGroups;j ++)
 			for(int k=0; k < subQuery.getAggConstraints().size();k++){
 				constraintString += GenerateConstraintsForHavingClause.getHavingClauseConstraints(cvc, subQuery, subQuery.getAggConstraints().get(k), subQuery.getFinalCount(), j);
 			}
-		constraintString += "\n%---------------------------------\n%END OF HAVING CLAUSE CONSTRAINTS\n%---------------------------------\n";
+		constraintString += ConstraintGenerator.addCommentLine("END OF HAVING CLAUSE CONSTRAINTS ");
 
 		return constraintString;
 	}
@@ -179,7 +179,7 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 			throws Exception {
 
 		String constraintString = "";
-
+		ConstraintGenerator constrGen = new ConstraintGenerator();
 		/**Depending on the type of connective generate the constraints */
 		if(subQ.getType().equals(Node.getNotExistsNodeType())){
 
@@ -217,12 +217,14 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 					for(int j=0;j<num;j++){
 						if( UtilsRelatedToNode.isStringSelection(n,0)){/** If it is a string selection condition*/
 
-							String subQueryConstraints = GenerateCVCConstraintForNode.genPositiveCondsForPred(subQuery, n, j+offset);
-							String result = cvc.getStringSolver().solveConstraints(subQueryConstraints,cvc.getResultsetColumns(), cvc.getTableMap()).get(0);
-							constraintString += result;							
+							String subQueryConstraints = constrGen.genPositiveCondsForPred(subQuery, n, j+offset);
+							//String result = cvc.getStringSolver().solveConstraints(subQueryConstraints,cvc.getResultsetColumns(), cvc.getTableMap()).get(0);
+							//constraintString += result;							
 						}
-						else
-							constraintString += "ASSERT "+ GenerateCVCConstraintForNode.genPositiveCondsForPred(subQuery, n, offset+j)+";\n";
+						else{
+							String res = ConstraintGenerator.genPositiveCondsForPred(subQuery, n, offset+j);
+							constraintString += constrGen.getAssertConstraint(res);
+						}
 					}
 				}
 			}
@@ -231,10 +233,19 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 		return constraintString;
 	}
 
-
+/**
+ * 
+ * 
+ * @param cvc
+ * @param condsInSubQ
+ * @param subQuery
+ * @return
+ * @throws Exception
+ */
 	public static String getConstraintsForConditionsInSubquery(GenerateCVC1 cvc, Vector<Node> condsInSubQ,	QueryBlockDetails subQuery)
 			throws Exception {
 		String constraintString = "";
+		ConstraintGenerator constrGen = new ConstraintGenerator();
 		for(int i=0;i<condsInSubQ.size();i++){
 			Node subQcond = condsInSubQ.get(i);
 
@@ -257,15 +268,18 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 					/**Generate the constraints for each tuple across all the groups*/
 					for(int j=0; j < cvc.getNoOfTuples().get(tableNameNo) * subQuery.getNoOfGroups(); j++){
 
-						String subQueryConstraints = GenerateCVCConstraintForNode.genPositiveCondsForPred(subQuery, subQcond, j+offset);
+						String subQueryConstraints = constrGen.genPositiveCondsForPred(subQuery, subQcond, j+offset);
 
-						String result = cvc.getStringSolver().solveConstraints(subQueryConstraints,cvc.getResultsetColumns(), cvc.getTableMap()).get(0);
-						constraintString += result;
+						//String result = cvc.getStringSolver().solveConstraints(subQueryConstraints,cvc.getResultsetColumns(), cvc.getTableMap()).get(0);
+						//constraintString += result;
 					}
 				}
 				else /**Generate the constraints for each tuple across all the groups*/
-					for(int j=0; j< cvc.getNoOfTuples().get(tableNameNo) * subQuery.getNoOfGroups(); j++)						
-						constraintString += "ASSERT("+ GenerateCVCConstraintForNode.genPositiveCondsForPred(subQuery, subQcond, j+offset)+");\n";
+					for(int j=0; j< cvc.getNoOfTuples().get(tableNameNo) * subQuery.getNoOfGroups(); j++)	{	
+						String res = ConstraintGenerator.genPositiveCondsForPred(subQuery, subQcond, j+offset);
+						constraintString += constrGen.getAssertConstraint(res)+"\n";
+						
+					}
 			}
 		}
 		return constraintString;
@@ -421,7 +435,7 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 	public static String negateCondForDiffGroupSubQ(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Node subQ) throws Exception{
 
 
-		String returnString="ASSERT NOT (";
+		String returnString="";//ASSERT NOT (";
 		int offset=0, count=0;
 		String tableNameNumber = null;
 		if(subQ.getType().equals(Node.getExistsNodeType()) || subQ.getType().equals(Node.getNotNodeType()) )
@@ -496,23 +510,27 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 					}
 
 				}
+				ConstraintGenerator constraintGen = new ConstraintGenerator();
+				
 				if( present ){
-					String subQueryConstraints ="ASSERT NOT ";
+					String subQueryConstraints = "";//ASSERT NOT ";
 					if( UtilsRelatedToNode.isStringSelection(cond,0)){
 
-						subQueryConstraints += GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, cond, i+offset);
-
-						String result = cvc.getStringSolver().solveConstraints(subQueryConstraints,cvc.getResultsetColumns(), cvc.getTableMap()).get(0);
-						returnString +=  result.substring(7,result.length()-2)+ " AND ";		
+						subQueryConstraints += constraintGen.getAssertNotCondition(queryBlock, cond, i+offset);
+						
+						//to be changed for SMT and CVC3 common method after clarification from Bikash
+						
+						//String result = cvc.getStringSolver().solveConstraints(subQueryConstraints,cvc.getResultsetColumns(), cvc.getTableMap()).get(0);
+						//returnString +=  result.substring(7,result.length()-2)+ " AND ";	
+						returnString += subQueryConstraints ;
 					}
 					else
-						returnString += GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, cond, i+offset)+" AND ";
+						returnString += constraintGen.getAssertNotCondition(queryBlock, cond, i+offset);
 				}
 			}
-			if(returnString.endsWith("ASSERT NOT ("))
-				returnString+="(1 /=1) AND ";
+			
 		}
-		returnString=returnString.substring(0, returnString.length()-4)+");\n";
+		returnString="\n"; //returnString.substring(0, returnString.length()-4)+");\n";
 
 		return returnString;
 
@@ -530,6 +548,7 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 	/**FIXME: Write good documentation for this function*/
 
 	public static String getCVCForAggInSubQConstraint(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Node n, int totalRows, int outerTupleNo, int groupNo){ /** String returned by this function must prepend 'ASSERT' and append ';' to it. */
+		ConstraintGenerator constrGen = new ConstraintGenerator();
 		if(n.getType().equalsIgnoreCase(Node.getBroNodeType())){			
 
 			String returnStr = "";
@@ -556,26 +575,35 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 
 				if(af.getFunc().equalsIgnoreCase(AggregateFunction.getAggMAX())){
 
-					String maxStr="MAX_"+columnName+ ": "+columnName+";\nASSERT(";
+					/*String maxStr="MAX_"+columnName+ ": "+columnName+";\n";
+					//"ASSERT(";
 					for(int i=1;i<=myCount;i++){
-						maxStr+="("+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), (i+offset+groupOffset)+"")+"=MAX_"+columnName+ ") OR";
-						returnStr+= "ASSERT ("+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), (i+offset+groupOffset)+"")+"<=MAX_"+columnName+ ");\n";
+						maxStr+="("+ ConstraintGenerator.cvcMapNode(af.getAggExp(), (i+offset+groupOffset)+"")+"=MAX_"+columnName+ ") OR";
+						returnStr+= "ASSERT ("+ ConstraintGenerator.cvcMapNode(af.getAggExp(), (i+offset+groupOffset)+"")+"<=MAX_"+columnName+ ");\n";
 					}
 					maxStr=maxStr.substring(0, maxStr.length()-3)+");\n";
 
 
-					returnStr+= "ASSERT (MAX_"+columnName+n.getOperator()+"+O_"+ GenerateCVCConstraintForNode.cvcMap(n.getRight().getColumn(), outerTupleNo+"")+");\n";
-					return maxStr+returnStr;
+					returnStr+= "ASSERT (MAX_"+columnName+n.getOperator()+"+O_"+ ConstraintGenerator.cvcMap(n.getRight().getColumn(), outerTupleNo+"")+");\n";
+					return maxStr+returnStr;*/
+					
+					for(int i=1;i<=myCount;i++){
+						returnStr+= ConstraintGenerator.getMaxConstraintForSubQ(af.getAggExp(),(i+offset+groupOffset), UtilsRelatedToNode.getColumn(af.getAggExp()), myCount);
+					}
+					returnStr+=	constrGen.getMaxAssertConstraintForSubQ(columnName,n.getOperator(), ConstraintGenerator.cvcMap(n.getRight().getColumn(), outerTupleNo+""));
+					return returnStr;
 				}
 				else if(n.getLeft().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMIN())){
-					String minStr="MIN_"+columnName+ ": "+columnName+";\nASSERT(";
+					//String minStr="MIN_"+columnName+ ": "+columnName+";\nASSERT(";
 					for(int i=1;i<=myCount;i++){
-						minStr+="("+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), (i+offset+groupOffset)+"")+"=MIN_"+columnName+ ") OR";
-						returnStr += "ASSERT ("+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), (i+offset+groupOffset)+"")+">=MIN_"+columnName+ ");\n";
+						//minStr+="("+ ConstraintGenerator.cvcMapNode(af.getAggExp(), (i+offset+groupOffset)+"")+"=MIN_"+columnName+ ") OR";
+						//returnStr += "ASSERT ("+ ConstraintGenerator.cvcMapNode(af.getAggExp(), (i+offset+groupOffset)+"")+">=MIN_"+columnName+ ");\n";
+						returnStr+= ConstraintGenerator.getMinConstraintForSubQ(af.getAggExp(),(i+offset+groupOffset), UtilsRelatedToNode.getColumn(af.getAggExp()), myCount);
 					}
-					minStr=minStr.substring(0, minStr.length()-3)+");\n";					
-					returnStr+= "ASSERT (MIN_"+columnName+n.getOperator()+"+O_"+ GenerateCVCConstraintForNode.cvcMap(n.getRight().getColumn(), outerTupleNo+"")+");\n";
-					return minStr+returnStr;
+					//minStr=minStr.substring(0, minStr.length()-3)+");\n";					
+					//returnStr+= "ASSERT (MIN_"+columnName+n.getOperator()+"+O_"+ ConstraintGenerator.cvcMap(n.getRight().getColumn(), outerTupleNo+"")+");\n";
+					returnStr+=	constrGen.getMinAssertConstraintForSubQ(columnName,n.getOperator(), ConstraintGenerator.cvcMap(n.getRight().getColumn(), outerTupleNo+""));
+					return returnStr;
 				}
 				else if(n.getLeft().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggCOUNT())){
 					return "";
@@ -607,31 +635,35 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 				int groupOffset = groupNo * myCount;
 
 				if(n.getRight().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMAX())){
-					String maxStr="MAX_"+columnName+ ": "+columnName+";\nASSERT(";
+				//	String maxStr="MAX_"+columnName+ ": "+columnName+";\nASSERT(";
 					for(int i=0;i<=myCount-1;i++){
-						maxStr+="("+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), (i + offset + groupOffset)+"")+"=MAX_"+columnName+ ") OR";
-						returnStr+= "ASSERT ("+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), (i + offset + groupOffset)+"")+"<=MAX_"+columnName+ ");\n";
+						/*maxStr+="("+ ConstraintGenerator.cvcMapNode(af.getAggExp(), (i + offset + groupOffset)+"")+"=MAX_"+columnName+ ") OR";
+						returnStr+= "ASSERT ("+ ConstraintGenerator.cvcMapNode(af.getAggExp(), (i + offset + groupOffset)+"")+"<=MAX_"+columnName+ ");\n";*/
+						returnStr+= ConstraintGenerator.getMaxConstraintForSubQ(af.getAggExp(),(i+offset+groupOffset), UtilsRelatedToNode.getColumn(af.getAggExp()), myCount);
 					}
-					maxStr=maxStr.substring(0, maxStr.length()-3)+");\n";
+					//maxStr=maxStr.substring(0, maxStr.length()-3)+");\n";
 					Column col = null;
 					if(n.getLeft().getType().equalsIgnoreCase(Node.getBaoNodeType())){
 						col = UtilsRelatedToNode.getColumn(n.getLeft());
 					}else{
 						col = n.getLeft().getColumn();
 					}
-					returnStr+="ASSERT ("+ "O_"+ GenerateCVCConstraintForNode.cvcMap(col, outerTupleNo+"")+n.getOperator()+"MAX_"+columnName+");\n";
+					returnStr+= constrGen.getMaxAssertConstraintForSubQ(columnName,n.getOperator(), ConstraintGenerator.cvcMap(n.getLeft().getColumn(), outerTupleNo+""));
+							//"ASSERT ("+ "O_"+ ConstraintGenerator.cvcMap(col, outerTupleNo+"")+n.getOperator()+"MAX_"+columnName+");\n";
 
-					return maxStr+returnStr;
+					return returnStr;
 				}
 				else if(n.getRight().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMIN())){
-					String minStr="MIN_"+columnName+ ": "+columnName+";\nASSERT(";
+					//String minStr="MIN_"+columnName+ ": "+columnName+";\nASSERT(";
 					for(int i=1;i<=myCount;i++){
-						minStr+="("+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), (i + offset + groupOffset)+"")+"=MIN_"+columnName+ ") OR";
-						returnStr+= "ASSERT ("+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), (i + offset + groupOffset)+"")+">=MIN_"+columnName+ ");\n";
+						//minStr+="("+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), (i + offset + groupOffset)+"")+"=MIN_"+columnName+ ") OR";
+						//returnStr+= "ASSERT ("+ ConstraintGenerator.cvcMapNode(af.getAggExp(), (i + offset + groupOffset)+"")+">=MIN_"+columnName+ ");\n";
+						returnStr+= ConstraintGenerator.getMinConstraintForSubQ(af.getAggExp(),(i+offset+groupOffset), UtilsRelatedToNode.getColumn(af.getAggExp()), myCount);
 					}
-					minStr=minStr.substring(0, minStr.length()-3)+");\n";					
-					returnStr+="ASSERT ("+ "O_"+ GenerateCVCConstraintForNode.cvcMap(n.getLeft().getColumn(), outerTupleNo+"")+n.getOperator()+"MIN_"+columnName+");\n";
-					return minStr+returnStr;
+					//minStr=minStr.substring(0, minStr.length()-3)+");\n";					
+					//returnStr+="ASSERT ("+ "O_"+ ConstraintGenerator.cvcMap(n.getLeft().getColumn(), outerTupleNo+"")+n.getOperator()+"MIN_"+columnName+");\n";
+					returnStr+= constrGen.getMinAssertConstraintForSubQ(columnName,n.getOperator(), ConstraintGenerator.cvcMap(n.getLeft().getColumn(), outerTupleNo+""));
+					return returnStr;
 
 				}
 				else if(n.getRight().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggCOUNT())){
@@ -642,7 +674,8 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 
 			String left = getCVCForAggInSubQConstraint(cvc, queryBlock, n.getLeft(), totalRows, outerTupleNo, groupNo);
 			String right = getCVCForAggInSubQConstraint(cvc, queryBlock, n.getRight(), totalRows, outerTupleNo, groupNo);
-			String returnValue="ASSERT (";
+			String returnValue="";//ASSERT (";
+			/*
 			if( right.contains(" OR ") ){
 				String split[]=right.split(" OR ");
 				for(int i=0;i<split.length;i++)
@@ -652,6 +685,12 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 			}
 			else
 				returnValue +=left+ n.getOperator() + right+");\n";
+			*/
+			if(right.contains(" OR ") || right.contains("(or ")){
+				returnValue += constrGen.replaceOrByOperator(right,n,left);
+			}else{
+				returnValue +=  constrGen.getAssertConstraint(left,n.getOperator(),right);
+			}
 			return returnValue;
 		}
 		else if(n.getType().equalsIgnoreCase(Node.getValType())){
@@ -665,7 +704,7 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 			String innerTableNo = n.getTableNameNo();
 			int offset2 = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
 			int groupOffset = groupNo * cvc.getNoOfTuples().get(innerTableNo);
-			return "O_"+ GenerateCVCConstraintForNode.cvcMap(n.getColumn(), outerTupleNo+offset2-1+"");
+			return ConstraintGenerator.getSolverMapping(n.getColumn(), outerTupleNo+offset2-1+"");
 		}
 		////////////////////////////////
 
@@ -682,18 +721,22 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 				int extras = totalRows%myCount;
 				int offset = cvc.getRepeatedRelNextTuplePos().get(tableNameNo)[1];
 				int groupOffset = groupNo * myCount;
-				for(int i=0,j=0;i<myCount;i++,j++){
+				
+				/*for(int i=0,j=0;i<myCount;i++,j++){
 					if(j<extras)
-						returnStr += (multiples+1)+"*("+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), (i+offset+groupOffset)+"")+")";
+						returnStr += (multiples+1)+"*("+ ConstraintGenerator.cvcMapNode(af.getAggExp(), (i+offset+groupOffset)+"")+")";
 					else
-						returnStr += (multiples)+"*("+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), (i+offset+groupOffset)+"")+")";
+						returnStr += (multiples)+"*("+ ConstraintGenerator.cvcMapNode(af.getAggExp(), (i+offset+groupOffset)+"")+")";
 
 					if(i<myCount-1){
 						returnStr += "+";
 					}
 				}
 				return returnStr + ") / "+totalRows + " ";
-			}
+				*/
+				
+				return constrGen.getAVGConstraintForSubQ(myCount, groupNo, multiples, totalRows, af.getAggExp(), offset);
+						}
 			else if(n.getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggSUM())){
 				String returnStr = " ";
 				//Actual count required my this table
@@ -704,16 +747,16 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 				int extras = totalRows%myCount;
 				int offset = cvc.getRepeatedRelNextTuplePos().get(tableNameNo)[1];
 				int groupOffset = groupNo * myCount;
-				if(isDistinct && myCount>1){//mahesh: add
+				/*if(isDistinct && myCount>1){//mahesh: add
 					//there will be three elements in the group
 					int ind=0;
 					for(int m=0;m<2;m++){
 						returnStr +="(";
 						for(int i=0,j=0;i<myCount-1;i++,j++){
 							if(j<extras)
-								returnStr += (multiples+1)+"*("+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), (i+offset+ind+groupOffset)+"")+")";
+								returnStr += (multiples+1)+"*("+ ConstraintGenerator.cvcMapNode(af.getAggExp(), (i+offset+ind+groupOffset)+"")+")";
 							else
-								returnStr += (multiples)+"*("+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), (i+offset+ind+groupOffset)+"")+")";//" DISTINCT (O_"+ cvcMap(col,group+offset-1+"") +", O_"+ cvcMap(col,(group+aliasCount-1+offset)+"") +") "
+								returnStr += (multiples)+"*("+ ConstraintGenerator.cvcMapNode(af.getAggExp(), (i+offset+ind+groupOffset)+"")+")";//" DISTINCT (O_"+ cvcMap(col,group+offset-1+"") +", O_"+ cvcMap(col,(group+aliasCount-1+offset)+"") +") "
 							if(i<myCount-2){
 								returnStr += "+";
 							}
@@ -722,7 +765,10 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 						returnStr+=" )) AND ";
 						for(int i=0,j=0;i<myCount-2;i++,j++)
 						{
-							returnStr +="DISTINCT( "+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), (i+offset+ind+groupOffset)+"")+" , "+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), (i+offset+ind+1+groupOffset)+"")+") AND ";
+							returnStr += 
+									
+									//"DISTINCT( "+ ConstraintGenerator.cvcMapNode(af.getAggExp(), (i+offset+ind+groupOffset)+"")+" , "
+									//+ ConstraintGenerator.cvcMapNode(af.getAggExp(), (i+offset+ind+1+groupOffset)+"")+") AND ";
 						}
 						returnStr = returnStr.substring(0,returnStr.lastIndexOf("AND")-1);
 						ind++;
@@ -734,15 +780,15 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 				}
 				for(int i=0,j=0;i<myCount;i++,j++){
 					if(j<extras)
-						returnStr += (multiples+1)+"*("+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), (i+offset+groupOffset)+"")+")";
+						returnStr += (multiples+1)+"*("+ ConstraintGenerator.cvcMapNode(af.getAggExp(), (i+offset+groupOffset)+"")+")";
 					else
-						returnStr += (multiples)+"*("+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), (i+offset+groupOffset)+"")+")";
+						returnStr += (multiples)+"*("+ ConstraintGenerator.cvcMapNode(af.getAggExp(), (i+offset+groupOffset)+"")+")";
 
 					if(i<myCount-1){
 						returnStr += "+";
 					}
-				}
-				return returnStr;
+				}*/
+				return constrGen.getSUMConstraintForSubQ(myCount, groupNo, multiples, totalRows, af.getAggExp(), offset);
 			}
 
 
@@ -751,7 +797,7 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 				int offset = cvc.getRepeatedRelNextTuplePos().get(tableNameNo)[1];
 				int groupOffset = groupNo * cvc.getNoOfTuples().get(tableNameNo);
 				String returnStr = "";
-				returnStr += GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), (1+offset+groupOffset)+"");
+				returnStr += ConstraintGenerator.cvcMapNode(af.getAggExp(), (1+offset+groupOffset)+"");
 				return returnStr;
 			}
 			else if(n.getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMIN())){
@@ -759,7 +805,7 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 				int offset = cvc.getRepeatedRelNextTuplePos().get(tableNameNo)[1];
 				int groupOffset = groupNo * cvc.getNoOfTuples().get(tableNameNo);
 				String returnStr = "";
-				returnStr += GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), (1+offset+groupOffset)+"");
+				returnStr += ConstraintGenerator.cvcMapNode(af.getAggExp(), (1+offset+groupOffset)+"");
 				return returnStr;
 			}
 			else return ""; //TODO: Code for COUNT
@@ -780,7 +826,7 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 	public static String subQueryConstraintsToKillAllAny(GenerateCVC1 cvc, QueryBlockDetails qbt, Node subQ) throws Exception{
 
 		String constraintString = "";
-
+		ConstraintGenerator constrGen=new ConstraintGenerator();
 		/**If connective is not of type exists*/
 		if(!subQ.getType().equalsIgnoreCase(Node.getExistsNodeType())){
 
@@ -802,24 +848,23 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 			int offset2 = cvc.getRepeatedRelNextTuplePos().get(rhs.getTableNameNo())[1];
 
 
-			constraintString += "\n%---------------------------------------------------\n%CONSTRAINTS TO KILL ALL/ANY SUBQUERY CONNECTIVE \n%---------------------------------------------------\n\n";
+			constraintString += ConstraintGenerator.addCommentLine("CONSTRAINTS TO KILL ALL/ANY SUBQUERY CONNECTIVE ");
 
-			constraintString += "\nASSERT (" + GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, lhs,offset1) + " " 
-					+ op +" " + GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, rhs,offset2) + ");";/**FIXME: Is qbt correct or do we need to pass sub query block*/
+			constraintString += constrGen.getAssertConstraint(ConstraintGenerator.genPositiveCondsForPred(qbt, lhs,offset1),op,ConstraintGenerator.genPositiveCondsForPred(qbt, rhs,offset2));
+			/**FIXME: Is qbt correct or do we need to pass sub query block*/
 
-			constraintString += "\nASSERT NOT (" + GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, lhs,offset1) + " "
-					+ op + " " + GenerateCVCConstraintForNode.genPositiveCondsForPred(qbt, rhs,offset2+1) + ");";
+			constraintString += constrGen.getAssertNotCondition(ConstraintGenerator.genPositiveCondsForPred(qbt, lhs,offset1), op, ConstraintGenerator.genPositiveCondsForPred(qbt, rhs,offset2+1));
 
-			constraintString += "\n%---------------------------------------------------\n%END OF CONSTRAINTS TO KILL ALL/ANY SUBQUERY CONNECTIVE \n%---------------------------------------------------\n\n";
+			constraintString += ConstraintGenerator.addCommentLine("END OF CONSTRAINTS TO KILL ALL/ANY SUBQUERY CONNECTIVE ");
 
 
-			constraintString += "\n%---------------------------------------------------\n%CONSTRAINTS FOR CONDITIONS INSIDE WHERE CLAUSE SUBQUERY CONNECTIVE \n%---------------------------------------------------\n\n";
+			constraintString += ConstraintGenerator.addCommentLine("CONSTRAINTS FOR CONDITIONS INSIDE WHERE CLAUSE SUBQUERY CONNECTIVE ");
 
 			constraintString += GenerateConstraintsForWhereClauseSubQueryBlock.getCVCForCondsInSubQ(cvc, qbt, subQ);
 
 			constraintString += GenerateConstraintsForWhereClauseSubQueryBlock.getConstraintsForGroupByAndHavingInSubQ(cvc, qbt, subQ);
 
-			constraintString += "\n%---------------------------------------------------\n%END OF CONSTRAINTS FOR CONDITIONS INSIDE WHERE CLAUSE SUBQUERY CONNECTIVE \n%---------------------------------------------------\n\n";
+			constraintString += ConstraintGenerator.addCommentLine("END OF CONSTRAINTS FOR CONDITIONS INSIDE WHERE CLAUSE SUBQUERY CONNECTIVE ");
 
 		}
 		return constraintString;
@@ -846,9 +891,9 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 		for(Node subQConds: con.getAllSubQueryConds()){
 
 
-			constraintString +="\n%---------------------------------------------------\n%CONSTRAINTS FOR WHERE CLAUSE SUBQUERY CONNECTIVE \n%---------------------------------------------------\n\n";
+			constraintString +=ConstraintGenerator.addCommentLine("CONSTRAINTS FOR WHERE CLAUSE SUBQUERY CONNECTIVE ");
 			constraintString += GenerateConstraintsForWhereClauseSubQueryBlock.getConstraintsForWhereSubQueryConnective( cvc, cvc.getOuterBlock(), subQConds);
-			constraintString += "\n%---------------------------------------------------\n%CONSTRAINTS FOR CONDITIONS INSIDE WHERE CLAUSE SUBQUERY CONNECTIVE \n%---------------------------------------------------\n\n";
+			constraintString += ConstraintGenerator.addCommentLine("CONSTRAINTS FOR CONDITIONS INSIDE WHERE CLAUSE SUBQUERY CONNECTIVE ");
 
 			/** Used to store conditions of this sub query block*/
 			Vector<Node> condsInSubQ = new Vector<Node>();

@@ -7,6 +7,7 @@ import parsing.Node;
 import parsing.Table;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
+import util.ConstraintObject;
 
 /**
  * This class generates constraints to kill the extra group by mutations
@@ -20,7 +21,9 @@ public class GenerateConstraintsToKillExtraGroupByMutations {
 
 		/** Used to store the constraint*/
 		String extraGroupBy = "";
-
+		
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+		ArrayList<ConstraintObject> constrList = new ArrayList<ConstraintObject>();
 		/**If there are no group  by attributes, then nothing need to be done*/
 		if(queryBlock.getGroupByNodes() == null || queryBlock.getGroupByNodes().size() == 0)
 			return extraGroupBy;
@@ -49,7 +52,7 @@ public class GenerateConstraintsToKillExtraGroupByMutations {
 			/**Generate constraints in each group of this query block*/
 			for(int m=1; m <= queryBlock.getNoOfGroups() ; m++){
 
-				extraGroupBy += "ASSERT ";
+				//extraGroupBy += "ASSERT ";
 
 				/**get no of tuples */
 				int count = 0;//cvc.getNoOfTuples().get(tableNameNo);
@@ -64,18 +67,23 @@ public class GenerateConstraintsToKillExtraGroupByMutations {
 
 				/**If there is a single tuple */
 				if(count == 1){
-					extraGroupBy +=" TRUE ;\n";
+					extraGroupBy +=constrGen.getAssertTrue();
 					continue;
 				}
-
+				ConstraintObject constrObj = new ConstraintObject();
 				/**To kill this mutation
 				 * This column has to be distinct in at least two tuples*/
 				for(int k=1; k<=count;k++){
 					for(int l=k+1; l<=count;l++)
-						extraGroupBy += " DISTINCT (O_"+t1+"["+(group+k-1+offset)+"]."+Index+ " , O_"+t1+"["+(group+l-1+offset)+"]."+Index+") OR ";
+						//extraGroupBy += 
+						constrObj.setLeftConstraint(constrGen.getDistinctConstraint(t1, col, (group+k-1+offset), Index, t1, col, (group+l-1+offset), Index));
+						constrList.add(constrObj);
+					//" DISTINCT (O_"+t1+"["+(group+k-1+offset)+"]."+Index+ " , O_"+t1+"["+(group+l-1+offset)+"]."+Index+") OR ";
 				}
-				int lastIndex = extraGroupBy.lastIndexOf("OR");
-				extraGroupBy = extraGroupBy.substring(0, lastIndex-1) + " ;\n ";
+				
+				extraGroupBy += constrGen.generateOrConstraintsWithAssert(constrList) +"\n";
+				//int lastIndex = extraGroupBy.lastIndexOf("OR");
+				//extraGroupBy = extraGroupBy.substring(0, lastIndex-1) + " ;\n ";
 			}
 		}
 

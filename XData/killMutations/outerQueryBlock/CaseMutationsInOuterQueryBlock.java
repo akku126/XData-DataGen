@@ -1,5 +1,6 @@
 package killMutations.outerQueryBlock;
 
+import generateConstraints.ConstraintGenerator;
 import generateConstraints.Constraints;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GenerateConstraintsForCaseConditions;
@@ -16,6 +17,7 @@ import parsing.CaseCondition;
 import parsing.CaseExpression;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
+import util.ConstraintObject;
 import util.TagDatasets;
 
 public class CaseMutationsInOuterQueryBlock {
@@ -118,7 +120,11 @@ public class CaseMutationsInOuterQueryBlock {
 						
 						/** Add the encountered case condition to the list*/
 						caseConditionCompleted.add(sc);
-						cvc.getStringConstraints().add(Constraints.getStringConstraints(localConstraints));
+					//	cvc.getStringConstraints().add(Constraints.getStringConstraints(cvc,localConstraints));
+						ArrayList<String> strConstraints =  Constraints.getStringConstraints(cvc,localConstraints);
+						for(String constraint : strConstraints){
+							cvc.getStringConstraints().add(constraint.toString());
+						}
 						GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc);
 						
 						/*******Code from selection mutations code end******/
@@ -144,7 +150,11 @@ public class CaseMutationsInOuterQueryBlock {
 				
 				/** Add the encountered case condition to the list*/
 				//caseConditionCompleted.add(sc);
-				cvc.getStringConstraints().add(Constraints.getStringConstraints(localConstraints));
+				//cvc.getStringConstraints().add(Constraints.getStringConstraints(cvc,localConstraints));
+				ArrayList<String> strConstraints =  Constraints.getStringConstraints(cvc,localConstraints);
+				for(String constraint : strConstraints){
+					cvc.getStringConstraints().add(constraint.toString());
+				}
 				GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc);
 			}
 		}//try ends
@@ -205,14 +215,18 @@ public class CaseMutationsInOuterQueryBlock {
 			/** Add the encountered case condition to the list*/
 			//caseConditionCompleted.add(sc);
 			
-			constraintString += "\n%---------------------------------\n%CASE CONDITION CONSTRAINTS\n%---------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine("CASE CONDITION CONSTRAINTS ");
 			constraintString += "ASSERT(() ";
 			constraintString += GenerateConstraintsForCaseConditions.getCaseConditionConstraintsForOriginalQuery(cvc,cvc.getOuterBlock());
 			constraintString += ")";
-			constraintString += "\n%---------------------------------\n%END OF CASE CONDITION CONSTRAINTS\n%---------------------------------\n";
+			constraintString += ConstraintGenerator.addCommentLine("END OF CASE CONDITION CONSTRAINTS");
 			cvc.getConstraints().add(constraintString);
 			
-			cvc.getStringConstraints().add(Constraints.getStringConstraints(localConstraints));
+			//cvc.getStringConstraints().add(Constraints.getStringConstraints(cvc,localConstraints));
+			ArrayList<String> strConstraints =  Constraints.getStringConstraints(cvc,localConstraints);
+			for(String constraint : strConstraints){
+				cvc.getStringConstraints().add(constraint.toString());
+			}
 			GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc);
 			
 		}//try ends

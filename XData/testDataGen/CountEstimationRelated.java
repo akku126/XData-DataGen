@@ -2,9 +2,10 @@
 
 package testDataGen;
 
+import generateConstraints.ConstraintGenerator;
 import generateConstraints.GenerateCVCConstraintForNode;
 import generateConstraints.GenerateConstraintsForHavingClause;
-import generateConstraints.GetCVC3HeaderAndFooter;
+import generateConstraints.GetSolverHeaderAndFooter;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -54,16 +55,20 @@ public class CountEstimationRelated {
 
 
 		String CVCText = "";
+	
 		Iterator itr = queryBlock.getColAggMap().keySet().iterator();
 		while(itr.hasNext()){
 			Column c = (Column)itr.next();
 			ArrayList<Node> aggCons = queryBlock.getColAggMap().get(c);
-			CVCText += cvc.getCVC3_HEADER();
+			//CVCText += cvc.getCVC3_HEADER();
+			cvc.getDatatypeColumns().clear();
+			CVCText += GetSolverHeaderAndFooter.generateSolver_Header(cvc);
 			for(int i=0;i<aggCons.size();i++)			
 				CVCText += GenerateConstraintsForHavingClause.getHavingClauseConstraints(cvc, queryBlock, aggCons.get(i), queryBlock.getFinalCount(), 0) ;
 
 
-			CVCText += GetCVC3HeaderAndFooter.generateCvc3_Footer();
+			//CVCText += GetSolverHeaderAndFooter.generateSolver_Footer(cvc);
+			CVCText += GetSolverHeaderAndFooter.generateSolver_FooterForAgg(cvc);
 			//Escape the whitespaces in the file path when writing File Name in BASH SCRIPT OR Enclose it with single quotes in BASH SCRIPT
 			//This is OS specific.
 			String filePath =  cvc.getFilePath().replace(" ", "\\ ");
@@ -71,10 +76,7 @@ public class CountEstimationRelated {
 			/**write these constraints into a file and execute*/
 			WriteFile.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints.cvc", CVCText);
 			Runtime r = Runtime.getRuntime();
-			String cmdString = "";
-			cmdString = "#!/bin/bash\n";
-			cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc" +filePath + "/checkAggConstraints.cvc | grep -e 'Invalid' > isValid \n";
-			WriteFile.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints", cmdString);
+			ConstraintGenerator.getAggConstraintExeFile(filePath,cvc);
 			
 			ProcessBuilder pb = new ProcessBuilder("/bin/bash", "checkAggConstraints");
 			pb.directory(new File(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath()));
@@ -248,6 +250,7 @@ public class CountEstimationRelated {
 								break;
 							}
 							/**Otherwise we cannot store the count*/
+							//FIXME What if right side is also an aggregate?
 							else if(cond.getOperator().equalsIgnoreCase(">") || cond.getOperator().equalsIgnoreCase(">=")){
 								c = Integer.parseInt(cond.getRight().getStrConst());
 								countPresent=true;
@@ -311,18 +314,14 @@ public class CountEstimationRelated {
 					//This is OS specific.
 					String filePath =  cvc.getFilePath().replace(" ", "\\ ");
 					/**Get the constraints related CVC3*/
-					CVCStr = GenerateCVCConstraintForNode.generateCVCForCNTForPositiveINT( queryBlock, havingColConds, col, c);
+					//CVCStr = GenerateCVCConstraintForNode.generateCVCForCNTForPositiveINT( queryBlock, havingColConds, col, c);
+					CVCStr = ConstraintGenerator.generateCVCForCNTForPositiveINT( queryBlock, havingColConds, col, c);
 
 					/**write these constraints into a file and execute*/
 					WriteFile.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/getCount.cvc", CVCStr);
 					
-					Runtime r = Runtime.getRuntime();
-					cmdString = "";
-					cmdString = "#!/bin/bash\n";
-					cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc" +filePath+ "/getCount.cvc > "+Configuration.homeDir+"/temp_cvc" + filePath + "/COUNTCVC \n";
-					cmdString +=Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc" + filePath + "/getCount.cvc | grep -e 'Invalid' > isValid \n";
-					cmdString += "grep -e 'COUNT = ' "+ Configuration.homeDir+"/temp_cvc" + filePath + "/COUNTCVC" +" | awk -F \" \" '{print $4}' | awk -F \")\" '{print $1}' > "+Configuration.homeDir+"/temp_cvc" +filePath + "/COUNT\n";
-					WriteFile.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/execCOUNT", cmdString);
+					ConstraintGenerator.getCountExeFile(filePath, cmdString, cvc);
+					
 					
 					ProcessBuilder pb = new ProcessBuilder("/bin/bash", "execCOUNT");
 					pb.directory(new File(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath()));
@@ -338,8 +337,8 @@ public class CountEstimationRelated {
 
 					Utilities.closeProcessStreams(myProcess);					
 					
-					File f = new File(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/isValid");
-					if(f.length() == 0){
+					File f = new File(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/isNotValid");
+					if(f.length() != 0){
 						continue;
 					}
 
@@ -348,7 +347,12 @@ public class CountEstimationRelated {
 					String countFromFile = "";
 					try{
 						input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/COUNT"));
-						countFromFile = input.readLine();
+						String str = input.readLine();
+						if(str != null && !str.isEmpty()){
+							countFromFile = str;
+						}else{
+							countFromFile = "0";
+						}
 					}
 					finally{
 						writer.close();
@@ -405,7 +409,7 @@ public class CountEstimationRelated {
 			Utilities.flattenConstraints( aggConstraints, queryBlock.getHavingClause());
 
 
-		RelatedToParameters.setupDataStructuresForParamConstraints( queryBlock );
+		RelatedToParameters.setupDataStructuresForParamConstraints(cvc,queryBlock );
 
 		/**FIXME: Not sure whether this is needed or not*/
 		for(ConjunctQueryStructure conjunct: queryBlock.getConjunctsQs())

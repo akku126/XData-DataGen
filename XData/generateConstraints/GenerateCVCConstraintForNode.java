@@ -17,6 +17,7 @@ import parsing.Table;
 import testDataGen.DataType;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
+import util.ConstraintObject;
 
 /**
  * This class contain actual methods that map a given node into CVC3 constraint
@@ -195,6 +196,7 @@ public class GenerateCVCConstraintForNode {
 	public static String cvcSetNull(GenerateCVC1 cvc, Column c, String index){
 		HashMap<String, Integer> nullValues = cvc.getColNullValuesMap().get(c);
 		Iterator<String> itr = nullValues.keySet().iterator();
+		ConstraintGenerator consGen = new ConstraintGenerator();
 		boolean foundNullVal = false;
 		String nullVal = "";
 		while(itr.hasNext()){
@@ -207,8 +209,10 @@ public class GenerateCVCConstraintForNode {
 		}
 		/** If found */
 		if(foundNullVal){
-			return "\nASSERT O_"+cvcMap(c, index)+" = "+nullVal+";";
+			 return consGen.getAssertNullValue(c,index,nullVal);
+			//return "\nASSERT O_"+cvcMap(c, index)+" = "+nullVal+";";
 		}
+		
 		else{
 			System.out.println("In cvcSetNull Function: "+"Unassigned Null value cannot be found due to insufficiency");
 			logger.log(Level.WARNING,"Unassigned Null value cannot be found due to insufficiency");		
@@ -226,20 +230,24 @@ public class GenerateCVCConstraintForNode {
 
 	public static String cvcSetNotNull(GenerateCVC1 cvc){
 		
-		String retVal = "\n\n%NOT NULL CONSTRAINTS\n\n";
+		String retVal = ConstraintGenerator.addCommentLine(" NOT NULL CONSTRAINTS\n\n");
 		Iterator<Column> itrCol = cvc.getColNullValuesMap().keySet().iterator();
+		ConstraintGenerator constraintGenerator = new ConstraintGenerator();
 		
 		while(itrCol.hasNext()){
 			Column col = itrCol.next();
 			HashMap<String, Integer> nullValues = cvc.getColNullValuesMap().get(col);
 			String tabName = col.getTableName();
 			for(int j=1; j <= cvc.getNoOfOutputTuples().get(tabName); j++){
-				if(!nullValues.values().contains(j))
-					if(col != null && col.getCvcDatatype() != null && (col.getCvcDatatype().equals("INT") || col.getCvcDatatype().equals("REAL") || col.getCvcDatatype().equals("TIME")
-							||col.getCvcDatatype().equals("TIMESTAMP") || col.getCvcDatatype().equals("DATE")))
+				/*if(!nullValues.values().contains(j))
+					if(col != null && col.getCvcDatatype() != null && (col.getCvcDatatype().equalsIgnoreCase("INT") || col.getCvcDatatype().equalsIgnoreCase("REAL") || col.getCvcDatatype().equalsIgnoreCase("TIME")
+							||col.getCvcDatatype().equalsIgnoreCase("TIMESTAMP") || col.getCvcDatatype().equalsIgnoreCase("DATE")))
 						retVal += "\nASSERT NOT ISNULL_"+col.getColumnName()+"(O_"+cvcMap(col, j+"")+");";
 					else
 						retVal += "\nASSERT NOT ISNULL_"+col.getCvcDatatype()+"(O_"+cvcMap(col, j+"")+");";
+						*/
+				
+				retVal = constraintGenerator.getAndSetNotNullValuesBeforeFooter(col, j,retVal);
 			}
 
 
@@ -261,6 +269,50 @@ public class GenerateCVCConstraintForNode {
 	}
 
 	/**
+	 * Returns not null constraint in CVC for all the tuples which are not explicitly stated as NULLs
+	 * Care must be taken to call this method at the end, after adding all the constraints, so that
+	 * the necessary explicit NULL constraints are already added.
+	 * @param cvc
+	 * @returns
+	 */
+
+	public static String solverSetNotNull(GenerateCVC1 cvc){
+		
+		String retVal = ConstraintGenerator.addCommentLine("NOT NULL CONSTRAINTS\n\n");
+		Iterator<Column> itrCol = cvc.getColNullValuesMap().keySet().iterator();
+		ConstraintGenerator constraintGenerator = new ConstraintGenerator();
+		
+		while(itrCol.hasNext()){
+			Column col = itrCol.next();
+			HashMap<String, Integer> nullValues = cvc.getColNullValuesMap().get(col);
+			String tabName = col.getTableName();
+			for(int j=1; j <= cvc.getNoOfOutputTuples().get(tabName); j++){
+				if(!nullValues.values().contains(j))
+					
+					retVal = constraintGenerator.getAndSetNotNullValuesBeforeFooter(col, j,retVal);
+					
+			}
+
+
+			//			//Added by Biplab for adding NOT NULL constraints to BRANCHQUERY
+			//			for(int i = 0; i < noOfBranchQueries; i++)
+			//				if(tablesChangedForbranchQuery[i].contains(col.getTable()))
+			//				{
+			//					if(col.getCvcDatatype().equals("INT") || col.getCvcDatatype().equals("REAL") || col.getCvcDatatype().equals("TIME")
+			//							||col.getCvcDatatype().equals("TIMESTAMP") || col.getCvcDatatype().equals("DATE"))
+			//						retVal += "\nASSERT NOT ISNULL_"+col.getColumnName()+"(O_"+cvcMap(col, (noOfOutputTuples.get(tabName) + 1)+"")+");";
+			//					else
+			//						retVal += "\nASSERT NOT ISNULL_"+col.getCvcDatatype()+"(O_"+cvcMap(col, (noOfOutputTuples.get(tabName) + 1)+"")+");";
+			//				}
+			//			//End of Added by Biplab for adding NOT NULL constraints to BRANCHQUERY
+
+
+		}
+		return retVal;
+	}
+	
+	
+	/**
 	 * DOC FOR THIS METHOD
 	 * @param queryBlock
 	 * @param vn
@@ -268,7 +320,8 @@ public class GenerateCVCConstraintForNode {
 	 * @param countVal
 	 * @return
 	 */
-	public static String generateCVCForCNTForPositiveINT(QueryBlockDetails queryBlock, ArrayList<Node> vn, Column c, int countVal){
+	@Deprecated
+	public static String generateCVCForCNTForPositiveINTToDel(QueryBlockDetails queryBlock, ArrayList<Node> vn, Column c, int countVal){
 
 		String CVCStr = "";
 		int min = 0,min1=0, max=0,max1=0;
@@ -344,7 +397,7 @@ public class GenerateCVCConstraintForNode {
 				for(String s: queryBlock.getParamMap().values()){
 					s = s.trim();
 					if(s.contains("PARAM")){
-						CVCStr += "\n"+s+": BITVECTOR(20);";
+						CVCStr += "\n (declare-const "+s+" (_ BitVec 32))";
 					}
 		}
 		 
@@ -404,10 +457,10 @@ public class GenerateCVCConstraintForNode {
 	 * @param n2
 	 * @return
 	 */
-	public static String getCvc3StatementPositive(Column col1, Node n1, Column col2, Node n2){
+	/*public static String getCvc3StatementPositive(Column col1, Node n1, Column col2, Node n2){
 
 		return "ASSERT O_"+cvcMap(col1, n1) +" = O_"+cvcMap(col2, n2)+";";
-	}
+	}*/
 
 
 	/**
@@ -416,9 +469,10 @@ public class GenerateCVCConstraintForNode {
 	 * @param n
 	 * @return
 	 */
-	public static String genNegativeStringCond(QueryBlockDetails queryBlock, Node n){
+	/*public static String genNegativeStringCond(GenerateCVC1 cvc,QueryBlockDetails queryBlock, Node n){
 		//System.out.println("Node type: "+n.getType() + n.getLeft() + n.getOperator() + n.getRight());
 		logger.log(Level.INFO, "Node type: "+n.getType() + n.getLeft() + n.getOperator() + n.getRight());
+		ConstraintGenerator constraintGenerator = new ConstraintGenerator();
 		if(n.getType().equalsIgnoreCase(Node.getColRefType())){
 			return "O_"+cvcMap(n.getColumn(), n);
 		}
@@ -445,14 +499,14 @@ public class GenerateCVCConstraintForNode {
 				n.setOperator("<");
 			else if(n.getOperator().equalsIgnoreCase("~"))
 				n.setOperator("!i~");
-			return "("+ genPositiveCondsForPred( queryBlock, n.getLeft()) + " "+n.getOperator() + " "+
-			genPositiveCondsForPred( queryBlock, n.getRight()) +")";
+			return "("+ constraintGenerator.genPositiveCondsForPred(cvc,queryBlock, n.getLeft()) + " "+n.getOperator() + " "+
+			constraintGenerator.genPositiveCondsForPred(cvc,queryBlock, n.getRight()) +")";
 		}
 		return null;
-	}
+	}*/
 
 
-	public static String genPositiveCondsForPred(QueryBlockDetails queryBlock, Node n, Map<String,Character> hm){
+	/*public static String genPositiveCondsForPred(QueryBlockDetails queryBlock, Node n, Map<String,Character> hm){
 		Character index = null;
 		if(n.getType().equalsIgnoreCase(Node.getColRefType())){
 			if(hm.containsKey(n.getTable().getTableName())){
@@ -485,9 +539,13 @@ public class GenerateCVCConstraintForNode {
 					genPositiveCondsForPred( queryBlock, n.getRight(), hm)+")";
 		}
 		return "";
-	}
+	}*/
 
-	public static String genPositiveCondsForPred( QueryBlockDetails queryBlock, Node n, int index, String paramId){//For parameters
+	/*public static String genPositiveCondsForPred(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Node n, int index, String paramId){//For parameters
+		
+		ConstraintGenerator constraintGenerator = new ConstraintGenerator();
+		return constraintGenerator.genPositiveCondsForPred(cvc, queryBlock, n, index);
+		
 		if(n.getType().equalsIgnoreCase(Node.getColRefType())){
 			return "O_"+cvcMap(n.getColumn(), index+"");
 		}
@@ -504,11 +562,11 @@ public class GenerateCVCConstraintForNode {
 					genPositiveCondsForPred( queryBlock, n.getRight(), index, paramId)+")";
 		}
 		return null;
-	}
+	}*/
 
-	public static String genNegativeCondsForPred( QueryBlockDetails queryBlock, Node node, int i) throws Exception{
+	public static String genNegativeCondsForPred(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Node node, int i) throws Exception{
 		//need to change it for joins etc
-
+		ConstraintGenerator constraintGenerator = new ConstraintGenerator();
 		Node n=node.clone();
 
 		if(n.getOperator().equals("="))
@@ -523,9 +581,7 @@ public class GenerateCVCConstraintForNode {
 			n.setOperator(">");
 		else if(n.getOperator().equals(">="))
 			n.setOperator("<");
-
-
-		return genPositiveCondsForPred( queryBlock, n,i);
+		return constraintGenerator.genPositiveCondsForPred(queryBlock, n,i);
 	}
 
 	/**
@@ -570,9 +626,11 @@ public class GenerateCVCConstraintForNode {
 	
 	public static String generateNegativeConditionsForNodesList(GenerateCVC1 cvc, QueryBlockDetails queryBlock, List<Node> selConds) throws Exception{
 		
-		String returnString = "ASSERT(";
+		String returnString = "";// "ASSERT(";
 		
 		int predCount = 0;
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+		ArrayList <ConstraintObject> conObjList = new ArrayList<ConstraintObject>();
 		
 		for(int k = 0; k < selConds.size(); k++){
 			
@@ -582,19 +640,24 @@ public class GenerateCVCConstraintForNode {
 
 			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
 			for(int l = 1; l <= count; l++){
+				ConstraintObject constrObj = new ConstraintObject();
 				if(predCount == 0){
-					returnString += GenerateCVCConstraintForNode.genNegativeCondsForPred(queryBlock, selConds.get(k),l+offset-1);
+					returnString += GenerateCVCConstraintForNode.genNegativeCondsForPred(cvc,queryBlock, selConds.get(k),l+offset-1);
+					constrObj.setLeftConstraint(returnString);
+					conObjList.add(constrObj);
 				}
 				else{
-					returnString += " OR " + GenerateCVCConstraintForNode.genNegativeCondsForPred(queryBlock, selConds.get(k),l+offset-1);
+					//returnString += " OR " + GenerateCVCConstraintForNode.genNegativeCondsForPred(cvc,queryBlock, selConds.get(k),l+offset-1);
+					returnString =  GenerateCVCConstraintForNode.genNegativeCondsForPred(cvc,queryBlock, selConds.get(k),l+offset-1);
+					constrObj.setLeftConstraint(returnString);
+					conObjList.add(constrObj);
 				}
 				
 				predCount++;
 			}
 		}
-		
-		returnString += "); \n";
-		
+		returnString = constrGen.generateOrConstraintsWithAssert(conObjList);
+		// returnString += "); \n";
 		return returnString;
 	}
 	

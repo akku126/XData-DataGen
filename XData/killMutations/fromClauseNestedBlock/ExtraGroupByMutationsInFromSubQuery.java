@@ -1,5 +1,6 @@
 package killMutations.fromClauseNestedBlock;
 
+import generateConstraints.ConstraintGenerator;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GenerateConstraintsToKillExtraGroupByMutations;
 
@@ -77,9 +78,9 @@ public class ExtraGroupByMutationsInFromSubQuery {
 			
 			GenerateCommonConstraintsForQuery.generateNullandDBConstraints(cvc,false);
 			/**Get the constraints to kill this mutation*/
-			cvc.getConstraints().add("\n%---------------------------------\n%CONSTRAINTS TO KILL EXTRA GROUP BY ATTRIBUTES INSIDE FROM CLAUSE NESTED SUBQUERY BLOCK\n%---------------------------------\n");
+			cvc.getConstraints().add(ConstraintGenerator.addCommentLine("CONSTRAINTS TO KILL EXTRA GROUP BY ATTRIBUTES INSIDE FROM CLAUSE NESTED SUBQUERY BLOCK"));
 			cvc.getConstraints().add(GenerateConstraintsToKillExtraGroupByMutations.getExtraGroupByConstraints(cvc, qbt, extraColumn,tableOccurrence));
-			cvc.getConstraints().add("\n%---------------------------------\n%END OF CONSTRAINTS TO KILL EXTRA GROUP BY ATTRIBUTES INSIDE FROM CLAUSE NESTED SUBQUERY BLOCK\n%---------------------------------\n");
+			cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF CONSTRAINTS TO KILL EXTRA GROUP BY ATTRIBUTES INSIDE FROM CLAUSE NESTED SUBQUERY BLOCK"));
 			
 			/** Call the method for the data generation*/
 			GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc,false);

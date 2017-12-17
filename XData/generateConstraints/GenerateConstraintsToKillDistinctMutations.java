@@ -25,7 +25,7 @@ public class GenerateConstraintsToKillDistinctMutations {
 	public static String getDistinctConstraints(GenerateCVC1 cvc, QueryBlockDetails queryBlock) {
 
 		String constraintString = "";
-
+		ConstraintGenerator constrGen = new ConstraintGenerator();
 		/** Get the projected columns of this query block */
 		ArrayList<Node> projectedCols = queryBlock.getProjectedCols();
 
@@ -68,15 +68,18 @@ public class GenerateConstraintsToKillDistinctMutations {
 
 
 				if(count>1){/** If more than one tuple in this relation*/						
-					constraintString += "\nASSERT O_"+ GenerateCVCConstraintForNode.cvcMap(c,(offset)+"") + " = O_" + GenerateCVCConstraintForNode.cvcMap(c,(offset+nextPos)+"") + ";";
+					constraintString += constrGen.getAssertConstraint(c, offset, c, (offset+nextPos), " = ");
+					//"\nASSERT O_"+ GenerateCVCConstraintForNode.cvcMap(c,(offset)+"") + " = O_" + GenerateCVCConstraintForNode.cvcMap(c,(offset+nextPos)+"") + ";";
 				}
 				else{/** If there is a single tuple in this relation, this means that this node is involved in 
 				equi joins with other relation nodes*/
 
 					/**Get the column name which is involved in equi joins with this node*/
 					Column c1 = getNonUniqueMemberInEquivalenceClassOf(cvc, queryBlock, c);
-					if(c1 != null)
-						constraintString += "\nASSERT O_"+ GenerateCVCConstraintForNode.cvcMap(c1,(offset)+"") + " = O_" + GenerateCVCConstraintForNode.cvcMap(c1,(offset+nextPos)+"") + ";";
+					if(c1 != null){
+						//constraintString += "\nASSERT O_"+ GenerateCVCConstraintForNode.cvcMap(c1,(offset)+"") + " = O_" + GenerateCVCConstraintForNode.cvcMap(c1,(offset+nextPos)+"") + ";";
+						constraintString += constrGen.getAssertConstraint(c1, offset, c1, (offset+nextPos), " = ");
+					}
 				}
 			}
 		}

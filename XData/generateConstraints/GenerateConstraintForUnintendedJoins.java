@@ -27,7 +27,7 @@ public class GenerateConstraintForUnintendedJoins {
 
 		/**get the list of tables in this query block*/
 		HashMap<String, Table> tables = QueryBlockDetails.getListOfTablesInQueryBlock(cvc, qbt);
-
+		ConstraintGenerator constrGen = new ConstraintGenerator();
 		/**for each table, get the extra column names which have same name but not involved in equivalence classes*/
 		ArrayList< ArrayList<Node> > extraCommonCols = GenerateConstraintForUnintendedJoins.getExtraColumnsWithCommonName( cvc, tables, qbt, con);
 
@@ -44,15 +44,21 @@ public class GenerateConstraintForUnintendedJoins {
 				String constraintString = GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, qbt, n1, n2, "/=");
 				
 				String constraint1 = "";
+				
+				constraint += constrGen.revertAndToOR(constraintString);
+				
+				
+				
 			
 				/**split this string at ';'*/
-				for(String str: constraintString.split(";") )	
+				/*for(String str: constraintString.split(";") )	
 					if( str.length() >= 7)
 						constraint1 += str.substring(7, str.length()) + " OR ";
 				
-				/** any of these tuples can differ*/
+				//any of these tuples can differ
 				if(constraint1.length() >= 4 )
 					constraint += "ASSERT " + constraint1.substring(0, constraint1.length() - 3) + ";\n";
+					*/
 			}
 		}
 		return constraint;

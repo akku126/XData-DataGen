@@ -1,5 +1,6 @@
 package generateConstraints;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Level;
@@ -11,6 +12,7 @@ import parsing.ConjunctQueryStructure;
 import parsing.Table;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
+import util.ConstraintObject;
 
 /**
  * Generates constraints for killing count mutations
@@ -33,6 +35,7 @@ public class CountMutations {
 	public static String constraintsForKillingCountMutants(GenerateCVC1 cvc,	QueryBlockDetails qbt) {
 
 		String countMutation = "";
+		ConstraintGenerator constrGen = new ConstraintGenerator();
 		/**for each relation in the given query block*/
 		for(String relationNo: qbt.getBaseRelations()){
 
@@ -46,12 +49,12 @@ public class CountMutations {
 			HashMap<String, Column> columns = table.getColumns();
 
 			Iterator<String> colNames = columns.keySet().iterator();
-
+			
 			while(colNames.hasNext()){
 
 				Column col = columns.get(colNames.next());
-
-				String constraint = "";
+				ArrayList<ConstraintObject> constrList = new ArrayList<ConstraintObject>();
+				
 				/**check if this column of this relation occurrence is nullable */
 				if( isNullable(qbt,col, relationNo)){
 
@@ -62,13 +65,17 @@ public class CountMutations {
 					int offset = cvc.getRepeatedRelNextTuplePos().get(relationNo)[1];
 
 					/**FIXME: But this may conflict with NOT NULL constraint*/
-					for(int i = 1; i <= count; i++)
-						constraint += GenerateCVCConstraintForNode.cvcSetNull(cvc, col, (i + offset - 1) + "") + " OR ";
+					for(int i = 1; i <= count; i++){
+						//constraint += GenerateCVCConstraintForNode.cvcSetNull(cvc, col, (i + offset - 1) + "") + " OR ";
+						ConstraintObject constrObj = new ConstraintObject();
+						constrObj.setLeftConstraint(GenerateCVCConstraintForNode.cvcSetNull(cvc, col, (i + offset - 1) + "") );
+						constrList.add(constrObj);
+					}
 
-					constraint = constraint.substring(0, constraint.lastIndexOf("OR"));
+					//constraint = constraint.substring(0, constraint.lastIndexOf("OR"));
 				}
 
-				countMutation += constraint;
+				countMutation += constrGen.generateOrConstraints(constrList);
 			}
 		}
 

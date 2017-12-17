@@ -1,5 +1,6 @@
 package killMutations.whereClauseNestedBlock;
 
+import generateConstraints.ConstraintGenerator;
 import generateConstraints.Constraints;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GenerateConstraintsForCaseConditions;
@@ -18,6 +19,7 @@ import parsing.CaseExpression;
 
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
+import util.ConstraintObject;
 import util.TagDatasets;
 
 public class CaseMutationsInWhereSubQuery {
@@ -183,11 +185,11 @@ public class CaseMutationsInWhereSubQuery {
 			/** Add the encountered case condition to the list*/
 			//caseConditionCompleted.add(sc); 
 			
-			constraintString += "\n%---------------------------------\n%CASE CONDITION CONSTRAINTS\n%---------------------------------\n";
+			constraintString +=  ConstraintGenerator.addCommentLine("CASE CONDITION CONSTRAINTS ");
 			constraintString += "ASSERT(() ";
 			constraintString += GenerateConstraintsForCaseConditions.getCaseConditionConstraintsForOriginalQuery(cvc,qbt);
 			constraintString += ")";
-			constraintString += "\n%---------------------------------\n%END OF CASE CONDITION CONSTRAINTS\n%---------------------------------\n";
+			constraintString +=  ConstraintGenerator.addCommentLine("END OF CASE CONDITION CONSTRAINTS ");
 			cvc.getConstraints().add(constraintString);
 			
 			cvc.getStringConstraints().add(Constraints.getStringConstraints(localConstraints));

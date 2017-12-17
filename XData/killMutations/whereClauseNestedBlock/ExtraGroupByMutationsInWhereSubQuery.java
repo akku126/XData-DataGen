@@ -1,5 +1,6 @@
 package killMutations.whereClauseNestedBlock;
 
+import generateConstraints.ConstraintGenerator;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GenerateConstraintsForConjunct;
 import generateConstraints.GenerateConstraintsToKillExtraGroupByMutations;
@@ -90,11 +91,11 @@ public class ExtraGroupByMutationsInWhereSubQuery {
 					
 					/** Add constraints for all the From clause nested sub query blocks */
 					for(QueryBlockDetails qb: cvc.getOuterBlock().getFromClauseSubQueries()){								
-							cvc.getConstraints().add("\n%---------------------------------\n% FROM CLAUSE SUBQUERY\n%---------------------------------\n");
+							cvc.getConstraints().add(ConstraintGenerator.addCommentLine("FROM CLAUSE SUBQUERY "));
 							
 							cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlock(cvc, qb) );
 							
-							cvc.getConstraints().add("\n%---------------------------------\n% END OF FROM CLAUSE SUBQUERY\n%---------------------------------\n");								
+							cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF FROM CLAUSE SUBQUERY "));								
 					}
 					
 					/** get constraints for this conjunct of outer query block, This also adds constraints for group by and having clause of this where clause sub query */
@@ -113,9 +114,9 @@ public class ExtraGroupByMutationsInWhereSubQuery {
 					
 					GenerateCommonConstraintsForQuery.generateNullandDBConstraints(cvc,false);
 					/**Get the constraints to kill this mutation*/
-					cvc.getConstraints().add("\n%---------------------------------\n%CONSTRAINTS TO KILL EXTRA GROUP BY ATTRIBUTES INSIDE WHERE CLAUSE NESTED SUBQUERY BLOCK\n%---------------------------------\n");
+					cvc.getConstraints().add(ConstraintGenerator.addCommentLine("CONSTRAINTS TO KILL EXTRA GROUP BY ATTRIBUTES INSIDE WHERE CLAUSE NESTED SUBQUERY BLOCK "));
 					cvc.getConstraints().add(GenerateConstraintsToKillExtraGroupByMutations.getExtraGroupByConstraints(cvc, qbt, extraColumn,tableOccurrence));
-					cvc.getConstraints().add("\n%---------------------------------\n%END OF CONSTRAINTS TO KILL EXTRA GROUP BY ATTRIBUTES INSIDE WHERE CLAUSE NESTED SUBQUERY BLOCK\n%---------------------------------\n");
+					cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF CONSTRAINTS TO KILL EXTRA GROUP BY ATTRIBUTES INSIDE WHERE CLAUSE NESTED SUBQUERY BLOCK "));
 					
 					/** Call the method for the data generation*/
 					GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc,false);

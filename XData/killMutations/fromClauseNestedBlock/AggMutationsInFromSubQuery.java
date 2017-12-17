@@ -1,5 +1,6 @@
 package killMutations.fromClauseNestedBlock;
 
+import generateConstraints.ConstraintGenerator;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GenerateConstraintsToKillAggregationMutations;
 
@@ -91,9 +92,9 @@ public class AggMutationsInFromSubQuery {
 				/** Add constraints for all the blocks of the query */
 				cvc.getConstraints().add(QueryBlockDetails.getConstraintsForQueryBlock(cvc));
 
-				cvc.getConstraints().add("\n%---------------------------------\n% AGGREGATION CONSTRAINTS FOR FROM CLAUSE SUBQUERY\n%---------------------------------\n");
+				cvc.getConstraints().add(ConstraintGenerator.addCommentLine("AGGREGATION CONSTRAINTS FOR FROM CLAUSE SUBQUERY "));
 				cvc.getConstraints().add( (GenerateConstraintsToKillAggregationMutations.getAggConstraints(cvc, af, qbt.getNoOfGroups())) );
-				cvc.getConstraints().add("\n%---------------------------------\n% END OF AGGREGATION CONSTRAINTS FOR FROM CLAUSE SUBQUERY\n%---------------------------------\n");
+				cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF AGGREGATION CONSTRAINTS FOR FROM CLAUSE SUBQUERY "));
 
 				/** Call the method for the data generation*/
 				GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc);

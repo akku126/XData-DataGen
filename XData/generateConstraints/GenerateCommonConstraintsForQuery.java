@@ -19,6 +19,7 @@ import testDataGen.GenerateCVC1;
 import testDataGen.GenerateDataset_new;
 import testDataGen.QueryBlockDetails;
 import util.Configuration;
+import util.ConstraintObject;
 
 /**
  * Generates constraints related to null conditions and database constraints
@@ -76,19 +77,19 @@ public class GenerateCommonConstraintsForQuery {
 	 
 			/** Solve the string constraints for the query */
 			if(!cvc.getStringConstraints().isEmpty()) {
-				cvc.getConstraints().add("\n%---------------------------------\n% TEMP VECTOR CONSTRAINTS\n%---------------------------------\n");
-				Vector<String> tempVector = cvc.getStringSolver().solveOrConstraints( new Vector<String>(cvc.getStringConstraints()), cvc.getResultsetColumns(), cvc.getTableMap());		
-				//if(cvc.getTypeOfMutation().equalsIgnoreCase(TagDatasets.MutationType.ORIGINAL.getMutationType() + TagDatasets.QueryBlock.NONE.getQueryBlock()))
-				cvc.getConstraints().addAll(tempVector);				
+				cvc.getConstraints().add( ConstraintGenerator.addCommentLine("TEMP VECTOR CONSTRAINTS"));
+				//To be added after String constraints issues for SMTLIB are sorted out
+			//Vector<String> tempVector = cvc.getStringSolver().solveOrConstraints( new Vector<String>(cvc.getStringConstraints()), cvc.getResultsetColumns(), cvc.getTableMap());		
+			//cvc.getConstraints().addAll(tempVector);				
 			}
 	
 			cvc.setCVCStr(CVCStr);
 			/** Add constraints, if there are branch queries*/
 			if( cvc.getBranchQueries().getBranchQuery() != null)
 			{
-				cvc.getConstraints().add("\n%---------------------------------\n%BRANCHQUERY CONSTRAINTS\n%---------------------------------\n");
+				cvc.getConstraints().add( ConstraintGenerator.addCommentLine("BRANCHQUERY CONSTRAINTS"));
 				cvc.getConstraints().add( GenerateConstraintsRelatedToBranchQuery.addBranchQueryConstraints( cvc ));
-				cvc.getConstraints().add("\n%---------------------------------\n%END OF BRANCHQUERY CONSTRAINTS\n%---------------------------------\n");
+				cvc.getConstraints().add( ConstraintGenerator.addCommentLine("END OF BRANCHQUERY CONSTRAINTS"));
 			}
 			
 			if(cvc.getOuterBlock().isConstrainedAggregation())
@@ -100,19 +101,17 @@ public class GenerateCommonConstraintsForQuery {
 	
 			cvc.setDatatypeColumns( new ArrayList<String>() );
 	
-			String CVC3_HEADER = GetCVC3HeaderAndFooter.generateCVC3_Header(cvc, unique);
+			String CVC3_HEADER = GetSolverHeaderAndFooter.generateSolver_Header(cvc, unique);
 	
 			/** Add not null constraints */
-			cvc.getConstraints().add("\n%---------------------------------\n% NOT NULL CONSTRAINTS\n%---------------------------------\n");
-			CVCStr += GenerateCVCConstraintForNode.cvcSetNotNull(cvc);
-			
-			CVCStr += GetCVC3HeaderAndFooter.generateCvc3_Footer();
-	
+			cvc.getConstraints().add( ConstraintGenerator.addCommentLine(" NOT NULL CONSTRAINTS"));
+			//CVCStr += GenerateCVCConstraintForNode.cvcSetNotNull(cvc);
+			CVCStr += GenerateCVCConstraintForNode.solverSetNotNull(cvc);
+
 			/** add mutation type and CVC3 header*/
-			CVCStr = "%--------------------------------------------\n\n%MUTATION TYPE: " + 
-					cvc.getTypeOfMutation() +"\n\n%--------------------------------------------\n\n\n\n" + 
-					CVC3_HEADER + CVCStr;
-	
+			CVCStr =  ConstraintGenerator.addCommentLine("MUTATION TYPE: " +cvc.getTypeOfMutation()) + CVC3_HEADER + CVCStr;
+		
+			CVCStr += GetSolverHeaderAndFooter.generateSolver_Footer(cvc);
 			cvc.setCVCStr(CVCStr);
 	
 			/** Add extra tuples to satisfy branch queries constraints*/
@@ -124,18 +123,37 @@ public class GenerateCommonConstraintsForQuery {
 					
 					cvc.getNoOfOutputTuples().put(tempTab.getTableName(), cvc.getNoOfOutputTuples().get(tempTab.getTableName()) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempTab));
 			}
-	
-			/** Call CVC3 Solver with constraints */
-			logger.log(Level.INFO,"cvc count =="+cvc.getCount());
-			WriteFile.writeFile(Configuration.homeDir + "/temp_cvc" + cvc.getFilePath() + "/cvc3_" + cvc.getCount() + ".cvc", CVCStr);
+			Boolean success = false;
+			if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+				
+				/** Call CVC3 Solver with constraints */
+				logger.log(Level.INFO,"cvc count =="+cvc.getCount());
+				WriteFile.writeFile(Configuration.homeDir + "/temp_cvc" + cvc.getFilePath() + "/cvc3_" + cvc.getCount() + ".cvc", CVCStr);
+				
+				success= new PopulateTestData().killedMutants("cvc3_" + cvc.getCount() 
+						+ ".cvc", cvc.getQuery(), 
+						"DS" + cvc.getCount(), cvc.getQueryString(), cvc.getFilePath(), cvc.getNoOfOutputTuples(), cvc.getTableMap(), 
+						cvc.getResultsetColumns(), cvc.getRepeatedRelationCount().keySet(),cvc.getDBAppparams()) ;
 			
-			Boolean success= new PopulateTestData().killedMutants("cvc3_" + cvc.getCount() 
+		/*	Boolean success= new PopulateTestData().killedMutants("cvc3_" + cvc.getCount() 
 					+ ".cvc", cvc.getQuery(), 
 					"DS" + cvc.getCount(), cvc.getQueryString(), cvc.getFilePath(), cvc.getNoOfOutputTuples(), cvc.getTableMap(), 
 					cvc.getResultsetColumns(), cvc.getRepeatedRelationCount().keySet(),cvc.getDBAppparams()) ;
+		*/
 			cvc.setOutput( cvc.getOutput() + success);
 			cvc.setCount(cvc.getCount() + 1);
-	
+			}else{
+				/** Call CVC3 Solver with constraints */
+				logger.log(Level.INFO,"cvc count =="+cvc.getCount());
+				WriteFile.writeFile(Configuration.homeDir + "temp_cvc" + cvc.getFilePath() + "/cvc4_" + cvc.getCount() + ".cvc", CVCStr);
+				
+				success= new PopulateTestData().killedMutantsForSMT("cvc4_" + cvc.getCount() 
+						+ ".cvc", cvc.getQuery(), 
+						"DS" + cvc.getCount(), cvc.getQueryString(), cvc.getFilePath(), cvc.getNoOfOutputTuples(), cvc.getTableMap(), 
+						cvc.getResultsetColumns(), cvc.getRepeatedRelationCount().keySet(),cvc.getDBAppparams()) ;
+				cvc.setOutput( cvc.getOutput() + success);
+				cvc.setCount(cvc.getCount() + 1);
+			}
 			/** remove extra tuples for Branch query */		
 			for(int i = 0; i < cvc.getBranchQueries().getNoOfBranchQueries(); i++){
 				
@@ -193,24 +211,24 @@ public class GenerateCommonConstraintsForQuery {
 
 		try{
 		/**Generate null constraints for outer query block */
-		cvc.getConstraints().add( "\n%---------------------------------\n%NULL CONSTRAINTS FOR OUTER BLOCK OF QUERY\n%---------------------------------\n" );
+		cvc.getConstraints().add(  ConstraintGenerator.addCommentLine("NULL CONSTRAINTS FOR OUTER BLOCK OF QUERY"));
 		cvc.getConstraints().add( getNullCOnstraintsForQueryBlock(cvc, cvc.getOuterBlock()) );
-		cvc.getConstraints().add( "\n%---------------------------------\n%END OF NULL CONSTRAINTS FOR OUTER BLOCK OF QUERY\n%---------------------------------\n" );
+		cvc.getConstraints().add(  ConstraintGenerator.addCommentLine("END OF NULL CONSTRAINTS FOR OUTER BLOCK OF QUERY"));
 
 		/**Generate null constraints for each from clause sub query block */
 		for(QueryBlockDetails queryBlock: cvc.getOuterBlock().getFromClauseSubQueries()){
 
-			cvc.getConstraints().add( "\n%---------------------------------\n%NULL CONSTRAINTS FOR FROM CLAUSE NESTED SUBQUERY BLOCK\n%---------------------------------\n" );
+			cvc.getConstraints().add(  ConstraintGenerator.addCommentLine("NULL CONSTRAINTS FOR FROM CLAUSE NESTED SUBQUERY BLOCK"));
 			cvc.getConstraints().add( getNullCOnstraintsForQueryBlock(cvc, queryBlock) );
-			cvc.getConstraints().add( "\n%---------------------------------\n%END OF NULL CONSTRAINTS FOR FROM CLAUSE NESTED SUBQUERY BLOCK\n%---------------------------------\n" );
+			cvc.getConstraints().add(  ConstraintGenerator.addCommentLine("END OF NULL CONSTRAINTS FOR FROM CLAUSE NESTED SUBQUERY BLOCK"));
 		}
 
 		/**Generate null constraints for each where clause sub query block */
 		for(QueryBlockDetails queryBlock: cvc.getOuterBlock().getWhereClauseSubQueries()){
 
-			cvc.getConstraints().add( "\n%---------------------------------\n%NULL CONSTRAINTS FOR WHERE CLAUSE NESTED SUBQUERY BLOCK\n%---------------------------------\n" );
+			cvc.getConstraints().add(  ConstraintGenerator.addCommentLine("NULL CONSTRAINTS FOR WHERE CLAUSE NESTED SUBQUERY BLOCK"));
 			cvc.getConstraints().add( getNullCOnstraintsForQueryBlock(cvc, queryBlock) );
-			cvc.getConstraints().add( "\n%---------------------------------\n%END OF NULL CONSTRAINTS FOR WHERE CLAUSE NESTED SUBQUERY BLOCK\n%---------------------------------\n" );
+			cvc.getConstraints().add(  ConstraintGenerator.addCommentLine("END OF NULL CONSTRAINTS FOR WHERE CLAUSE NESTED SUBQUERY BLOCK"));
 		}
 		}catch (TimeoutException e){
 			logger.log(Level.SEVERE,e.getMessage(),e);		
@@ -261,9 +279,11 @@ public class GenerateCommonConstraintsForQuery {
 	public static String generateConstraintsForNoExtraTuples(GenerateCVC1 cvc, QueryBlockDetails queryBlock, ArrayList<Node> additionalSelConds, Map<String, TupleRange> allowedTuples) {
 		String constraintString = "";
 		
-		Vector<String> orConstraints=new Vector<String>();
+		ArrayList<ConstraintObject> orConstraints=new ArrayList<ConstraintObject>();
+		Vector<ArrayList<ConstraintObject>> orConstraintsVector = new Vector<ArrayList<ConstraintObject>>();
 		
-		Vector<String> orPrimaryKeyConstraints = new Vector<String>();
+		//Vector<String> orPrimaryKeyConstraints = new Vector<String>();
+		Vector<ArrayList<ConstraintObject>> orPrimaryKeyConstraints = new Vector<ArrayList<ConstraintObject>>();
 		
 		ArrayList<String> relations = new ArrayList<String>();
 		ArrayList<String> allRelations = new ArrayList<String>();
@@ -383,6 +403,14 @@ public class GenerateCommonConstraintsForQuery {
 			
 			System.out.print(combinations);
 			
+			ConstraintGenerator constraintGenerator = new ConstraintGenerator();
+			ConstraintObject con = new ConstraintObject();
+			ConstraintObject constr1 = new ConstraintObject();
+			String impliedCond = "" ;
+			ArrayList<ConstraintObject> conList = new ArrayList<ConstraintObject>();
+			ArrayList<ConstraintObject> constrList1 = new ArrayList<ConstraintObject>();
+			int pkConstraintIndex = 1;
+			
 			for(ArrayList<Integer> t: combinations) {
 				Boolean process = false;
 				
@@ -390,34 +418,53 @@ public class GenerateCommonConstraintsForQuery {
 					TupleRange temp = allowedTuples.get(indexToTable.get(index));
 					
 					String relation = indexToTable.get(index);
-					
+
 					if(temp != null && (t.get(index) < temp.start || t.get(index) > temp.end)){
 						process = true;
 						
 						ArrayList<Column> primaryKeys = relationToPrimaryKeys.get(relation);
 						
-						String pkConstraint = "ASSERT ";
+						String pkConstraint = "";// "ASSERT ";
 						
 						for(int k = temp.start; k <= temp.end; k++){
 						
-							pkConstraint += "(";
+							//pkConstraint += "(";
 							
 							for(int p = 0; p < primaryKeys.size(); p++){
 		
+								con = new ConstraintObject();
+								
 								Column pkeyColumn = primaryKeys.get(p);
 								
 								int pos = pkeyColumn.getTable().getColumnIndex(pkeyColumn.getColumnName());
 			
-								pkConstraint += "(O_" + relation + "[" + k + "]." + pos + " /= O_" + relation + "[" + t.get(index) +"]." + pos + ") OR ";						
+								//pkConstraint += "(O_" + relation + "[" + k + "]." + pos + " /= O_" + relation + "[" + t.get(index) +"]." + pos + ") OR ";		
+								
+								con = constraintGenerator.getConstraint(relation,Integer.valueOf(k),Integer.valueOf(pos),
+										relation,Integer.valueOf(t.get(index)),Integer.valueOf(pos),
+										pkeyColumn,pkeyColumn,"/=");
+								//get primary Key constraint and add to constraint list
+								if(! conList.contains(con)){
+									conList.add(con);
+								}
+								
 							}
 							
-							pkConstraint = pkConstraint.substring(0,pkConstraint.length()-4);
-							pkConstraint += ") AND ";
+							constraintString =constraintGenerator.generateOrConstraintsWithAssert(conList);
+							constr1 = new ConstraintObject();
+							constr1.setLeftConstraint(constraintString);
+							//constraintString = constraintString.substring(0,pkConstraint.length()-4);
+							constrList1.add(constr1);
+							//pkConstraint += ") AND ";
 						}
 						
-						pkConstraint = pkConstraint.substring(0,pkConstraint.length()-5);
-						pkConstraint += ";";
-						orPrimaryKeyConstraints.add(pkConstraint);
+						pkConstraint = constraintGenerator.generateANDConstraintsWithAssert(constrList1);
+						
+						//pkConstraint = pkConstraint.substring(0,pkConstraint.length()-5);
+						//pkConstraint += ";";
+						//orPrimaryKeyConstraints.add(pkConstraint);
+						orPrimaryKeyConstraints.add(constrList1);
+						pkConstraintIndex++;
 					}
 				}
 				
@@ -432,9 +479,12 @@ public class GenerateCommonConstraintsForQuery {
 	
 						/**Generate constraints for the negative conditions*/
 						for(int i = 0; i < negativeSelConds.size(); i++){
-							orConstraints.add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, negativeSelConds.get(i), t.get(index))+";" +"\n" );
+						//	orConstraints.add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, negativeSelConds.get(i), t.get(index))+";" +"\n" );
+							ConstraintObject constrObj = new ConstraintObject();
+							constrObj.setLeftConstraint(constraintGenerator.genPositiveCondsForPredAsString(cvc,queryBlock, negativeSelConds.get(i), t.get(index)));
+							orConstraints.add(constrObj);
 						}
-						
+						orConstraintsVector.add(orConstraints);
 						Vector<Node> ec = joinConds.get(relation);
 						
 						if(ec == null)
@@ -462,8 +512,12 @@ public class GenerateCommonConstraintsForQuery {
 							if(tableToIndex.get(relationNode.getTable().getTableName()) != null){
 								tupleIndex2 = t.get(tableToIndex.get(relationNode.getTable().getTableName()));
 							}
-							orConstraints.add(GenerateJoinPredicateConstraints.genNegativeCondsEqClassForTuplePair(cvc, queryBlock, ece, relationNode, tupleIndex1, tupleIndex2));
+							ConstraintObject constrObj = new ConstraintObject();
+							constrObj.setLeftConstraint(GenerateJoinPredicateConstraints.genNegativeCondsEqClassForTuplePair(cvc, queryBlock, ece, relationNode, tupleIndex1, tupleIndex2));
+							
+							orConstraints.add(constrObj);
 						}
+						orConstraintsVector.add(orConstraints);
 					}
 				}
 				
@@ -471,19 +525,21 @@ public class GenerateCommonConstraintsForQuery {
 				String constraints = "";
 				
 				if(!orPrimaryKeyConstraints.isEmpty() && orPrimaryKeyConstraints.size() != 0){
-					pkConst = processOrConstraintsNotExists(orPrimaryKeyConstraints);				
+					pkConst = processOrConstraintsNotExists(cvc,orPrimaryKeyConstraints);				
 					System.out.print(pkConst);
 					orPrimaryKeyConstraints.clear();
 				}
 				
 				if(!orConstraints.isEmpty() && orConstraints.size() != 0){
-					constraints = processOrConstraintsNotExists(orConstraints);
+					constraints = processOrConstraintsNotExists(cvc,orConstraintsVector);
 					orConstraints.clear();
 				}
 				
-				if(process)
-					constraintString += processImpliedConstraints(pkConst, constraints);
-						
+				if(process){
+					if(pkConst != null && !pkConst.isEmpty() && constraints != null && !constraints.isEmpty() ){
+						constraintString += constraintGenerator.processImpliedConstraints(pkConst, constraints);
+					}
+				}
 			}		
 			
 			return constraintString;
@@ -493,7 +549,7 @@ public class GenerateCommonConstraintsForQuery {
 		}
 	}
 	
-	private static String processImpliedConstraints(String left, String right){
+	/*private static String processImpliedConstraints(String left, String right){
 		String result = "";
 		
 		left = left.replaceFirst("ASSERT ", "");
@@ -504,10 +560,11 @@ public class GenerateCommonConstraintsForQuery {
 		result = "ASSERT " + left + " => " + right + ";\n";
 		
 		return result;
-	}
+	}*/
 	
 	private static String addNoExtraTuple(GenerateCVC1 cvc){
 		ArrayList<Node> sel = new ArrayList<Node>();
+		ConstraintGenerator constraintGenerator = new ConstraintGenerator();
 		
 		ArrayList<Node> groupByNodes = cvc.outerBlock.getGroupByNodes();
 		for(Node n : groupByNodes){
@@ -517,7 +574,7 @@ public class GenerateCommonConstraintsForQuery {
 			newNode.setLeft(n);
 			newNode.setType(Node.getBroNodeType());
 			Node rightCond = new Node(); 
-			rightCond.setStrConst(GenerateCVCConstraintForNode.cvcMapNode(n, (t != null?t.start:0) + ""));
+			rightCond.setStrConst(constraintGenerator.getMapNode(n, (t != null?t.start:0) + ""));
 			rightCond.setType(Node.getValType());
 			newNode.setRight(rightCond);
 			newNode.setOperator("=");
@@ -544,19 +601,19 @@ public class GenerateCommonConstraintsForQuery {
 		}
 	}
 	
-	private static String processOrConstraintsNotExists(Vector<String> OrConstraints){
+	private static String processOrConstraintsNotExists(GenerateCVC1 cvc, Vector<ArrayList<ConstraintObject>> OrConstraints){
 
-		String str = "ASSERT ";
-
-		for(String constraint: OrConstraints)
-			if( constraint.length() != 0) {
-				int index = constraint.indexOf(";");
-				String temp = constraint.substring(6, index);
-				str += "(" + temp.trim() + ") OR ";
-			}
-
-		str = str.substring(0,str.length()-4);
-		str+=";";
+		String str = "";//"ASSERT ";
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+		for(ArrayList constraint: OrConstraints){
+			
+		 //for(ConstraintObject con : constraint){
+			//		str += "(" + temp.trim() + ") OR ";
+		 //}
+			str = constrGen.generateOrConstraintsWithAssert(constraint);
+		}
+		//str = str.substring(0,str.length()-4);
+		//str+=";";
 
 		return str;
 	}

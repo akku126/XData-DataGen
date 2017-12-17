@@ -1,5 +1,6 @@
 package killMutations.outerQueryBlock;
 
+import generateConstraints.ConstraintGenerator;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GenerateConstraintForUnintendedJoins;
 import generateConstraints.GenerateConstraintsForConjunct;
@@ -95,17 +96,17 @@ public class UnintendedJoinsMutationsInOuterQueryBlock {
 				if( constraintString == "")/**means there are no extra columns with same column name*/
 					continue ;
 				
-				cvc.getConstraints().add("\n%---------------------------------\n%CONSTRAINTS TO KILL UNINTENDE JOINS IN OUTER QUERY BLOCK\n%---------------------------------\n");
+				cvc.getConstraints().add(ConstraintGenerator.addCommentLine("CONSTRAINTS TO KILL UNINTENDE JOINS IN OUTER QUERY BLOCK "));
 				cvc.getConstraints().add( constraintString );
-				cvc.getConstraints().add("\n%---------------------------------\n%END OF CONSTRAINTS TO KILL UNINTENDE JOINS IN OUTER QUERY BLOCK\n%---------------------------------\n");
+				cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF CONSTRAINTS TO KILL UNINTENDE JOINS IN OUTER QUERY BLOCK "));
 				
 				
 				/** get the constraints for each from clause nested sub query block*/
 				for(QueryBlockDetails qb: cvc.getOuterBlock().getFromClauseSubQueries()){
 					
-					cvc.getConstraints().add("\n%---------------------------------\n% FROM CLAUSE SUBQUERY\n%---------------------------------\n");				
+					cvc.getConstraints().add(ConstraintGenerator.addCommentLine("FROM CLAUSE SUBQUERY "));				
 					cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlock(cvc, qb) );				
-					cvc.getConstraints().add("\n%---------------------------------\n% END OF FROM CLAUSE SUBQUERY\n%---------------------------------\n");
+					cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF FROM CLAUSE SUBQUERY "));
 			}
 				
 				
@@ -118,17 +119,17 @@ public class UnintendedJoinsMutationsInOuterQueryBlock {
 				cvc.getConstraints().add( GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, qbt, con) );			
 	
 				/** get group by constraints */
-				cvc.getConstraints().add("\n%---------------------------------\n%GROUP BY CLAUSE CONSTRAINTS FOR OUTER QUERY BLOCK\n%---------------------------------\n");
+				cvc.getConstraints().add(ConstraintGenerator.addCommentLine("GROUP BY CLAUSE CONSTRAINTS FOR OUTER QUERY BLOCK "));
 				cvc.getConstraints().add( GenerateGroupByConstraints.getGroupByConstraints( cvc, qbt) );
 				
 				
 				/** Generate havingClause constraints */
-				cvc.getConstraints().add("\n%---------------------------------\n%HAVING CLAUSE CONSTRAINTS FOR OUTER QUERY BLOCK\n%---------------------------------\n");
+				cvc.getConstraints().add(ConstraintGenerator.addCommentLine("HAVING CLAUSE CONSTRAINTS FOR OUTER QUERY BLOCK "));
 				for(int l=0; l< qbt.getNoOfGroups(); l++)
 					for(int k=0; k < qbt.getAggConstraints().size();k++){
 						cvc.getConstraints().add(GenerateConstraintsForHavingClause.getHavingClauseConstraints(cvc, qbt, qbt.getAggConstraints().get(k), qbt.getFinalCount(), l) );
 					}
-				cvc.getConstraints().add("\n%---------------------------------\n%END OF HAVING CLAUSE CONSTRAINTS FOR OUTER QUERY BLOCK\n%---------------------------------\n");
+				cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF HAVING CLAUSE CONSTRAINTS FOR OUTER QUERY BLOCK "));
 				
 				
 										

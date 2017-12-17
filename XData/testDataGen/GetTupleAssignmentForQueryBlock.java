@@ -117,6 +117,7 @@ public class GetTupleAssignmentForQueryBlock {
 	 * @param gta
 	 */
 	private static void assignmentFromJoinGraphVericesToRelationsInQuery(GenerateCVC1 cvc, QueryBlockDetails queryBlock, GetTupleAssignment gta) {
+
 		/** get vertices of the join graph*/
 		Vector<JoinGraphNode> relations = new Vector<JoinGraphNode>();
 		relations = gta.getJoinGraph().getAllVertex();

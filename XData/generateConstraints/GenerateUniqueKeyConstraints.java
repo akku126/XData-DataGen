@@ -1,5 +1,6 @@
 package generateConstraints;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -8,6 +9,7 @@ import parsing.Column;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
+import util.ConstraintObject;
 
 /**
  * This class contain methods for generating constraints for the unique keys across all the groups of the query block
@@ -35,7 +37,9 @@ public class GenerateUniqueKeyConstraints {
 		
 		/** Get number of groups */
 		int noOfGroups = queryBlock.getNoOfGroups();
+		ConstraintGenerator constraintGen = new ConstraintGenerator();
 		
+		ArrayList<ConstraintObject> constrList = new ArrayList<ConstraintObject>();
 		/** or each unique element */
 		for(HashSet<Node> unique: uniqueElements){
 			
@@ -48,7 +52,7 @@ public class GenerateUniqueKeyConstraints {
 			noOfGroups = UtilsRelatedToNode.getNoOfGroupsForThisNode(cvc, queryBlock, n);
 			String tableNameNo = n.getTableNameNo();
 
-
+			
 			int count = cvc.getNoOfTuples().get(tableNameNo);
 			if( count*noOfGroups == 1)
 				continue;
@@ -56,20 +60,25 @@ public class GenerateUniqueKeyConstraints {
 			for(int k=1; k<=count*noOfGroups; k++){
 				for(int j=k+1; j<=count*noOfGroups; j++){
 
-					distinct += "ASSERT ";
+					//distinct += "ASSERT ";
 
 
 					for(Node u: unique){
+						ConstraintObject constObj = new ConstraintObject();
 						Column g = u.getColumn();
 						String t = g.getTableName();
 						int offset = cvc.getRepeatedRelNextTuplePos().get(tableNameNo)[1];
 						int Index = cvc.getTableMap().getTable(t).getColumnIndex(g.getColumnName());
 
-						distinct += " DISTINCT ( O_"+t+"["+(k + offset -1)+"]."+Index+" , O_"+t+"["+ (j +  offset -1) +"]."+Index + ") OR ";
+						constObj.setLeftConstraint(constraintGen.getDistinctConstraint(t, u.getColumn(), (k + offset -1), Index, t, u.getColumn(), (j +  offset -1), Index));
+						constrList.add(constObj);
+						
+						//distinct += " DISTINCT ( O_"+t+"["+(k + offset -1)+"]."+Index+" , O_"+t+"["+ (j +  offset -1) +"]."+Index + ") OR ";
 					}
 
-					int lastIndex = distinct.lastIndexOf("OR");
-					distinct = distinct.substring(0, lastIndex-1) + " ;\n ";
+					//int lastIndex = distinct.lastIndexOf("OR");
+					//distinct = distinct.substring(0, lastIndex-1) + " ;\n ";
+					distinct = constraintGen.generateOrConstraintsWithAssert(constrList);
 				}
 			}
 		}

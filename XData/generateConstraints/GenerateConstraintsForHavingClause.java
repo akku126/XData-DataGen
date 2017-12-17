@@ -24,11 +24,11 @@ public class GenerateConstraintsForHavingClause {
 		}
 		else{
 			String returnStr = "";
-			returnStr = getCVCForHavingConstraintRepeated(cvc, queryBlock, havingClause,totalRows,"",groupNumber);
+			returnStr = getCVCForHavingConstraintRepeated(cvc, queryBlock, havingClause,totalRows,groupNumber);
 			if(returnStr.equalsIgnoreCase(""))
 				return "";
 			else
-				return returnStr += ";";
+				return returnStr ;//+= ";";
 		}
 	}
 	
@@ -46,14 +46,15 @@ public class GenerateConstraintsForHavingClause {
 	 * @return
 	 * @throws Exception
 	 */
-	public static String getCVCForHavingConstraintRepeated(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Node n, int totalRows, String paramId, int groupNumber) throws Exception {
+	public static String getCVCForHavingConstraintRepeated(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Node n, int totalRows, int groupNumber) throws Exception {
 
+		ConstraintGenerator consGen = new ConstraintGenerator();
 		if(n.getType().equalsIgnoreCase(Node.getBroNodeType())){
 			String returnStr = "";
 			if(n.getLeft().getType().equalsIgnoreCase(Node.getAggrNodeType())){
 				
 				if(n.getLeft().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMAX())){
-					returnStr = "MAX: TYPE = SUBTYPE(LAMBDA(x: INT): " + " x " + n.getOperator() + n.getRight().toCVCString(10, queryBlock.getParamMap());
+					/*returnStr = "MAX: TYPE = SUBTYPE(LAMBDA(x: INT): " + " x " + n.getOperator() + n.getRight().toCVCString(10, queryBlock.getParamMap());
 					if(n.getOperator().equalsIgnoreCase("<") || n.getOperator().equalsIgnoreCase("<=")){ 
 						returnStr += " AND x > 0 );";
 					}
@@ -62,11 +63,12 @@ public class GenerateConstraintsForHavingClause {
 					}
 					else{//operator is = or /=
 						returnStr += ");";
-					}
-					return returnStr + getCVCForHavingConstraintRepeated(cvc, queryBlock, n.getLeft(), totalRows, paramId, groupNumber);
+					}*/
+					returnStr += consGen.getMaxConstraint(queryBlock, n,true);// n.getRight().toCVCString(10, queryBlock.getParamMap()), 
+					return returnStr + getCVCForHavingConstraintRepeated(cvc, queryBlock, n.getLeft(), totalRows,groupNumber);
 				}
 				else if(n.getLeft().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMIN())){
-					returnStr = "MIN: TYPE = SUBTYPE(LAMBDA(x: INT): " + " x " + n.getOperator() + n.getRight().toCVCString(10, queryBlock.getParamMap());
+					/*returnStr = "MIN: TYPE = SUBTYPE(LAMBDA(x: INT): " + " x " + n.getOperator() + n.getRight().toCVCString(10, queryBlock.getParamMap());
 					if(n.getOperator().equalsIgnoreCase("<") || n.getOperator().equalsIgnoreCase("<=")){ 
 						returnStr += " AND x > 0 );";
 					}
@@ -75,20 +77,21 @@ public class GenerateConstraintsForHavingClause {
 					}
 					else{//operator is = or /=
 						returnStr += ");";
-					}
-					return returnStr + getCVCForHavingConstraintRepeated(cvc, queryBlock,  n.getLeft(), totalRows, paramId, groupNumber);
+					}*/
+					returnStr += consGen.getMinConstraint(queryBlock, n,true);// n.getRight().toCVCString(10, queryBlock.getParamMap())
+					return returnStr + getCVCForHavingConstraintRepeated(cvc, queryBlock,  n.getLeft(), totalRows, groupNumber);
 				}
 				else if(n.getLeft().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggCOUNT())){
 					return "";
 				}
-				else 
-					return getCVCForHavingConstraintRepeated(cvc, queryBlock, n.getLeft(), totalRows, paramId, groupNumber) +
-							n.getOperator() + 
-							getCVCForHavingConstraintRepeated(cvc, queryBlock, n.getRight(), totalRows, paramId, groupNumber);				
+				else //n.getRight().toCVCString(10, queryBlock.getParamMap()),
+					return consGen.getAssertConstraint(getCVCForHavingConstraintRepeated(cvc, queryBlock, n.getLeft(), totalRows,   groupNumber),
+							n.getOperator(),
+							getCVCForHavingConstraintRepeated(cvc, queryBlock, n.getRight(), totalRows,  groupNumber));//n.getLeft().toCVCString(10, queryBlock.getParamMap())				
 			}
 			else if(n.getRight().getType().equalsIgnoreCase(Node.getAggrNodeType())){
 				if(n.getRight().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMAX())){
-					returnStr = "MAX: TYPE = SUBTYPE(LAMBDA(x: INT): " + n.getLeft().toCVCString(10, queryBlock.getParamMap()) + " " + n.getOperator() + " x ";
+					/*returnStr = "MAX: TYPE = SUBTYPE(LAMBDA(x: INT): " + n.getLeft().toCVCString(10, queryBlock.getParamMap()) + " " + n.getOperator() + " x ";
 					if(n.getOperator().equalsIgnoreCase("<") || n.getOperator().equalsIgnoreCase("<=")){
 						returnStr += " AND x < 10000000 );";
 					}
@@ -97,11 +100,12 @@ public class GenerateConstraintsForHavingClause {
 					}
 					else{//operator is = or /=
 						returnStr += ";";
-					}
-					return returnStr + getCVCForHavingConstraintRepeated(cvc, queryBlock, n.getRight(), totalRows, paramId, groupNumber);
+					}*/
+					returnStr += consGen.getMaxConstraint(queryBlock, n,false);//n.getLeft().toCVCString(10, queryBlock.getParamMap()),
+					return returnStr + getCVCForHavingConstraintRepeated(cvc, queryBlock, n.getRight(), totalRows,   groupNumber);
 				}
 				else if(n.getRight().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMIN())){
-					returnStr = "MIN: TYPE = SUBTYPE(LAMBDA(x: INT): " + n.getLeft().toCVCString(10, queryBlock.getParamMap()) + " " + n.getOperator() + " x ";
+					/*returnStr = "MIN: TYPE = SUBTYPE(LAMBDA(x: INT): " + n.getLeft().toCVCString(10, queryBlock.getParamMap()) + " " + n.getOperator() + " x ";
 					if(n.getOperator().equalsIgnoreCase("<") || n.getOperator().equalsIgnoreCase("<=")){
 						returnStr += " AND x < 10000000 );";
 					}
@@ -110,16 +114,18 @@ public class GenerateConstraintsForHavingClause {
 					}
 					else{//operator is = or /=
 						returnStr += ");";
-					}
-					return returnStr + getCVCForHavingConstraintRepeated(cvc, queryBlock, n.getRight(), totalRows, paramId, groupNumber);
+					}*/
+					
+					returnStr += consGen.getMinConstraint(queryBlock, n,false);// n.getLeft().toCVCString(10, queryBlock.getParamMap()),
+					return returnStr + getCVCForHavingConstraintRepeated(cvc, queryBlock, n.getRight(), totalRows,  groupNumber);
 				}
 				else if(n.getRight().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggCOUNT())){
 					return "";
 				}
 				else 
-					return getCVCForHavingConstraintRepeated(cvc, queryBlock, n.getLeft(), totalRows, paramId, groupNumber) +
-							n.getOperator() + 
-							getCVCForHavingConstraintRepeated(cvc, queryBlock, n.getRight(),totalRows, paramId, groupNumber);				
+					return consGen.getAssertConstraint(getCVCForHavingConstraintRepeated(cvc, queryBlock, n.getLeft(), totalRows,  groupNumber),
+							n.getOperator(),
+							getCVCForHavingConstraintRepeated(cvc, queryBlock, n.getRight(),totalRows,  groupNumber));				
 			}
 			else{
 				logger.log(Level.INFO,"Not an Aggregation!!");
@@ -136,7 +142,7 @@ public class GenerateConstraintsForHavingClause {
 			//Column aggColumn = n.getAgg().getAggCol();
 			AggregateFunction af = n.getAgg();
 			if(n.getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggAVG())){
-				String returnStr = "\nASSERT (";
+				String returnStr = "";//"\nASSERT (";
 				//Actual count required my this table
 				//Required to adapt when aggregation column has x tuples but total tuples in output are y >= x
 				//int myCount = af.getNoOfOutputTuples(noOfOutputTuples);
@@ -152,7 +158,7 @@ public class GenerateConstraintsForHavingClause {
 				int offset = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
 				boolean isDistinct=af.isDistinct();
 
-				for(int i=1,j=0;i<=myCount;i++,j++){
+				/*for(int i=1,j=0;i<=myCount;i++,j++){
 
 					int tuplePos=(groupNumber)*myCount+i;
 
@@ -165,10 +171,11 @@ public class GenerateConstraintsForHavingClause {
 						returnStr += "+";
 					}
 				}
-				return returnStr + ") / "+totalRows + " ";
+				return returnStr + ") / "+totalRows + " ";*/
+				return consGen.getAVGConstraint(myCount,groupNumber,multiples,totalRows,af.getAggExp(), offset);
 			}
 			else if(n.getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggSUM())){
-				String returnStr = "\nASSERT ";
+				String returnStr = "";//\nASSERT ";
 				//Actual count required my this table
 				
 				String innerTableNo=af.getAggExp().getTableNameNo();
@@ -184,7 +191,7 @@ public class GenerateConstraintsForHavingClause {
 				boolean isDistinct=af.isDistinct();
 				
 
-				for(int i=1,j=0;i<=myCount;i++,j++){
+			/*	for(int i=1,j=0;i<=myCount;i++,j++){
 					int tuplePos=(groupNumber)*myCount+i;
 
 					if(j<extras)
@@ -195,8 +202,10 @@ public class GenerateConstraintsForHavingClause {
 					if(i<myCount){
 						returnStr += "+";
 					}
-				}
-				return returnStr;
+				}*/
+				
+				//return returnStr;
+				return consGen.getSUMConstraint(myCount,groupNumber,multiples,totalRows,af.getAggExp(), offset);
 			}
 			else if(n.getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMAX())){
 				String returnStr = "";

@@ -1,6 +1,10 @@
 package generateConstraints;
 
+import java.util.ArrayList;
 import java.util.Vector;
+
+import testDataGen.GenerateCVC1;
+import util.ConstraintObject;
 
 public class Constraints {
 
@@ -16,7 +20,7 @@ public class Constraints {
 	/** String constraints**/
 	public Vector<String> stringConstraints;
 	
-	public static Constraints mergeConstraints(Constraints constraints,Constraints constraint2){
+	public static Constraints mergeConstraints(GenerateCVC1 cvc, Constraints constraints,Constraints constraint2){
 		Constraints updatedConstraints=new Constraints();
 		Vector<String> newConstraints=new Vector<String>();
 		
@@ -37,7 +41,14 @@ public class Constraints {
 		
 		for(String eachConstraint:constraints.constraints){
 			for(String eachConstraint2:constraint2.constraints){
-				String temp = "(" + eachConstraint + ") AND (" + eachConstraint2 +")";
+				
+				String temp = "";// "(" + eachConstraint + ") AND (" + eachConstraint2 +")";
+				if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+					temp += "(" + eachConstraint + ") AND (" + eachConstraint2 +")";
+				}else{
+					temp += "(and ("+eachConstraint +") ("+eachConstraint2+"))";
+				}
+				
 				if(eachConstraint.equalsIgnoreCase("")){
 					temp = eachConstraint2;
 				} else if (eachConstraint2.equalsIgnoreCase("")){
@@ -51,7 +62,13 @@ public class Constraints {
 		newConstraints.removeAllElements();
 		for(String eachConstraint:constraints.stringConstraints){
 			for(String eachConstraint2:constraint2.stringConstraints){
-				String temp = eachConstraint + " AND " + eachConstraint2 ;
+				String temp = "";
+				if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+					temp += eachConstraint + " AND " + eachConstraint2 ;
+				}else{
+					temp += "(and "+eachConstraint +" "+eachConstraint2+")";
+				}
+				
 				if(eachConstraint.equalsIgnoreCase("")){
 					temp = eachConstraint2;
 				} else if (eachConstraint2.equalsIgnoreCase("")){
@@ -75,18 +92,27 @@ public class Constraints {
 		return updatedConstraints;
 	}
 	
-	public static String getConstraint(Constraints constraints){
-		String constraintString="ASSERT ";
+	public static String getConstraint(GenerateCVC1 cvc,Constraints constraints){
+		String constraintString= ""; //"ASSERT ";
+		ConstraintGenerator constraintGen = new ConstraintGenerator();
+		ArrayList<ConstraintObject> constrList = new ArrayList<ConstraintObject>();
+		if(constraints != null && constraints.constraints != null && !constraints.constraints.isEmpty()){
 		for(String constrint:constraints.constraints){
-			if(!constrint.equalsIgnoreCase(""))
-				constraintString+= "(" + constrint + ")" + " OR ";
+			if(constrint!= null &&!constrint.isEmpty() &&!constrint.equalsIgnoreCase("")){
+				ConstraintObject conObj = new ConstraintObject();
+			    conObj.setLeftConstraint(constrint);
+			    constrList.add(conObj);
+			}
+				//constraintString+= "(" + constrint + ")" + " OR ";
 		}
-		if(!constraints.constraints.isEmpty() && constraintString.length() > 7){
+		constraintString+=constraintGen.generateOrConstraintsWithAssert(constrList);
+		}
+		/*if(!constraints.constraints.isEmpty() && constraintString.length() > 7){
 			constraintString=constraintString.substring(0, constraintString.length()-4);
 			constraintString+=";";
 		}
 		else
-			return "";
+			return "";*/
 		return constraintString;
 	}
 	
@@ -104,4 +130,31 @@ public class Constraints {
 			return "";
 		return constraintString;
 	}
+
+	public static ArrayList<String> getStringConstraints(GenerateCVC1 cvc,Constraints constraints){
+		String constraintString="";
+		ConstraintGenerator constraintGen = new ConstraintGenerator();
+		ArrayList<String> constrList = new ArrayList<String>();
+		for(String constraint:constraints.stringConstraints){
+			if(!constraint.isEmpty() && !constraint.equalsIgnoreCase("")){
+				constrList.add(constraint);
+			/*	ConstraintObject conObj = new ConstraintObject();
+			    conObj.setLeftConstraint(constraint);
+			    
+			    if(conObj != null && conObj.getLeftConstraint() != null && !conObj.getLeftConstraint().isEmpty()){
+			    	constrList.add(conObj);
+			    }*/
+			}
+		}
+		
+		//constraintString+=constraintGen.generateOrConstraintsWithAssert(constrList);
+		/*if(!constraints.stringConstraints.isEmpty() && constraintString.length() > 7){
+			if(!constraintString.equalsIgnoreCase(""))
+				constraintString=constraintString.substring(0, constraintString.length()-4);
+		}
+		else 
+			return "";*/
+		return constrList;
+	}
+
 }

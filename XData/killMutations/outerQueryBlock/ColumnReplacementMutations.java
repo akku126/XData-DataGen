@@ -4,10 +4,12 @@ import parsing.Column;
 import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import parsing.Table;
+import generateConstraints.ConstraintGenerator;
 import generateConstraints.GenerateCVCConstraintForNode;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
+import util.ConstraintObject;
 import util.TagDatasets.MutationType;
 import util.TagDatasets.QueryBlock;
 
@@ -19,17 +21,6 @@ import java.util.logging.Logger;
 public class ColumnReplacementMutations {
 	
 	private static Logger logger = Logger.getLogger(ColumnReplacementMutations.class.getName());
-	
-	public static void generateDataForkillingColumnReplacementMutationsInProjectionGen(GenerateCVC1 cvc) throws Exception{
-		
-		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
-			generateDataForkillingColumnReplacementMutationsInProjection(cvc);
-		}
-		else{
-			//generateDataForkillingColumnReplacementMutationsInProjectionSMT(cvc);
-		}
-		
-	}
 	
 	
 	public static void generateDataForkillingColumnReplacementMutationsInProjection(GenerateCVC1 cvc) throws Exception{
@@ -58,8 +49,8 @@ public class ColumnReplacementMutations {
 			
 			ArrayList<Node> candidateNodes = new ArrayList<Node>();
 			
-			cvc.getConstraints().add("\n%---------------------------------\n% COLUMN REPLACEMENT \n%---------------------------------\n");
-			logger.log(Level.INFO,"\n%---------------------------------\n% COLUMN REPLACEMENT \n%-----------------------------\n");
+			cvc.getConstraints().add(ConstraintGenerator.addCommentLine(" COLUMN REPLACEMENT"));
+			logger.log(Level.INFO,ConstraintGenerator.addCommentLine(" COLUMN REPLACEMENT"));
 			
 			// Only non-string fields are considered here. The string fields are handled automatically by ensuring that enumeration has different values for
 			// different fields in CVC.
@@ -197,13 +188,20 @@ public class ColumnReplacementMutations {
 								
 								String cond = ""; 
 								Vector<String> conds = new Vector<String>();
+								ArrayList <ConstraintObject> constrList = new ArrayList<ConstraintObject>();
+								ConstraintGenerator constrGen = new ConstraintGenerator();
 								
 								for(int i = 1; i <= cvc.getNoOfTuples().get(tableName); i++){
 									for(int k = 1; k <= cvc.getNoOfTuples().get(table); k++){
-										
+										ConstraintObject constrObj = new ConstraintObject();
 										int offset1 = cvc.getRepeatedRelNextTuplePos().get(tableName)[1];
 										int offset2 = cvc.getRepeatedRelNextTuplePos().get(table)[1];
-										String temp = "ASSERT ("+GenerateCVCConstraintForNode.cvcMapNode(candidate, Integer.toString(i + offset1 - 1)) +" /= " +GenerateCVCConstraintForNode.cvcMapNode(replacement, Integer.toString(k + offset2 - 1)) +");\n";
+										//String temp = constrGen.
+										constrObj.setLeftConstraint(constrGen.getMapNode(candidate,i + offset1 - 1+""));
+										constrObj.setRightConstraint(constrGen.getMapNode(replacement, k + offset2 - 1+""));
+										constrObj.setOperator(" /= ");
+										String temp = constrGen.getAssertConstraint(candidate.getColumn(),(i + offset1 - 1), replacement.getColumn(), (k + offset2 - 1), " /= ");
+										//"ASSERT ("+GenerateCVCConstraintForNode.cvcMapNode(candidate, Integer.toString(i + offset1 - 1)) +" /= " +GenerateCVCConstraintForNode.cvcMapNode(replacement, Integer.toString(k + offset2 - 1)) +");\n";
 										cond += temp;
 										conds.add(temp);
 									}
@@ -221,8 +219,8 @@ public class ColumnReplacementMutations {
 				}
 			}
 			
-			cvc.getConstraints().add("\n%---------------------------------\n% END OF COLUMN REPLACEMENT\n%---------------------------------\n");
-			logger.log(Level.INFO,"\n%------------------\n% END OF COLUMN REPLACEMENT\n%--------------------\n");
+			cvc.getConstraints().add(ConstraintGenerator.addCommentLine(" END OF COLUMN REPLACEMENT"));
+			logger.log(Level.INFO,"\n"+ConstraintGenerator.addCommentLine("END OF COLUMN REPLACEMENT"));
 			
 			/** Call the method for the data generation*/
 			GenerateCommonConstraintsForQuery.generateNullandDBConstraints(cvc,true);

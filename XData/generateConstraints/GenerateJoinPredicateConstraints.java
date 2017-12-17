@@ -1,5 +1,6 @@
 package generateConstraints;
 
+import java.util.ArrayList;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -8,6 +9,7 @@ import parsing.Column;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
+import util.ConstraintObject;
 
 /**
  * This class is used to generate constraints for the join predicates
@@ -193,11 +195,23 @@ public class GenerateJoinPredicateConstraints {
 		if(cvc.getNoOfTuples().containsKey(r2)){
 			tuples2 = cvc.getNoOfTuples().get(r2);
 		}
-
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+		ArrayList<ConstraintObject> constrObjList = new ArrayList<ConstraintObject>();
+	
 		/** Do a round robin for the smaller value of the group number */
 		for(int k=1,l=1;; k++,l++){
-			constraintString += "ASSERT ("+ GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n1, ((k-1)*tuples1+offset1))+ operator +
-					GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n2, (l+offset2-1))+");\n";
+			//constraintString += "ASSERT ("+ GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n1, ((k-1)*tuples1+offset1))+ operator +
+				//	GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n2, (l+offset2-1))+");\n";
+			
+			/*ConstraintObject constrObj = new ConstraintObject();
+			constrObj.setLeftConstraint(constrGen.genPositiveCondsForPred(queryBlock,n1, ((k-1)*tuples1+offset1)));
+			constrObj.setRightConstraint(constrGen.genPositiveCondsForPred(queryBlock, n2, (l+offset2-1)));
+			constrObj.setOperator(operator);
+			constrObjList.add(constrObj);*/
+			
+			constraintString += constrGen.getAssertConstraint(constrGen.genPositiveCondsForPred(queryBlock, n1, ((k-1)*tuples1+offset1)),operator,constrGen.genPositiveCondsForPred(queryBlock, n2, (l+offset2-1)));
+					
+			
 			if(leftGroup>tuples2){
 				if(l==tuples2 && k<leftGroup)	l=0;
 				if(k>=leftGroup) break;
@@ -210,7 +224,7 @@ public class GenerateJoinPredicateConstraints {
 				if(l==leftGroup) break;
 			}
 		}
-
+		//constraintString =constrGen.generateANDConstraintsWithAssert(constrObjList);
 		return constraintString;
 	}
 
@@ -258,10 +272,19 @@ public class GenerateJoinPredicateConstraints {
 			tuples2 = cvc.getNoOfTuples().get(r2);
 		}
 
+
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+		ArrayList<ConstraintObject> constrObjList = new ArrayList<ConstraintObject>();
+	
 		/** Do a round robin for the smaller value of the group number */
 		for(int k=1,l=1;; k++,l++){
-			constraintString += "("+ GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n1, ((k-1)*tuples1+offset1))+ operator +
-					GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n2, (l+offset2-1))+") AND ";
+			//constraintString += "("+ GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n1, ((k-1)*tuples1+offset1))+ operator +
+				//	GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n2, (l+offset2-1))+") AND ";
+			ConstraintObject constrObj = new ConstraintObject();
+			constrObj.setLeftConstraint(constrGen.genPositiveCondsForPred(queryBlock, n1, ((k-1)*tuples1+offset1)));
+			constrObj.setRightConstraint(constrGen.genPositiveCondsForPred(queryBlock, n2, (l+offset2-1)));
+			constrObj.setOperator(operator);
+			constrObjList.add(constrObj);
 			if(leftGroup>tuples2){
 				if(l==tuples2 && k<leftGroup)	l=0;
 				if(k>=leftGroup) break;
@@ -274,7 +297,7 @@ public class GenerateJoinPredicateConstraints {
 				if(l==leftGroup) break;
 			}
 		}
-
+		constraintString =constrGen.generateANDConstraintsWithAssert(constrObjList);
 		return constraintString;
 	}
 
@@ -319,13 +342,24 @@ public class GenerateJoinPredicateConstraints {
 		}
 
 		int noOfgroups = UtilsRelatedToNode.getNoOfGroupsForThisNode(cvc, queryBlock, n1);
-
+		
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+		ArrayList<ConstraintObject> constrObjList = new ArrayList<ConstraintObject>();
+	
 		for(int i=0; i<noOfgroups; i++){
 			/**Do a round robin for the smaller value*/
 			for(int k=1,l=1;; k++,l++){
 
-				constraintString += "ASSERT ("+ GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n1, ((i*tuples1)+k+offset1-1))+ operator + 
-						GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n2, ((i*tuples2)+l+offset2-1))+");\n";
+				//constraintString += "ASSERT ("+ GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n1, ((i*tuples1)+k+offset1-1))+ operator + 
+					//	GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n2, ((i*tuples2)+l+offset2-1))+");\n";
+				/*ConstraintObject constrObj = new ConstraintObject();
+				constrObj.setLeftConstraint(constrGen.genPositiveCondsForPred(queryBlock, n1, ((i*tuples1)+k+offset1-1)));
+				constrObj.setRightConstraint(constrGen.genPositiveCondsForPred(queryBlock, n2, ((i*tuples2)+l+offset2-1)));
+				constrObj.setOperator(operator);
+				constrObjList.add(constrObj);
+				*/
+				
+				constraintString += constrGen.getAssertConstraint(constrGen.genPositiveCondsForPred(queryBlock, n1, ((i*tuples1)+k+offset1-1)),operator,constrGen.genPositiveCondsForPred(queryBlock, n2, ((i*tuples2)+l+offset2-1)));
 
 				if(tuples1>tuples2){
 					if(l==tuples2 && k<tuples1)	l=0;
@@ -340,6 +374,7 @@ public class GenerateJoinPredicateConstraints {
 				}
 			}
 		}
+	//	constraintString =constrGen.generateANDConstraintsWithAssert(constrObjList);
 		return constraintString;
 	}
 
@@ -407,13 +442,20 @@ public class GenerateJoinPredicateConstraints {
 		}
 
 		int noOfgroups = UtilsRelatedToNode.getNoOfGroupsForThisNode(cvc, queryBlock, n1);
-
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+		ArrayList<ConstraintObject> constrObjList = new ArrayList<ConstraintObject>();
+		
 		for(int i=0; i<noOfgroups; i++){
 			/**Do a round robin for the smaller value*/
 			for(int k=1,l=1;; k++,l++){
 
-				constraintString += "("+ GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n1, ((i*tuples1)+k+offset1-1))+ operator + 
-						GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n2, ((i*tuples2)+l+offset2-1))+") AND ";
+				//constraintString += "("+ GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n1, ((i*tuples1)+k+offset1-1))+ operator + 
+					//	GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n2, ((i*tuples2)+l+offset2-1))+") AND ";
+				ConstraintObject constrObj = new ConstraintObject();
+				constrObj.setLeftConstraint(constrGen.genPositiveCondsForPred(queryBlock, n1, ((i*tuples1)+k+offset1-1)));
+				constrObj.setRightConstraint(constrGen.genPositiveCondsForPred(queryBlock, n2, ((i*tuples2)+l+offset2-1)));
+				constrObj.setOperator(operator);
+				constrObjList.add(constrObj);
 
 				if(tuples1>tuples2){
 					if(l==tuples2 && k<tuples1)	l=0;
@@ -428,6 +470,7 @@ public class GenerateJoinPredicateConstraints {
 				}
 			}
 		}
+		constraintString =constrGen.generateANDConstraintsWithAssert(constrObjList);
 		return constraintString;
 	}
 
@@ -471,11 +514,20 @@ public class GenerateJoinPredicateConstraints {
 		if(cvc.getNoOfTuples().containsKey(r2)){
 			tuples2 = cvc.getNoOfTuples().get(r2);
 		}
-
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+		ArrayList<ConstraintObject> constrObjList = new ArrayList<ConstraintObject>();
+		
 		/**Do a round robin for the smaller value of the group number*/
 		for(int k=1,l=1;; k++,l++){
-			constraintString += "ASSERT ("+ GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n1, ((k-1)*tuples1+offset1))+ operator +
-					GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n2, ((l-1)*tuples2+offset2))+");\n";
+			//constraintString += "ASSERT ("+ GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n1, ((k-1)*tuples1+offset1))+ operator +
+					//GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n2, ((l-1)*tuples2+offset2))+");\n";
+			
+			/*ConstraintObject constrObj = new ConstraintObject();
+			constrObj.setLeftConstraint(constrGen.genPositiveCondsForPred(queryBlock, n1, ((k-1)*tuples1+offset1)));
+			constrObj.setRightConstraint(constrGen.genPositiveCondsForPred(queryBlock, n2, ((l-1)*tuples2+offset2)));
+			constrObj.setOperator(operator);
+			constrObjList.add(constrObj);*/
+			constraintString += constrGen.getAssertConstraint(constrGen.genPositiveCondsForPred(queryBlock, n1, ((k-1)*tuples1+offset1)),operator,constrGen.genPositiveCondsForPred(queryBlock, n2, ((l-1)*tuples2+offset2)));
 			if(leftGroup>rightGroup){
 				if(l==rightGroup && k<leftGroup)	l=0;
 				if(k>=leftGroup) break;
@@ -488,7 +540,7 @@ public class GenerateJoinPredicateConstraints {
 				if(l==leftGroup) break;
 			}
 		}
-
+		//constraintString =constrGen.generateANDConstraintsWithAssert(constrObjList);
 		return constraintString;
 	}
 
@@ -533,11 +585,19 @@ public class GenerateJoinPredicateConstraints {
 		if(cvc.getNoOfTuples().containsKey(r2)){
 			tuples2 = cvc.getNoOfTuples().get(r2);
 		}
-
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+		ArrayList<ConstraintObject> constrObjList = new ArrayList<ConstraintObject>();
 		/**Do a round robin for the smaller value of the group number*/
 		for(int k=1,l=1;; k++,l++){
-			constraintString += "("+ GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n1, ((k-1)*tuples1+offset1))+ operator +
-					GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n2, ((l-1)*tuples2+offset2))+") AND ";
+			//Populate constraint Object list and call AND function
+			ConstraintObject constrObj = new ConstraintObject();
+			constrObj.setLeftConstraint(constrGen.genPositiveCondsForPred(queryBlock, n1, ((k-1)*tuples1+offset1)));
+			constrObj.setRightConstraint(constrGen.genPositiveCondsForPred(queryBlock, n2, ((l-1)*tuples2+offset2)));
+			constrObj.setOperator(operator);
+			constrObjList.add(constrObj);
+			
+			//constraintString += "("+ GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n1, ((k-1)*tuples1+offset1))+ operator +
+			//		GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n2, ((l-1)*tuples2+offset2))+") AND ";
 			if(leftGroup>rightGroup){
 				if(l==rightGroup && k<leftGroup)	l=0;
 				if(k>=leftGroup) break;
@@ -550,7 +610,7 @@ public class GenerateJoinPredicateConstraints {
 				if(l==leftGroup) break;
 			}
 		}
-
+		constraintString =constrGen.generateANDConstraintsWithAssert(constrObjList);
 		return constraintString;
 	}
 
@@ -566,6 +626,8 @@ public class GenerateJoinPredicateConstraints {
 	/**FIXME: What if there are multiple groups in this query block*/
 	public static String genNegativeConds(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Node nulled, Node P0) throws Exception{
 		String constraintString = new String();
+		
+		
 		if(cvc.isFne()){
 			String tableName=nulled.getTable().getTableName();
 			constraintString += "ASSERT NOT EXISTS (i: O_"+tableName+"_INDEX_INT): " +
@@ -589,28 +651,35 @@ public class GenerateJoinPredicateConstraints {
 			/**Get next position for these tuples*/
 			int offset1= cvc.getRepeatedRelNextTuplePos().get(nulledTableNameNo)[1];			
 			int offset2= cvc.getRepeatedRelNextTuplePos().get(tablenameno)[1];
-
-			constraintString += "ASSERT ";
+			ConstraintGenerator constrGen = new ConstraintGenerator();
+			ConstraintObject conObj = new ConstraintObject();
+			ArrayList<ConstraintObject> constrList = new ArrayList<ConstraintObject>();
+			
+			//constraintString += "ASSERT ";
 
 			for(int i=1;i<=count1;i++){
 				for(int j=1;j<=count2;j++){
 					String left ="", right = "";
 					if(nulled.getQueryType() == 1 && queryBlock.getFromClauseSubQueries()!= null && queryBlock.getFromClauseSubQueries().size() != 0)
-						left = "(O_"+ GenerateCVCConstraintForNode.cvcMap(nulled.getColumn(), (i-1)*cvc.getNoOfTuples().get(nulled.getTableNameNo())+offset1+"") ;
+						left = ConstraintGenerator.getSolverMapping(nulled.getColumn(), (i-1)*cvc.getNoOfTuples().get(nulled.getTableNameNo())+offset1+"") ;
 					else
-						left = "(O_"+ GenerateCVCConstraintForNode.cvcMap(nulled.getColumn(), i+offset1-1+"") ;
+						left = ConstraintGenerator.getSolverMapping(nulled.getColumn(), i+offset1-1+"") ;
 
 					if(P0.getQueryType() == 1 && queryBlock.getFromClauseSubQueries()!= null && queryBlock.getFromClauseSubQueries().size() != 0)
-						right = "O_"+ GenerateCVCConstraintForNode.cvcMap(P0.getColumn(), (j-1)*cvc.getNoOfTuples().get(P0.getTableNameNo())+offset2+"") ;
+						right =ConstraintGenerator.getSolverMapping(P0.getColumn(), (j-1)*cvc.getNoOfTuples().get(P0.getTableNameNo())+offset2+"") ;
 					else
-						right = "O_"+ GenerateCVCConstraintForNode.cvcMap(P0.getColumn(), j+offset2-1+"") ;
+						right =ConstraintGenerator.getSolverMapping(P0.getColumn(), j+offset2-1+"") ;
 
-					constraintString += left +" /= "+ right+") AND ";
+					conObj.setLeftConstraint(left);
+					conObj.setRightConstraint(right);
+					conObj.setOperator("/=");
+					
+					constrList.add(conObj);
 				}
 			}
 
-			constraintString = constraintString.substring(0, constraintString.length()-4);
-			constraintString += ";";
+			  constraintString = constrGen.generateANDConstraintsWithAssert(constrList);//constraintString.substring(0, constraintString.length()-4);
+			//constraintString += ";";
 		}
 		return constraintString;
 	}
@@ -626,7 +695,9 @@ public class GenerateJoinPredicateConstraints {
 	/**FIXME: What if there are multiple groups in this query block*/
 	public static String genNegativeConds(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Column nulled, Node P0){
 		String constraintString = new String();
-
+		ArrayList<ConstraintObject> constrList = new ArrayList<ConstraintObject>();
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+	
 		if(cvc.isFne()){
 			constraintString += "ASSERT NOT EXISTS (i: O_"+nulled.getTableName()+"_INDEX_INT): " +
 					"(O_"+ GenerateCVCConstraintForNode.cvcMap(nulled, "i") + " = O_" + GenerateCVCConstraintForNode.cvcMap(P0.getColumn(), P0) + ");";			
@@ -635,55 +706,80 @@ public class GenerateJoinPredicateConstraints {
 
 			/** Open up FORALL and NOT EXISTS*/
 
-			constraintString += "ASSERT ";
+			//constraintString += "ASSERT ";
 			for(int i = 1; i <= cvc.getNoOfOutputTuples().get(nulled.getTableName()) ; i++){/**FIXME: Handle repeated relations*/
-				constraintString += "(O_" + GenerateCVCConstraintForNode.cvcMap(nulled, i + "") + " /= O_" + GenerateCVCConstraintForNode.cvcMap(P0.getColumn(), P0) + ") AND "; 
+				//constraintString += "(O_" + GenerateCVCConstraintForNode.cvcMap(nulled, i + "") + " /= O_" + GenerateCVCConstraintForNode.cvcMap(P0.getColumn(), P0) + ") AND ";
+				ConstraintObject constr = new ConstraintObject();
+				constr.setLeftConstraint( ConstraintGenerator.getSolverMapping(nulled, i + ""));
+				constr.setOperator("/=");
+				constr.setRightConstraint(ConstraintGenerator.getSolverMapping(P0.getColumn(), P0));
+				constrList.add(constr);				
 			}
-			constraintString = constraintString.substring(0, constraintString.length()-4);
-			constraintString += ";";
+			constraintString = constrGen.generateANDConstraintsWithAssert(constrList);//constraintString.substring(0, constraintString.length()-4);
+			//constraintString += ";";
 		}
 		return constraintString;
 	}
 	
 	public static String genNegativeCondsEqClass(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Node c1, Node c2, int tuple){
 		String constraintString = new String();
+		ArrayList<ConstraintObject> constrList = new ArrayList<ConstraintObject>();
+		ConstraintGenerator constrGen = new ConstraintGenerator();
 		
 		for(int i = 1; i <= cvc.getNoOfOutputTuples().get(c1.getTable().getTableName()) ; i++){
-			constraintString += "(O_" + GenerateCVCConstraintForNode.cvcMap(c1.getColumn(), i + "") + " /= O_" + GenerateCVCConstraintForNode.cvcMap(c2.getColumn(), tuple + "") + ") AND "; 
+			ConstraintObject constr = new ConstraintObject();
+			constr.setLeftConstraint( ConstraintGenerator.getSolverMapping(c1.getColumn(), i + ""));
+			constr.setOperator("/=");
+			constr.setRightConstraint(ConstraintGenerator.getSolverMapping(c2.getColumn(), tuple +""));
+			constrList.add(constr);
 		}
-		constraintString = constraintString.substring(0, constraintString.length()-4);		
+		//constraintString = constraintString.substring(0, constraintString.length()-4);
+		constraintString = constrGen.generateANDConstraintsWithAssert(constrList);
 		return constraintString.trim();
 	}
 	
 	public static String genNegativeCondsEqClassForTuplePair(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Node c1, Node c2, int tupleIndex1, int tupleIndex2){
-		String constraintString = new String();
 		
-		constraintString += "ASSERT ";			
+		String constraintString = new String();
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+		
+		constraintString = constrGen.getAssertConstraint(c1.getColumn(), tupleIndex1, c2.getColumn(), tupleIndex2, "/=");
+		
+		/*constraintString += "ASSERT ";			
 		constraintString += "(O_" + GenerateCVCConstraintForNode.cvcMap(c1.getColumn(), tupleIndex1 + "") + " /= O_" + GenerateCVCConstraintForNode.cvcMap(c2.getColumn(), tupleIndex2 + "") + ") AND ";
 			
 		constraintString = constraintString.substring(0, constraintString.length()-4);
-		constraintString += ";";
+		constraintString += ";"; */
+		
 		
 		return constraintString;
 	}
 	
-	public static String genNegativeCondsEqClassForAllTuplePairs(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Node c1, Node c2, int tupleIndex1, int tupleIndex2){
+	public static ArrayList<ConstraintObject> genNegativeCondsEqClassForAllTuplePairs(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Node c1, Node c2, int tupleIndex1, int tupleIndex2){
 		String constraintString = new String();
+		ConstraintGenerator constrGen = new ConstraintGenerator();
+		ArrayList<ConstraintObject> constrList = new ArrayList<ConstraintObject>();
 		
 		for(int i = 1; i <= tupleIndex1 ; i++){
-				for(int j = 1; j <= tupleIndex2; j++){			
-					constraintString += "(O_" + GenerateCVCConstraintForNode.cvcMap(c1.getColumn(), i + "") + " /= O_" + GenerateCVCConstraintForNode.cvcMap(c2.getColumn(), j + "") + ") AND ";
+				for(int j = 1; j <= tupleIndex2; j++){		
+					
+					ConstraintObject constr = new ConstraintObject();
+					constr.setLeftConstraint( ConstraintGenerator.getSolverMapping(c1.getColumn(), i + ""));
+					constr.setOperator("/=");
+					constr.setRightConstraint(ConstraintGenerator.getSolverMapping(c2.getColumn(), j +""));
+					constrList.add(constr);
 			}
 		}
-		constraintString = constraintString.substring(0, constraintString.length()-4);		
-		return constraintString.trim();
+		//constraintString = constrGen.generateANDConstraintsWithAssert(constrList);
+		//return constraintString.trim();
+		return constrList;
 	}
 	
 	/**
 	 * Generates positive constraints for the given set of nodes
 	 * @param ec
 	 */
-	public static String genPositiveConds(Vector<Node> ec){
+	public static String genPositiveConds(GenerateCVC1 cvc,Vector<Node> ec){
 
 		String constraintString = "";
 
@@ -692,7 +788,7 @@ public class GenerateJoinPredicateConstraints {
 			Column col1 = ec.get(i).getColumn();
 			Column col2 = ec.get(i+1).getColumn();
 
-			constraintString += GenerateCVCConstraintForNode.getCvc3StatementPositive(col1, ec.get(i), col2, ec.get(i+1));
+			constraintString += ConstraintGenerator.getPositiveStatement(col1, ec.get(i), col2, ec.get(i+1));
 		}
 		return constraintString;
 	}

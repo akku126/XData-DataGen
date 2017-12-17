@@ -1,7 +1,7 @@
 
 package testDataGen;
 
-import generateConstraints.GetCVC3HeaderAndFooter;
+import generateConstraints.GetSolverHeaderAndFooter;
 import generateConstraints.TupleRange;
 
 import java.io.ByteArrayInputStream;
@@ -207,6 +207,7 @@ public class GenerateCVC1 implements Serializable{
 		tableNames = new HashMap<String, Integer[]>();
 		equiJoins = new HashMap<String, Vector<Vector<Node>>>();
 		allowedTuples = new HashMap<String, TupleRange>();
+		DBAppparams = new AppTest_Parameters();
 	}
 
 
@@ -487,9 +488,9 @@ public class GenerateCVC1 implements Serializable{
 			
 			if(Configuration.getProperty("smtsolver").equalsIgnoreCase("cvc3")){
 					/**Generate CVC3 Header, This is need to initialize the CVC3 Data Type field of each column of each table */
-					this.setCVC3_HEADER( GetCVC3HeaderAndFooter.generateCVC3_Header(this) );
+					this.setCVC3_HEADER( GetSolverHeaderAndFooter.generateSolver_Header(this) );
 			}else{
-				this.setSMTLIB_HEADER(GetCVC3HeaderAndFooter.generateCVC3_Header(this));
+				this.setSMTLIB_HEADER(GetSolverHeaderAndFooter.generateSolver_Header(this));
 			}
 		}catch (TimeoutException e){
 			logger.log(Level.SEVERE,e.getMessage(),e);		
@@ -774,7 +775,7 @@ public class GenerateCVC1 implements Serializable{
 	public void initilizeDataStructuresForTupleAssignment(QueryBlockDetails queryBlock){
 		
 		/** neha -- added to initialize the param data structure**/
-		RelatedToParameters.setupDataStructuresForParamConstraints(queryBlock);
+		RelatedToParameters.setupDataStructuresForParamConstraints(this,queryBlock);
 
 		/** Add constraints related to parameters*/
 		this.getConstraints().add(RelatedToParameters.addDatatypeForParameters( this, queryBlock));
@@ -1497,6 +1498,20 @@ public class GenerateCVC1 implements Serializable{
 	    }
 	}*/
 	
+	public GenerateCVC1 copy() throws Exception{
+		//TODO: change implementation to provide faster copy
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream out = new ObjectOutputStream(bos);
+        out.writeObject(this);
+        out.flush();
+        out.close();
+        
+        ObjectInputStream in = new ObjectInputStream(
+                new ByteArrayInputStream(bos.toByteArray()));
+        GenerateCVC1    obj = (GenerateCVC1)in.readObject();
+		return obj;
+	}
+
 
 	public int getAssignId() {
 		// TODO Auto-generated method stub

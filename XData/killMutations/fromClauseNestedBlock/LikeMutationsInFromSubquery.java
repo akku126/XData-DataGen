@@ -1,5 +1,6 @@
 package killMutations.fromClauseNestedBlock;
 
+import generateConstraints.ConstraintGenerator;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GenerateConstraintsForConjunct;
 import generateConstraints.GenerateConstraintsForHavingClause;
@@ -97,11 +98,11 @@ public static void generateDataForkillingLikeMutationsInFromSubquery( GenerateCV
 							/** Add constraints for all the From clause nested subquery blocks except this sub query block */
 							for(QueryBlockDetails qb: cvc.getOuterBlock().getFromClauseSubQueries()){
 								if(!(qb.equals(qbt))){
-									cvc.getConstraints().add("\n%---------------------------------\n% FROM CLAUSE SUBQUERY\n%---------------------------------\n");
+									cvc.getConstraints().add(ConstraintGenerator.addCommentLine("FROM CLAUSE SUBQUERY "));
 									
 									cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlock(cvc, qb) );
 									
-									cvc.getConstraints().add("\n%---------------------------------\n% END OF FROM CLAUSE SUBQUERY\n%---------------------------------\n");
+									cvc.getConstraints().add(ConstraintGenerator.addCommentLine(" END OF FROM CLAUSE SUBQUERY "));
 								}
 							}
 							
@@ -118,17 +119,17 @@ public static void generateDataForkillingLikeMutationsInFromSubquery( GenerateCV
 							}
 							
 							/** get group by constraints */
-							cvc.getConstraints().add("\n%---------------------------------\n%GROUP BY CLAUSE CONSTRAINTS FOR SUBQUERY BLOCK\n%---------------------------------\n");
+							cvc.getConstraints().add(ConstraintGenerator.addCommentLine("GROUP BY CLAUSE CONSTRAINTS FOR SUBQUERY BLOCK "));
 							cvc.getConstraints().add( GenerateGroupByConstraints.getGroupByConstraints( cvc, qbt) );
 							
 							
 							/** Generate havingClause constraints */
-							cvc.getConstraints().add("\n%---------------------------------\n%HAVING CLAUSE CONSTRAINTS FOR SUBQUERY BLOCK\n%---------------------------------\n");
+							cvc.getConstraints().add(ConstraintGenerator.addCommentLine("HAVING CLAUSE CONSTRAINTS FOR SUBQUERY BLOCK "));
 							for(int l=0; l< qbt.getNoOfGroups(); l++)
 								for(int k=0; k < qbt.getAggConstraints().size();k++){
 									cvc.getConstraints().add(GenerateConstraintsForHavingClause.getHavingClauseConstraints(cvc, qbt, qbt.getAggConstraints().get(k), qbt.getFinalCount(), l) );
 								}
-							cvc.getConstraints().add("\n%---------------------------------\n%END OF HAVING CLAUSE CONSTRAINTS\n%---------------------------------\n");
+							cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF HAVING CLAUSE CONSTRAINTS "));
 							
 							/** add constraints of outer query block */
 							cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlockExceptSubQuries(cvc, cvc.getOuterBlock()) );
