@@ -298,11 +298,11 @@ import util.TableMap;
 				if(con.stringSelectionConds != null)					
 					lstSelectionConds.addAll(con.stringSelectionConds);
 				if(con.joinCondsForEquivalenceClasses != null){
-					lstSelectionConds.addAll(con.joinCondsForEquivalenceClasses);
+					//lstSelectionConds.addAll(con.joinCondsForEquivalenceClasses);
 					this.lstJoinConditions.addAll(con.joinCondsForEquivalenceClasses);
 				}
 				if(con.joinCondsAllOther!=null){
-					lstSelectionConds.addAll(con.joinCondsAllOther);
+					//lstSelectionConds.addAll(con.joinCondsAllOther);
 					this.lstJoinConditions.addAll(con.joinCondsAllOther);
 				}
 				if(con.likeConds != null)
