@@ -91,6 +91,7 @@ import util.TableMap;
 		Vector<Node> joinConds;
 		private Vector<Node> foreignKeys;
 		public Vector<Node> projectedCols;
+		private Node queryType; // To store outer query information
 
 		//added by mathew on 2 september 2016
 		public QueryStructure parentQueryParser;
@@ -1011,8 +1012,33 @@ import util.TableMap;
 						 plainSelect = (PlainSelect)((Select) stmt).getSelectBody();
 //						ProcessResultSetNode.processResultSetNodeJSQL(plainSelect, debug, this);
 						ProcessSelectClause.ProcessSelect(plainSelect,  this, dbAppParameters);
+						
+						// add transformation
+						for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
+						{
+							ConjunctQueryStructure conjunct = this.getConjuncts().get(0);
+							Node temp = conjunct.allSubQueryConds.elementAt(i);
+							this.getWhereClauseSubqueries().elementAt(i).setQueryType(temp);
+						}
+						// Convert IN to Exists
+						for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
+						{
+							QueryStructure q = this.getWhereClauseSubqueries().get(i);
+							if(q.getQueryType()!=null && q.getQueryType().type.equalsIgnoreCase("IN"))
+							{
+								q.getQueryType().type="EXISTS";
+								Node temp = new Node();
+								temp.left = q.getQueryType().left;
+								temp.right = q.getLstProjectedCols().get(0);
+								temp.operator = "=";
+								q.getLstJoinConditions().add(temp);
+								q.getQueryType().setLeft(null);
+								this.getLstSubQConnectives().set(i, "EXISTS");
+							}
+						}
+						
 					}
-					
+			
 					//Check if query contains WithItem list - then Query is of the form  WITH S AS ()
 					if(((Select) stmt).getSelectBody() instanceof PlainSelect 
 							&& ((Select)stmt).getWithItemsList() != null){
@@ -1025,6 +1051,31 @@ import util.TableMap;
 		
 						//ProcessResultSetNode.processResultSetNodeJSQL((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
 						ProcessSelectClause.ProcessSelect((PlainSelect)((Select) stmt).getSelectBody(),  this, dbAppParameters);
+						
+						// add transformation
+						for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
+						{
+							ConjunctQueryStructure conjunct = this.getConjuncts().get(0);
+							Node temp = conjunct.allSubQueryConds.elementAt(i);
+							this.getWhereClauseSubqueries().elementAt(i).setQueryType(temp);
+						}
+						// Convert IN to Exists
+						for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
+						{
+							QueryStructure q = this.getWhereClauseSubqueries().get(i);
+							if(q.getQueryType()!=null && q.getQueryType().type.equalsIgnoreCase("IN"))
+							{
+								q.getQueryType().type="EXISTS";
+								Node temp = new Node();
+								temp.left = q.getQueryType().left;
+								temp.right = q.getLstProjectedCols().get(0);
+								temp.operator = "=";
+								q.getLstJoinConditions().add(temp);
+								q.getQueryType().setLeft(null);
+								this.getLstSubQConnectives().set(i, "EXISTS");
+							}
+						}
+						
 					}
 					
 					//If it is instance of SetOperationList - UNION,EXCEPT OR INTERSECT
@@ -2673,6 +2724,14 @@ import util.TableMap;
 		 */
 		public void setCaseConditionMap(HashMap<Integer,CaseExpression> caseConditionMap) {
 			this.caseConditionMap = caseConditionMap;
+		}
+
+		private Node getQueryType() {
+			return queryType;
+		}
+
+		private void setQueryType(Node queryType) {
+			this.queryType = queryType;
 		}
 
 		

@@ -1353,30 +1353,33 @@ public static ArrayList<Node> removeDuplicates(ArrayList<Node> selectionConds) {
 	boolean removedFlag;
 	do{
 		removedFlag=false;
-		for(int i=0;i<selectionConds.size()-1;i++){
-			Node src=selectionConds.get(i);
-			boolean found=false;
-			for(int j=i+1;j<selectionConds.size();j++){
-				Node tar=selectionConds.get(j);
-				if(src==tar){
-					found=true;
+		if(selectionConds!=null){
+			for(int i=0;i<selectionConds.size()-1;i++){
+				Node src=selectionConds.get(i);
+				boolean found=false;
+				for(int j=i+1;j<selectionConds.size();j++){
+					Node tar=selectionConds.get(j);
+					if(src==tar){
+						found=true;
+						break;
+					}
+					String srcLeftStr=src.getLeft().toString();
+					String srcRightStr=src.getRight().toString();
+					String tarLeftStr=tar.getLeft().toString();
+					String tarRightStr=tar.getRight().toString();
+					if(srcLeftStr.equalsIgnoreCase(tarLeftStr)&&srcRightStr.equalsIgnoreCase(tarRightStr)){
+						found=true;
+						break;
+					}
+				}
+				if(found){
+					selectionConds.remove(i);
+					removedFlag=true;
 					break;
 				}
-				String srcLeftStr=src.getLeft().toString();
-				String srcRightStr=src.getRight().toString();
-				String tarLeftStr=tar.getLeft().toString();
-				String tarRightStr=tar.getRight().toString();
-				if(srcLeftStr.equalsIgnoreCase(tarLeftStr)&&srcRightStr.equalsIgnoreCase(tarRightStr)){
-					found=true;
-					break;
-				}
-			}
-			if(found){
-				selectionConds.remove(i);
-				removedFlag=true;
-				break;
 			}
 		}
+			
 	} while(removedFlag);
 	return selectionConds;
 }
