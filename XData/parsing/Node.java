@@ -368,7 +368,27 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 		
 		return (Node)obj;
 	}
-
+	public static String complimentOperator(String op)
+	{
+		String S="";
+		if(op.equalsIgnoreCase("="))
+			S="<>";
+		if(op.equalsIgnoreCase("<>"))
+			S="=";
+		if(op.equalsIgnoreCase(">"))
+			S="<=";
+		if(op.equalsIgnoreCase(">="))
+			S="<";
+		if(op.equalsIgnoreCase("<"))
+			S=">=";
+		if(op.equalsIgnoreCase(">="))
+			S="<";
+		return S;
+	}
+	public void compliment()
+	{
+		this.operator=complimentOperator(this.operator);
+	}
 
 
 	/**

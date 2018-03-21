@@ -1020,7 +1020,7 @@ import util.TableMap;
 							Node temp = conjunct.allSubQueryConds.elementAt(i);
 							this.getWhereClauseSubqueries().elementAt(i).setQueryType(temp);
 						}
-						// Convert IN to Exists
+						// Convert IN to EXISTS
 						for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
 						{
 							QueryStructure q = this.getWhereClauseSubqueries().get(i);
@@ -1036,7 +1036,55 @@ import util.TableMap;
 								this.getLstSubQConnectives().set(i, "EXISTS");
 							}
 						}
-						
+						// Convert NOT IN to NOT EXISTS
+						for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
+						{
+							QueryStructure q = this.getWhereClauseSubqueries().get(i);
+							if(q.getQueryType()!=null && q.getQueryType().type.equalsIgnoreCase("NOT IN"))
+							{
+								q.getQueryType().type="NOT EXISTS";
+								Node temp = new Node();
+								temp.left = q.getQueryType().left;
+								temp.right = q.getLstProjectedCols().get(0);
+								temp.operator = "=";
+								q.getLstJoinConditions().add(temp);
+								q.getQueryType().setLeft(null);
+								this.getLstSubQConnectives().set(i, "NOT EXISTS");
+							}
+						}
+						// Convert ANY to EXISTS
+						for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
+						{
+							QueryStructure q = this.getWhereClauseSubqueries().get(i);
+							if(q.getQueryType()!=null && q.getQueryType().type.equalsIgnoreCase("ANY"))
+							{
+								q.getQueryType().type="EXISTS";
+								Node temp = new Node();
+								temp.left = q.getQueryType().left;
+								temp.right = q.getLstProjectedCols().get(0);
+								temp.operator = q.getQueryType().operator;
+								q.getLstJoinConditions().add(temp);
+								q.getQueryType().setLeft(null);
+								this.getLstSubQConnectives().set(i, "EXISTS");
+							}
+						}
+						// Convert ALL to NOT EXISTS
+						for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
+						{
+							QueryStructure q = this.getWhereClauseSubqueries().get(i);
+							if(q.getQueryType()!=null && q.getQueryType().type.equalsIgnoreCase("ALL"))
+							{
+								q.getQueryType().type="NOT EXISTS";
+								Node temp = new Node();
+								temp.left = q.getQueryType().left;
+								temp.right = q.getLstProjectedCols().get(0);
+								temp.operator = q.getQueryType().operator;
+								temp.compliment();
+								q.getLstJoinConditions().add(temp);
+								q.getQueryType().setLeft(null);
+								this.getLstSubQConnectives().set(i, "NOT EXISTS");
+							}
+						}
 					}
 			
 					//Check if query contains WithItem list - then Query is of the form  WITH S AS ()
