@@ -2726,11 +2726,11 @@ import util.TableMap;
 			this.caseConditionMap = caseConditionMap;
 		}
 
-		private Node getQueryType() {
+		public Node getQueryType() {
 			return queryType;
 		}
 
-		private void setQueryType(Node queryType) {
+		public void setQueryType(Node queryType) {
 			this.queryType = queryType;
 		}
 
