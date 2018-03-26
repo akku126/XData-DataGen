@@ -1004,7 +1004,7 @@ import util.TableMap;
 				Statement stmt = pm.parse(new StringReader(queryString));
 				//SQLParser sqlParser = new SQLParser();
 				PlainSelect plainSelect = null;
-				
+				this.queryType = new Node();
 				if (stmt instanceof Select){
 					//Check if it is plain select statement without with clause
 					if(((Select) stmt).getSelectBody() instanceof PlainSelect &&
