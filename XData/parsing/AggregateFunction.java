@@ -3,8 +3,10 @@ package parsing;
 import java.util.HashMap;
 import java.util.Vector;
 
-public class AggregateFunction {
+public class AggregateFunction implements java.io.Serializable{
 
+	
+	private static final long serialVersionUID = 7929469164175666861L;
 	private static String aggSUM = "SUM";
 	private static String aggAVG = "AVG"; 
 	private static String aggMIN = "MIN"; 
