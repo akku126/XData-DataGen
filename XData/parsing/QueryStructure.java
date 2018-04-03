@@ -1024,7 +1024,7 @@ import util.TableMap;
 						for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
 						{
 							QueryStructure q = this.getWhereClauseSubqueries().get(i);
-							if(q.getQueryType()!=null && q.getQueryType().type.equalsIgnoreCase("IN"))
+							if(q.getQueryType().type!=null && q.getQueryType().type.equalsIgnoreCase("IN"))
 							{
 								q.getQueryType().type="EXISTS";
 								Node temp = new Node();
@@ -1040,7 +1040,7 @@ import util.TableMap;
 						for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
 						{
 							QueryStructure q = this.getWhereClauseSubqueries().get(i);
-							if(q.getQueryType()!=null && q.getQueryType().type.equalsIgnoreCase("NOT IN"))
+							if(q.getQueryType().type!=null && q.getQueryType().type.equalsIgnoreCase("NOT IN"))
 							{
 								q.getQueryType().type="NOT EXISTS";
 								Node temp = new Node();
@@ -1056,7 +1056,7 @@ import util.TableMap;
 						for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
 						{
 							QueryStructure q = this.getWhereClauseSubqueries().get(i);
-							if(q.getQueryType()!=null && q.getQueryType().type.equalsIgnoreCase("ANY"))
+							if(q.getQueryType().right.type!=null && q.getQueryType().right.type.equalsIgnoreCase("ANY"))
 							{
 								q.getQueryType().type="EXISTS";
 								Node temp = new Node();
@@ -1065,14 +1065,14 @@ import util.TableMap;
 								temp.operator = q.getQueryType().operator;
 								q.getLstJoinConditions().add(temp);
 								q.getQueryType().setLeft(null);
-								this.getLstSubQConnectives().set(i, "EXISTS");
+								//this.getLstSubQConnectives().set(i, "EXISTS");
 							}
 						}
 						// Convert ALL to NOT EXISTS
 						for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
 						{
 							QueryStructure q = this.getWhereClauseSubqueries().get(i);
-							if(q.getQueryType()!=null && q.getQueryType().type.equalsIgnoreCase("ALL"))
+							if(q.getQueryType().right.type!=null && q.getQueryType().right.type.equalsIgnoreCase("ALL"))
 							{
 								q.getQueryType().type="NOT EXISTS";
 								Node temp = new Node();
@@ -1082,7 +1082,7 @@ import util.TableMap;
 								temp.compliment();
 								q.getLstJoinConditions().add(temp);
 								q.getQueryType().setLeft(null);
-								this.getLstSubQConnectives().set(i, "NOT EXISTS");
+								//this.getLstSubQConnectives().set(i, "NOT EXISTS");
 							}
 						}
 					}
