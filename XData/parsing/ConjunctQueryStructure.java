@@ -369,8 +369,14 @@ public class ConjunctQueryStructure implements Serializable{
 		Vector<Node> ec = new Vector<Node>();
 		temp = new Node();
 		Node temp1, temp2;
-		Vector<Node> tempAllJoinConds = (Vector) allJoinConds.clone();
-		
+		Vector<Node> tempAllJoinConds1 = (Vector) allJoinConds.clone();
+		Vector<Node> tempAllJoinConds = new Vector<Node> ();
+		for (int i=0;i<tempAllJoinConds1.size();i++)
+		{
+			Node joinNode = tempAllJoinConds1.get(i);
+			if(joinNode!=null && joinNode.operator!=null && joinNode.operator.equalsIgnoreCase("="))
+				tempAllJoinConds.add(joinNode);
+		}
 		int count = 0;
 		int flag = 0;
 		while (tempAllJoinConds.size() > 0) {
