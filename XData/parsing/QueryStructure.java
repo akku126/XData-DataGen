@@ -991,6 +991,79 @@ import util.TableMap;
 	    /* rename of old method parseQueryJSQL
 	     *       
 	     */
+		public void inToExists()
+		{
+			for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
+			{
+				QueryStructure q = this.getWhereClauseSubqueries().get(i);
+				if(q.getQueryType().type!=null && q.getQueryType().type.equalsIgnoreCase("IN"))
+				{
+					q.getQueryType().type="EXISTS";
+					Node temp = new Node();
+					temp.left = q.getQueryType().left;
+					temp.right = q.getLstProjectedCols().get(0);
+					temp.operator = "=";
+					q.getLstJoinConditions().add(temp);
+					q.getQueryType().setLeft(null);
+					this.getLstSubQConnectives().set(i, "EXISTS");
+				}
+			}
+		}
+		public void notInToNotExists()
+		{
+			for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
+			{
+				QueryStructure q = this.getWhereClauseSubqueries().get(i);
+				if(q.getQueryType().type!=null && q.getQueryType().type.equalsIgnoreCase("NOT IN"))
+				{
+					q.getQueryType().type="NOT EXISTS";
+					Node temp = new Node();
+					temp.left = q.getQueryType().left;
+					temp.right = q.getLstProjectedCols().get(0);
+					temp.operator = "=";
+					q.getLstJoinConditions().add(temp);
+					q.getQueryType().setLeft(null);
+					this.getLstSubQConnectives().set(i, "NOT EXISTS");
+				}
+			}
+		}
+		public void anyToExists()
+		{
+			for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
+			{
+				QueryStructure q = this.getWhereClauseSubqueries().get(i);
+				if(q.getQueryType().right.type!=null && q.getQueryType().right.type.equalsIgnoreCase("ANY"))
+				{
+					q.getQueryType().type="EXISTS";
+					Node temp = new Node();
+					temp.left = q.getQueryType().left;
+					temp.right = q.getLstProjectedCols().get(0);
+					temp.operator = q.getQueryType().operator;
+					q.getLstJoinConditions().add(temp);
+					q.getQueryType().setLeft(null);
+					//this.getLstSubQConnectives().set(i, "EXISTS");
+				}
+			}
+		}
+		public void allToNotExists()
+		{
+			for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
+			{
+				QueryStructure q = this.getWhereClauseSubqueries().get(i);
+				if(q.getQueryType().right.type!=null && q.getQueryType().right.type.equalsIgnoreCase("ALL"))
+				{
+					q.getQueryType().type="NOT EXISTS";
+					Node temp = new Node();
+					temp.left = q.getQueryType().left;
+					temp.right = q.getLstProjectedCols().get(0);
+					temp.operator = q.getQueryType().operator;
+					temp.compliment();
+					q.getLstJoinConditions().add(temp);
+					q.getQueryType().setLeft(null);
+					//this.getLstSubQConnectives().set(i, "NOT EXISTS");
+				}
+			}
+		}
 		public void buildQueryStructureJSQL(String queryId, String queryString, boolean debug,AppTest_Parameters dbAppParameters)
 				throws Exception {
 			logger.fine("beginning to parse query");
@@ -1021,70 +1094,16 @@ import util.TableMap;
 							this.getWhereClauseSubqueries().elementAt(i).setQueryType(temp);
 						}
 						// Convert IN to EXISTS
-						for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
-						{
-							QueryStructure q = this.getWhereClauseSubqueries().get(i);
-							if(q.getQueryType().type!=null && q.getQueryType().type.equalsIgnoreCase("IN"))
-							{
-								q.getQueryType().type="EXISTS";
-								Node temp = new Node();
-								temp.left = q.getQueryType().left;
-								temp.right = q.getLstProjectedCols().get(0);
-								temp.operator = "=";
-								q.getLstJoinConditions().add(temp);
-								q.getQueryType().setLeft(null);
-								this.getLstSubQConnectives().set(i, "EXISTS");
-							}
-						}
-						// Convert NOT IN to NOT EXISTS
-						for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
-						{
-							QueryStructure q = this.getWhereClauseSubqueries().get(i);
-							if(q.getQueryType().type!=null && q.getQueryType().type.equalsIgnoreCase("NOT IN"))
-							{
-								q.getQueryType().type="NOT EXISTS";
-								Node temp = new Node();
-								temp.left = q.getQueryType().left;
-								temp.right = q.getLstProjectedCols().get(0);
-								temp.operator = "=";
-								q.getLstJoinConditions().add(temp);
-								q.getQueryType().setLeft(null);
-								this.getLstSubQConnectives().set(i, "NOT EXISTS");
-							}
-						}
-						// Convert ANY to EXISTS
-						for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
-						{
-							QueryStructure q = this.getWhereClauseSubqueries().get(i);
-							if(q.getQueryType().right.type!=null && q.getQueryType().right.type.equalsIgnoreCase("ANY"))
-							{
-								q.getQueryType().type="EXISTS";
-								Node temp = new Node();
-								temp.left = q.getQueryType().left;
-								temp.right = q.getLstProjectedCols().get(0);
-								temp.operator = q.getQueryType().operator;
-								q.getLstJoinConditions().add(temp);
-								q.getQueryType().setLeft(null);
-								//this.getLstSubQConnectives().set(i, "EXISTS");
-							}
-						}
+						inToExists();
+
+  					   // Convert NOT IN to NOT EXISTS
+						notInToNotExists();
+						
+					   //Convert ANY to EXISTS
+						anyToExists();
+				
 						// Convert ALL to NOT EXISTS
-						for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
-						{
-							QueryStructure q = this.getWhereClauseSubqueries().get(i);
-							if(q.getQueryType().right.type!=null && q.getQueryType().right.type.equalsIgnoreCase("ALL"))
-							{
-								q.getQueryType().type="NOT EXISTS";
-								Node temp = new Node();
-								temp.left = q.getQueryType().left;
-								temp.right = q.getLstProjectedCols().get(0);
-								temp.operator = q.getQueryType().operator;
-								temp.compliment();
-								q.getLstJoinConditions().add(temp);
-								q.getQueryType().setLeft(null);
-								//this.getLstSubQConnectives().set(i, "NOT EXISTS");
-							}
-						}
+						allToNotExists();					
 					}
 			
 					//Check if query contains WithItem list - then Query is of the form  WITH S AS ()
@@ -1107,22 +1126,17 @@ import util.TableMap;
 							Node temp = conjunct.allSubQueryConds.elementAt(i);
 							this.getWhereClauseSubqueries().elementAt(i).setQueryType(temp);
 						}
-						// Convert IN to Exists
-						for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
-						{
-							QueryStructure q = this.getWhereClauseSubqueries().get(i);
-							if(q.getQueryType()!=null && q.getQueryType().type.equalsIgnoreCase("IN"))
-							{
-								q.getQueryType().type="EXISTS";
-								Node temp = new Node();
-								temp.left = q.getQueryType().left;
-								temp.right = q.getLstProjectedCols().get(0);
-								temp.operator = "=";
-								q.getLstJoinConditions().add(temp);
-								q.getQueryType().setLeft(null);
-								this.getLstSubQConnectives().set(i, "EXISTS");
-							}
-						}
+						// Convert IN to EXISTS
+						inToExists();
+
+  					   // Convert NOT IN to NOT EXISTS
+						notInToNotExists();
+						
+					   //Convert ANY to EXISTS
+						anyToExists();
+				
+						// Convert ALL to NOT EXISTS
+						allToNotExists();	
 						
 					}
 					
