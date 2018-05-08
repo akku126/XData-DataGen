@@ -1561,6 +1561,7 @@ import util.TableMap;
 				if(selectListIt.hasNext()){
 					Object nxtElement = selectListIt.next();				
 					leftQuery = new QueryStructure(this.tableMap);
+					leftQuery.queryType = new Node();
 					if(nxtElement instanceof PlainSelect){
 						PlainSelect left= (PlainSelect)nxtElement;
 						
@@ -1580,6 +1581,7 @@ import util.TableMap;
 					Object nxtElement = selectListIt.next();
 
 					rightQuery = new QueryStructure(this.tableMap);
+					rightQuery.queryType = new Node();
 					if(nxtElement instanceof PlainSelect){
 						PlainSelect right=(PlainSelect) nxtElement;
 						if(rightQuery.query==null)
