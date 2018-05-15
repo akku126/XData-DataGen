@@ -1006,6 +1006,7 @@ import util.TableMap;
 					q.getLstJoinConditions().add(temp);
 					q.getQueryType().setLeft(null);
 					this.getLstSubQConnectives().set(i, "EXISTS");
+					q.setIsDistinct(false);
 				}
 			}
 		}
@@ -1024,6 +1025,7 @@ import util.TableMap;
 					q.getLstJoinConditions().add(temp);
 					q.getQueryType().setLeft(null);
 					this.getLstSubQConnectives().set(i, "NOT EXISTS");
+					q.setIsDistinct(false);
 				}
 			}
 		}
@@ -1041,7 +1043,8 @@ import util.TableMap;
 					temp.operator = q.getQueryType().operator;
 					q.getLstJoinConditions().add(temp);
 					q.getQueryType().setLeft(null);
-					//this.getLstSubQConnectives().set(i, "EXISTS");
+					this.getLstSubQConnectives().set(i, "EXISTS");
+					q.setIsDistinct(false);
 				}
 			}
 		}
@@ -1060,7 +1063,8 @@ import util.TableMap;
 					temp.compliment();
 					q.getLstJoinConditions().add(temp);
 					q.getQueryType().setLeft(null);
-					//this.getLstSubQConnectives().set(i, "NOT EXISTS");
+					this.getLstSubQConnectives().set(i, "NOT EXISTS");
+					q.setIsDistinct(false);
 				}
 			}
 		}
@@ -1103,7 +1107,8 @@ import util.TableMap;
 						anyToExists();
 				
 						// Convert ALL to NOT EXISTS
-						allToNotExists();					
+						allToNotExists();	
+						
 					}
 			
 					//Check if query contains WithItem list - then Query is of the form  WITH S AS ()
@@ -1997,9 +2002,12 @@ import util.TableMap;
 				if(!found)
 					this.lstRelations.add(n);
 			}
-			
-		   lstRelationInstances.removeAll(lstRedundantRelations);
-		   this.setNumberOfInnerJoins(numberOfInnerJoins-lstRedundantRelations.size());
+		   if(lstRelationInstances != null && lstRelationInstances.size()>0)
+			   lstRelationInstances.removeAll(lstRedundantRelations);
+		   if(lstRedundantRelations!=null && lstRedundantRelations.size()>0)
+			   this.setNumberOfInnerJoins(numberOfInnerJoins-lstRedundantRelations.size());
+		   else 
+			   this.setNumberOfInnerJoins(numberOfInnerJoins);
 		}
 		
 				
