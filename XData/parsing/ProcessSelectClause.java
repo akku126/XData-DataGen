@@ -150,7 +150,7 @@ public class ProcessSelectClause{
 		for(Vector<Node> conds: qStruct.dnfCond)
 		{
 			Node composite=conds.firstElement();
-			if(composite.getLeft().getComponentNodes().size()>1)
+			if(composite.getLeft().getComponentNodes()!=null && composite.getLeft().getComponentNodes().size()>1)
 			{
 				for(int i=0;i<composite.getLeft().getComponentNodes().size();i++)
 				{
