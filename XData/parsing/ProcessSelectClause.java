@@ -147,7 +147,23 @@ public class ProcessSelectClause{
 		
 		//initializes the populates the list structures (eg: lstSelectionConditions) used by Canonicalization step subsequently
 		qStruct.initializeQueryListStructures();
-		
+		for(Vector<Node> conds: qStruct.dnfCond)
+		{
+			Node composite=conds.firstElement();
+			if(composite.getLeft().getComponentNodes().size()>1)
+			{
+				for(int i=0;i<composite.getLeft().getComponentNodes().size();i++)
+				{
+					Node n=new Node();
+					n.setLeft(composite.getLeft().getComponentNodes().get(i));
+					n.setRight(composite.getRight().getComponentNodes().get(i));
+					n.setOperator(composite.getOperator());
+					if(! qStruct.getLstSelectionConditions().contains(n))
+					qStruct.getLstSelectionConditions().add(n);
+				}
+			}
+		}
+		qStruct.reAdjustJoins();
 		//System.out.println(qStruct.toString());
 	}
 
