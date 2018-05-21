@@ -1066,6 +1066,7 @@ import util.TableMap;
 					QueryStructure temp = this.getFromClauseSubqueries().elementAt(i);
 					this.lstSelectionConds.addAll(temp.getLstSelectionConditions());
 					this.lstRelationInstances.addAll(temp.getLstRelationInstances());
+					this.lstJoinConditions.addAll(temp.getLstJoinConditions());
 				}
 				this.getFromClauseSubqueries().clear();
 			}
