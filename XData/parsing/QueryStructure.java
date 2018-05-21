@@ -1143,6 +1143,27 @@ import util.TableMap;
 						// Convert ALL to NOT EXISTS
 						allToNotExists();	
 						
+						//Flatten from Clause
+						boolean isInner=true;
+						for(Node joinConds : this.getLstJoinConditions())
+						{
+							if(!joinConds.joinType.equalsIgnoreCase("INNER JOIN"))
+							{
+								isInner=false;
+								break;
+							}
+						}
+						if(isInner)
+						{
+							for(int i=0;i<this.getFromClauseSubqueries().size();i++)
+							{
+								QueryStructure temp = this.getFromClauseSubqueries().elementAt(i);
+								this.lstSelectionConds.addAll(temp.getLstSelectionConditions());
+								this.lstRelationInstances.addAll(temp.getLstRelationInstances());
+							}
+							this.getFromClauseSubqueries().clear();
+						}
+						
 					}
 					
 					//If it is instance of SetOperationList - UNION,EXCEPT OR INTERSECT
