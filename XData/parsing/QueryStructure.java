@@ -1048,6 +1048,28 @@ import util.TableMap;
 				}
 			}
 		}
+		public void flattenFromClauseInnerJoin()
+		{
+			boolean isInner=true;
+			for(Node joinConds : this.getLstJoinConditions())
+			{
+				if(!joinConds.joinType.equalsIgnoreCase("INNER JOIN"))
+				{
+					isInner=false;
+					break;
+				}
+			}
+			if(isInner)
+			{
+				for(int i=0;i<this.getFromClauseSubqueries().size();i++)
+				{
+					QueryStructure temp = this.getFromClauseSubqueries().elementAt(i);
+					this.lstSelectionConds.addAll(temp.getLstSelectionConditions());
+					this.lstRelationInstances.addAll(temp.getLstRelationInstances());
+				}
+				this.getFromClauseSubqueries().clear();
+			}
+		}
 		public void allToNotExists()
 		{
 			for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
@@ -1109,6 +1131,9 @@ import util.TableMap;
 						// Convert ALL to NOT EXISTS
 						allToNotExists();	
 						
+						//Flatten from Clause
+						flattenFromClauseInnerJoin();
+						
 					}
 			
 					//Check if query contains WithItem list - then Query is of the form  WITH S AS ()
@@ -1144,25 +1169,7 @@ import util.TableMap;
 						allToNotExists();	
 						
 						//Flatten from Clause
-						boolean isInner=true;
-						for(Node joinConds : this.getLstJoinConditions())
-						{
-							if(!joinConds.joinType.equalsIgnoreCase("INNER JOIN"))
-							{
-								isInner=false;
-								break;
-							}
-						}
-						if(isInner)
-						{
-							for(int i=0;i<this.getFromClauseSubqueries().size();i++)
-							{
-								QueryStructure temp = this.getFromClauseSubqueries().elementAt(i);
-								this.lstSelectionConds.addAll(temp.getLstSelectionConditions());
-								this.lstRelationInstances.addAll(temp.getLstRelationInstances());
-							}
-							this.getFromClauseSubqueries().clear();
-						}
+						flattenFromClauseInnerJoin();
 						
 					}
 					
