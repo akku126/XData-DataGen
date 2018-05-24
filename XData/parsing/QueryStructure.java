@@ -1034,7 +1034,7 @@ import util.TableMap;
 			for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
 			{
 				QueryStructure q = this.getWhereClauseSubqueries().get(i);
-				if(q.getQueryType().right.type!=null && q.getQueryType().right.type.equalsIgnoreCase("ANY"))
+				if(q.getQueryType().right!=null && q.getQueryType().right.type!=null && q.getQueryType().right.type.equalsIgnoreCase("ANY"))
 				{
 					q.getQueryType().type="EXISTS";
 					Node temp = new Node();
@@ -1076,7 +1076,7 @@ import util.TableMap;
 			for(int i=0;i<this.getWhereClauseSubqueries().size();i++)
 			{
 				QueryStructure q = this.getWhereClauseSubqueries().get(i);
-				if(q.getQueryType().right.type!=null && q.getQueryType().right.type.equalsIgnoreCase("ALL"))
+				if(q.getQueryType().right!=null && q.getQueryType().right.type!=null && q.getQueryType().right.type.equalsIgnoreCase("ALL"))
 				{
 					q.getQueryType().type="NOT EXISTS";
 					Node temp = new Node();
