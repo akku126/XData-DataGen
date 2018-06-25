@@ -196,15 +196,7 @@ public class GenerateConstraintsForConjunct {
 	public static Constraints getConstraintsInConjuct(GenerateCVC1 cvc, QueryBlockDetails queryBlock, ConjunctQueryStructure conjunct) throws Exception {
 		Constraints constraints= new Constraints();
 		String constraintString="";
-		Vector<Vector<Node>> equivalenceClasses = conjunct.getEquivalenceClasses();
-		for(int k=0; k<equivalenceClasses.size(); k++){
-			Vector<Node> ec = equivalenceClasses.get(k);
-			for(int i=0;i<ec.size()-1;i++){
-				Node n1 = ec.get(i);
-				Node n2 = ec.get(i+1);
-				constraintString += GenerateJoinPredicateConstraints.getConstraintsForEquiJoins1(cvc, queryBlock, n1,n2);
-			}
-		}
+		
 		ConstraintGenerator constrGen = new ConstraintGenerator();
 		ArrayList<ConstraintObject> constrObjList = new ArrayList<ConstraintObject>();
 		

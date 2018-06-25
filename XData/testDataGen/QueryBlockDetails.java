@@ -7,6 +7,7 @@ import generateConstraints.GenerateConstraintsForConjunct;
 import generateConstraints.GenerateConstraintsForHavingClause;
 import generateConstraints.GenerateConstraintsForWhereClauseSubQueryBlock;
 import generateConstraints.GenerateGroupByConstraints;
+import generateConstraints.GenerateJoinPredicateConstraints;
 import generateConstraints.GenerateUniqueKeyConstraints;
 
 import java.io.Serializable;
@@ -418,6 +419,8 @@ public class QueryBlockDetails implements Serializable{
 		try{
 			/** Add the positive conditions for each conjunct of this query block */
 			for(ConjunctQueryStructure conjunct : qb.getConjunctsQs()){
+				
+				constraintString +=GenerateJoinPredicateConstraints.getConstraintsforEquivalenceClasses(cvc,qb,conjunct);
 				constraintString += ConstraintGenerator.addCommentLine(" CONSTRAINTS FOR THIS CONJUNCT ");
 				//constraintString += GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, qb, conjunct);
 				constraints=Constraints.orConstraints(constraints, GenerateConstraintsForConjunct.getConstraintsInConjuct(cvc, qb, conjunct));

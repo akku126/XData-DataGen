@@ -6,6 +6,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import parsing.Column;
+import parsing.ConjunctQueryStructure;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
@@ -21,6 +22,24 @@ import util.ConstraintObject;
 public class GenerateJoinPredicateConstraints {
 	
 	private static Logger logger = Logger.getLogger(GenerateJoinPredicateConstraints.class.getName());
+	
+	public static String getConstraintsforEquivalenceClasses(GenerateCVC1 cvc, QueryBlockDetails queryBlock, ConjunctQueryStructure conjunct) throws Exception{
+		String constraintString="";
+		Vector<Vector<Node>> equivalenceClasses = conjunct.getEquivalenceClasses();
+		for(int k=0; k<equivalenceClasses.size(); k++){
+			Vector<Node> ec = equivalenceClasses.get(k);
+			for(int i=0;i<ec.size()-1;i++){
+				Node n1 = ec.get(i);
+				Node n2 = ec.get(i+1);
+				constraintString += GenerateJoinPredicateConstraints.getConstraintsForEquiJoins1(cvc, queryBlock, n1,n2);
+			}
+		}
+		
+		return constraintString;
+	}
+	
+	
+	
 	/**
 	 * Get the constraints for equivalence Classes by Considering repeated relations
 	 * @param cvc
