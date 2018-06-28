@@ -1,0 +1,2 @@
+1| select id, name from student
+1|select id, name from student where tot_cred<30

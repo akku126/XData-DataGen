@@ -13,8 +13,8 @@ public class Configuration implements ConfigurationInterface{
 	public static String existingDatabaseUser = getProperty("existingDatabaseUser");
 	public static String existingDatabaseUserPasswd = getProperty("existingDatabaseUserPasswd");
 	
-//	public static String testDatabaseUser = getProperty("testDatabaseUser");
-	//public static String testDatabaseUserPasswd = getProperty("testDatabaseUserPasswd");
+	public static String testDatabaseUser = getProperty("testDatabaseUser");
+	public static String testDatabaseUserPasswd = getProperty("testDatabaseUserPasswd");
 	public static String databaseIP = getProperty("databaseIP");
 	public static String databasePort = getProperty("databasePort");
 	public static String homeDir= getProperty("homeDir");

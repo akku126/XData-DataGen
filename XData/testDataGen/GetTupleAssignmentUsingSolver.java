@@ -14,7 +14,6 @@ import java.util.logging.Logger;
 
 import parsing.Column;
 import parsing.Node;
-import testDataGen.WriteFile;
 import util.Configuration;
 import util.JoinAndUniqueAttributes;
 import util.JoinGraphNode;
@@ -1144,7 +1143,7 @@ public class GetTupleAssignmentUsingSolver {
 		//Escape the White Spaces in the file name for using it in BASH script. This is OS Specific and work for *nix and Mac
 		String filePath= getFilePath().replace(" ", "\\ ");
 		/**write these constraints to a cvc file*/
-		WriteFile.writeFile(Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/tupleAssignment.cvc", constraints);
+		Utilities.writeFile(Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/tupleAssignment.cvc", constraints);
 
 		String cmdString = "";
 
@@ -1171,7 +1170,7 @@ public class GetTupleAssignmentUsingSolver {
 				Configuration.homeDir+"/temp_cvc"+ filePath + "/assignment\n";
 
 		/**write these command to a file*/
-		WriteFile.writeFile(Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/execTupleAssgnCVC", cmdString);
+		Utilities.writeFile(Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/execTupleAssgnCVC", cmdString);
 
 		startT = System.currentTimeMillis();
 		/**execute these commands using process*/

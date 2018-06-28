@@ -36,17 +36,9 @@ public class GenerateDataSet {
 			String line,schema="",sampleData="";
 			
 			
-			BufferedReader br=new BufferedReader(new FileReader(schemaFile));
-			while((line=br.readLine())!=null) {
-				schema+=line+"\n";
-			}
-			br.close();
+			schema=Utilities.readFile(schemaFile);
 			
-			br=new BufferedReader(new FileReader(sampleDataFile));
-			while((line=br.readLine())!=null) {
-				sampleData+=line+"\n";
-			}
-			br.close();
+			sampleData=Utilities.readFile(sampleDataFile);
 			
 			return generateDatasetForQuery(conn, queryId, query, schema, sampleData, orderDependent, tempFilePath, obj);
 		}
@@ -63,7 +55,7 @@ public class GenerateDataSet {
 		 * @return List of dataset ids that have been generated
 		 * @throws Exception
 		 */
-		public List<String> generateDatasetForQuery(Connection conn,int queryId,String query, String schema, String sampleData, boolean orderDependent, String tempFilePath, AppTest_Parameters obj) throws Exception{
+		public List<String> generateDatasetForQuery(Connection conn,int queryId,String query, String schema, String sampleData, boolean orderDependent, String tempFilePath, AppTest_Parameters appTestParams) throws Exception{
 			
 			if(tempFilePath==null | tempFilePath.equals("")){
 				tempFilePath="/tmp/"+queryId;
@@ -76,8 +68,8 @@ public class GenerateDataSet {
 			cvc.setOrderindependent(orderDependent);	
 			
 			
-			checkSchema(conn,schema);
-			checkSampleData(conn,sampleData);
+			loadSchema(conn,schema);
+			loadSampleData(conn,sampleData);
 			
 			cvc.setSchemaFile(schema);
 			cvc.setDataFileName(sampleData);
@@ -88,7 +80,9 @@ public class GenerateDataSet {
 			
 			deletePreviousDatasets(cvc);
 			//Application Testing
-			cvc.setDBAppparams(obj);
+			if(appTestParams==null)
+				appTestParams=new AppTest_Parameters();
+			cvc.setDBAppparams(appTestParams);
 			//end
 			FileWriter fw=new FileWriter(Configuration.homeDir+"/temp_cvc" +cvc.getFilePath()+"/queries.txt");
 			fw.write(query);
@@ -100,7 +94,13 @@ public class GenerateDataSet {
 			
 		}
 		
-		public void checkSchema(Connection conn,String schema) throws Exception{
+		/**
+		 * Creates tables provided in the schema for the given connection
+		 * @param conn
+		 * @param schema
+		 * @throws Exception
+		 */
+		public static void loadSchema(Connection conn,String schema) throws Exception{
 			
 			byte[] dataBytes = null;
 			String tempFile = "";
@@ -129,7 +129,13 @@ public class GenerateDataSet {
 			}
 		}
 		
-		public void checkSampleData(Connection conn, String sampleData) throws Exception{
+		/**
+		 * Loads datasets for the given connection
+		 * @param conn
+		 * @param sampleData
+		 * @throws Exception
+		 */
+		public static void loadSampleData(Connection conn, String sampleData) throws Exception{
 			
 			byte[] dataBytes = null;
 			String tempFile = "/tmp/dummy";
@@ -214,11 +220,11 @@ public class GenerateDataSet {
 			//String query="select course_id,count(id) from course inner join takes";
 //			String query="select course_id,count(id) from course inner join takes where grade=?";
 			//String query="select * from instructor natural join teaches where dept_name=? and year=?";
-			String query="select count(*) from student where dept_name = ? and active_from <= ? and active_to >= ? ";
-			File schemaFile=new File("/home/neha/tmp/DDL.sql");
-			File sampleDataFile=new File("/home/neha/tmp/data.sql");
+			String query="select id, name from student where tot_cred>30";
+			File schemaFile=new File("/home/bikash/Desktop/DDL.sql");
+			File sampleDataFile=new File("/home/bikash/Desktop/data.sql");
 			boolean orderDependent=false;
-			String tempFilePath="4";
+			String tempFilePath=File.separator +queryId;
 			
 			GenerateDataSet d=new GenerateDataSet();
 			//Application Testing

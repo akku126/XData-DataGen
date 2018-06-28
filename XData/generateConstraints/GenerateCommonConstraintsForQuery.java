@@ -14,12 +14,12 @@ import parsing.Node;
 import parsing.RelationHierarchyNode;
 import parsing.Table;
 import testDataGen.PopulateTestData;
-import testDataGen.WriteFile;
 import testDataGen.GenerateCVC1;
 import testDataGen.GenerateDataset_new;
 import testDataGen.QueryBlockDetails;
 import util.Configuration;
 import util.ConstraintObject;
+import util.Utilities;
 
 /**
  * Generates constraints related to null conditions and database constraints
@@ -128,7 +128,7 @@ public class GenerateCommonConstraintsForQuery {
 				
 				/** Call CVC3 Solver with constraints */
 				logger.log(Level.INFO,"cvc count =="+cvc.getCount());
-				WriteFile.writeFile(Configuration.homeDir + "/temp_cvc" + cvc.getFilePath() + "/cvc3_" + cvc.getCount() + ".cvc", CVCStr);
+				Utilities.writeFile(Configuration.homeDir + "/temp_cvc" + cvc.getFilePath() + "/cvc3_" + cvc.getCount() + ".cvc", CVCStr);
 				
 				success= new PopulateTestData().killedMutants("cvc3_" + cvc.getCount() 
 						+ ".cvc", cvc.getQuery(), 
@@ -145,7 +145,7 @@ public class GenerateCommonConstraintsForQuery {
 			}else{
 				/** Call CVC3 Solver with constraints */
 				logger.log(Level.INFO,"cvc count =="+cvc.getCount());
-				WriteFile.writeFile(Configuration.homeDir + "temp_cvc" + cvc.getFilePath() + "/cvc4_" + cvc.getCount() + ".cvc", CVCStr);
+				Utilities.writeFile(Configuration.homeDir + "temp_cvc" + cvc.getFilePath() + "/cvc4_" + cvc.getCount() + ".cvc", CVCStr);
 				
 				success= new PopulateTestData().killedMutantsForSMT("cvc4_" + cvc.getCount() 
 						+ ".cvc", cvc.getQuery(), 

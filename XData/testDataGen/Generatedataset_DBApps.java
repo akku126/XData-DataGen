@@ -121,8 +121,8 @@ public class Generatedataset_DBApps {
 		cvc.setOrderindependent(orderDependent);	
 		GenerateDataSet gd = new GenerateDataSet();
 		
-		gd.checkSchema(conn,schema);
-		gd.checkSampleData(conn,sampleData);
+		gd.loadSchema(conn,schema);
+		gd.loadSampleData(conn,sampleData);
 		
 		cvc.setSchemaFile(schema);
 		cvc.setDataFileName(sampleData);

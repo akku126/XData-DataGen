@@ -31,8 +31,6 @@ import parsing.AggregateFunction;
 import parsing.Column;
 import parsing.ConjunctQueryStructure;
 import parsing.Node;
-
-import testDataGen.WriteFile;
 import util.Configuration;
 import util.Utilities;
 
@@ -74,7 +72,7 @@ public class CountEstimationRelated {
 			String filePath =  cvc.getFilePath().replace(" ", "\\ ");
 			
 			/**write these constraints into a file and execute*/
-			WriteFile.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints.cvc", CVCText);
+			Utilities.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints.cvc", CVCText);
 			Runtime r = Runtime.getRuntime();
 			ConstraintGenerator.getAggConstraintExeFile(filePath,cvc);
 			
@@ -318,7 +316,7 @@ public class CountEstimationRelated {
 					CVCStr = ConstraintGenerator.generateCVCForCNTForPositiveINT( queryBlock, havingColConds, col, c);
 
 					/**write these constraints into a file and execute*/
-					WriteFile.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/getCount.cvc", CVCStr);
+					Utilities.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/getCount.cvc", CVCStr);
 					
 					ConstraintGenerator.getCountExeFile(filePath, cmdString, cvc);
 					

@@ -215,15 +215,8 @@ public class RelatedToPreprocessing {
 
 
 		Query query = cvc.getQuery();
-		int connId = 0, schemaId = 0,optionalSchemaId=0;
 		Connection assignmentConn  = cvc.getConnection();
 		
-				byte[] dataBytes = null;
-				String tempFile = "";
-				
-				ArrayList<String> listOfQueries = null;
-				String[] inst = null;
-				
 				/**Gets the name of tables required for the query and the name columns of that query. 
 				 * Also checks for any foreign key reference and adds the referenced table to the list of tables being considered.*/
 		

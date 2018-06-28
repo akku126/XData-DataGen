@@ -20,7 +20,6 @@ import stringSolver.StringConstraint;
 import testDataGen.DataType;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
-import testDataGen.WriteFile;
 import util.Configuration;
 import util.ConstraintObject;
 import util.TagDatasets.QueryBlock;
@@ -3100,7 +3099,7 @@ public static void getCountExeFile(String filePath, String cmdString, GenerateCV
 		cmdString += "grep -e '((COUNT' "+ Configuration.homeDir+"temp_cvc" + filePath + "/COUNTCVC" +" | awk -F \" \" '{print $2}' | awk -F \")\" '{print $1}' > "+Configuration.homeDir+"temp_cvc" +filePath + "/COUNT\n";
 	}
 	
-	WriteFile.writeFile(Configuration.homeDir+"temp_cvc" + cvc.getFilePath() + "/execCOUNT", cmdString);
+	Utilities.writeFile(Configuration.homeDir+"temp_cvc" + cvc.getFilePath() + "/execCOUNT", cmdString);
 } 
 
 /**
@@ -3117,7 +3116,7 @@ public static void getAggConstraintExeFile(String filePath,GenerateCVC1 cvc) {
 	}else{
 		cmdString += Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"temp_cvc" +filePath+ "/checkAggConstraints.cvc | grep -e 'true' > isValid \n";
 	}
-	WriteFile.writeFile(Configuration.homeDir+"temp_cvc" + cvc.getFilePath() + "/checkAggConstraints", cmdString);
+	Utilities.writeFile(Configuration.homeDir+"temp_cvc" + cvc.getFilePath() + "/checkAggConstraints", cmdString);
 }
 
 /**

@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import java.lang.Runtime;
 import java.lang.reflect.Type;
 import java.net.URLDecoder;
@@ -19,8 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+
 
 import parsing.*;
 import util.*;
@@ -42,7 +42,7 @@ class CallableProcess implements Callable {
 public class PopulateTestData {
 
 	private static Logger logger = Logger.getLogger(PopulateTestData.class.getName());
-	
+
 	public String getParameterMapping(HashMap<String,Node> paramConstraints, HashMap<String, String> paramMap){
 
 		String retVal = "------------------------\nPARAMETER MAPPING\n------------------------\n";
@@ -55,7 +55,7 @@ public class PopulateTestData {
 
 		return retVal;
 	}
-	
+
 	public void captureACPData(String cvcFileName, String filePath, HashMap<String, Node> constraintsWithParams, HashMap<String, String> paramMap) throws Exception{
 		String outputFileName = generateCvcOutput(cvcFileName, filePath);
 		String copystmt = "";
@@ -107,16 +107,16 @@ public class PopulateTestData {
 
 			smtCommand[0] = Configuration.smtsolver;
 			smtCommand[1] = Configuration.homeDir+"/temp_cvc"+filePath+"/" + cvcFileName;
-		
- 
+
+
 			ExecutorService service = Executors.newSingleThreadExecutor();
 			Process myProcess = r.exec(smtCommand);	
 			try {
 				Callable<Integer> call = new CallableProcess(myProcess);
 				Future<Integer> future = service.submit(call);
 				int exitValue = future.get(180, TimeUnit.SECONDS);
-				
-				
+
+
 				if(myProcess.exitValue() != 0){
 					logger.log(Level.SEVERE," GenerateCvcOutput function :  Generating CVC Output failed.");
 					myProcess.destroy();	
@@ -127,13 +127,13 @@ public class PopulateTestData {
 
 				//Writing output to .out file
 				BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+filePath+"/" + cvcFileName.substring(0,cvcFileName.lastIndexOf(".cvc")) + ".out"));
-				
+
 				while ((ch = myIStreamReader.read()) != -1) 
 				{ 
 					out.write((char)ch); 
 				} 	
-				
-				
+
+
 				Utilities.closeProcessStreams(myProcess);
 
 				out.close();
@@ -175,9 +175,9 @@ public class PopulateTestData {
 			//Executing the CVC file generated for given query
 			Runtime r = Runtime.getRuntime();
 			String smtCommand = "";
-			
-				smtCommand = Configuration.smtsolver+ " --lang smtlib " +Configuration.homeDir+"temp_cvc"+filePath+"/" + cvcFileName;;
-			
+
+			smtCommand = Configuration.smtsolver+ " --lang smtlib " +Configuration.homeDir+"temp_cvc"+filePath+"/" + cvcFileName;;
+
 			ExecutorService service = Executors.newSingleThreadExecutor();
 			Process myProcess = r.exec(smtCommand);	
 			try {
@@ -189,7 +189,7 @@ public class PopulateTestData {
 
 				//Writing output to .out file
 				BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+filePath+"/" + cvcFileName.substring(0,cvcFileName.lastIndexOf(".cvc")) + ".out"));
-				
+
 				while ((ch = myIStreamReader.read()) != -1) 
 				{ 
 					out.write((char)ch); 
@@ -200,8 +200,8 @@ public class PopulateTestData {
 					myProcess.destroy();	
 					service.shutdown();
 				}
-				
-				
+
+
 				/*String line = "";
 				//InputStreamReader myIStreamReader = new InputStreamReader(myProcess.getInputStream().);
 				BufferedReader myIStreamReader = new BufferedReader( new InputStreamReader(myProcess.getInputStream()));
@@ -211,14 +211,14 @@ public class PopulateTestData {
 				{ 
 					out.write(line); 
 				} */
-				
+
 				/*Scanner stdin = new Scanner(new BufferedInputStream(myProcess.getInputStream()));
 				BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+filePath+"/" + cvcFileName.substring(0,cvcFileName.lastIndexOf(".cvc")) + ".out"));
 		        while (stdin.hasNext()) {
 		        	out.write(stdin.next()); 
 		        }*/
-				
-				
+
+
 				Utilities.closeProcessStreams(myProcess);
 
 				out.close();
@@ -246,9 +246,9 @@ public class PopulateTestData {
 		return cvcFileName.substring(0,cvcFileName.lastIndexOf(".cvc")) + ".out";
 	}
 
-	
-	
-	
+
+
+
 	public String cutRequiredOutput(String cvcOutputFileName, String filePath){
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+filePath+"/cut_" + cvcOutputFileName));
@@ -279,7 +279,7 @@ public class PopulateTestData {
 		}
 		return "cut_"+cvcOutputFileName;
 	}
-	
+
 
 	public String cutRequiredOutputForSMT(String cvcOutputFileName, String filePath){
 		try {
@@ -311,7 +311,7 @@ public class PopulateTestData {
 		}
 		return "cut_"+cvcOutputFileName;
 	}
-	
+
 
 	public void setContents(File aFile, String aContents, boolean append)throws FileNotFoundException, IOException {
 		if (aFile == null) {
@@ -373,7 +373,7 @@ public class PopulateTestData {
 						listOfCopyFiles.add(currentCopyFileName + ".copy");
 					}
 					copystmt = line.substring(line.indexOf("=")+2,line.indexOf(")"));
-					
+
 					HashMap<String,String> param_Datatype_Map = dbAppParameters.getParameters_Datatype_Copy();
 					String param_type="";
 					if(param_Datatype_Map.containsKey(currentCopyFileName))
@@ -394,7 +394,7 @@ public class PopulateTestData {
 						copystmt=copystmt.replace("_b", " ");
 					}
 					setContents(testFile, copystmt+"\n", true);
-				
+
 				}
 				else{
 					String tableName = line.substring(line.indexOf("_")+1,line.indexOf("["));
@@ -420,18 +420,18 @@ public class PopulateTestData {
 						listOfCopyFiles.add(currentCopyFileName + ".copy");
 					}
 					copystmt = getCopyStmtFromCvcOutput(line);
-	
+
 					copyFileContents.add(copystmt);
 					////Putting back string values in CVC
-	
+
 					Table t=tableMap.getTable(tableName);
-	
+
 					String[] copyTemp=copystmt.split("\\|");
 					copystmt="";
 					String out="";
-	
+
 					for(int i=0;i<copyTemp.length;i++){
-	
+
 						String cvcDataType=t.getColumn(i).getCvcDatatype();
 						if(cvcDataType.equalsIgnoreCase("INT") )
 							continue;
@@ -449,7 +449,7 @@ public class PopulateTestData {
 							copyTemp[i]=timeStamp.toString();
 						}
 						else if(cvcDataType.equalsIgnoreCase("TIME")){
-	
+
 							int time=Integer.parseInt(copyTemp[i].trim());
 							int sec=time%60;
 							int min=((time-sec)/60)%60;
@@ -458,22 +458,22 @@ public class PopulateTestData {
 						}
 						else if(cvcDataType.equalsIgnoreCase("DATE")){
 							long l=Long.parseLong(copyTemp[i].trim())*86400000;
-	
+
 							java.sql.Date date=new java.sql.Date(l);
 							copyTemp[i]=date.toString();
-	
+
 						}
 						else {
-	
+
 							String copyStr=copyTemp[i].trim();
-	
-	
+
+
 							if(copyStr.endsWith("__"))
 								copyStr = "";
 							else if(copyStr.contains("__"))
 								copyStr = copyStr.split("__")[1];
-	
-	
+
+
 							/*&copyStr = copyStr.replace("_p", "+");
 						copyStr = copyStr.replace("_m", "-");
 						copyStr = copyStr.replace("_a", "&");
@@ -481,7 +481,7 @@ public class PopulateTestData {
 						copyStr = copyStr.replace("_d", ".");
 						copyStr = copyStr.replace("_c", ",");
 						copyStr = copyStr.replace("_u", "_");*/
-	
+
 							copyStr = copyStr.replace("_p", "%");
 							copyStr = copyStr.replace("_s", "+");
 							copyStr = copyStr.replace("_d", ".");
@@ -490,18 +490,18 @@ public class PopulateTestData {
 							copyStr = copyStr.replace("_u", "_");
 							copyStr = URLDecoder.decode(copyStr,"UTF-8");
 							copyTemp[i]=copyStr.replace("_b", " ");
-	
+
 						}
-	
-	
+
+
 					}
 					for(String s:copyTemp){
 						copystmt+=s+"|";
 					}
 					copystmt=copystmt.substring(0, copystmt.length()-1);
-	
-	
-	
+
+
+
 					setContents(testFile, copystmt+"\n", true);
 				}
 			}
@@ -553,7 +553,7 @@ public class PopulateTestData {
 						listOfCopyFiles.add(currentCopyFileName + ".copy");
 					}
 					copystmt = line.substring(line.indexOf("=")+2,line.indexOf(")"));
-					
+
 					HashMap<String,String> param_Datatype_Map = dbAppParameters.getParameters_Datatype_Copy();
 					String param_type="";
 					if(param_Datatype_Map.containsKey(currentCopyFileName))
@@ -574,7 +574,7 @@ public class PopulateTestData {
 						copystmt=copystmt.replace("_b", " ");
 					}
 					setContents(testFile, copystmt+"\n", true);
-				
+
 				}
 				else{
 					String tableName = line.substring(line.indexOf("O_")+2,line.indexOf(" (store ("));
@@ -600,92 +600,92 @@ public class PopulateTestData {
 						listOfCopyFiles.add(currentCopyFileName + ".copy");
 					}
 					copystmt = getCopyStmtFromCvcOutputForSMT(line);
-	
+
 					copyFileContents.add(copystmt);
 					////Putting back string values in CVC
-	
+
 					Table t=tableMap.getTable(tableName);
 					String[] copyvalues = copystmt.split("\n");
-					
+
 					for(int k=0; k<copyvalues.length; k++){
 
-					String[] copyTemp=copyvalues[k].split("\\ ");
-					copystmt="";
-					String out="";
-	
-					for(int i=0;i<copyTemp.length;i++){
-	
-						String cvcDataType=t.getColumn(i).getCvcDatatype();
-						if(cvcDataType.equalsIgnoreCase("INT") )
-							continue;
-						else if(cvcDataType.equalsIgnoreCase("REAL")){
-							String str[]=copyTemp[i].trim().split("/");
-							if(str.length==1)
+						String[] copyTemp=copyvalues[k].split("\\ ");
+						copystmt="";
+						String out="";
+
+						for(int i=0;i<copyTemp.length;i++){
+
+							String cvcDataType=t.getColumn(i).getCvcDatatype();
+							if(cvcDataType.equalsIgnoreCase("INT") )
 								continue;
-							double num=Integer.parseInt(str[0]);
-							double den=Integer.parseInt(str[1]);
-							copyTemp[i]=(num/den)+"";
-						}
-						else if(cvcDataType.equalsIgnoreCase("TIMESTAMP")){
-							long l=Long.parseLong(copyTemp[i].trim())*1000;
-							java.sql.Timestamp timeStamp=new java.sql.Timestamp(l);
-							copyTemp[i]=timeStamp.toString();
-						}
-						else if(cvcDataType.equalsIgnoreCase("TIME")){
-	
-							int time=Integer.parseInt(copyTemp[i].trim());
-							int sec=time%60;
-							int min=((time-sec)/60)%60;
-							int hr=(time-sec+min*60)/3600;
-							copyTemp[i]=hr+":"+min+":"+sec;
-						}
-						else if(cvcDataType.equalsIgnoreCase("DATE")){
-							long l=Long.parseLong(copyTemp[i].trim())*86400000;
-	
-							java.sql.Date date=new java.sql.Date(l);
-							copyTemp[i]=date.toString();
-	
-						}
-						else {
-	
-							String copyStr=copyTemp[i].trim();
-	
-	
-							if(copyStr.endsWith("__"))
-								copyStr = "";
-							else if(copyStr.contains("__"))
-								copyStr = copyStr.split("__")[1];
-	
-	
-							/*&copyStr = copyStr.replace("_p", "+");
+							else if(cvcDataType.equalsIgnoreCase("REAL")){
+								String str[]=copyTemp[i].trim().split("/");
+								if(str.length==1)
+									continue;
+								double num=Integer.parseInt(str[0]);
+								double den=Integer.parseInt(str[1]);
+								copyTemp[i]=(num/den)+"";
+							}
+							else if(cvcDataType.equalsIgnoreCase("TIMESTAMP")){
+								long l=Long.parseLong(copyTemp[i].trim())*1000;
+								java.sql.Timestamp timeStamp=new java.sql.Timestamp(l);
+								copyTemp[i]=timeStamp.toString();
+							}
+							else if(cvcDataType.equalsIgnoreCase("TIME")){
+
+								int time=Integer.parseInt(copyTemp[i].trim());
+								int sec=time%60;
+								int min=((time-sec)/60)%60;
+								int hr=(time-sec+min*60)/3600;
+								copyTemp[i]=hr+":"+min+":"+sec;
+							}
+							else if(cvcDataType.equalsIgnoreCase("DATE")){
+								long l=Long.parseLong(copyTemp[i].trim())*86400000;
+
+								java.sql.Date date=new java.sql.Date(l);
+								copyTemp[i]=date.toString();
+
+							}
+							else {
+
+								String copyStr=copyTemp[i].trim();
+
+
+								if(copyStr.endsWith("__"))
+									copyStr = "";
+								else if(copyStr.contains("__"))
+									copyStr = copyStr.split("__")[1];
+
+
+								/*&copyStr = copyStr.replace("_p", "+");
 						copyStr = copyStr.replace("_m", "-");
 						copyStr = copyStr.replace("_a", "&");
 						copyStr = copyStr.replace("_s", " ");
 						copyStr = copyStr.replace("_d", ".");
 						copyStr = copyStr.replace("_c", ",");
 						copyStr = copyStr.replace("_u", "_");*/
-	
-							copyStr = copyStr.replace("_p", "%");
-							copyStr = copyStr.replace("_s", "+");
-							copyStr = copyStr.replace("_d", ".");
-							copyStr = copyStr.replace("_m", "-");
-							copyStr = copyStr.replace("_s", "*");
-							copyStr = copyStr.replace("_u", "_");
-							copyStr = URLDecoder.decode(copyStr,"UTF-8");
-							copyTemp[i]=copyStr.replace("_b", " ");
-	
+
+								copyStr = copyStr.replace("_p", "%");
+								copyStr = copyStr.replace("_s", "+");
+								copyStr = copyStr.replace("_d", ".");
+								copyStr = copyStr.replace("_m", "-");
+								copyStr = copyStr.replace("_s", "*");
+								copyStr = copyStr.replace("_u", "_");
+								copyStr = URLDecoder.decode(copyStr,"UTF-8");
+								copyTemp[i]=copyStr.replace("_b", " ");
+
+							}
+
+
 						}
-	
-	
+						for(String s:copyTemp){
+							copystmt+=s+"|";
+						}
+						copystmt=copystmt.substring(0, copystmt.length()-1);
+						setContents(testFile, copystmt+"\n", true);
 					}
-					for(String s:copyTemp){
-						copystmt+=s+"|";
-					}
-					copystmt=copystmt.substring(0, copystmt.length()-1);
-					setContents(testFile, copystmt+"\n", true);
-					}
-	
-					
+
+
 				}
 			}
 		}catch(Exception e){
@@ -697,8 +697,8 @@ public class PopulateTestData {
 		}
 		return listOfCopyFiles;
 	}
-	
-	
+
+
 	public String getCopyStmtFromCvcOutput(String cvcOutputLine){
 		String queryString = "";
 		String tableName = cvcOutputLine.substring(cvcOutputLine.indexOf("_")+1,cvcOutputLine.indexOf("["));
@@ -707,7 +707,7 @@ public class PopulateTestData {
 		insertTupleValues = cleanseCopyString(insertTupleValues);		
 		return insertTupleValues;
 	}
-	
+
 	public String getCopyStmtFromCvcOutputForSMT(String cvcOutputLine){
 		String queryString = "";
 		//String tableName = cvcOutputLine.substring(cvcOutputLine.indexOf("_")+1,cvcOutputLine.indexOf("["));
@@ -718,7 +718,7 @@ public class PopulateTestData {
 		String insertTupleValues = "";
 		if(temp1.contains("))")){
 			String[] temp = temp1.split("[)]+ [0-9]+ [(]+");
-			
+
 			for(int i=0;i<temp.length; i++){
 				if(temp[i].contains("))")){
 					insertTupleValues += cleanseCopyString(temp[i].substring((temp[i].indexOf("_TupleType")+11),(temp[i].indexOf("))"))) )+"\n" ;
@@ -739,7 +739,7 @@ public class PopulateTestData {
 
 	public String cleanseCopyString(String copyStr){
 
-	 
+
 		copyStr = copyStr.replaceAll("\\b_", "");
 		copyStr = copyStr.replaceAll("\\bNULL_\\w+", "");
 		copyStr = copyStr.replaceAll("\\-9999[6789]", "");
@@ -748,11 +748,11 @@ public class PopulateTestData {
 			copyStr = copyStr.replace("(- ", "");
 			copyStr = copyStr.replace(")", "");
 		}
-		
- 
+
+
 		return copyStr;
 	}
-	
+
 
 
 	/**
@@ -792,24 +792,24 @@ public class PopulateTestData {
 		if(!created) {
 			logger.log(Level.WARNING, "Could not create directory for dataset: "+datasetDir.getPath());
 		}
-		
+
 		for(String i:listOfCopyFiles){				
 			File src = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+i);
 			File dest = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+datasetName+"/"+i);
 			Files.copy(src.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
-		
+
 		}	
 		//Connection conn = MyConnection.getTestDatabaseConnection();
 		//try(Connection conn = (new DatabaseConnection().getTesterConnection(assignmentId)).getTesterConn()){
 		//	populateTestDataForTesting(listOfCopyFiles, filePath, tableMap,conn, assignmentId, questionId);
 
-			for(String i : listOfFiles){				
-				File src = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+i);
-				File dest = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+datasetName+"/"+i);
-				Files.copy(src.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			}
+		for(String i : listOfFiles){				
+			File src = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+i);
+			File dest = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+datasetName+"/"+i);
+			Files.copy(src.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+		}
 
-			returnVal=true;
+		returnVal=true;
 
 		/*}catch(Exception e){
 			logger.log(Level.SEVERE,e.getMessage(),e);
@@ -822,7 +822,7 @@ public class PopulateTestData {
 		}*/
 		return returnVal;			
 	}
-	
+
 	public void deleteAllTempTablesFromTestUser(Connection dbConn) throws Exception{
 		Statement st = dbConn.createStatement();
 		st = dbConn.createStatement();
@@ -853,7 +853,7 @@ public class PopulateTestData {
 		String test = generateCvcOutputForSMT(cvcOutputFileName, filePath);
 		BufferedReader br =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc"+filePath+"/"+test));
 		String str = br.readLine();
-	 
+
 		if((str == null || str.equals("") || (str.equalsIgnoreCase("unsupported") && (br.readLine().equalsIgnoreCase("unsat"))))) {
 			return false;
 		}
@@ -863,29 +863,29 @@ public class PopulateTestData {
 				tableMap,columns,existingTableNames, dbAppParameters);			
 		Vector<String> listOfFiles = (Vector<String>) listOfCopyFiles.clone();
 		if(listOfCopyFiles.size() > 0){
-				File datasetDir = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+datasetName);
-				boolean created = datasetDir.mkdirs();
-				if(!created) {
-					logger.log(Level.WARNING, "Could not create directory for dataset: "+datasetDir.getPath());
-				}
-				
-				for(String i:listOfCopyFiles){				
-					File src = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+i);
-					File dest = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+datasetName+"/"+i);
-					Files.copy(src.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
-				
-				}	
-		//Connection conn = MyConnection.getTestDatabaseConnection();
-		//try(Connection conn = (new DatabaseConnection().getTesterConnection(assignmentId)).getTesterConn()){
-		//	populateTestDataForTesting(listOfCopyFiles, filePath, tableMap,conn, assignmentId, questionId);
-		
-					for(String i : listOfFiles){				
-						File src = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+i);
-						File dest = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+datasetName+"/"+i);
-						Files.copy(src.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
-					}
-		
-					returnVal=true;
+			File datasetDir = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+datasetName);
+			boolean created = datasetDir.mkdirs();
+			if(!created) {
+				logger.log(Level.WARNING, "Could not create directory for dataset: "+datasetDir.getPath());
+			}
+
+			for(String i:listOfCopyFiles){				
+				File src = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+i);
+				File dest = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+datasetName+"/"+i);
+				Files.copy(src.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+			}	
+			//Connection conn = MyConnection.getTestDatabaseConnection();
+			//try(Connection conn = (new DatabaseConnection().getTesterConnection(assignmentId)).getTesterConn()){
+			//	populateTestDataForTesting(listOfCopyFiles, filePath, tableMap,conn, assignmentId, questionId);
+
+			for(String i : listOfFiles){				
+				File src = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+i);
+				File dest = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+datasetName+"/"+i);
+				Files.copy(src.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+			}
+
+			returnVal=true;
 		}
 
 		/*}catch(Exception e){
@@ -900,4 +900,164 @@ public class PopulateTestData {
 		return returnVal;			
 	}
 	
+	public static void deleteAllTablesFromTestUser(Connection conn) throws Exception{
+		try{
+			DatabaseMetaData dbm = conn.getMetaData();
+			String[] types = {"TEMPORARY TABLE"};
+			ResultSet rs = dbm.getTables(conn.getCatalog(), null, "%", types);		  
+
+			while(rs.next()){
+				String table=rs.getString("TABLE_NAME");		
+				if(!table.equalsIgnoreCase("xdata_temp1")
+						&& !table.equalsIgnoreCase("xdata_temp2")){
+					//PreparedStatement pstmt = conn.prepareStatement("delete from "+table);						
+					PreparedStatement pstmt = conn.prepareStatement("Truncate table "+table +" cascade");
+					pstmt.executeUpdate();
+					pstmt.close();
+				}
+
+			} 
+
+			rs.close();
+		}catch(SQLException e){
+			logger.log(Level.SEVERE,e.getMessage(),e);
+		}
+
+	}
+
+	public static void deleteAllTempTables(Connection dbConn) throws Exception{
+		Statement st = dbConn.createStatement();
+		st = dbConn.createStatement();
+		st.executeUpdate("DISCARD TEMPORARY");
+		st.close();
+	}
+
+
+	public static String loadCopyFileToDataBase(Connection testCon,String dataset,String filePath, TableMap tableMap) throws Exception{
+
+		String dsPath = Configuration.homeDir+"/temp_cvc"+File.separator+filePath+File.separator+dataset;
+		ArrayList<String> copyFileList=new ArrayList<String>();
+		ArrayList <String> copyFilesWithFk = new ArrayList<String>();
+		Pattern pattern = Pattern.compile("^DS([0-9]+)$");
+		java.util.regex.Matcher matcher = pattern.matcher(dataset);
+		
+		File ds=new File(dsPath);
+		String copyFiles[] = ds.list();
+
+		String datasetvalue="",st="";
+		if(copyFiles != null && copyFiles.length==0){
+			return null;
+		}else if(copyFiles == null){
+			return null;
+		}
+
+		for(int j=0;j<copyFiles.length;j++){
+			//	if(copyFiles[j].contains(".ref")){
+			//	copyFileList.add(copyFiles[j].substring(0,copyFiles[j].indexOf(".ref")));
+			//}else{
+
+			copyFileList.add(copyFiles[j].substring(0,copyFiles[j].indexOf(".copy")));
+			//}
+		}
+
+
+		/**Delete existing entries in Temp tables **/
+		int size = tableMap.foreignKeyGraph.topSort().size();
+		for (int fg=(size-1);fg>=0;fg--){
+			String tableName = tableMap.foreignKeyGraph.topSort().get(fg).toString();
+			String del="delete from "+tableName;
+			try(PreparedStatement stmt=testCon.prepareStatement(del)){
+				try{
+					stmt.executeUpdate();
+
+				}catch(Exception e){
+
+					e.printStackTrace();
+				}finally{
+
+					stmt.close();
+				}
+			}
+		}
+
+		//This part helps in identifying the order of foreign key dependence and helps in
+		//populating the data accordingly.
+		for(int f=0;f<tableMap.foreignKeyGraph.topSort().size();f++){
+			String tableName = tableMap.foreignKeyGraph.topSort().get(f).toString();
+			String tName="";
+
+			if(copyFileList.contains(tableName) || copyFileList.contains(tableName+".ref")){
+				if(copyFileList.contains(tableName+".ref")){
+					tName = tableName+".ref";
+				}else
+					tName = tableName;
+
+				copyFilesWithFk.add(tName+".copy");
+				BufferedReader br = new BufferedReader(new FileReader(dsPath+"/"+tName+".copy"));
+
+				while((st=br.readLine())!=null){
+					String row=st.replaceAll("\\|", "','");
+					String insert="insert into "+tableName+" Values ('"+row+"')";
+
+					try(PreparedStatement inst=testCon.prepareStatement(insert)){
+						try{
+							inst.executeUpdate();
+							//If constraint not violated, that means the record is encountered first time
+
+						}catch(Exception e){
+
+
+							// e.printStackTrace();
+						} finally{
+							inst.close();
+						}
+					}
+				}
+
+				br.close();
+			}
+
+		}
+
+
+		for(int j=0;j<copyFiles.length;j++){
+
+			String copyFileName = copyFiles[j];
+			if(copyFilesWithFk.contains(copyFileName)){
+				continue;
+			}else{
+				//Check for primary keys constraint and add the data to avoid duplicates
+
+
+				String tname =copyFileName.substring(0,copyFileName.indexOf(".copy"));
+
+				BufferedReader br = new BufferedReader(new FileReader(dsPath+"/"+copyFileName));
+				while((st=br.readLine())!=null){
+
+					String row=st.replaceAll("\\|", "','");
+					String insert="insert into "+tname+" Values ('"+row+"')";
+
+					try(PreparedStatement inst=testCon.prepareStatement(insert)){
+						try{
+							inst.executeUpdate();
+
+						}catch(Exception e){
+							//If exception occurs, then this is duplicate column
+
+							//e.printStackTrace();
+						} finally{
+							inst.close();
+						}
+					}
+					// dsValue.addData(st);
+				}
+				br.close();
+			}
+		}
+
+		return null;
+	}
+
+
+
 }
