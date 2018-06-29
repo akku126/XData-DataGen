@@ -221,8 +221,8 @@ public class GenerateDataSet {
 //			String query="select course_id,count(id) from course inner join takes where grade=?";
 			//String query="select * from instructor natural join teaches where dept_name=? and year=?";
 			String query="select id, name from student where tot_cred>30";
-			File schemaFile=new File("/home/bikash/Desktop/DDL.sql");
-			File sampleDataFile=new File("/home/bikash/Desktop/data.sql");
+			File schemaFile=new File("test/universityTest/DDL.sql");
+			File sampleDataFile=new File("test/universityTest/sampleData.sql");
 			boolean orderDependent=false;
 			String tempFilePath=File.separator +queryId;
 			

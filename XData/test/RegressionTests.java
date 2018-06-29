@@ -257,9 +257,9 @@ public class RegressionTests {
 		
 		String basePath="test/universityTest";
 		//Path of file containing schema
-		String schemaFile="";
+		String schemaFile="test/universityTest/DDL.sql";
 		//Path of file containing sampleData
-		String sampleDataFile="";
+		String sampleDataFile="test/universityTest/sampleData.sql";
 		
 		RegressionTests r=new RegressionTests(basePath,schemaFile,sampleDataFile);
 		Map<Integer,List<String>> errorsMap=r.runRegressionTests();
