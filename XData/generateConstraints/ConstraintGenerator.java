@@ -1633,6 +1633,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 		String tableName = col.getTableName();
 		String columnName = col.getColumnName();
 		int pos = table.getColumnIndex(columnName);
+		index=index.trim();
 		return "O_"+tableName+"["+index+"]."+pos;	
 	}
 

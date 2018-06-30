@@ -26,6 +26,7 @@ import parsing.QueryParser;
 import parsing.QueryStructure;
 import parsing.RelationHierarchyNode;
 import parsing.Table;
+import stringSolver.StringConstraintSolver;
 import util.ConstraintObject;
 
 /**
@@ -414,8 +415,8 @@ public class QueryBlockDetails implements Serializable{
 	public static String getConstraintsForQueryBlockExceptSubQuries(GenerateCVC1 cvc, QueryBlockDetails qb) throws Exception{
 		String constraintString = "";
 		Constraints constraints=new Constraints();
-		constraints.constraints.add("");
-		constraints.stringConstraints.add("");
+		//constraints.constraints.add("");
+		//constraints.stringConstraints.add("");
 		try{
 			/** Add the positive conditions for each conjunct of this query block */
 			for(ConjunctQueryStructure conjunct : qb.getConjunctsQs()){
@@ -435,10 +436,14 @@ public class QueryBlockDetails implements Serializable{
 				//constraintString += ConstraintGenerator.addCommentLine("END OF CONSTRAINTS FOR THIS CONJUNCT ");
 			}
 			constraintString += Constraints.getConstraint(cvc,constraints);
-			//String stringConstraints= Constraints.getStringConstraints(cvc,constraints);
-			ArrayList<String> strConstraints =  Constraints.getStringConstraints(cvc,constraints);
-			for(String constraint : strConstraints){
-				cvc.getStringConstraints().add(constraint.toString());
+			
+			Vector<String> strConstraints=new Vector<String>();
+			strConstraints.addAll(constraints.stringConstraints);
+			
+		
+			Vector<String> solvedStringConstraint=cvc.getStringSolver().solveConstraints(strConstraints, cvc.getResultsetColumns(), cvc.getTableMap());
+			for(String str:solvedStringConstraint)	{
+				constraintString+=str+"\n";
 			}
 			
 			//constraintString += getCaseConditionConstraints(cvc);

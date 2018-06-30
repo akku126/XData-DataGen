@@ -466,6 +466,16 @@ public class ConjunctQueryStructure implements Serializable{
 	}
 	
 	public void seggregateSelectionConds(){
+		
+		
+		for(Node n :likeConds){
+			n.getRight().setStrConst("'"+n.getRight().getStrConst()+"'");
+			selectionConds.add(n);
+			
+		}
+		
+		likeConds.removeAllElements();
+		
 		Vector<Node> selectCondsClone = (Vector<Node>)selectionConds.clone();
 		for(Node n: selectCondsClone){			
 			if(isStringSelection(n,1) ){
@@ -507,9 +517,7 @@ public class ConjunctQueryStructure implements Serializable{
 			}
 			
 		}
-		for(Node n :likeConds){
-			n.getRight().setStrConst("'"+n.getRight().getStrConst()+"'"); 
-		}
+		
 		for(Node n:allSubQueryConds){
 			Vector<Node> subQ=n.getSubQueryConds();
 			if(subQ!=null){
