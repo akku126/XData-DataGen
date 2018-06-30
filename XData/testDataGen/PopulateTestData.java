@@ -116,7 +116,6 @@ public class PopulateTestData {
 				Future<Integer> future = service.submit(call);
 				int exitValue = future.get(180, TimeUnit.SECONDS);
 
-
 				if(myProcess.exitValue() != 0){
 					logger.log(Level.SEVERE," GenerateCvcOutput function :  Generating CVC Output failed.");
 					myProcess.destroy();	
@@ -133,7 +132,6 @@ public class PopulateTestData {
 					out.write((char)ch); 
 				} 	
 
-
 				Utilities.closeProcessStreams(myProcess);
 
 				out.close();
@@ -160,94 +158,6 @@ public class PopulateTestData {
 
 		return cvcFileName.substring(0,cvcFileName.lastIndexOf(".cvc")) + ".out";
 	}
-
-	/**
-	 * This method generates SMT-LIB output to XData readable output.
-	 * 
-	 * @param cvcFileName
-	 * @param filePath
-	 * @return
-	 * @throws Exception
-	 */
-	public String generateCvcOutputForSMT (String cvcFileName, String filePath) throws Exception{
-		int ch;
-		try{
-			//Executing the CVC file generated for given query
-			Runtime r = Runtime.getRuntime();
-			String smtCommand = "";
-
-			smtCommand = Configuration.smtsolver+ " --lang smtlib " +Configuration.homeDir+"temp_cvc"+filePath+"/" + cvcFileName;;
-
-			ExecutorService service = Executors.newSingleThreadExecutor();
-			Process myProcess = r.exec(smtCommand);	
-			try {
-				Callable<Integer> call = new CallableProcess(myProcess);
-				Future<Integer> future = service.submit(call);
-				int exitValue = future.get(180, TimeUnit.SECONDS);
-
-				InputStreamReader myIStreamReader = new InputStreamReader(myProcess.getInputStream());
-
-				//Writing output to .out file
-				BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+filePath+"/" + cvcFileName.substring(0,cvcFileName.lastIndexOf(".cvc")) + ".out"));
-
-				while ((ch = myIStreamReader.read()) != -1) 
-				{ 
-					out.write((char)ch); 
-				} 
-
-				if(myProcess.exitValue() != 0){
-					logger.log(Level.SEVERE," GenerateCvcOutput function :  Generating CVC Output failed.");
-					myProcess.destroy();	
-					service.shutdown();
-				}
-
-
-				/*String line = "";
-				//InputStreamReader myIStreamReader = new InputStreamReader(myProcess.getInputStream().);
-				BufferedReader myIStreamReader = new BufferedReader( new InputStreamReader(myProcess.getInputStream()));
-				//Writing output to .out file
-				BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+filePath+"/" + cvcFileName.substring(0,cvcFileName.lastIndexOf(".cvc")) + ".out"));				
-				while ((line = myIStreamReader.readLine()) != null) 
-				{ 
-					out.write(line); 
-				} */
-
-				/*Scanner stdin = new Scanner(new BufferedInputStream(myProcess.getInputStream()));
-				BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+filePath+"/" + cvcFileName.substring(0,cvcFileName.lastIndexOf(".cvc")) + ".out"));
-		        while (stdin.hasNext()) {
-		        	out.write(stdin.next()); 
-		        }*/
-
-
-				Utilities.closeProcessStreams(myProcess);
-
-				out.close();
-
-			} catch (ExecutionException e) {
-
-				logger.log(Level.SEVERE,"ExecutionException in generateCvcOutput");
-				Utilities.closeProcessStreams(myProcess);
-				throw new Exception("Process failed to execute", e);
-			} catch (TimeoutException e) {
-				logger.log(Level.SEVERE,"TimeOutException in generateCvcOutput");
-				Utilities.closeProcessStreams(myProcess);
-				myProcess.destroy();		    	
-				throw new Exception("Process timed out", e);
-			} finally {
-				service.shutdown();
-			}			
-
-		}catch(Exception e){
-			logger.log(Level.SEVERE,e.getMessage(),e);
-			//e.printStackTrace();
-			throw new Exception("Process interrupted or timed out.", e);
-		}
-
-		return cvcFileName.substring(0,cvcFileName.lastIndexOf(".cvc")) + ".out";
-	}
-
-
-
 
 	public String cutRequiredOutput(String cvcOutputFileName, String filePath){
 		try {
@@ -850,7 +760,7 @@ public class PopulateTestData {
 		String temp=""; 
 		Process proc=null;
 		boolean returnVal=false;
-		String test = generateCvcOutputForSMT(cvcOutputFileName, filePath);
+		String test = generateCvcOutput(cvcOutputFileName, filePath);
 		BufferedReader br =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc"+filePath+"/"+test));
 		String str = br.readLine();
 
