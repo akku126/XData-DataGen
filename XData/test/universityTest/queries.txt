@@ -1,1 +1,8 @@
-1|select id, name from student where tot_cred>30
+1|select id,name from student where tot_cred>30
+2|select dept_name,budget from department where budget > 20000
+3|select building from classroom where capacity < 10
+4|select name from instructor where salary > 30000
+5|select title from course where credits > 5
+6|select dept_name from department where budget > 70000
+
+

@@ -217,10 +217,12 @@ public class GenerateDataSet {
 			
 			int queryId=1;
 			//String query="select id,name from student";
-			//String query="select course_id,count(id) from course inner join takes";
+			//String query="select * from student join takes on student.ID = takes.ID";
 //			String query="select course_id,count(id) from course inner join takes where grade=?";
 			//String query="select * from instructor natural join teaches where dept_name=? and year=?";
-			String query="select id, name from student where name like 'A%' and tot_cred=30";
+			//String query="select name,count(*) from student group by name";
+			//String query ="select dept_name, avg(salary) as avg_salary from instructor group by dept_name having avg(salary) > 42000";
+			String query = "select id from instructor where salary > 7000";
 			File schemaFile=new File("test/universityTest/DDL.sql");
 			File sampleDataFile=new File("test/universityTest/sampleData.sql");
 			boolean orderDependent=false;

@@ -172,7 +172,7 @@ public class PopulateTestData {
 						setContents(testFile, line+"\n", true);
 					}
 					//Application Testing - to include value of program parameters
-					if(line.startsWith("ASSERT (parameter")){
+					if(line.startsWith("ASSERT (parameter") || line.startsWith("ASSERT (PARAM_")){
 						setContents(testFile, line+"\n", true);
 					}
 				}
@@ -200,8 +200,18 @@ public class PopulateTestData {
 			try {
 				String line = null; 
 				while (( line = input.readLine()) != null){
-					if(line.startsWith("((O_") && line.contains("_TupleType) ") && !line.contains("define-fun O_")){
-						setContents(testFile, line+"\n", true);
+					if(line.contains("(define-fun ")  && line.contains("_TupleType")){
+						//setContents(testFile,line, true);
+						while ((line = input.readLine()) != null && !line.contains("))")) {
+							if(!line.contains("(ite") && !line.contains("!")) {
+									if(line.contains(")"))
+										setContents(testFile,line+"\n", true);
+									else
+										setContents(testFile,line, true);
+							}		
+						}
+						if(!line.contains("!"))
+						setContents(testFile,line+"\n", true);
 					}
 					//Application Testing - to include value of program parameters
 					if(line.startsWith("ASSERT (parameter")){
@@ -271,7 +281,7 @@ public class PopulateTestData {
 			String line = null,copystmt=null; 
 			while (( line = input.readLine()) != null){
 				//Application Testing -- added check for the presence of parameter
-				if(line.startsWith("ASSERT (parameter")){
+				if(line.startsWith("ASSERT (parameter") || line.startsWith("ASSERT (PARAM_")){
 
 					currentCopyFileName = line.substring(line.indexOf("(")+1,line.indexOf("=")-1);
 					testFile = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/" + currentCopyFileName + ".copy");
@@ -487,7 +497,8 @@ public class PopulateTestData {
 
 				}
 				else{
-					String tableName = line.substring(line.indexOf("O_")+2,line.indexOf(" (store ("));
+					//String tableName = line.substring(line.indexOf("O_")+2,line.indexOf(" (store ("));
+					String tableName = line.substring(line.indexOf("(")+1,line.indexOf("_"));
 					if(!noOfOutputTuples.containsKey(tableName)){
 						continue;
 					}
@@ -621,7 +632,13 @@ public class PopulateTestData {
 	public String getCopyStmtFromCvcOutputForSMT(String cvcOutputLine){
 		String queryString = "";
 		//String tableName = cvcOutputLine.substring(cvcOutputLine.indexOf("_")+1,cvcOutputLine.indexOf("["));
-		String tableName = cvcOutputLine.substring(cvcOutputLine.indexOf("O_")+2,cvcOutputLine.indexOf(" (store ("));
+		//String tableName = cvcOutputLine.substring(cvcOutputLine.indexOf("O_")+2,cvcOutputLine.indexOf(" (store ("));
+		String tableName = cvcOutputLine.substring(cvcOutputLine.indexOf("(")+1,cvcOutputLine.indexOf("_"));
+		String temp = cvcOutputLine.substring(cvcOutputLine.indexOf("_TupleType ")+11);
+		String insertTupleValues = temp.substring(temp.indexOf("_"),temp.indexOf(")"));
+		insertTupleValues = cleanseCopyString(insertTupleValues);
+		insertTupleValues = insertTupleValues.trim().replaceAll(" +", " ");
+		/*
 		String temp1 = cvcOutputLine.substring((cvcOutputLine.indexOf(" 1 (")+2), 
 				cvcOutputLine.lastIndexOf("))))"));
 		//String temp = temp1.substring((temp1.indexOf("_TupleType) ("))+13, temp1.lastIndexOf("("));
@@ -644,6 +661,8 @@ public class PopulateTestData {
 		}
 		//String insertTupleValues = temp.substring((temp.indexOf("_TupleType"))+11,temp.lastIndexOf(")) "));
 		//insertTupleValues = cleanseCopyStringSMT(insertTupleValues);		
+		 * 
+		 */
 		return insertTupleValues;
 	}
 
