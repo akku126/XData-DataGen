@@ -178,7 +178,10 @@ public class RelatedToParameters {
 			
 			for(int i=0;i<params.size();i++){
 				
-				retVal = params.get(i) + " : " + datatype +";\n" + retVal;
+				if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3"))
+					retVal = params.get(i) + " : " + datatype +";\n" + retVal;
+				else
+					retVal = "(declare-const "+params.get(i) + " " + datatype+")\n" + retVal;
 				//to collect all string constraints
 				Vector<String> Stringvec = new Vector();
 				String newconsformat ="";
