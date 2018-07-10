@@ -25,10 +25,7 @@ public class ColumnReplacementMutations {
 	
 	public static void generateDataForkillingColumnReplacementMutationsInProjection(GenerateCVC1 cvc) throws Exception{
 		try {
-			/*adasdSystem.out.println("\n----------------------------------");
-			System.out.println("GENERATE DATA FOR KILLING COLUMN REPLACEMENT IN PROJECTION LIST: ");
-			System.out.println("----------------------------------\n");
-	*/
+			
 			/** Initialize the data structures for generating the data to kill this mutation */
 			cvc.inititalizeForDatasetQs();
 		
@@ -118,7 +115,7 @@ public class ColumnReplacementMutations {
 					for(Table t: cvc.getTablesOfOriginalQuery()){
 						if(table.startsWith(t.getTableName())){
 							requiredTable =t;
-							//System.out.print(t.getTableName());
+							
 							break;
 						}
 					}
@@ -133,7 +130,7 @@ public class ColumnReplacementMutations {
 							replacement.setTableNameNo(table);
 							
 							if(replacement.equals(candidate)){
-								//System.out.print("Same");
+								
 							}
 							else{
 								

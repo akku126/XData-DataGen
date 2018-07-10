@@ -229,13 +229,12 @@ public class ProcessResultSetNode {
 		         if(dbApparameters.getResultSetIndexArray().size() > 0){
 		 			for(int ind=0;ind<(dbApparameters.getResultSetIndexArray()).size();ind++){
 		 				int rsIndex=Integer.parseInt(dbApparameters.getResultSetIndexArray().get(ind));
-		 				//System.out.println(qParser.projectedCols.elementAt(rsIndex-1));
+		 				
 		 				String rsColumnName = qParser.projectedCols.elementAt(rsIndex-1).toString();
 		 				rsColumnName = rsColumnName.substring(rsColumnName.indexOf(".")+1);
-		 				//System.out.println("rsColumnName"+rsColumnName);
+		 				
 		 				String rsCons =dbApparameters.getXdata_resultset_constraints().get(ind);
 		 				rsCons=rsCons.replace("rs("+rsIndex+")", rsColumnName);
-		 				System.out.println("rsCons----"+rsCons);
 		 				if(Dbridge_Const.isEmpty()){
 		 					Dbridge_Const+=rsCons;
 		 				}

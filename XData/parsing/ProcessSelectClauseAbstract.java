@@ -43,13 +43,11 @@ public abstract class ProcessSelectClauseAbstract {
 	public static void display(Vector<FromClauseElement> visitedFromListElements) {
 		for(FromClauseElement fle:visitedFromListElements){
 			if(fle!=null && (fle.getTableName()!=null||fle.getTableNameNo()!=null))
-				System.out.println(fle.toString());
+				;
 			else if(fle!=null && fle.getSubQueryStructure()!=null){
-				System.out.println(fle.toString());
 				display(fle.getSubQueryStructure().getFromListElements());
 			}
 			else if(fle!=null && fle.getBag()!=null && !fle.getBag().isEmpty()){
-				System.out.println(fle.toString());
 				display(fle.getBag());				
 			}
 

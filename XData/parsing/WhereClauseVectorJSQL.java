@@ -2289,9 +2289,7 @@ public class WhereClauseVectorJSQL {
 				
 //				Node tempn=n;
 				n=transformToAbsoluteTableNames(n,fle,false, qParser);
-//				System.out.println("Before "+tempn+ "after transforming to absolute names "+n);
-//				Scanner scan = new Scanner(System.in);
-//				String s = scan.next();
+
 				
 
 

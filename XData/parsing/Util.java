@@ -1143,9 +1143,9 @@ public static void foreignKeyClosure(QueryParser qParser) {
 	/*
 	for (String tableName : query.getFromTables().keySet()) {
 		Table table = query.getFromTables().get(tableName);
-		System.out.println(tableName);
+		
 		if (table.hasForeignKey()) {
-			System.out.println(tableName+" has foreign key");
+		
 			for (String fKeyName : table.getForeignKeys().keySet()) {
 				ForeignKey fKey = table.getForeignKey(fKeyName);
 				Vector<Column> fKeyColumns = fKey.getFKeyColumns();
@@ -1153,7 +1153,7 @@ public static void foreignKeyClosure(QueryParser qParser) {
 				// fKey.getReferenceKeyColumns();
 
 				for (Column fKeyColumn : fKeyColumns) {
-					// System.out.println(fKeyColumn.getTableName()+"."+fKeyColumn.getColumnName()+" -> "+fKeyColumn.getReferenceColumn().getTableName()+"."+fKeyColumn.getReferenceColumn().getColumnName());
+		
 					JoinClauseInfo foreignKey = new JoinClauseInfo(fKeyColumn, fKeyColumn.getReferenceColumn(),JoinClauseInfo.FKType);
 					foreignKey.setConstant(fKeyName);
 					this.foreignKeyVector.add(foreignKey);
@@ -1161,7 +1161,7 @@ public static void foreignKeyClosure(QueryParser qParser) {
 			}
 		}
 	}
-	System.out.println("foreignKeyVector " + foreignKeyVector);
+	
 	 */
 	//Changed by Biplab the original code is commented out above
 	Vector<Table> fkClosure = new Vector<Table>();
@@ -1745,7 +1745,6 @@ public static void copyDatabaseTables(Connection srcConn, Connection tarConn, St
 			}
 		}
 		String insertQuery= insertHead+")"+insertTail+")";		
-//		System.out.println(insertQuery);
 		PreparedStatement insStmt=tarConn.prepareStatement(insertQuery);
 		int k=0;
 		for(int j=1;j<=metaData.getColumnCount();j++){
@@ -1783,13 +1782,11 @@ public static void copyDatabaseTables(Connection srcConn, Connection tarConn, St
 				insStmt.setString(++k, tableValues.getString(j));
 			}
 		}
-		System.out.println(insStmt.toString());
 		try{
 		insStmt.executeUpdate();
 		}
 		catch(Exception e){
-			System.out.println(insStmt.toString());
-			System.out.println(e.getMessage());
+			logger.log(Level.WARNING,e.getMessage(), e);
 		}
 	}
 }
@@ -1864,12 +1861,11 @@ public static void copyDatabaseTables(Connection srcConn, Connection tarConn) th
 					insStmt.setString(j, tableValues.getString(j));
 				}
 			}
-			System.out.println(insStmt.toString());
 			try{
 			insStmt.executeUpdate();
 			}
 			catch(Exception e){
-				System.out.println(e.getMessage());
+				logger.log(Level.SEVERE, e.getMessage(), e);
 			}
 		}
 	}

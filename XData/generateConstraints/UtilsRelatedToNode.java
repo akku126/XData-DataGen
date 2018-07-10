@@ -258,7 +258,6 @@ public class UtilsRelatedToNode {
 		for(Node temp:conds){
 			Node l=temp.getLeft();
 			Node r=temp.getRight();
-			System.out.println("r.getStrConst() ====  "+r.getStrConst());
 			String regex = "[0-9]+";
 			if(l.getTable().getTableName().equalsIgnoreCase(c.getTableName())
 					&& l.getColumn().getColumnName().equalsIgnoreCase(c.getColumnName())
@@ -312,7 +311,6 @@ public class UtilsRelatedToNode {
 				maxMin[1] = getExpressionValue(n,"MIN");
 				maxMin[0] = getExpressionValue(n,"MAX");
 				
-				System.out.println("r.getStrConst() ====  "+r.getStrConst()+" --exprVal--"+ maxMin[0]+maxMin[1]);
 				String regex = "[0-9]+";
 				if(l != null && r != null
 						&& (getTableName(l)).getTableName().equalsIgnoreCase(c.getTableName())

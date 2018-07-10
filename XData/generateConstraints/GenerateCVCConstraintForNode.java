@@ -214,7 +214,6 @@ public class GenerateCVCConstraintForNode {
 		}
 		
 		else{
-			System.out.println("In cvcSetNull Function: "+"Unassigned Null value cannot be found due to insufficiency");
 			logger.log(Level.WARNING,"Unassigned Null value cannot be found due to insufficiency");		
 			return "";
 		}
@@ -470,7 +469,6 @@ public class GenerateCVCConstraintForNode {
 	 * @return
 	 */
 	/*public static String genNegativeStringCond(GenerateCVC1 cvc,QueryBlockDetails queryBlock, Node n){
-		//System.out.println("Node type: "+n.getType() + n.getLeft() + n.getOperator() + n.getRight());
 		logger.log(Level.INFO, "Node type: "+n.getType() + n.getLeft() + n.getOperator() + n.getRight());
 		ConstraintGenerator constraintGenerator = new ConstraintGenerator();
 		if(n.getType().equalsIgnoreCase(Node.getColRefType())){

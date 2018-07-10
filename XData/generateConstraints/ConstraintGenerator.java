@@ -2541,7 +2541,6 @@ public static String genPositiveCondsForPredWithAssert(QueryBlockDetails queryBl
 	 * @return
 	 */
 	public static String genNegativeStringCond(QueryBlockDetails queryBlock, Node n){
-		//System.out.println("Node type: "+n.getType() + n.getLeft() + n.getOperator() + n.getRight());
 		logger.log(Level.INFO, "Node type: "+n.getType() + n.getLeft() + n.getOperator() + n.getRight());
 		ConstraintGenerator constraintGenerator = new ConstraintGenerator();
 		if(n.getType().equalsIgnoreCase(Node.getColRefType())){

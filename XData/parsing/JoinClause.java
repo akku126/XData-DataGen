@@ -50,8 +50,7 @@ public class JoinClause {
 			joinTable2 = joinAttribute2.getTable();			
 			joinAttributes2.add(joinAttribute2);
 		}
-		//System.out.println("joinAttr1Vector contains : " + joinAttributes1);
-		//System.out.println("joinAttr2vector contains : " + joinAttributes2);
+		
 	}*/
 	
 	/*public boolean contains(Vector<Column> columns){

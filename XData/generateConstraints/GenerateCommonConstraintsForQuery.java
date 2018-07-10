@@ -399,10 +399,6 @@ public class GenerateCommonConstraintsForQuery {
 			
 			generateCombinations(combinations, numRelations, tupleCount, new ArrayList<Integer>(), 0);
 			
-			System.out.print(relations);
-			
-			System.out.print(combinations);
-			
 			ConstraintGenerator constraintGenerator = new ConstraintGenerator();
 			ConstraintObject con = new ConstraintObject();
 			ConstraintObject constr1 = new ConstraintObject();
@@ -526,7 +522,6 @@ public class GenerateCommonConstraintsForQuery {
 				
 				if(!orPrimaryKeyConstraints.isEmpty() && orPrimaryKeyConstraints.size() != 0){
 					pkConst = processOrConstraintsNotExists(cvc,orPrimaryKeyConstraints);				
-					System.out.print(pkConst);
 					orPrimaryKeyConstraints.clear();
 				}
 				

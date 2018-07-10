@@ -337,16 +337,11 @@ public class GetTupleAssignment {
 			boolean add = uniqueElements.addAll(uniqueElementsSet);
 			logger.log(Level.INFO,"Rule 6 changed elements: " + flag);
 
-			//System.out.println("At the end of loop SV attributes size:  " + singleValuedAttributes.size() + " unique elements size: "+ uniqueElements.size());
+			
 
 		}while( (sSize != singleValuedAttributes.size()) || (uSize != uniqueElements.size()) ||(flag == true) );/**there is change in the set of attributes  of single valued or unique elements*/ 
 
-		logger.log(Level.INFO,"");
-		//System.out.println("UNIQUE ELEMENTS: " + uniqueElements);
-		logger.log(Level.INFO,"");
-		//System.out.println("SINGLE VALUED ATTRIBUTES: " +  singleValuedAttributes);
-		logger.log(Level.INFO,"");
-
+		
 		/**keep a copy of unique elements and single valued attributes*/
 		uniqueElementsDup.addAll((HashSet < HashSet< Node > >)uniqueElements.clone());
 
@@ -510,8 +505,8 @@ public class GetTupleAssignment {
 		while (itr.hasNext()) {
 			Map.Entry pairs = (Map.Entry)itr.next();
 
-			System.out.print(" to " + pairs.getKey());
-			logger.log(Level.INFO,"");
+			
+			logger.log(Level.INFO,pairs.getKey()+"");
 
 			Vector< JoinAndUniqueAttributes > attributes = (Vector< JoinAndUniqueAttributes >) pairs.getValue();
 
@@ -608,7 +603,7 @@ public class GetTupleAssignment {
 			while (itr.hasNext()) {
 				Map.Entry pairs = (Map.Entry)itr.next();
 
-				System.out.print("Applying rule 7 from node " + jgn);
+			
 
 				/**Rule 7*/
 				applyRule7(pairs);
@@ -670,8 +665,6 @@ public class GetTupleAssignment {
 	 */
 	public void applyRule7(Map.Entry pairs) throws Exception {
 
-
-		System.out.print(" to the node " + pairs.getKey() + "\n");
 
 		Vector< JoinAndUniqueAttributes > attributes = (Vector< JoinAndUniqueAttributes >) pairs.getValue();
 

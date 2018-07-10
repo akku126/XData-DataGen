@@ -222,7 +222,7 @@ public class GenerateDataSet {
 			//String query="select * from instructor natural join teaches where dept_name=? and year=?";
 			//String query="select name,count(*) from student group by name";
 			//String query ="select dept_name, avg(salary) as avg_salary from instructor group by dept_name having avg(salary) > 42000";
-			String query = "select id from instructor where salary > 7000";
+			String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year > 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201')";
 			File schemaFile=new File("test/universityTest/DDL.sql");
 			File sampleDataFile=new File("test/universityTest/sampleData.sql");
 			boolean orderDependent=false;

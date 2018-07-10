@@ -259,28 +259,20 @@ public class Column	implements Serializable{
 	@Override
 	public int hashCode() {
 
-	//	System.out.println("hashcode for column: " + this);
 		final int prime = 31;
 		int result = 1;
 		result = prime * result
 				+ ((columnAliasName == null) ? 0 : columnAliasName.hashCode());
-
-	//	System.out.println("columnalias hashcode: " + ((columnAliasName == null) ? 0 : columnAliasName.hashCode()));
-
+		
 		result = prime * result
 				+ ((columnName == null) ? 0 : columnName.hashCode());
 
-	//	System.out.println("columnName hashcode: " + ((columnName == null) ? 0 : columnName.hashCode()));
-
 		result = prime * result + columnSize;
-		//result = prime * result	+ ((columnValues == null) ? 0 : columnValues.hashCode());
-
-	//	System.out.println("column values hashcode: " + ((columnValues == null) ? 0 : columnValues.hashCode()));
 
 	/*	result = prime * result
 				+ ((cvcDatatype == null) ? 0 : cvcDatatype.hashCode());
 
-		System.out.println("cvc datatype hashcode: " + ((cvcDatatype == null) ? 0 : cvcDatatype.hashCode()));
+
 
 		result = prime * result + dataType;
 		result = prime * result + (isAutoIncrement ? 1231 : 1237);
@@ -294,27 +286,22 @@ public class Column	implements Serializable{
 		result = prime * result
 				+ ((referenceColumn == null) ? 0 : referenceColumn.hashCode());
 
-		System.out.println("reference column  hashcode: " + ((referenceColumn == null) ? 0 : referenceColumn.hashCode()));*/
+		*/
 
 		result = prime
 				* result
 				+ ((referenceTableName == null) ? 0 : referenceTableName
 						.hashCode());
 
-	//	System.out.println("refrence table hashcode: " + ((referenceTableName == null) ? 0 : referenceTableName.hashCode()));
+
 
 		/*result = prime * result + (references ? 1231 : 1237);
-		result = prime * result + ((table == null) ? 0 : table.hashCode());
-
-		System.out.println("Table hashcode: " + ((table == null) ? 0 : table.hashCode()));*/
+		result = prime * result + ((table == null) ? 0 : table.hashCode());*/
 
 		result = prime * result
 				+ ((tableName == null) ? 0 : new Integer(tableName.hashCode()).hashCode());
-
-//		System.out.println("tableName hashcode: " + ((tableName == null) ? 0 : tableName.hashCode()));
-
+		
 		//return new Integer(result).hashCode();
-//		System.out.println("Value for column: " + result);
 		return result;
 	}
 

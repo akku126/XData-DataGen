@@ -114,8 +114,6 @@ public class GetTupleAssignmentUsingSolver {
 
 		long endAssgn = System.currentTimeMillis();
 
-		//System.out.println(constraints);
-
 
 
 		logger.log(Level.INFO,"Constraint Generation Time: " + (endAssgn-startAssgn) );
@@ -1254,8 +1252,6 @@ public class GetTupleAssignmentUsingSolver {
 
 				key = line.substring(line.indexOf("[")+1, line.indexOf(']'));
 
-				System.out.println("KEY: " + key + " VALUE: " + value);
-
 				int ival = Integer.parseInt(value,2);
 
 				String tableNameNo = getRelation(key);
@@ -1270,7 +1266,6 @@ public class GetTupleAssignmentUsingSolver {
 
 				key = line.substring(line.indexOf("(")+1, line.indexOf(','));
 
-				System.out.println("KEY: " + key + " VALUE: " + value);
 
 				String tableNameNo = getRelation(key);
 

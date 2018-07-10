@@ -359,7 +359,6 @@ public class CountEstimationRelated {
 					}
 					countVal = Integer.parseInt(countFromFile);
 					countVal = c;
-					//System.out.println("\nValue read from COUNT file="+countVal);
 					if(countVal > finalCount){
 						finalCount = countVal;
 					}

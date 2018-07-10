@@ -342,7 +342,6 @@ public class GenerateJoinPredicateConstraints {
 
 		String r1 = getTableNameNo(n1);
 		String r2 = getTableNameNo(n2);
-		//System.out.println("relation2 name num  ---"+r2);
 		logger.log(Level.INFO,"relation2 name num  ---"+r2);
 		
 		int offset1 = cvc.getRepeatedRelNextTuplePos().get(r1)[1];

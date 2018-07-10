@@ -126,7 +126,7 @@ public class TableMap implements Serializable{
                }               
             }
             
-            //System.out.print(tables);
+          
             
             rs = null;    
             rs = meta.getColumns(database, "", "%","%");           
@@ -205,11 +205,6 @@ public class TableMap implements Serializable{
                     Column col = table.getColumn(columnName);
                		table.addColumnInPrimaryKey(col);
                		
-                    System.out.println("*******************UNIQUE INDEX DETAILS*********************");
-                    System.out.println("Table: " + schema + "." + table);
-                    System.out.println("Index Name: " + indexName);
-                    System.out.println("Column Name: " + columnName);
-                    System.out.println("****************************************");
                 }
             }
             foreignKeyGraph = new Graph<Table,ForeignKey>(true);

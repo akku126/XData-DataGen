@@ -106,7 +106,6 @@ public class DataType {
 			        	String type = resultSet.getString("TYPE_NAME");
 			        	int size = resultSet.getInt("COLUMN_SIZE");
 			         
-			        	//System.out.println("Column name: [" + name + "]; type: [" + type+ "]; size: [" + size + "]");
 			        }
 			        
 			       try(PreparedStatement pstmt = connection.prepareStatement("select * from rollhist where studentid = 70626")){

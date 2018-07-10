@@ -254,8 +254,7 @@ public class OperateOnSubQuery {
 			/*getAggregationDataStructures(rsNode, queryAliases, query.getFromTables());
 
 			if (debug) {
-			System.out.println("\nJoin Tables : " + query.getJoinTables());
-			System.out.println("Undirected Join Graph : "
+			
 					+ query.getJoinGraph());
 			}
 

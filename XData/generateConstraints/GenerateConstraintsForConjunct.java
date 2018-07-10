@@ -936,7 +936,6 @@ public class GenerateConstraintsForConjunct {
 		Vector<String> OrStringConstraints = new Vector<String>();
 		
 		for(int k = 1; k <= cvc.getNoOfOutputTuples().get(relation); k++){
-			//System.out.print(k);
 			
 			/** Generate negative constraint for correlation condition.*/
 			if(!conjunct.joinCondsAllOther.isEmpty()){

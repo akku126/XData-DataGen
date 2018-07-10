@@ -195,7 +195,6 @@ public class PreProcessingActivity {
 				
 				
 					cvc.getDBAppparams().setSchemaProjectedColumns(cvc.getqStructure().getProjectedCols());				
-					System.out.println(cvc.getDBAppparams().getSchemaProjectedColumns());
 					return cvc.getDBAppparams().getSchemaProjectedColumns();
 				
 				//end
@@ -250,7 +249,6 @@ public class PreProcessingActivity {
 				
 				if(cvc.getDBAppparams().isSchemasetFlag()== true){
 					cvc.getDBAppparams().setSchemaProjectedColumns(cvc.getqStructure().getProjectedCols());				
-					System.out.println(cvc.getDBAppparams().getSchemaProjectedColumns());
 					return;
 				}
 				//end

@@ -24,7 +24,6 @@ public class AppTest_StringConstraintSolver implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	public Vector<String> solveConstraints_Apptest(Vector<String> assertConstraints,Vector<Column> columns,TableMap tableMap) throws Exception {
-		//System.out.println("assertConstraints " + assertConstraints);
 		Vector<StringConstraint> resultingConstraints = new Vector<StringConstraint>();
 		Vector<StringConstraint> stringConstraints = new Vector<StringConstraint>();
 		StringConstraintSolver ssobj = new StringConstraintSolver();
@@ -78,18 +77,18 @@ public class AppTest_StringConstraintSolver implements Serializable {
 			relatedConstraints.add(s);
 			stringConstraints.remove(0);
 
-//			System.out.println("s = " + s);
+
 			ssobj.getReleatedConstraints(s.var1,relatedConstraints,stringConstraints);
-//			System.out.println("relatedConstraints = " + relatedConstraints);
+
 			if(s.var2!=null)
 				ssobj.getReleatedConstraints(s.var2,relatedConstraints,stringConstraints);
-//			System.out.println("relatedConstraints = " + relatedConstraints);
+
 
 			stringConstraints.removeAll(relatedConstraints);
 			Vector<StringConstraint> rel=new Vector<StringConstraint>();
 			rel.addAll(relatedConstraints);
 			Vector<StringConstraint> result= solveRelatedConstraints_AppTest(rel,columns,tableMap);	
-//			System.out.println("result.size() = " + result.get(0));	
+	
 			if(result== null || result.size()==0 ){
 				Vector<String> v=new Vector<String>();
 				v.add("ASSERT  (1=2);\n");
@@ -158,18 +157,15 @@ public class AppTest_StringConstraintSolver implements Serializable {
 		
 		boolean flag=true;
 		int length=constraints.size();
-		//System.out.println("length = " + length);
-		
+
 		//----------------------Solve for Single variable---------------------
 		for(int i=0;i<length;i++){		
 			StringConstraint s=constraints.get(i);
-			//System.out.println("s ++ " + s.var1 + " " + s.var2 + " " + s.constant + " " +s.operator);
 			if(s.var2!=null || s.operator.startsWith("L")){ 
 				flag=false;
 				break;
 			}
 		}
-		//System.out.println("flag = " + flag);
 		if(flag){
 			
 			String str,opr;
@@ -203,7 +199,6 @@ public class AppTest_StringConstraintSolver implements Serializable {
 		int j=0;
 		for(int i=0;i<length;i++){		
 			StringConstraint s=constraints.get(i);
-			//System.out.println("s1 = " + s);
 			Integer lhs=varMap.get(s.var1);
 			if(lhs==null){
 				varMap.put(s.var1,j);

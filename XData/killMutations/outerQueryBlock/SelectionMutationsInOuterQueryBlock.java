@@ -66,20 +66,14 @@ public class SelectionMutationsInOuterQueryBlock {
 				killSelectionMutationsInConjunct(cvc, conjunct, constraints);
 				/*
 	
-				System.out.println("\n----------------------------------");
-				System.out.println("NEW CONJUNCT IN SELCTION CLAUSE MUTATIONS KILLING: " + conjunct);
-				System.out.println("\n----------------------------------");
-	
+				
 				*//**Get the selection conditions of this conjunct*//*
 				Vector<Node > selectionConds = conjunct.getSelectionConds();
 	
 				*//** Kill each selection condition of this conjunct*//*
 				for(int i=0; i < selectionConds.size(); i++){
 	
-					System.out.println("\n----------------------------------");
-					System.out.println("\n\nGETTING SELECTION MUTANTS\n");
-					System.out.println("\n----------------------------------");
-	
+					
 	
 					Node sc = selectionConds.get(i);
 	
@@ -91,10 +85,7 @@ public class SelectionMutationsInOuterQueryBlock {
 						*//**If this mutation is not same as that of original condition*//*
 						if(!( scMutants.get(j).getOperator().equalsIgnoreCase(sc.getOperator())) ){
 	
-							System.out.println("\n----------------------------------");
-							System.out.println("KILLING : " + scMutants.get(j));
-							System.out.println("----------------------------------\n");
-	
+					
 							*//** This is required so that the tuple assignment for the subquery is fine*//*
 							selectionConds.set(i,scMutants.get(j) );
 	

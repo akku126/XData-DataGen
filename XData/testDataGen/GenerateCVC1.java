@@ -1447,7 +1447,6 @@ public class GenerateCVC1 implements Serializable{
 				// we ensure that there is no spaces before or after the request string  
 				// in order to not execute empty statements  
 				 if (!inst[i].trim().equals("") && !inst[i].contains("drop table") && !inst[i].contains("delete from")) {
-					//System.out.println(inst[i]);
 					//Changed for MSSQL TESTING
 					PreparedStatement stmt3 = assignmentConn.prepareStatement(inst[i]);
 						stmt3.executeUpdate();							

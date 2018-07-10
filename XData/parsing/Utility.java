@@ -436,13 +436,13 @@ public class Utility {
 		if (clause instanceof AndNode) {
 			AndNode andNode = ((AndNode)clause);
 			
-			//System.out.println("andNode.getLeftOperand() = "+andNode.getLeftOperand());
+			
 			if (andNode.getLeftOperand() == null)
 				inLeftPart = false;
 			else
 				inLeftPart = isContantWhereClause(andNode.getLeftOperand(), joinAttribute);
 			
-			//System.out.println("andNode.getRightOperand() = "+andNode.getRightOperand());
+			
 			if (andNode.getRightOperand() == null)
 				inRightPart = false;
 			else
@@ -453,13 +453,13 @@ public class Utility {
 		} else if (clause instanceof OrNode) {
 			OrNode orNode = (OrNode) clause;
 			
-			//System.out.println("orNode.getLeftOperand() = "+orNode.getLeftOperand());
+			
 			if ((orNode.getLeftOperand() == null))
 				inLeftPart = false;
 			else
 				inLeftPart = isContantWhereClause(orNode.getLeftOperand(), joinAttribute); 
 			
-			//System.out.println("orNode.getRightOperand() = "+orNode.getRightOperand());
+			
 			if ((orNode.getRightOperand() == null))
 				inRightPart = false;
 			else
@@ -470,9 +470,6 @@ public class Utility {
 		} else if (clause instanceof BinaryOperatorNode) {
 			
 			BinaryOperatorNode binaryOperatorNode = (BinaryOperatorNode) clause;
-			
-			//System.out.println("binaryOperatorNode.getLeftOperand() = "+binaryOperatorNode.getLeftOperand().getColumnName());
-			//System.out.println("binaryOperatorNode.getRightOperand() = "+binaryOperatorNode.getRightOperand().getColumnName());
 			
 			if(binaryOperatorNode.getLeftOperand() instanceof CharConstantNode || binaryOperatorNode.getLeftOperand() instanceof NumericConstantNode ){
 				if(joinAttribute.contains(binaryOperatorNode.getRightOperand().getColumnName().toString()))
@@ -568,9 +565,7 @@ public class Utility {
 		SQLParser sqlParser = new SQLParser();
 		try {
 			ResultSetNode rsNode = ((CursorNode)sqlParser.Statement(queryString, null)).getResultSetNode();
-			//System.out.println(getQueryString(rsNode));
-			//System.out.println("Not removed : "+Utility.getWhereClauseString(rsNode,false));
-			//System.out.println("Removed     : "+Utility.getWhereClauseString(rsNode,true));
+			
 		} catch (Exception e) {
 			logger.log(Level.SEVERE,e.getMessage(),e);
 			e.printStackTrace();

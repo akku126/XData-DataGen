@@ -151,8 +151,6 @@ public class RelatedToParameters {
 			{
 				datatype = n.getRight().getColumn().getColumnName();
 			}
-			//System.out.println("datatype: "+datatype);*/
-			//String datatype = getDatatypeFromNode(n);
 			if(n.getType().equalsIgnoreCase(Node.getBroNodeType())){
 				if(n.getLeft().getType().equalsIgnoreCase(Node.getAggrNodeType()) ||
 						n.getRight().getType().equalsIgnoreCase(Node.getAggrNodeType())){
@@ -426,7 +424,6 @@ public class RelatedToParameters {
 											 //Need to first check for related parameters then call for solving single constraints
 											 StringConstraintSolver scsobj = new StringConstraintSolver();
 											String  paramValnew = scsobj.solveSingleConstraint(s);
-											//System.out.println("paramValnew---"+paramValnew);
 											paramVal = paramValnew;
 										 }
 										

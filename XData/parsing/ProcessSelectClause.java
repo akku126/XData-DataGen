@@ -164,7 +164,6 @@ public class ProcessSelectClause{
 			}
 		}
 		qStruct.reAdjustJoins();
-		//System.out.println(qStruct.toString());
 	}
 
 
@@ -528,8 +527,7 @@ public class ProcessSelectClause{
 		}
 		else if(firstFromItem instanceof SubJoin){
 			SubJoin subJoin=(SubJoin) firstFromItem;
-			Join join=subJoin.getJoin();
-			//System.out.println(" subJoinAlias "+subJoin.getAlias().getName()+" on Expression"+	join.getOnExpression());			
+			Join join=subJoin.getJoin();			
 			Vector<FromClauseElement> tempElements=new Vector<FromClauseElement>();
 			ProcessSelectClause.processFromListSubJoin(subJoin, tempElements, joinConditions, qStruct,plainSelect, dbAppParameters);
 			leftFLE=new FromClauseElement();
@@ -830,13 +828,12 @@ public class ProcessSelectClause{
 	public static void newDisplay(Vector<FromClauseElement> visitedFromListElements) {
 		for(FromClauseElement fle:visitedFromListElements){
 			if(fle!=null && (fle.getTableName()!=null||fle.getTableNameNo()!=null))
-				System.out.println(fle.toString());
+				;
 			else if(fle!=null && fle.getSubQueryStructure()!=null){
-				System.out.println(fle.toString());
+				
 				newDisplay(fle.getSubQueryStructure().getFromListElements());
 			}
 			else if(fle!=null && fle.getBag()!=null && !fle.getBag().isEmpty()){
-				System.out.println(fle.toString());
 				newDisplay(fle.getBag());				
 			}
 

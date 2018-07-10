@@ -969,15 +969,10 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 	@Override
 	public int hashCode() {
 		final int prime = 31;
-		//		System.out.println("HashCode for node: " + this);
 		int result = 1;
 		result = prime * result + ((agg == null) ? 0 : agg.hashCode());
 
-		//	System.out.println("agg hashcode: " + ((agg == null) ? 0 : agg.hashCode()));
-
 		result = prime * result + ((column == null) ? 0 : column.hashCode());
-
-		//		System.out.println("Column hashcode: " + ((column == null) ? 0 : column.hashCode()));
 
 		/*	result = prime * result
 				+ ((isDistinct == null) ? 0 : isDistinct.hashCode());
@@ -985,18 +980,16 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 				+ ((joinType == null) ? 0 : joinType.hashCode());*/
 		result = prime * result + ((left == null) ? 0 : left.hashCode());
 
-		//		System.out.println("left hashcode: " + ((left == null) ? 0 : left.hashCode()));
+
 
 		/*	 	result = prime * result + ((lhsRhs == null) ? 0 : lhsRhs.hashCode());*/
 		result = prime * result
 				+ ((operator == null) ? 0 : operator.hashCode());
 
-		//		System.out.println("operator hashcode: " + ((operator == null) ? 0 : operator.hashCode()));
 		/*	result = prime * result + queryIndex;
 		result = prime * result + queryType;*/
 		result = prime * result + ((right == null) ? 0 : right.hashCode());
 
-		//		System.out.println("right hashcode: " + ((right == null) ? 0 : right.hashCode()));
 		/*result = prime * result
 				+ ((strConst == null) ? 0 : strConst.hashCode());
 		result = prime * result
@@ -1007,9 +1000,6 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 		result = prime * result
 				+ ((tableNameNo == null) ? 0 : tableNameNo.hashCode());
 
-		//		 System.out.println("tablename mo hashcode: " + ((tableNameNo == null) ? 0 : tableNameNo.hashCode()));
-
-		//	System.out.println("Value for node: " +result); 
 		result = prime * result + ((type == null) ? 0 : type.hashCode());
 		// return new Integer(result).hashCode();
 		return result;
@@ -1017,7 +1007,6 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 
 	@Override
 	public boolean equals(Object obj) {
-		//		System.out.println("Calling equals for: "+this+" "+obj);
 		if (this == obj)
 			return true;
 		if (obj == null)
