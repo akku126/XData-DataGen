@@ -1,9 +1,26 @@
 1|select id, name from student where tot_cred<30
 2|select dept_name,budget from department where budget = 20000
-3|select building from classroom where capacity > 10
-4|select name from instructor where salary < 30000
-5|select title from course where credits < 5
-6|select dept_name from department where budget < 70000
+2|select dept_name from department where budget < 70000
+3|select name from instructor where salary < 30000
+4|select * from instructor, department where instructor.dept_name < department.dept_name
+5|select name,course_id from instructor,teaches
+6|select name from student join takes on student.ID = takes.ID
+7|select count(DISTINCT id) from student group by dept_name
+8|select count(name) from student
+9|select avg(salary) from instructor
+10|SELECT dept_name FROM instructor 
+11|select building from classroom where capacity > 10
+12|SELECT name, COUNT(*) FROM instructor GROUP BY id, name
+13|select distinct s.id, s.name from student s, takes t where s.id = t.id 
+14|SELECT takes.course_id FROM student INNER JOIN takes ON(student.id=takes.id) INNER JOIN course ON(course.course_id=takes.course_id)
+15|SELECT dept_name FROM course LEFT OUTER JOIN takes USING(course_id) GROUP BY dept_name
+16|SELECT instructor.dept_name FROM  instructor, department 
+17|SELECT id FROM takes WHERE grade > (SELECT MIN(grade) FROM takes WHERE year = 2010)
+18|SELECT course.course_id FROM course LEFT OUTER JOIN (SELECT * from department WHERE department.budget < 70000) d USING (dept_name)
+19|select count(id) from student group by name having count(id) = 10
+20|SELECT dept_name, SUM(credits) FROM course INNER JOIN department USING (dept_name) WHERE credits >= 4 GROUP BY dept_name HAVING SUM(credits) < 13
+21|SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year > 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201')
+22|select name, title from instructor natural join teaches, course where teaches.course_id = course.course_id
 
 
 
