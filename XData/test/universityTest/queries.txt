@@ -1,8 +1,23 @@
-1|select id,name from student where tot_cred>30
-2|select dept_name,budget from department where budget > 20000
-3|select building from classroom where capacity < 10
-4|select name from instructor where salary > 30000
-5|select title from course where credits > 5
-6|select dept_name from department where budget > 70000
-
+1|select id, name from student where tot_cred>30
+2|select dept_name,budget from department where budget>40000
+3|select id from instructor where salary>70000
+4|select * from instructor, department where instructor.dept_name = department.dept_name
+5|select name,course_id from instructor,teaches where instructor.ID = teaches.ID
+6|select * from student join takes on student.ID = takes.ID
+7|select dept_name, count(id) from student group by dept_name
+8|select id, count(DISTINCT name) from student group by id
+9|select name, avg(salary) from instructor group by name
+10|SELECT DISTINCT dept_name FROM instructor 
+11|select building from classroom where capacity > 10
+12|SELECT COUNT(*) FROM instructor GROUP BY id, name
+13|select distinct s.id, s.name from student s, takes t where s.id = t.id and  t.grade != 'F' 
+14|SELECT takes.course_id FROM student INNER JOIN takes ON(student.id=takes.id) INNER JOIN course ON(course.course_id=takes.course_id) WHERE student.id = '12345'
+15|SELECT dept_name, COUNT(DISTINCT course_id) FROM course LEFT OUTER JOIN takes USING(course_id) GROUP BY dept_name
+16|SELECT instructor.dept_name FROM  instructor INNER JOIN department ON instructor.dept_name=department.dept_name
+17|SELECT id FROM takes WHERE grade < (SELECT MIN(grade) FROM takes WHERE year = 2010)
+18|SELECT course.course_id, d.dept_name  FROM course LEFT OUTER JOIN (SELECT * from department WHERE department.budget > 70000) d using (dept_name)
+19|select count(dept_name) from student group by name having count(id) < 10
+20|SELECT dept_name, SUM(credits) FROM course INNER JOIN department USING (dept_name) WHERE credits <= 4 GROUP BY dept_name HAVING SUM(credits) < 13 
+21|SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year = 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201' AND prereq.course_id = course.course_id)
+22|select name, title from (instructor natural join teaches) join course using (course_id)
 
