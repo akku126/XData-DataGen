@@ -1,11 +1,17 @@
 1|select id, name from student where tot_cred<30
+1|select id, name from student
 2|select dept_name,budget from department where budget = 20000
 2|select dept_name from department where budget < 70000
 3|select name from instructor where salary < 30000
+3|select name from instructor where salary = 30000
 4|select * from instructor, department where instructor.dept_name < department.dept_name
+4|select instructor.dept_name from instructor, department where instructor.dept_name < department.dept_name
 5|select name,course_id from instructor,teaches
+5|select name,course_id from instructor,teaches where instructor.ID < teaches.ID
 6|select name from student join takes on student.ID = takes.ID
+6|select name from student,takes where student.ID = takes.ID
 7|select count(DISTINCT id) from student group by dept_name
+7|select dept_name from student group by dept_name
 8|select count(name) from student
 9|select avg(salary) from instructor
 10|SELECT dept_name FROM instructor 
@@ -21,6 +27,34 @@
 20|SELECT dept_name, SUM(credits) FROM course INNER JOIN department USING (dept_name) WHERE credits >= 4 GROUP BY dept_name HAVING SUM(credits) < 13
 21|SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year > 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201')
 22|select name, title from instructor natural join teaches, course where teaches.course_id = course.course_id
-
-
+23|select * from (select * from student where dept_name = 'Comp.Sci') natural full outer join (select * from takes where semester = 'Spring' and year != 2009)
+24|select course_id from section as S where semester = 'Fall' and year = 2009 and exists (select * from section as T where semester = 'Spring' and year = 2010 and S.course_id = T.course_id)
+25|select * from instructor where dept_name in (select dept_name from department where building != 'Watson')
+26|select * from instructor where dept_name not in (select dept_name from department)
+27|(select course_id from section where semester = 'Fall' and year != 2009) union (select course_id from section where semester = 'Spring' and year = 2010)
+27|(select course_id from section where semester = 'Fall') union (select course_id from section where semester = 'Spring')
+28|(select course_id from section where year = 2009) union all (select course_id from section where semester = 'Spring' and year != 2010)
+28|(select course_id from section where semester = 'Fall' and year = 2009) union all (select course_id from section where year != 2010)
+29|(select course_id from section where semester = 'Fall' and year = 2009) intersect (select course_id from section where semester = 'Spring' and year != 2010)
+29|(select course_id from section where semester = 'Fall') intersect (select course_id from section where semester = 'Spring')
+30|(select course_id from section where semester = 'Fall' and year != 2009) intersect all (select course_id from section where semester = 'Spring' and year = 2010)
+30|(select course_id from section where year != 2009) intersect all (select course_id from section where year = 2010)
+31|(select course_id from section where semester = 'Fall' and year = 2009) except (select course_id from section where semester = 'Spring' and year != 2010)
+31|(select course_id from section where semester = 'Fall') except (select course_id from section where semester = 'Spring')
+32|(select course_id from section where semester = 'Fall' and year != 2009) except all (select course_id from section where semester = 'Spring' and year = 2010)
+32|(select course_id from section where year != 2009) except all (select course_id from section where year = 2010)
+33|select * from instructor where salary is null
+34|select * from instructor where salary is not null
+37|select count(distinct ID) from takes where (course_id , sec_id , semester , year)in(select course_id , sec_id , semester , year from teaches where teaches.ID != '10101')
+38|select count(distinct ID) from takes where (course_id , sec_id , semester , year)not in(select course_id , sec_id , semester , year from teaches where teaches.ID != '10101')
+39|select  from instructor where dept_name = 'Physics' order by name
+40|select ID from instructor order by salary desc , name asc
+41|select dept_name from department where building not like '%Watson%'
+42|select ID , name, salary*1.1 from instructor
+43|select dept_name from instructor
+44|select tot_cred from student
+45|select course_id from section as S where semester = 'Fall' and year = !2009 and exists (select * from section as T where semester = 'Spring' and year != 2010 and S.course_id = T.course_id)
+46|select course_id from section as S where semester = 'Fall' and year = !2009 and not exists (select * from section as T where semester = 'Spring' and year != 2010 and S.course_id = T.course_id)
+47|select min(salary)from instructor
+48|select max(salary)from instructor
 
