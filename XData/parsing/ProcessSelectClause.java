@@ -1718,14 +1718,15 @@ public class ProcessSelectClause{
 		Node n = new Node();
 		n.setType(Node.getBroNodeType());
 		
-		n.setQueryType(2);
-		n.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
-		
 
 		n.setOperator(QueryStructure.cvcRelationalOperators[3]);
 		n.setLeft(processExpression(broNode.getLeftExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters));
 		n.setRight(processExpression(broNode.getRightExpression(),fle, qStruct,plainSelect,joinType,dbAppParameters));
 
+		// added to fix array index out of bound exception in scalar subqueries
+		n.setQueryType(2);
+		n.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
+		
 		if(n.getLeft() != null && n.getLeft().getSubQueryConds() != null && n.getLeft().getSubQueryConds().size() > 0 && n.getSubQueryConds()!=null){
 			n.setSubQueryConds(n.getLeft().getSubQueryConds());
 			n.getLeft().getSubQueryConds().clear();

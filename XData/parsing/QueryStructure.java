@@ -1043,7 +1043,7 @@ import util.TableMap;
 					temp.operator = q.getQueryType().operator;
 					q.getLstJoinConditions().add(temp);
 					q.getQueryType().setLeft(null);
-					this.getLstSubQConnectives().set(i, "EXISTS");
+					this.getLstSubQConnectives().add("EXISTS");
 					q.setIsDistinct(false);
 				}
 			}
@@ -1086,7 +1086,7 @@ import util.TableMap;
 					temp.compliment();
 					q.getLstJoinConditions().add(temp);
 					q.getQueryType().setLeft(null);
-					this.getLstSubQConnectives().set(i, "NOT EXISTS");
+					this.getLstSubQConnectives().add("NOT EXISTS");
 					q.setIsDistinct(false);
 				}
 			}
