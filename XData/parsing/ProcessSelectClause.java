@@ -1709,7 +1709,7 @@ public class ProcessSelectClause{
 		r.setRight(processExpression(bn.getBetweenExpressionEnd(),fle,qStruct,plainSelect,joinType,dbAppParameters));
 		r.setType(Node.getBroNodeType());
 		n.setRight(r);
-
+		
 		return n;
 	}
 
@@ -1723,7 +1723,6 @@ public class ProcessSelectClause{
 		n.setLeft(processExpression(broNode.getLeftExpression(), fle, qStruct,plainSelect,joinType,dbAppParameters));
 		n.setRight(processExpression(broNode.getRightExpression(),fle, qStruct,plainSelect,joinType,dbAppParameters));
 
-		// added to fix array index out of bound exception in scalar subqueries
 		n.setQueryType(2);
 		n.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
 		
@@ -1797,12 +1796,14 @@ public class ProcessSelectClause{
 		Node n = new Node();
 		n.setType(Node.getBroNodeType());
 		n.setOperator(QueryStructure.cvcRelationalOperators[4]);
-		n.setQueryType(2);
-		n.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
+		
 
 		n.setLeft(processExpression(broNode.getLeftExpression(), fles, qStruct,plainSelect,joinType,dbAppParameters));
 		n.setRight(processExpression(broNode.getRightExpression(), fles, qStruct,plainSelect,joinType,dbAppParameters));
 
+		n.setQueryType(2);
+		n.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
+		
 		//Storing sub query details
 		//Code added for ALL / ANY subqueries - Start
 		//FIXME ANy condition needs to be tested - IS this correct???
@@ -1837,12 +1838,14 @@ public class ProcessSelectClause{
 		Node n = new Node();
 		n.setType(Node.getBroNodeType());
 		n.setOperator(QueryStructure.cvcRelationalOperators[5]);
-		n.setQueryType(2);
-		n.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
+		
 	
 		n.setLeft(processExpression(bne.getLeftExpression(), fle,qStruct,plainSelect,joinType,dbAppParameters));
 		n.setRight(processExpression(bne.getRightExpression(),fle,qStruct,plainSelect,joinType,dbAppParameters));
 
+		n.setQueryType(2);
+		n.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
+		
 		if(n.getLeft() != null && n.getLeft().getSubQueryConds() != null && n.getLeft().getSubQueryConds().size() > 0){
 			n.setSubQueryConds(n.getLeft().getSubQueryConds());
 			n.getLeft().getSubQueryConds().clear();
@@ -1872,14 +1875,15 @@ public class ProcessSelectClause{
 			QueryStructure qStruct, PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception{
 		Node n = new Node();
 		n.setType(Node.getBroNodeType());
-		n.setQueryType(2);
-		n.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
 		
 
 		n.setOperator(QueryStructure.cvcRelationalOperators[6]);
 		n.setLeft(processExpression(bne.getLeftExpression(), fle,qStruct,plainSelect,joinType,dbAppParameters));
 		n.setRight(processExpression(bne.getRightExpression(),fle, qStruct,plainSelect,joinType,dbAppParameters));
 
+		n.setQueryType(2);
+		n.setQueryIndex(qStruct.getWhereClauseSubqueries().size()-1);
+		
 		if(n.getLeft() != null && n.getLeft().getSubQueryConds() != null && n.getLeft().getSubQueryConds().size() > 0){
 			n.setSubQueryConds(n.getLeft().getSubQueryConds());
 			n.getLeft().getSubQueryConds().clear();
