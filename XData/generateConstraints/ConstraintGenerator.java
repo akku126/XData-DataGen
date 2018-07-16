@@ -2632,25 +2632,26 @@ public static String genPositiveCondsForPredWithAssert(QueryBlockDetails queryBl
 	 * @param constraint
 	 * @return
 	 */
-	public String getAndSetNotNullValuesBeforeFooter(Column col, Integer index, String constraint){
+	public String getAndSetNotNullValuesBeforeFooter(Column col, Integer index){
 		
+		 String constraint;
 		
 		if(col != null && col.getCvcDatatype() != null && (col.getCvcDatatype().equalsIgnoreCase("INT") || col.getCvcDatatype().equalsIgnoreCase("REAL") || col.getCvcDatatype().equalsIgnoreCase("TIME")
 				||col.getCvcDatatype().equalsIgnoreCase("TIMESTAMP") || col.getCvcDatatype().equalsIgnoreCase("DATE")))
 		{
 			if(isCVC3){
-				constraint += "\nASSERT NOT ISNULL_"+col.getColumnName()+"("+cvcMap(col, index+"")+");";
+				constraint = "\nASSERT NOT ISNULL_"+col.getColumnName()+"("+cvcMap(col, index+"")+");";
 			}else{
 				//	constraint += "\n (assert NOTISNULL_"+col.getColumnName()+" "+smtMap(col,Integer.toString(index))+")";
-				constraint += "\n (assert (get"+col.getColumnName()+" "+smtMap(col,Integer.toString(index))+"))";
+				constraint = "\n (assert (get"+col.getColumnName()+" "+smtMap(col,Integer.toString(index))+"))";
 			}
 		
 		}
 		else{
 			if(isCVC3){
-				constraint += "\nASSERT NOT ISNULL_"+col.getCvcDatatype()+"("+cvcMap(col, index+"")+");";
+				constraint = "\nASSERT NOT ISNULL_"+col.getCvcDatatype()+"("+cvcMap(col, index+"")+");";
 			}else{
-				constraint += "\n (assert (NOTISNULL_"+col.getCvcDatatype()+" " +smtMap(col,Integer.toString(index))+"))";
+				constraint = "\n (assert (NOTISNULL_"+col.getCvcDatatype()+" " +smtMap(col,Integer.toString(index))+"))";
 			}
 		}
 		return constraint;

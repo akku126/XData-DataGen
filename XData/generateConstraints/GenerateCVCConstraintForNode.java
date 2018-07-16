@@ -245,8 +245,9 @@ public class GenerateCVCConstraintForNode {
 					else
 						retVal += "\nASSERT NOT ISNULL_"+col.getCvcDatatype()+"(O_"+cvcMap(col, j+"")+");";
 						*/
-				
-				retVal = constraintGenerator.getAndSetNotNullValuesBeforeFooter(col, j,retVal);
+				if(!nullValues.values().contains(j)) {
+					retVal += constraintGenerator.getAndSetNotNullValuesBeforeFooter(col, j);
+				}
 			}
 
 
@@ -288,7 +289,7 @@ public class GenerateCVCConstraintForNode {
 			for(int j=1; j <= cvc.getNoOfOutputTuples().get(tabName); j++){
 				if(!nullValues.values().contains(j))
 					
-					retVal = constraintGenerator.getAndSetNotNullValuesBeforeFooter(col, j,retVal);
+					retVal += constraintGenerator.getAndSetNotNullValuesBeforeFooter(col, j);
 					
 			}
 

@@ -716,7 +716,7 @@ public class GenerateConstraintsRelatedToBranchQuery {
 
 				for(int i = 1; i <= tempTuplesAddedForBranchQueries.get(col.getTable()); i++){
 
-					retVal = constraintGenerator.getAndSetNotNullValuesBeforeFooter(col, (cvc.getNoOfOutputTuples().get(tabName) + i),retVal); 
+					retVal += constraintGenerator.getAndSetNotNullValuesBeforeFooter(col, (cvc.getNoOfOutputTuples().get(tabName) + i)); 
 					
 					/*if(col.getCvcDatatype().equals("INT") || col.getCvcDatatype().equals("REAL") || col.getCvcDatatype().equals("TIME")
 							||col.getCvcDatatype().equals("TIMESTAMP") || col.getCvcDatatype().equals("DATE"))

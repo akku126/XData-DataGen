@@ -99,15 +99,18 @@ public class GenerateCommonConstraintsForQuery {
 				CVCStr += "\n" + cvc.getConstraints().get(k);
 			}
 	
-			cvc.setDatatypeColumns( new ArrayList<String>() );
+			
 	
-			String CVC3_HEADER = GetSolverHeaderAndFooter.generateSolver_Header(cvc, unique);
+			
 	
 			/** Add not null constraints */
 			cvc.getConstraints().add( ConstraintGenerator.addCommentLine(" NOT NULL CONSTRAINTS"));
 			//CVCStr += GenerateCVCConstraintForNode.cvcSetNotNull(cvc);
 			CVCStr += GenerateCVCConstraintForNode.solverSetNotNull(cvc);
 
+			cvc.setDatatypeColumns( new ArrayList<String>() );
+			String CVC3_HEADER = GetSolverHeaderAndFooter.generateSolver_Header(cvc, unique);
+			
 			/** add mutation type and CVC3 header*/
 			CVCStr =  ConstraintGenerator.addCommentLine("MUTATION TYPE: " +cvc.getTypeOfMutation()) + CVC3_HEADER + CVCStr;
 		
