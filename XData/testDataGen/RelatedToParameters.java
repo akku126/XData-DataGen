@@ -126,30 +126,39 @@ public class RelatedToParameters {
 			//modified by bikash to ensure that datatype is the same as column name to ensure that range constraints get satisfied
 			//FIXME: What if left side is aggregation
 			String datatype = null;
+			String datatype4 = null;
 
 			if(n.getLeft().getType().equalsIgnoreCase(Node.getAggrNodeType()))//If the left side of node is aggregate function
 			{
-				if(n.getLeft().getAgg().getAggExp().getType().equalsIgnoreCase(Node.getBaoNodeType()))
+				if(n.getLeft().getAgg().getAggExp().getType().equalsIgnoreCase(Node.getBaoNodeType())) {
 					datatype = getTableNameNoForBAONode(n.getLeft().getAgg().getAggExp());
-				else
+					datatype4 = datatype;
+				}
+				else {
 					datatype = n.getLeft().getAgg().getAggExp().getColumn().getColumnName();
-				 
+					datatype4 = n.getLeft().getAgg().getAggExp().getColumn().getCvcDatatype();
+				}
 			}
 			else if (n.getRight().getType().equalsIgnoreCase(Node.getAggrNodeType()))//If the right side of node is aggregate function
 			{
-				if(n.getRight().getAgg().getAggExp().getType().equalsIgnoreCase(Node.getBaoNodeType()))
+				if(n.getRight().getAgg().getAggExp().getType().equalsIgnoreCase(Node.getBaoNodeType())) {
 					datatype = getTableNameNoForBAONode(n.getRight().getAgg().getAggExp());
-				else
+					datatype4 = datatype;
+				}	
+				else {
 					datatype = n.getRight().getAgg().getAggExp().getColumn().getColumnName();
-					
+					datatype4 = n.getRight().getAgg().getAggExp().getColumn().getCvcDatatype();
+				}
 			}
 			else if(n.getLeft() != null && n.getLeft().getColumn()!=null)//if left side is not aggregate
 			{
 				datatype = n.getLeft().getColumn().getColumnName();
+				datatype4 = n.getLeft().getColumn().getCvcDatatype();
 			}
 			else if(n.getRight() != null && n.getRight().getColumn() != null)
 			{
 				datatype = n.getRight().getColumn().getColumnName();
+				datatype4 = n.getLeft().getColumn().getCvcDatatype();
 			}
 			if(n.getType().equalsIgnoreCase(Node.getBroNodeType())){
 				if(n.getLeft().getType().equalsIgnoreCase(Node.getAggrNodeType()) ||
@@ -179,7 +188,7 @@ public class RelatedToParameters {
 				if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3"))
 					retVal = params.get(i) + " : " + datatype +";\n" + retVal;
 				else
-					retVal = "(declare-const "+params.get(i) + " " + datatype+")\n" + retVal;
+					retVal = "(declare-const "+params.get(i) + " " + datatype4+")\n" + retVal;
 				//to collect all string constraints
 				Vector<String> Stringvec = new Vector();
 				String newconsformat ="";

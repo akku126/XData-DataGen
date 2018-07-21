@@ -547,7 +547,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 						returnStr += ")";
 					}
 					
-					returnStr += "))";
+					returnStr += ")";
 				}			
 			}
 		}else{
@@ -575,7 +575,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 						returnStr += ")";
 					}
 					
-					returnStr += "))";
+					returnStr += ")";
 				}		
 			}
 			
@@ -695,7 +695,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 	}
 	else{
 		//Check if it is correct - 
-		returnStr += "(assert (/ (";
+		returnStr += " (/ (";
 		for(int i=1,j=0;i<=myCount;i++,j++){
 			String str = "";
 			int tuplePos=(groupNumber)*myCount+i;
@@ -710,13 +710,13 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 				str += "* "+(multiples)+" "+ getMapNode(agg, (tuplePos+offset-1)+"")+"";
 
 			if(i<myCount){
-				returnStr += ")) ";
+				//returnStr += ")) ";
 			}
 			if(i==1 && j==0){
 				returnStr += str;
 			}
 		}
-		return returnStr + ") "+totalRows + ")) \n";
+		return returnStr + ") "+totalRows + ") \n";
 	}
 	}
 	
@@ -3115,7 +3115,8 @@ public static void getAggConstraintExeFile(String filePath,GenerateCVC1 cvc) {
 	if(isCVC3){
 		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_cvc" +filePath+ "/checkAggConstraints.cvc | grep -e 'Invalid' > isValid \n";
 	}else{
-		cmdString += Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"temp_cvc" +filePath+ "/checkAggConstraints.cvc | grep -e 'true' > isValid \n";
+		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_cvc" +filePath+ "/checkAggConstraints.cvc | grep -e 'sat' > isValid \n";
+		//cmdString += Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"temp_cvc" +filePath+ "/checkAggConstraints.cvc | grep -e 'true' > isValid \n";
 	}
 	Utilities.writeFile(Configuration.homeDir+"temp_cvc" + cvc.getFilePath() + "/checkAggConstraints", cmdString);
 }
