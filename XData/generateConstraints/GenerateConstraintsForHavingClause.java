@@ -236,7 +236,7 @@ public class GenerateConstraintsForHavingClause {
 						returnStr += " OR ";
 					}
 				}
-				returnStr += ") ";
+				returnStr += "); ";
 				return returnStr;
 			}
 			else if(n.getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMIN())){
@@ -266,7 +266,7 @@ public class GenerateConstraintsForHavingClause {
 						returnStr += " OR ";
 					}
 				}
-				returnStr += ") ";
+				returnStr += ");";
 				return returnStr;
 			}
 			else return ""; //TODO: Code for COUNT
