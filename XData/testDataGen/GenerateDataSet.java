@@ -121,7 +121,7 @@ public class GenerateDataSet {
 			for (int i = 0; i < inst.length; i++) {
 				 
 				if (!inst[i].trim().equals("") && ! inst[i].trim().contains("drop table")) {
-					String temp = inst[i].replaceAll("(?i)^[ ]*create[ ]+table[ ]+", "create temporary table ");
+					String temp = inst[i].trim().replaceAll("(?i)^\\s*create\\s+table\\s+", "create temporary table ");
 					PreparedStatement stmt2 = conn.prepareStatement(temp);
 						stmt2.executeUpdate();	
 					stmt2.close();

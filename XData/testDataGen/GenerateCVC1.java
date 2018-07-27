@@ -1426,7 +1426,7 @@ public class GenerateCVC1 implements Serializable{
 				// in order to not execute empty statements  
 				if (!inst[i].trim().equals("") && ! inst[i].trim().contains("drop table")) {
 					//Changed for MSSQL testing
-					String temp = inst[i].replaceAll("(?i)^[ ]*create[ ]+table[ ]+", "create temporary table ");
+					String temp = inst[i].trim().replaceAll("(?i)^\\s*create\\s+table\\s+", "create temporary table ");
 					PreparedStatement stmt2 = assignmentConn.prepareStatement(temp);
 						stmt2.executeUpdate();	
 					stmt2.close();

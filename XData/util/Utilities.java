@@ -269,7 +269,7 @@ public class Utilities {
 			{  
 				if(!splittedQueries[i].trim().equals("") && !splittedQueries[i].trim().equals("\t"))    
 				{  
-					listOfQueries.add(new String(splittedQueries[i]));  
+					listOfQueries.add(new String(splittedQueries[i].trim()));  
 				}  
 			}       
 

@@ -90,7 +90,7 @@ public class ProcessSelectClause{
 	 */
 
 	public static void ProcessSelect(PlainSelect plainSelect, QueryStructure qStruct,AppTest_Parameters dbAppParameters) throws Exception {
-		logger.fine("processing select query"+plainSelect.toString());
+		logger.log(Level.FINE,"processing select query"+plainSelect.toString());
 		Vector<Node> joinConditions=new Vector<Node>();		
 		//Get the Node hierarchy
 				qStruct.topLevelRelation = generateRelationHierarchyJSQL(plainSelect);
@@ -99,7 +99,7 @@ public class ProcessSelectClause{
 		 */
 		ProcessSelectClause.processFromClause(plainSelect,qStruct,joinConditions, dbAppParameters);
 		for(Node n:joinConditions){
-			logger.info("joinCondition "+n);
+			logger.log(Level.FINE,"joinCondition "+n);
 		}
 		//		display(qStruct.fromListElements);
 
@@ -314,7 +314,7 @@ public class ProcessSelectClause{
 		
 		caseInWhereClause(whereClauseExpression,null,qStruct,plainSelect, dbAppParameters);
 		Node whereClause=ProcessSelectClause.processExpression(whereClauseExpression,qStruct.fromListElements, qStruct,plainSelect,null, dbAppParameters);
-		logger.info(" where clause "+whereClause);
+		logger.log(Level.FINE," where clause "+whereClause);
 	
 		if( whereClause != null) 
 			qStruct.allConds.add(whereClause);
@@ -335,7 +335,7 @@ public class ProcessSelectClause{
 		}
 		Node havingClause=ProcessSelectClause.processExpression(hc,qStruct.fromListElements, qStruct,plainSelect,null, dbAppParameters);
 		qStruct.setHavingClause(havingClause);
-		logger.info(hc+" having clause "+havingClause);
+		logger.log(Level.FINE,hc+" having clause "+havingClause);
 	}
 
 
@@ -393,17 +393,17 @@ public class ProcessSelectClause{
 			}
 			if(groupByColumn.getType().equals(Node.getValType())){
 				qStruct.groupByNodes.addElement(groupByColumn);
-				logger.info(groupExpression.toString()+ " group by column "+groupByColumn);
+				logger.log(Level.FINE,groupExpression.toString()+ " group by column "+groupByColumn);
 				continue;
 			}
 			else if(groupByColumn.getType().equals(Node.getCaseNodeType())){
 				qStruct.groupByNodes.addElement(groupByColumn);
-				logger.info(groupExpression.toString()+ " group by column "+groupByColumn);
+				logger.log(Level.FINE,groupExpression.toString()+ " group by column "+groupByColumn);
 				continue;
 			}
 			else if(groupByColumn.getType().equals(Node.getExtractFuncType())){
 				qStruct.groupByNodes.addElement(groupByColumn);
-				logger.info(groupExpression.toString()+ " group by column "+groupByColumn);
+				logger.log(Level.FINE,groupExpression.toString()+ " group by column "+groupByColumn);
 				continue;
 			}
 			else if(groupByColumn.getTableNameNo()==null||groupByColumn.getTableNameNo().isEmpty()){
@@ -420,7 +420,7 @@ public class ProcessSelectClause{
 						if(selExpItem.getAlias()!=null){
 							if(groupByColumn.getColumn().getColumnName().equalsIgnoreCase(selExpItem.getAlias().getName())){
 								groupByColumn =processExpression(e,qStruct.fromListElements, qStruct,plainSelect,null,dbAppParameters);
-								logger.info(groupByColumn+" alias name resolved " +selExpItem.getAlias().getName());
+								logger.log(Level.FINE,groupByColumn+" alias name resolved " +selExpItem.getAlias().getName());
 								break;
 							}
 						}
@@ -429,7 +429,7 @@ public class ProcessSelectClause{
 
 			}
 			qStruct.groupByNodes.addElement(groupByColumn);
-			logger.info(groupExpression.toString()+ " group by column "+groupByColumn);
+			logger.log(Level.FINE,groupExpression.toString()+ " group by column "+groupByColumn);
 
 		}
 
@@ -486,7 +486,7 @@ public class ProcessSelectClause{
 						if(selExpItem.getAlias()!=null){
 							if(orderByColumn.getColumn().getColumnName().equalsIgnoreCase(selExpItem.getAlias().getName())){
 								orderByColumn =processExpression(e,qStruct.fromListElements, qStruct,plainSelect,null,dbAppParameters);
-								logger.info(orderByColumn+" alias name resolved " +selExpItem.getAlias().getName());
+								logger.log(Level.FINE,orderByColumn+" alias name resolved " +selExpItem.getAlias().getName());
 								break;
 							}
 						}
@@ -495,7 +495,7 @@ public class ProcessSelectClause{
 
 			}
 			qStruct.orderByNodes.addElement(orderByColumn);
-			logger.info(orderExpression.toString()+ " order by column "+orderByColumn);
+			logger.log(Level.FINE,orderExpression.toString()+ " order by column "+orderByColumn);
 		}
 
 	}
@@ -558,7 +558,7 @@ public class ProcessSelectClause{
 				if(aliasNames.size()>0){
 					Vector<Node> subQueryProjColumns=subQueryParser.getProjectedCols();
 					if(aliasNames.size()!= subQueryProjColumns.size()){
-						logger.info(" Number of Aliass' Arguments does not match the number of subquery projected columns, "
+						logger.log(Level.WARNING," Number of Aliass' Arguments does not match the number of subquery projected columns, "
 								+ "exception thrown, query: "+plainSelect.toString());
 						throw new Exception(" Number of Alias Arguments does not match the number of subquery projected columns"
 								+ ", exception thrown");
@@ -660,7 +660,7 @@ public class ProcessSelectClause{
 							else
 								equiJoinNode.setJoinType(JoinClauseInfo.innerJoin);
 							joinConditions.add(equiJoinNode);
-							logger.info(" join condition added for join with using condition: "+equiJoinNode);
+							logger.log(Level.FINE," join condition added for join with using condition: "+equiJoinNode);
 						}
 					}
 				}
@@ -689,7 +689,7 @@ public class ProcessSelectClause{
 									equiJoinNode.setJoinType(JoinClauseInfo.innerJoin);
 								
 								joinConditions.add(equiJoinNode);
-								logger.info(" join condition added for natural join: "+equiJoinNode);
+								logger.log(Level.FINE," join condition added for natural join: "+equiJoinNode);
 							}
 						}
 					}
@@ -720,7 +720,7 @@ public class ProcessSelectClause{
 			//the case where projected column is described by * in plainSelect
 			if(projectedItem instanceof net.sf.jsqlparser.statement.select.AllColumns){			
 				for(Node n:parsing.Util.getAllProjectedColumns(qStruct.fromListElements, qStruct)){
-					logger.info(" all column, select all columns... "+n);
+					logger.log(Level.FINE," all column, select all columns... "+n);
 					qStruct.projectedCols.add(n);
 				}
 			}
@@ -729,7 +729,7 @@ public class ProcessSelectClause{
 				SelectExpressionItem selExpItem=(net.sf.jsqlparser.statement.select.SelectExpressionItem)projectedItem;
 				Expression e=selExpItem.getExpression();
 				if(selExpItem.getAlias()!=null){
-					logger.info(" alias present " +selExpItem.getAlias().getName());
+					logger.log(Level.FINE," alias present " +selExpItem.getAlias().getName());
 				}
 				// deals with the case when projected column is bounded by a pair of braces
 				if(e instanceof net.sf.jsqlparser.expression.Parenthesis){
@@ -740,7 +740,7 @@ public class ProcessSelectClause{
 				}
 				// deals with the case expression
 				if(e instanceof net.sf.jsqlparser.expression.CaseExpression){
-					logger.info("case expression: "+e);
+					logger.log(Level.FINE,"case expression: "+e);
 
 					CaseExpression caseExpr=(CaseExpression) e;
 					
@@ -782,7 +782,7 @@ public class ProcessSelectClause{
 						projectedColumn.setAliasName(selExpItem.getAlias().getName());
 					projectedColumn.setCaseExpression(retCaseExpr);
 					qStruct.projectedCols.add(projectedColumn);
-					logger.info(" Case Expresssion Projected Column Added "+projectedColumn);
+					logger.log(Level.FINE," Case Expresssion Projected Column Added "+projectedColumn);
 					
 				}
 				else{//case when projected column is not a case expression 
@@ -796,7 +796,7 @@ public class ProcessSelectClause{
 						projectedColumn.setAliasName(selExpItem.getAlias().getName());
 					}
 					qStruct.projectedCols.add(projectedColumn);
-					logger.info("Select Expression"+projectedItem.toString()+ " "+projectedColumn+" type "+projectedColumn.getType());
+					logger.log(Level.FINE,"Select Expression"+projectedItem.toString()+ " "+projectedColumn+" type "+projectedColumn.getType());
 
 					if(qStruct.setOperator==null||qStruct.setOperator.isEmpty()){
 						//deals with the case when the table name of the projected column  cannot be resolved  
@@ -804,7 +804,7 @@ public class ProcessSelectClause{
 							&&!projectedColumn.getType().equals(Node.getAggrNodeType())	&&!projectedColumn.getType().equals(Node.getCaseNodeType())
 							&&!projectedColumn.getType().equals(Node.getExtractFuncType())
 							&&(projectedColumn.getTableNameNo()==null||projectedColumn.getTableNameNo().isEmpty())){
-							logger.info(" Column name could not be resolved, query parsing failed, exception thrown, query: "+plainSelect.toString());
+							logger.log(Level.FINE," Column name could not be resolved, query parsing failed, exception thrown, query: "+plainSelect.toString());
 							throw new Exception(" Column name could not be resolved, query parsing failed, exception thrown");
 						}
 					}
@@ -893,7 +893,7 @@ public class ProcessSelectClause{
 	 */
 	public static void processFromListSubJoin(SubJoin subJoin, Vector<FromClauseElement> visitedFromListElements, Vector<Node> joinConditions,
 			QueryStructure qStruct, PlainSelect plainSelect,AppTest_Parameters dbAppParameters) throws Exception{
-		logger.info("processing subjoin"+ subJoin.toString());
+		logger.log(Level.FINE,"processing subjoin"+ subJoin.toString());
 
 		FromItem leftFromItem=subJoin.getLeft();
 		FromClauseElement leftFLE=null, rightFLE=null;
@@ -1002,7 +1002,7 @@ public class ProcessSelectClause{
 							equiJoinNode.setJoinType(JoinClauseInfo.innerJoin);
 
 						joinConditions.add(equiJoinNode);
-						logger.info(" join condition added for natural join: "+equiJoinNode);
+						logger.log(Level.FINE," join condition added for natural join: "+equiJoinNode);
 					}
 				}
 			}
@@ -1072,7 +1072,7 @@ public class ProcessSelectClause{
 				n.setStrConst(t.toString());
 				n.setLeft(null); 
 				n.setRight(null);
-				logger.info("TimeValue"+clause);
+				logger.log(Level.FINE,"TimeValue"+clause);
 			}
 			else if(clause instanceof TimestampValue){
 				TimestampValue timeStampValue=(TimestampValue) clause;
@@ -1082,7 +1082,7 @@ public class ProcessSelectClause{
 				n.setStrConst(ts.toString());
 				n.setLeft(null); 
 				n.setRight(null);
-				logger.info("TimestampValue"+clause);
+				logger.log(Level.FINE,"TimestampValue"+clause);
 				return n;
 			}
 			else if(clause instanceof TimeKeyExpression){
@@ -1102,12 +1102,12 @@ public class ProcessSelectClause{
 				n.setStrConst(dateTimeExpr.getValue());
 				n.setLeft(null); 
 				n.setRight(null); 
-				logger.info("DateTimeLiteralExpression Processed"+n);
+				logger.log(Level.FINE,"DateTimeLiteralExpression Processed"+n);
 				return n; 
 			}
 			else if(clause instanceof DateValue){
 				DateValue dateValue=(DateValue) clause;
-				logger.info("its a date"+dateValue.getValue());
+				logger.log(Level.FINE,"its a date"+dateValue.getValue());
 				Node n=new Node();
 				n.setType(Node.getValType());
 				n.setStrConst(dateValue.getValue().toString());
@@ -1123,12 +1123,12 @@ public class ProcessSelectClause{
 				n.setStrConst(dateTimeExpr.toString());
 				n.setLeft(null); 
 				n.setRight(null); 
-				logger.info("IntervalExpression Processed"+n);
+				logger.log(Level.FINE,"IntervalExpression Processed"+n);
 				return n; 
 			}
 			else if(clause instanceof SignedExpression){
 				SignedExpression sExpr=(SignedExpression) clause;
-				logger.info("its a signed expression"+sExpr);
+				logger.log(Level.FINE,"its a signed expression"+sExpr);
 				Node n=processExpression(sExpr.getExpression(),qStruct.fromListElements, qStruct,plainSelect,joinType,dbAppParameters);
 				if(n.getType().equals(Node.getValType())){
 					n.setStrConst(sExpr.getSign()+n.getStrConst());
@@ -1550,13 +1550,13 @@ public class ProcessSelectClause{
 				inNode.setRight(rhs);
 			}
 			if(!sqn.isNot()){					
-				logger.info(" Composite In node"+inNode);
+				logger.log(Level.FINE," Composite In node"+inNode);
 				return inNode;
 			}else{
 				notNode.setType(Node.getNotNodeType());
 				notNode.setRight(null);
 				notNode.setLeft(inNode);
-				logger.info(" Composite In node"+notNode);
+				logger.log(Level.FINE," Composite In node"+notNode);
 				return notNode;
 
 			}			
@@ -1921,7 +1921,7 @@ public class ProcessSelectClause{
 		
 		for(Expression whenClauseExpr:whenClauses){
 			WhenClause whenClause=(WhenClause)whenClauseExpr;
-			logger.info(" when exp: "+whenClause.getWhenExpression()+" then expression "+whenClause.getThenExpression());
+			logger.log(Level.FINE," when exp: "+whenClause.getWhenExpression()+" then expression "+whenClause.getThenExpression());
 			Node antecedentNode=processExpression(whenClause.getWhenExpression(),qStruct.fromListElements, qStruct,plainSelect,null,dbAppParameters);
 			Node consequentNode=processExpression(whenClause.getThenExpression(),qStruct.fromListElements, qStruct,plainSelect,null,dbAppParameters);
 			if(switchExpression!=null){
@@ -1993,7 +1993,7 @@ public class ProcessSelectClause{
 			n.setLeft(n1);
 		}
 		n.setRight(null);				
-		logger.info("Extract expression processed"+n);
+		logger.log(Level.FINE,"Extract expression processed"+n);
 		return n;
 
 	}
@@ -2131,9 +2131,9 @@ public class ProcessSelectClause{
 	 */
 	public static void processFromListSubSelect(SubSelect subSelect, QueryStructure subQueryParser,QueryStructure parentQueryParser,AppTest_Parameters dbAppParameters) throws Exception {
 		// TODO Auto-generated method stub
-		logger.info(" Processing subselect, selbody:"+subSelect.getSelectBody().toString());
+		logger.log(Level.FINE," Processing subselect, selbody:"+subSelect.getSelectBody().toString());
 		if(subSelect.getAlias()!=null)
-			logger.info(" subselect alias "+subSelect.getAlias().getName());
+			logger.log(Level.FINE," subselect alias "+subSelect.getAlias().getName());
 
 		parentQueryParser.getFromClauseSubqueries().add(subQueryParser);
 		
@@ -2156,7 +2156,7 @@ public class ProcessSelectClause{
  */
 
 	public static void processWhereSubSelect(SubSelect subSelect, QueryStructure subQueryParser,QueryStructure parentQueryParser,AppTest_Parameters dbAppParameters) throws Exception {
-		logger.info(" Processing subselect, selbody:"+subSelect.getSelectBody().toString());
+		logger.log(Level.FINE," Processing subselect, selbody:"+subSelect.getSelectBody().toString());
 
 		parentQueryParser.getWhereClauseSubqueries().add(subQueryParser);
 		subQueryParser.parentQueryParser=parentQueryParser;
@@ -2196,7 +2196,7 @@ public class ProcessSelectClause{
 					//n.setColumn(new parsing.Column(n.getColumn().getColumnName(),table));
 					parsing.Column c=table.getColumn(n.getColumn().getColumnName());
 					if(c==null){
-						logger.info(" Column name could not be resolved, query parsing failed, exception thrown, column name: "+n.getColumn().getColumnName());
+						logger.log(Level.WARNING," Column name could not be resolved, query parsing failed, exception thrown, column name: "+n.getColumn().getColumnName());
 						throw new Exception(" Column name could not be resolved, query parsing failed, exception thrown, column name: "+n.getColumn().getColumnName());
 					}
 					else{
@@ -2213,18 +2213,18 @@ public class ProcessSelectClause{
 						parsing.Column c=table.getColumn(n.getColumn().getColumnName());
 						n.setColumn(c);
 						if(c==null){
-							logger.info(" Column name could not be resolved, query parsing failed, exception thrown, column name: "+n.getColumn().getColumnName());
+							logger.log(Level.WARNING," Column name could not be resolved, query parsing failed, exception thrown, column name: "+n.getColumn().getColumnName());
 							throw new Exception(" Column name could not be resolved, query parsing failed, exception thrown, column name: "+n.getColumn().getColumnName());
 						}
 					}
-					logger.info("alias Name Found "+n);
+					logger.log(Level.FINE,"alias Name Found "+n);
 					return n;
 				}
 				// case when there is table name of n does not match with table/alias name of fle
 				// in which case fle's columns are searched for a column whose name is n's, if yes
 				// then fle's table and table name is copied to n's
 				else if(aliasNameFound){
-					logger.info("alias Name Found but not n");
+					logger.log(Level.FINE,"alias Name Found but not n");
 					Table table=qStruct.getTableMap().getTable(fle.getTableName());
 					parsing.Column c;
 					if((c=table.getColumn(n.getColumn().getColumnName().toUpperCase()))!=null){
@@ -2240,7 +2240,7 @@ public class ProcessSelectClause{
 			// and alias name matches with n's table name
 			if(fle!=null&&fle.getTableName()==null && fle.getAliasName()!=null&&
 				fle.getAliasName().equalsIgnoreCase(n.getTableNameNo())){
-					logger.info(" alias name is not null, but table name is null");
+				logger.log(Level.FINE," alias name is not null, but table name is null");
 					
 					// case when fle is a subquery, then its from list elements are recursively traversed and searched for a match
 					if(fle.getSubQueryStructure()!=null){
@@ -2257,7 +2257,7 @@ public class ProcessSelectClause{
 			}
 			if(aliasNameFound 
 					&& fle.getTableName()==null){
-				logger.info("alias name found"+n);
+				logger.log(Level.FINE,"alias name found"+n);
 				if(fle.getBag()!=null&&!fle.getBag().isEmpty()){
 					Node k= transformToAbsoluteTableNames(n,fle.getBag(),true,qStruct);
 					if(!n.getTableNameNo().equalsIgnoreCase(k.getTableNameNo()))
@@ -2269,13 +2269,13 @@ public class ProcessSelectClause{
 						return k;					
 
 				}
-				logger.info(" Alias name found, but column name cannot be resolved");
+				logger.log(Level.FINE," Alias name found, but column name cannot be resolved");
 			}
 
 			// if fle represents a sub join then its tabs contains it's components, in which 
 			// case its tabs are recursively traversed for finding a match
 			if(fle!=null && fle.getBag()!=null && !fle.getBag().isEmpty()){
-				logger.info(" tabs is not null");
+				logger.log(Level.FINE," tabs is not null");
 				Node k= transformToAbsoluteTableNames(n,fle.getBag(),false,qStruct);
 				if(!n.getTableNameNo().equalsIgnoreCase(k.getTableNameNo()))
 					return k;
@@ -2283,7 +2283,7 @@ public class ProcessSelectClause{
 			// if fle represents a subquery then its columns' names/alias names are also examined for a match with n's column name
 			if(fle!=null && fle.getSubQueryStructure()!=null 
 					&& (aliasNameFound||n.getTableNameNo()==null||n.getTableNameNo().isEmpty())){
-				logger.info(" subQueryParser: checking projected cols");
+				logger.log(Level.FINE," subQueryParser: checking projected cols");
 				
 				Node k=transformToAbsoluteNamesForAliasNameFoundSubquery(n,fle.getSubQueryStructure());
 				if(!n.getTableNameNo().equalsIgnoreCase(k.getTableNameNo()))
@@ -2321,7 +2321,7 @@ public class ProcessSelectClause{
 					n.setTable(table);
 					//n.setColumn(new parsing.Column(n.getColumn().getColumnName(),table));
 					n.setColumn(table.getColumn(n.getColumn().getColumnName()));
-					logger.info("table Name Found in ancestor"+n);
+					logger.log(Level.FINE,"table Name Found in ancestor"+n);
 					return n;
 				}
 				else if( !n.getTableNameNo().isEmpty() && fle.getAliasName().equalsIgnoreCase(n.getTableNameNo())){
@@ -2334,7 +2334,7 @@ public class ProcessSelectClause{
 						//n.setColumn(new parsing.Column(n.getColumn().getColumnName(),table));
 						n.setColumn(table.getColumn(n.getColumn().getColumnName()));
 					}
-					logger.info("alias Name Found in ancestor"+n);
+					logger.log(Level.FINE,"alias Name Found in ancestor"+n);
 					return n;
 				}
 				// case when there is table name of n does not match with table/alias name of fle
@@ -2348,14 +2348,14 @@ public class ProcessSelectClause{
 						//n.setColumn(new parsing.Column(n.getColumn().getColumnName(),table));
 						n.setColumn(table.getColumn(n.getColumn().getColumnName()));
 					}
-					logger.info("alias Name Found in ancestor"+n);
+					logger.log(Level.FINE,"alias Name Found in ancestor"+n);
 					return n;
 				}
 				// case when there is table name of n that does not match with table/alias name of fle
 				// in which case fle's columns are searched for a column whose name is n's, if yes
 				// then fle's table and table name is copied to n's
 				else if(aliasNameFound){
-					logger.info("alias Name Found but not n in ancestor");
+					logger.log(Level.FINE,"alias Name Found but not n in ancestor");
 					Table table=qStruct.getTableMap().getTable(fle.getTableName());
 					parsing.Column c;
 					if((c=table.getColumn(n.getColumn().getColumnName().toUpperCase()))!=null){
@@ -2368,7 +2368,7 @@ public class ProcessSelectClause{
 				}
 				//Case where column name of ancestor table is used in a subquery without any table alias.
 				else if(n.getTableNameNo().isEmpty() && n.getTableAlias().isEmpty() && n.getTable() == null){
-					logger.info("No Table/Aliasdetails exists other than Column Name. So find the table in fle and check if column name matches any parent table. ");
+					logger.log(Level.FINE,"No Table/Aliasdetails exists other than Column Name. So find the table in fle and check if column name matches any parent table. ");
 					Table table=qStruct.getTableMap().getTable(fle.getTableName());
 					parsing.Column c;
 					if((c=table.getColumn(n.getColumn().getColumnName().toUpperCase()))!=null){
@@ -2384,7 +2384,7 @@ public class ProcessSelectClause{
 			// and alias name matches with n's table name
 			if(fle!=null&&fle.getTableName()==null && fle.getAliasName()!=null&&
 				fle.getAliasName().equalsIgnoreCase(n.getTableNameNo())){
-					logger.info(" alias name is not null, but table name is null");
+				logger.log(Level.FINE," alias name is not null, but table name is null");
 					
 					// case when fle is a subquery, then its from list elements are recursively traversed and searched for a match
 					if(fle.getSubQueryStructure()!=null){
@@ -2403,7 +2403,7 @@ public class ProcessSelectClause{
 			// if fle represents a sub join then its tabs contains it's components, in which 
 			// case its tabs are recursively traversed for finding a match
 			if(fle!=null && fle.getBag()!=null && !fle.getBag().isEmpty()){
-				logger.info(" tabs is not null");
+				logger.log(Level.FINE," tabs is not null");
 				Node k= traverseAncestorsForAbsoluteNameTransformations(n,fle.getBag(),false,qStruct);
 				if(!n.getTableNameNo().equalsIgnoreCase(k.getTableNameNo()))
 					return k;
@@ -2411,7 +2411,7 @@ public class ProcessSelectClause{
 			// if fle represents a subquery then its columns' names/alias names are also examined for a match with n's column name
 			if(fle!=null && fle.getSubQueryStructure()!=null 
 					&& (aliasNameFound||n.getTableNameNo()==null||n.getTableNameNo().isEmpty())){
-				logger.info(" subQueryParser: checking projected cols");
+				logger.log(Level.FINE," subQueryParser: checking projected cols");
 				
 				Node k=transformToAbsoluteNamesForAliasNameFoundSubquery(n,fle.getSubQueryStructure());
 				if(!n.getTableNameNo().equalsIgnoreCase(k.getTableNameNo()))
@@ -2424,21 +2424,21 @@ public class ProcessSelectClause{
 }
 
 	private static Node transformToAbsoluteNamesForAliasNameFoundSubquery(Node n,QueryStructure subQueryStructure){
-		logger.info(" subQueryParser: checking projected cols");
+		logger.log(Level.FINE," subQueryParser: checking projected cols");
 
 		for(Node m:subQueryStructure.getProjectedCols()){
 			if(m.getAgg()!=null && m.getAgg().getAggAliasName()!=null){
 				if(n.getColumn().getColumnName().equalsIgnoreCase(m.getAgg().getAggAliasName())){
-					logger.info(" agg alias Name "+m.getAgg().getAggAliasName()+" node "+m);
+					logger.log(Level.FINE," agg alias Name "+m.getAgg().getAggAliasName()+" node "+m);
 					return m;
 				}
 			}					
 			if(m.getColumn()!=null&&m.getColumn().getColumnName().equalsIgnoreCase(n.getColumn().getColumnName())){	
-				logger.info(" column Name found in subQueryParser "+m);
+				logger.log(Level.FINE," column Name found in subQueryParser "+m);
 				return m;
 			}
 			if(m.getAliasName()!=null&&m.getAliasName().equalsIgnoreCase(n.getColumn().getColumnName())){
-				logger.info(" column Name found as alias in subQueryParser "+m);
+				logger.log(Level.FINE," column Name found as alias in subQueryParser "+m);
 				return m;
 			}
 		}	
