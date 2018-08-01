@@ -208,66 +208,18 @@ public class GenerateConstraintsForHavingClause {
 				return consGen.getSUMConstraint(myCount,groupNumber,multiples,totalRows,af.getAggExp(), offset);
 			}
 			else if(n.getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMAX())){
-				String returnStr = "";
-				returnStr += "\nASSERT EXISTS(i: MAX): (";
-
 				String innerTableNo=af.getAggExp().getTableNameNo();
 				if(innerTableNo == null){
 					innerTableNo = getTableNameNoForBAONode(af.getAggExp());
-				
 				}
-				int myCount = cvc.getNoOfTuples().get(innerTableNo);
-				int offset = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
-
-				for(int i=1;i<=totalRows;i++){
-					int tuplePos=(groupNumber)*myCount+i;
-					//Add the expression value to the other side of eqn - ie., to i value so that condition is satisfied
-					//If Aggregate has an expression
-					returnStr += GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), tuplePos+offset-1+"") + " <= " +"i ";//+GenerateCVCConstraintForNode.cvcMapNode(getValueForExpressionsInAgg(af),tuplePos+offset-1+"");//+"i ";
-					if(i<totalRows){
-						returnStr += " AND ";
-					}
-				}
-				returnStr += ") AND (";
-				for(int i=1;i<=totalRows;i++){
-					int tuplePos=(groupNumber)*myCount+i;
-					returnStr += GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), tuplePos+offset-1+"") + " = " +"i ";//+GenerateCVCConstraintForNode.cvcMapNode(getValueForExpressionsInAgg(af),tuplePos+offset-1+"");//"i ";
-					if(i<totalRows){
-						returnStr += " OR ";
-					}
-				}
-				returnStr += "); ";
-				return returnStr;
+				return consGen.getMaxAssertConstraint(innerTableNo,groupNumber,totalRows,cvc,af);
 			}
 			else if(n.getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMIN())){
-				String returnStr = "";
-				returnStr += "\nASSERT EXISTS(i: MIN): (";
-
 				String innerTableNo=af.getAggExp().getTableNameNo();
 				if(innerTableNo == null){
 					innerTableNo = getTableNameNoForBAONode(af.getAggExp());
-				
 				}
-				int myCount = cvc.getNoOfTuples().get(innerTableNo);
-				int offset = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
-
-				for(int i=1;i<=totalRows;i++){
-					int tuplePos=(groupNumber)*myCount+i;
-					returnStr += GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), tuplePos+offset-1+"") + " >= " + "i ";
-					if(i<totalRows){
-						returnStr += " AND ";
-					}
-				}
-				returnStr += ") AND (";
-				for(int i=1;i<=totalRows;i++){
-					int tuplePos=(groupNumber)*myCount+i;
-					returnStr += GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), tuplePos+offset-1+"") + " = " + "i ";
-					if(i<totalRows){
-						returnStr += " OR ";
-					}
-				}
-				returnStr += ");";
-				return returnStr;
+				return consGen.getMinAssertConstraint(innerTableNo,groupNumber,totalRows,cvc,af);
 			}
 			else return ""; //TODO: Code for COUNT
 		}		

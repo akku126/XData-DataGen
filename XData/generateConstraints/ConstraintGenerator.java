@@ -536,7 +536,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 			}
 			else{
 				String dataType = n.getLeft().getColumn().getCvcDatatype();
-				if(dataType != null){
+				/* if(dataType != null){
 					returnStr = "(define-fun MAX_"+n.getLeft().getColumn()+" ((x "+dataType+")) "+dataType+" ("+n.getOperator()+" x "+n.getRight().toCVCString(10, queryBlock.getParamMap())+") (";
 					if(n.getOperator().equalsIgnoreCase("<") || n.getOperator().equalsIgnoreCase("<=")){ 
 						returnStr += "> x  0)";
@@ -548,7 +548,21 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 					}
 					
 					returnStr += ")";
-				}			
+				}		
+				*/
+				
+				if(dataType != null){
+					returnStr = "(declare-const MAX_"+n.getLeft().getColumn()+" "+dataType+")\n";
+					returnStr += "(assert ("+n.getOperator()+" MAX_"+n.getLeft().getColumn()+" "+n.getRight().toCVCString(10, queryBlock.getParamMap())+"))\n ";
+					if(n.getOperator().equalsIgnoreCase("<") || n.getOperator().equalsIgnoreCase("<=")){ 
+						returnStr += "(assert (> MAX_"+n.getLeft().getColumn()+" 0))\n";
+					}
+					else if(n.getOperator().equalsIgnoreCase(">") || n.getOperator().equalsIgnoreCase(">=")){
+						returnStr += "(assert (< MAX_"+n.getLeft().getColumn()+" 10000000))\n";
+					}else{
+						returnStr += ")";
+					}
+				}
 			}
 		}else{
 			if(isCVC3){
@@ -610,6 +624,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 				}
 				else{
 					String dataType = n.getLeft().getColumn().getCvcDatatype();
+					/*
 					if(dataType != null){
 						returnStr = "(define-fun MIN_"+n.getLeft().getColumn()+" ((x "+dataType+")) "+dataType+" ("+n.getOperator()+" x "+n.getRight().toCVCString(10, queryBlock.getParamMap())+") (";
 						if(n.getOperator().equalsIgnoreCase("<") || n.getOperator().equalsIgnoreCase("<=")){ 
@@ -622,7 +637,21 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 						}
 						
 						returnStr += "))";
-					}		
+					}	
+					*/	
+					if(dataType != null){
+						returnStr = "(declare-const MIN_"+n.getLeft().getColumn()+" "+dataType+")\n";
+						returnStr += "(assert ("+n.getOperator()+" MIN_"+n.getLeft().getColumn()+" "+n.getRight().toCVCString(10, queryBlock.getParamMap())+"))\n ";
+						if(n.getOperator().equalsIgnoreCase("<") || n.getOperator().equalsIgnoreCase("<=")){ 
+							returnStr += "(assert (> MIN_"+n.getLeft().getColumn()+" 0))\n";
+						}
+						else if(n.getOperator().equalsIgnoreCase(">") || n.getOperator().equalsIgnoreCase(">=")){
+							returnStr += "(assert (< MIN_"+n.getLeft().getColumn()+" 10000000))\n";
+						}else{
+							returnStr += ")";
+						}
+		
+					}
 				}
 		}
 		else{
@@ -779,6 +808,169 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 		return returnStr + ") "+totalRows + ")) \n";
 	}
 	}
+	
+	
+	/**
+	 * This method is used to get the SMT / CVC constraints for aggregation function : MIN 
+	 *  
+	 * @param innerTableNo
+	 * @param groupNumber
+	 * @param totalRows
+	 * @param cvc
+	 * @param af
+	 * @return
+	 */
+	public String getMinAssertConstraint(String innerTableNo,Integer groupNumber,int totalRows,GenerateCVC1 cvc,AggregateFunction af){
+		
+		String returnStr = "";
+		
+
+		int myCount = cvc.getNoOfTuples().get(innerTableNo);
+		int offset = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
+		
+		if(isCVC3){
+			
+			returnStr += "\nASSERT EXISTS(i: MIN): (";
+	
+			for(int i=1;i<=totalRows;i++){
+				int tuplePos=(groupNumber)*myCount+i;
+				returnStr += GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), tuplePos+offset-1+"") + " >= " + "i ";
+				if(i<totalRows){
+					returnStr += " AND ";
+				}
+			}
+			returnStr += ") AND (";
+			for(int i=1;i<=totalRows;i++){
+				int tuplePos=(groupNumber)*myCount+i;
+				returnStr += GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), tuplePos+offset-1+"") + " = " + "i ";
+				if(i<totalRows){
+					returnStr += " OR ";
+				}
+			}
+			returnStr += ");";
+		}
+		else {
+			
+			String tableName = af.getAggExp().getColumn().getTable().getTableName();
+			String columnName = af.getAggExp().getColumn().getColumnName();
+			int index = af.getAggExp().getColumn().getTable().getColumnIndex(columnName);
+			
+			
+			myCount = cvc.getNoOfTuples().get(innerTableNo);
+			offset = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
+	
+			returnStr += "\n(assert ";
+			if(totalRows > 1)
+				returnStr += "(and";
+			for(int i=1;i<=totalRows;i++){
+				int tuplePos=(groupNumber)*myCount+i;
+				int row = tuplePos+offset-1;
+				returnStr += "\n ( >= MIN_"+columnName+" ("+tableName+"_"+columnName+index+" (select O_"+tableName+" "+row+") ))"; 
+				//returnStr += GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), tuplePos+offset-1+"") + " >= " + "i ";
+				
+			}
+			if(totalRows > 1)
+				returnStr += ")";
+			returnStr += ")";
+			
+			returnStr += "\n(assert ";
+			if(totalRows > 1)
+				returnStr += "(or";
+			for(int i=1;i<=totalRows;i++){
+				int tuplePos=(groupNumber)*myCount+i;
+				int row = tuplePos+offset-1;
+				returnStr += "\n ( = MIN_"+columnName+" ("+tableName+"_"+columnName+index+" (select O_"+tableName+" "+row+") ))"; 
+				//returnStr += GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), tuplePos+offset-1+"") + " >= " + "i ";
+			}
+			if(totalRows > 1)
+				returnStr += ")";
+			returnStr += ")";
+		}
+		
+		return returnStr;
+		
+		}
+	
+	
+	/**
+	 * This method is used to get the SMT / CVC constraints for aggregation function : MIN 
+	 *  
+	 * @param innerTableNo
+	 * @param groupNumber
+	 * @param totalRows
+	 * @param cvc
+	 * @param af
+	 * @return
+	 */
+	public String getMaxAssertConstraint(String innerTableNo,Integer groupNumber,int totalRows,GenerateCVC1 cvc,AggregateFunction af){
+		
+		String returnStr = "";
+		
+
+		int myCount = cvc.getNoOfTuples().get(innerTableNo);
+		int offset = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
+		
+		if(isCVC3){
+			
+			for(int i=1;i<=totalRows;i++){
+				int tuplePos=(groupNumber)*myCount+i;
+				//Add the expression value to the other side of eqn - ie., to i value so that condition is satisfied
+				//If Aggregate has an expression
+				returnStr += GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), tuplePos+offset-1+"") + " <= " +"i ";//+GenerateCVCConstraintForNode.cvcMapNode(getValueForExpressionsInAgg(af),tuplePos+offset-1+"");//+"i ";
+				if(i<totalRows){
+					returnStr += " AND ";
+				}
+			}
+			returnStr += ") AND (";
+			for(int i=1;i<=totalRows;i++){
+				int tuplePos=(groupNumber)*myCount+i;
+				returnStr += GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), tuplePos+offset-1+"") + " = " +"i ";//+GenerateCVCConstraintForNode.cvcMapNode(getValueForExpressionsInAgg(af),tuplePos+offset-1+"");//"i ";
+				if(i<totalRows){
+					returnStr += " OR ";
+				}
+			}
+			returnStr += "); ";
+		}
+		else {
+			
+			String tableName = af.getAggExp().getColumn().getTable().getTableName();
+			String columnName = af.getAggExp().getColumn().getColumnName();
+			int index = af.getAggExp().getColumn().getTable().getColumnIndex(columnName);
+			
+			
+			myCount = cvc.getNoOfTuples().get(innerTableNo);
+			offset = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
+	
+			returnStr += "\n(assert ";
+			if(totalRows > 1)
+				returnStr += "(and";
+			for(int i=1;i<=totalRows;i++){
+				int tuplePos=(groupNumber)*myCount+i;
+				int row = tuplePos+offset-1;
+				returnStr += "\n ( <= MAX_"+columnName+" ("+tableName+"_"+columnName+index+" (select O_"+tableName+" "+row+") ))"; 				
+			}
+			if(totalRows > 1)
+				returnStr += ")";
+			returnStr += ")";
+			
+			returnStr += "\n(assert ";
+			if(totalRows > 1)
+				returnStr += "(or";
+			for(int i=1;i<=totalRows;i++){
+				int tuplePos=(groupNumber)*myCount+i;
+				int row = tuplePos+offset-1;
+				returnStr += "\n ( = MAX_"+columnName+" ("+tableName+"_"+columnName+index+" (select O_"+tableName+" "+row+") ))"; 
+			}
+			if(totalRows > 1)
+				returnStr += ")";
+			returnStr += ")";
+		}
+		
+		return returnStr;
+	}
+	
+	
+	
 	
 	/**
 	 * 
