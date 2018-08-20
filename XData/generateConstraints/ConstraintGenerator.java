@@ -624,21 +624,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 				}
 				else{
 					String dataType = n.getLeft().getColumn().getCvcDatatype();
-					/*
-					if(dataType != null){
-						returnStr = "(define-fun MIN_"+n.getLeft().getColumn()+" ((x "+dataType+")) "+dataType+" ("+n.getOperator()+" x "+n.getRight().toCVCString(10, queryBlock.getParamMap())+") (";
-						if(n.getOperator().equalsIgnoreCase("<") || n.getOperator().equalsIgnoreCase("<=")){ 
-							returnStr += "> x  0)";
-						}
-						else if(n.getOperator().equalsIgnoreCase(">") || n.getOperator().equalsIgnoreCase(">=")){
-							returnStr += " < x 10000000 )";
-						}else{
-							returnStr += ")";
-						}
 						
-						returnStr += "))";
-					}	
-					*/	
 					if(dataType != null){
 						returnStr = "(declare-const MIN_"+n.getLeft().getColumn()+" "+dataType+")\n";
 						returnStr += "(assert ("+n.getOperator()+" MIN_"+n.getLeft().getColumn()+" "+n.getRight().toCVCString(10, queryBlock.getParamMap())+"))\n ";
@@ -865,9 +851,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 			for(int i=1;i<=totalRows;i++){
 				int tuplePos=(groupNumber)*myCount+i;
 				int row = tuplePos+offset-1;
-				returnStr += "\n ( >= MIN_"+columnName+" ("+tableName+"_"+columnName+index+" (select O_"+tableName+" "+row+") ))"; 
-				//returnStr += GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), tuplePos+offset-1+"") + " >= " + "i ";
-				
+				returnStr += "\n ( >= MIN_"+columnName+" ("+tableName+"_"+columnName+index+" (select O_"+tableName+" "+row+") ))"; 				
 			}
 			if(totalRows > 1)
 				returnStr += ")";
@@ -880,7 +864,6 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 				int tuplePos=(groupNumber)*myCount+i;
 				int row = tuplePos+offset-1;
 				returnStr += "\n ( = MIN_"+columnName+" ("+tableName+"_"+columnName+index+" (select O_"+tableName+" "+row+") ))"; 
-				//returnStr += GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), tuplePos+offset-1+"") + " >= " + "i ";
 			}
 			if(totalRows > 1)
 				returnStr += ")";
@@ -1379,9 +1362,15 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 			}
 			
 		}else{
-			constraint1 += constraintString.replaceAll("(and ", "(or ");
-			
-			constraint += "(assert "+constraint1+") \n";
+			if(constraintString.contains("(and "))
+				{	
+				constraint1 += constraintString.replaceAll("(and ", "(or ");
+				
+				constraint += "(assert "+constraint1+") \n";
+				}
+			else
+				constraint = constraintString;
+				
 		}
 		return constraint;
 	}
@@ -1561,6 +1550,9 @@ public String generateSMTAndConstraints(ArrayList<ConstraintObject> constraintLi
 	if(constraintStr == null || constraintStr == ""){
 		return "";
 	}
+	else {
+		constraintStr = " (and " + constraintStr + ")";
+	}
 	return constraintStr;
 }
 
@@ -1593,6 +1585,9 @@ public String generateSMTOrConstraints(ArrayList<ConstraintObject> constraintLis
 	if(constraintStr == null || constraintStr == ""){
 		constraintStr = "";
 	}
+	else {
+		constraintStr = " (or " + constraintStr + ")";
+	}
 	
 	return constraintStr;
 }
@@ -1609,10 +1604,66 @@ public String getSMTAndConstraint(ConstraintObject con, String s1,ArrayList<Cons
 	String cvcStr ="";
 	
 	if(s1 != null && !s1.isEmpty() || (s1 != null && !s1.isEmpty() && conList!= null && conList.size() > 1)){
-		cvcStr += " (and ";
+		//cvcStr += " (and ";
 		cvcStr += s1;
 	}	
 	if(con != null){
+		
+		String Rightconstr = "";
+		String Leftconstr = "";
+		///
+		if((con.getRightConstraint() != null && !con.getRightConstraint().isEmpty())) {
+			Rightconstr = con.getRightConstraint().trim();
+			
+			int st_index = Rightconstr.indexOf("(assert");
+			while(st_index != -1) {
+				//Rightconstr.replaceFirst("(assert", " ");
+				Leftconstr = Rightconstr.substring(0, st_index)+Leftconstr.substring(st_index+7);
+				int count = 1;
+				int end_index=st_index+1;
+				for(; end_index < Rightconstr.length(); end_index++) {
+					if(Rightconstr.charAt(end_index) == '(')
+						count++;
+					else if(Rightconstr.charAt(end_index) == ')')
+						count--;
+					if(count == 0) {
+						Rightconstr = Rightconstr.substring(0, end_index)+Rightconstr.substring(end_index+1);
+						st_index = Rightconstr.indexOf("(assert");
+						break;
+					}	
+						
+				}
+				if(end_index == Rightconstr.length())
+					break;
+			}	
+				
+		}
+		
+		if((con.getLeftConstraint() != null && !con.getLeftConstraint().isEmpty())) {
+			Leftconstr = con.getLeftConstraint().trim();
+			int st_index = Leftconstr.indexOf("(assert");
+			while(st_index != -1) {
+				Leftconstr = Leftconstr.substring(0, st_index)+Leftconstr.substring(st_index+7);
+				//Leftconstr.replaceFirst(" assert ", " ");
+				int count = 1;
+				int end_index=st_index+1;
+				for(; end_index < Leftconstr.length(); end_index++) {
+					if(Leftconstr.charAt(end_index) == '(')
+						count++;
+					else if(Leftconstr.charAt(end_index) == ')')
+						count--;
+					if(count == 0) {
+						Leftconstr = Leftconstr.substring(0, end_index)+Leftconstr.substring(end_index+1);
+						st_index = Leftconstr.indexOf("(assert");
+						break;
+					}	
+						
+				}
+				if(end_index == Leftconstr.length())
+					break;
+			}	
+				
+		}
 		
 		//If else statements are added to get the matching brackets based on the operator and constraint
 		
@@ -1632,20 +1683,20 @@ public String getSMTAndConstraint(ConstraintObject con, String s1,ArrayList<Cons
 			
 			
 			if(con.getLeftConstraint() != null && !con.getLeftConstraint().isEmpty()){
-				if(con.getLeftConstraint().startsWith("(")){
-					cvcStr+= con.getLeftConstraint()+" " ;
+				if(Leftconstr.trim().startsWith("(")){
+					cvcStr+= Leftconstr+" " ;
 				}else{
-					cvcStr+= " ("+con.getLeftConstraint()+") ";
+					cvcStr+= " ("+Leftconstr+") ";
 				}
 			}else{
 				cvcStr += " ";
 			}
 			
 			if(con.getRightConstraint() !=null && ! con.getRightConstraint().isEmpty() ){
-				if(isIntOrReal(con.getRightConstraint()) || con.getRightConstraint().startsWith("(")){
-					cvcStr +=con.getRightConstraint();
+				if(isIntOrReal(con.getRightConstraint()) || Rightconstr.trim().startsWith("(")){
+					cvcStr +=Rightconstr;
 				}else{
-					cvcStr +="("+con.getRightConstraint()+")";
+					cvcStr +="("+Rightconstr+")";
 				}
 			}else{
 				cvcStr += " ";
@@ -1676,11 +1727,11 @@ public String getSMTAndConstraint(ConstraintObject con, String s1,ArrayList<Cons
 			
 		}
 		else{
-			cvcStr += con.getLeftConstraint().startsWith("(")? " "+con.getLeftConstraint()+" " : " ("+con.getLeftConstraint()+") ";
+			cvcStr += Leftconstr.trim().startsWith("(")? " "+Leftconstr+" " : " ("+Leftconstr+") ";
 		}
 	}
 	if(s1 != null && !s1.isEmpty() || (s1 != null && !s1.isEmpty() && conList!= null && conList.size() > 1)){
-		cvcStr +=")  ";
+		//cvcStr +=")  ";
 	}
 	return cvcStr;
 }
@@ -1698,11 +1749,68 @@ public String getSMTOrConstraint(ConstraintObject con, String s1,ArrayList<Const
 	String cvcStr ="";
 	
 	if(s1 != null && !s1.isEmpty() || (s1 != null && !s1.isEmpty() && conList!= null && conList.size() > 1)){
-		cvcStr += " (or ";
+		//cvcStr += " (or ";
 		cvcStr += s1;
 	}
 	
 	if(con != null){
+		
+		String Rightconstr = "";
+		String Leftconstr = "";
+		/// Code to remove nested assert string 
+		if((con.getRightConstraint() != null && !con.getRightConstraint().isEmpty())) {
+			Rightconstr = con.getRightConstraint().trim();
+			
+			int st_index = Rightconstr.indexOf("(assert");
+			while(st_index != -1) {
+				//Rightconstr.replaceFirst("(assert", " ");
+				Leftconstr = Rightconstr.substring(0, st_index)+Leftconstr.substring(st_index+7);
+				int count = 1;
+				int end_index=st_index+1;
+				for(; end_index < Rightconstr.length(); end_index++) {
+					if(Rightconstr.charAt(end_index) == '(')
+						count++;
+					else if(Rightconstr.charAt(end_index) == ')')
+						count--;
+					if(count == 0) {
+						Rightconstr = Rightconstr.substring(0, end_index)+Rightconstr.substring(end_index+1);
+						st_index = Rightconstr.indexOf("(assert");
+						break;
+					}	
+						
+				}
+				if(end_index == Rightconstr.length())
+					break;
+			}	
+				
+		}
+		
+		if((con.getLeftConstraint() != null && !con.getLeftConstraint().isEmpty())) {
+			Leftconstr = con.getLeftConstraint().trim();
+			int st_index = Leftconstr.indexOf("(assert");
+			while(st_index != -1) {
+				Leftconstr = Leftconstr.substring(0, st_index)+Leftconstr.substring(st_index+7);
+				//Leftconstr.replaceFirst(" assert ", " ");
+				int count = 1;
+				int end_index=st_index+1;
+				for(; end_index < Leftconstr.length(); end_index++) {
+					if(Leftconstr.charAt(end_index) == '(')
+						count++;
+					else if(Leftconstr.charAt(end_index) == ')')
+						count--;
+					if(count == 0) {
+						Leftconstr = Leftconstr.substring(0, end_index)+Leftconstr.substring(end_index+1);
+						st_index = Leftconstr.indexOf("(assert");
+						break;
+					}	
+						
+				}
+				if(end_index == Leftconstr.length())
+					break;
+			}	
+				
+		}
+		///
 
 		if( (con.getOperator()!= null && ! con.getOperator().isEmpty()) && (con.getRightConstraint() != null 
 				&& !con.getRightConstraint().isEmpty()) ){
@@ -1723,21 +1831,21 @@ public String getSMTOrConstraint(ConstraintObject con, String s1,ArrayList<Const
 			}
 			
 			if(con.getLeftConstraint() != null && !con.getLeftConstraint().isEmpty()){
-				if(con.getLeftConstraint().trim().startsWith("(")){
-					cvcStr += con.getLeftConstraint()+" ";
+				if(Leftconstr.trim().startsWith("(")){
+					cvcStr += Leftconstr+" ";
 				}
 				else{
-					cvcStr += " ("+con.getLeftConstraint()+") ";
+					cvcStr += " ("+Leftconstr+") ";
 				}
 			}else{
 				cvcStr += " ";
 			}
 			
 			if(con.getRightConstraint() !=null && ! con.getRightConstraint().isEmpty()){
-				if((isIntOrReal(con.getRightConstraint()) || con.getRightConstraint().trim().startsWith("("))){
-					cvcStr += con.getRightConstraint() ;
+				if((isIntOrReal(con.getRightConstraint()) || Rightconstr.trim().startsWith("("))){
+					cvcStr += Rightconstr ;
 				}else{
-					cvcStr += "("+con.getRightConstraint()+")";
+					cvcStr += "("+Rightconstr+")";
 				}
 			}else{
 				cvcStr += " ";
@@ -1769,11 +1877,11 @@ public String getSMTOrConstraint(ConstraintObject con, String s1,ArrayList<Const
 			
 		}
 		else{
-			cvcStr += con.getLeftConstraint().trim().startsWith("(")? (" "+con.getLeftConstraint()+" ") : " ("+con.getLeftConstraint()+") ";
+			cvcStr += Leftconstr.trim().startsWith("(")? (" "+Leftconstr+" ") : " ("+con.getLeftConstraint()+") ";
 		}
 	}
 	if(s1 != null && !s1.isEmpty() || (s1 != null && !s1.isEmpty() && conList!= null && conList.size() > 1)){
-		cvcStr +=")  ";
+	//	cvcStr +=")  ";
 	}
 	return cvcStr;
 }
