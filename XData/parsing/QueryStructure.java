@@ -899,7 +899,7 @@ import util.TableMap;
 				index=m.start()+1;
 				input=m.replaceAll(" ROW "+m.group(1)+" NOT IN ");
 			}
-			logger.info(" replaced string after reformatting row lists: "+input);
+			logger.log(Level.FINE, "replaced string after reformatting row lists: "+input);
 			return input;
 		}
 
@@ -973,14 +973,14 @@ import util.TableMap;
 
 			}catch(ParseException ex){
 				
-				logger.log(Level.SEVERE," Function buildQueryStructure : "+ex.getMessage(),ex);
+				//logger.log(Level.SEVERE," Function buildQueryStructure : "+ex.getMessage(),ex);
 				String tempStr="";
 				for(StackTraceElement ele:ex.getStackTrace())
 					tempStr+="\n"+ele.toString();
 
 				throw new Exception("QueryStructure.java: buildQueryStructure() : JSQLParser Error : Query Parsing failed for the following query : \n"+queryString+" \n. \n Please check the logs for details.\n"+tempStr); 
 			} catch(Exception e){
-				logger.log(Level.SEVERE," Function buildQueryStructure : "+e.getMessage(),e);			
+				//logger.log(Level.SEVERE," Function buildQueryStructure : "+e.getMessage(),e);			
 				String tempStr="";
 				for(StackTraceElement ele:e.getStackTrace())
 					tempStr+="\n"+ele.toString();
@@ -1145,7 +1145,7 @@ import util.TableMap;
 						//PlainSelect selectClause =(PlainSelect) ((Select) stmt).getSelectBody();
 						
 						String alteredWithQuery=((Select)stmt).getSelectBody().toString();
-						logger.info("transformed query after substitution of Witt aliases\n"+ alteredWithQuery);
+						logger.log(Level.FINE,"transformed query after substitution of Witt aliases\n"+ alteredWithQuery);
 		
 						//ProcessResultSetNode.processResultSetNodeJSQL((PlainSelect)((Select) stmt).getSelectBody(), debug, this);
 						ProcessSelectClause.ProcessSelect((PlainSelect)((Select) stmt).getSelectBody(),  this, dbAppParameters);
@@ -1179,7 +1179,7 @@ import util.TableMap;
 						
 						stmt=transformQueryForWithAs((Select)stmt);
 						String alteredWithQuery=((Select)stmt).getSelectBody().toString();
-						logger.info("transformed query after substitution of with aliases\n"+ alteredWithQuery);
+						logger.log(Level.FINE,"transformed query after substitution of with aliases\n"+ alteredWithQuery);
 						
 						SetOperationList setOpList = (SetOperationList)((Select) stmt).getSelectBody();
 									
@@ -1207,7 +1207,7 @@ import util.TableMap;
 			if(leftFromItem instanceof net.sf.jsqlparser.schema.Table){			
 				net.sf.jsqlparser.schema.Table tarTable= (net.sf.jsqlparser.schema.Table)leftFromItem;
 				if(tarTable.getName().equalsIgnoreCase(srcWithItem.getName())){
-					logger.info("found as from item");
+					logger.log(Level.FINE,"found as from item");
 					//Get withItem and create new SubSelect if fromItem name is equal to with item name
 					Alias a;
 					if(tarTable.getAlias()!=null)
@@ -1227,7 +1227,7 @@ import util.TableMap;
 			}
 			// if fromitem is a subselect , then call the corresponding method that handles it
 			else if(leftFromItem instanceof SubSelect){
-				logger.info("processing subselect");
+				logger.log(Level.FINE,"processing subselect");
 				SubSelect leftSubSelect=(SubSelect) leftFromItem;
 				transformSubSelectForWithAs(srcWithItem, leftSubSelect);
 			}
@@ -1239,7 +1239,7 @@ import util.TableMap;
 			if(rightFromItem instanceof net.sf.jsqlparser.schema.Table){			
 				net.sf.jsqlparser.schema.Table tarTable= (net.sf.jsqlparser.schema.Table)rightFromItem;
 				if(tarTable.getName().equalsIgnoreCase(srcWithItem.getName())){
-					logger.info("found as from item");
+					logger.log(Level.FINE,"found as from item");
 					//Get withItem and create new SubSelect if fromItem name is equal to with item name
 					Alias a;
 					if(tarTable.getAlias()!=null)
@@ -1258,7 +1258,7 @@ import util.TableMap;
 				transformSubJoinForWithAs(srcWithItem,(SubJoin)rightFromItem);
 			}
 			else if(rightFromItem instanceof SubSelect){
-				logger.info("processing subselect");
+				logger.log(Level.FINE,"processing subselect");
 				SubSelect rightSubSelect=(SubSelect) rightFromItem;
 				transformSubSelectForWithAs(srcWithItem, rightSubSelect);
 			}
@@ -1279,7 +1279,7 @@ import util.TableMap;
 			if(tarFromItem instanceof net.sf.jsqlparser.schema.Table){
 				net.sf.jsqlparser.schema.Table tarTable= (net.sf.jsqlparser.schema.Table)tarFromItem;
 				if(tarTable.getName().equalsIgnoreCase(srcWithItem.getName())){
-					logger.info("found as from item");
+					logger.log(Level.FINE,"found as from item");
 					//Get withItem and create new SubSelect if fromItem name is equal to with item name
 					Alias a;
 					if(tarTable.getAlias()!=null)
@@ -1295,20 +1295,20 @@ import util.TableMap;
 			}
 			// if fromitem is a subselect , then call the corresponding method that handles it
 			else if(tarFromItem instanceof SubSelect){
-				logger.info("processing subselect");
+				logger.log(Level.FINER,"processing subselect");
 				SubSelect tarSubSelect=(SubSelect) tarFromItem;
 				transformSubSelectForWithAs(srcWithItem, tarSubSelect);
 			}
 			// if fromitem is a subjoin, then call the corresponding method that handles it
 			else if(tarFromItem instanceof SubJoin){
-				logger.info("processing subjoin");
+				logger.log(Level.FINER,"processing subjoin");
 				SubJoin tarSubJoin=(SubJoin)tarFromItem;
 				tarSubJoin=transformSubJoinForWithAs(srcWithItem,tarSubJoin);
 			}
 		
 			// WITH AS names can be in joins as well, call the corresponding method that handles it
 			if(tarSelectClause.getJoins() != null ){
-				logger.info("processing joins");
+				logger.log(Level.FINER,"processing joins");
 				List<Join> joinList = tarSelectClause.getJoins();
 				transformJoinsForWithAs(srcWithItem, joinList);
 
@@ -1350,7 +1350,7 @@ import util.TableMap;
 				if(tarJoinFromItem instanceof net.sf.jsqlparser.schema.Table){
 					net.sf.jsqlparser.schema.Table tarTable= (net.sf.jsqlparser.schema.Table)tarJoinFromItem;
 					if(tarTable.getName().equalsIgnoreCase(srcWithItem.getName())){
-						logger.info("found with alias in from item of join");
+						logger.log(Level.FINER,"found with alias in from item of join");
 						//Get withItem and create new SubSelect if fromItem name is equal to with item name
 						Alias a;
 						if(tarTable.getAlias()!=null)
@@ -1366,14 +1366,14 @@ import util.TableMap;
 				}
 				//if join item is a subselect, then call the corresponding method that handles it
 				else if(tarJoinFromItem instanceof SubSelect){
-					logger.info("processing subselect in join");
+					logger.log(Level.FINER,"processing subselect in join");
 					SubSelect tarSubSelect=(SubSelect) tarJoinFromItem;
 					PlainSelect tempSelect=(PlainSelect)tarSubSelect.getSelectBody();
 					transformPlainSelectForWithAs(srcWithItem, tempSelect);
 				}
 				//if join item is a subjoin, then call the corresponding method that handles it
 				else if(tarJoinFromItem instanceof SubJoin){
-					logger.info("processing subjoin in join");
+					logger.log(Level.FINER,"processing subjoin in join");
 					SubJoin tarSubJoin=(SubJoin)tarJoinFromItem;
 					tarSubJoin=transformSubJoinForWithAs(srcWithItem,tarSubJoin);
 				}
@@ -1400,13 +1400,13 @@ import util.TableMap;
 			}
 			//if whereClause is a Exists Expression, then recurisively call using its right expression as argument
 			else if(whereClause instanceof ExistsExpression){
-				logger.info("transforming exists in where clause");
+				logger.log(Level.FINER,"transforming exists in where clause");
 				ExistsExpression existsExpression = (ExistsExpression)whereClause;
 				transformWhereClauseForWithAs(srcWithItem,existsExpression.getRightExpression());
 			}
 			//if whereClause is a InExpression, then handle its left and right operands separately
 			else if(whereClause instanceof InExpression){
-				logger.info("transforming inExpression in where clause");
+				logger.log(Level.FINER,"transforming inExpression in where clause");
 				InExpression inExpression = (InExpression)whereClause;
 				if (inExpression.getLeftItemsList() instanceof SubSelect){
 					transformWhereClauseForWithAs(srcWithItem, (SubSelect)inExpression.getLeftItemsList());
@@ -1417,13 +1417,13 @@ import util.TableMap;
 			}
 			//if whereClause is a All comparision Expression, then recurisively call using its subselect as argument
 			else if(whereClause instanceof AllComparisonExpression){
-				logger.info("transforming all comparison in where clause");
+				logger.log(Level.FINER,"transforming all comparison in where clause");
 				AllComparisonExpression ace = (AllComparisonExpression) whereClause;
 				transformPlainSelectForWithAs(srcWithItem, (PlainSelect)(ace.getSubSelect().getSelectBody()));
 			}
 			//if whereClause is a Any comparision Expression, then recurisively call using its subselect as argument
 			else if(whereClause instanceof AnyComparisonExpression){
-				logger.info("transforming any comparison in where clause");
+				logger.log(Level.FINER,"transforming any comparison in where clause");
 				AnyComparisonExpression ace = (AnyComparisonExpression) whereClause;
 				transformPlainSelectForWithAs(srcWithItem, (PlainSelect)(ace.getSubSelect().getSelectBody()));
 			}
@@ -1437,7 +1437,7 @@ import util.TableMap;
 		private Select transformQueryForWithAs(Select selectClause) {
 			// TODO Auto-generated method stub
 			if(selectClause==null){
-				logger.info("Empty select");
+				logger.log(Level.FINE,"Empty select");
 				return null;
 			}
 			
@@ -1449,7 +1449,7 @@ import util.TableMap;
 				// normalize column names in with items eg: With A(a) as (select name from ...)
 				// is normalized to With A(a) as (select name as a from ...)
 				WithItem srcWithItem=normalizeWithItem(withItemsList.get(i));
-				logger.info("normalized with item"+srcWithItem);
+				logger.log(Level.FINER,"normalized with item"+srcWithItem);
 				// now translate the subsequent with items by substituting the definition 
 				// of withItem under consideration in their select bodies
 				for(int j=i+1;j<withItemsList.size();j++){
@@ -1517,7 +1517,7 @@ import util.TableMap;
 				normalizeSelectedColumnsForWithItem(withItem, setOpList);
 
 			}
-			logger.info(" normalized with item "+withItem.getName()+" withItemBody: "+withItem.getSelectBody());
+			logger.log(Level.FINE," normalized with item "+withItem.getName()+" withItemBody: "+withItem.getSelectBody());
 			return withItem;
 		}
 		
@@ -1578,7 +1578,7 @@ import util.TableMap;
 		 */
 		public void processQueriesForSetOp(SetOperationList setOpList, boolean debug,AppTest_Parameters dbAppParameters) throws Exception {
 			
-			logger.info(" set operation List"+setOpList.toString());
+			logger.log(Level.FINE," set operation List"+setOpList.toString());
 			SetOperation setOperation =  setOpList.getOperations().get(0);
 			
 			if(setOperation instanceof ExceptOp || setOperation instanceof MinusOp || setOperation instanceof IntersectOp || setOperation instanceof UnionOp){
@@ -1919,7 +1919,7 @@ import util.TableMap;
 						for(int i=0;i<eqClass.size();i++){
 							Node n=eqClass.get(i);
 							if(n.getTableNameNo().equalsIgnoreCase(elimRelation)){
-								logger.info(" eq member deleted"+n+" from "+eqClass);
+								logger.log(Level.FINER," eq member deleted"+n+" from "+eqClass);
 								eqClass.remove(i);
 								updateFlag=true;
 							}

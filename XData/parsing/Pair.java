@@ -1,10 +1,14 @@
 package parsing;
 
+import java.io.Serializable;
+
 import parsing.Node;
 
 
-public class Pair {
+public class Pair implements Serializable{
 	
+	private static final long serialVersionUID = -5712147089838421706L;
+
 	public Node first;
 	
 	public Node second;

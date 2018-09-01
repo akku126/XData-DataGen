@@ -2201,7 +2201,7 @@ public class ProcessSelectClause{
 					}
 					else{
 					n.setColumn(table.getColumn(n.getColumn().getColumnName()));
-					logger.info("table Name Found "+n);
+					logger.log(Level.FINE, "table Name Found "+n);
 					}
 					return n;
 				}

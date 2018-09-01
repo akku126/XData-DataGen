@@ -403,7 +403,7 @@ public class ConjunctQueryStructure implements Serializable{
 										.equalsIgnoreCase(
 												temp2.getTableNameNo().toUpperCase())) {
 							
-							ConjunctQueryStructure.logger.log(Level.INFO,"Added " + temp1.toString());
+							ConjunctQueryStructure.logger.log(Level.FINE,"Added " + temp1.toString());
 							ec.add(temp1.getLeft());
 							ec.add(temp1.getRight());
 							tempAllJoinConds.remove(k);
@@ -417,7 +417,7 @@ public class ConjunctQueryStructure implements Serializable{
 										.equalsIgnoreCase(
 												temp2.getTableNameNo().toUpperCase())) {
 							
-							ConjunctQueryStructure.logger.log(Level.INFO,"Added " + temp1.toString());
+							ConjunctQueryStructure.logger.log(Level.FINE,"Added " + temp1.toString());
 							ec.add(temp1.getLeft());
 							ec.add(temp1.getRight());
 							tempAllJoinConds.remove(k);
@@ -437,7 +437,7 @@ public class ConjunctQueryStructure implements Serializable{
 			// tempAllJoinConds.remove(count);
 			equivalenceClasses.add(new Vector<Node>(ec));
 
-			ConjunctQueryStructure.logger.log(Level.INFO,"Added EC: " + ec.toString());
+			logger.log(Level.FINE,"Added EC: " + ec.toString());
 			ec.removeAllElements();
 		}
 		removeDuplicates(equivalenceClasses);

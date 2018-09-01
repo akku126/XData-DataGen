@@ -1,5 +1,6 @@
 package parsing;
 
+import java.io.Serializable;
 import java.sql.Types;
 import java.util.HashMap;
 import java.util.Vector;
@@ -10,7 +11,9 @@ import parsing.ANDNode;
 import parsing.ORNode;
 import parsing.Node;
 
-public class DisjunctQueryStructure {
+public class DisjunctQueryStructure implements Serializable{
+	
+	private static final long serialVersionUID = 5331369461376183408L;
 	private static Logger logger = Logger.getLogger(DisjunctQueryStructure.class.getName());
 	public Vector<Node> allConds;
 	public Vector<Node> selectionConds;

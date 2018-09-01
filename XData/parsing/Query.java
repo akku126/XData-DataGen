@@ -204,7 +204,7 @@ public class Query implements Serializable{
 	}
 	
 	public void addFromTable(Table table){
-		logger.log(Level.INFO,"addFromTable : Table Name "+table);
+		logger.log(Level.FINER,"addFromTable : Table Name "+table);
 		fromTables.put(table.getTableName(), table);
 	}
 	
