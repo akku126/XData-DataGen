@@ -216,16 +216,91 @@ public class GenerateDataSet {
 			Connection conn=DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));;
 			
 			int queryId=1;
-			//String query="select id,name from student";
-			//String query="select * from student join takes on student.ID = takes.ID";
-//			String query="select course_id,count(id) from course inner join takes where grade=?";
-			//String query="select * from instructor natural join teaches where dept_name=? and year=?";
-			//String query="select name,count(*) from student group by name";
+			//String query = "select name from instructor where salary > some (select salary from instructor where dept_name = ’Biology’)";
+			String query = "with recursive c_prereq(course_id , prereq_id)as(select course_id , prereq_id from prereq union select prereq.prereq_id , c_prereq.course_id from prereq , c_prereq where prereq.course_id = c_prereq.prereq_id) select course_id,prereq_id from c_prereq";
+			//String query = "with max_budget (value) as (select max(budget) from department) select budget from department, max_budget where department.budget = max_budget.value";
+			//String query = "select dept_name, avg_salary from (select dept_name, avg (salary) from instructor group by dept name) as dept avg (dept_name, avg_salary) where avg_salary > 42000";
+			//String query = "select dept_name from department where building = 'T%'";
+			//String query = "select dept_name from department where building like '%Watson%'";
+			//String query = "SELECT takes.course_id FROM student INNER JOIN takes ON(student.id=takes.id) INNER JOIN course ON(course.course_id=takes.course_id) WHERE student.id = '12345'";
+			//String query="select * from student join takes on student.ID = takes.ID";	
 			//String query ="select dept_name, avg(salary) as avg_salary from instructor group by dept_name having avg(salary) > 42000";
-			String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year > 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201')";
+			//String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year > 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201')";
+			
+			/* I----*/
+			//  String query = "select id, name from student where tot_cred>30";
+			 
+			/* II----
+			 * String query = "select * from student inner join department using (dept_name) where student.tot_cred > 40 and exists (select * from course where credits >=6 and course.dept_name = 'comp. sci.' )";
+			 */
+			/* III----
+			 * String query = "select dept_name, avg(salary) from instructor group by dept_name having avg(salary) > 100000";
+			 */
+			/* IV----
+			 * String query="select * from instructor natural join teaches where dept_name=? and year=?";
+			 */
+			/* V-----
+			 * String query = "select course_id from section as S where semester = 'Fall' and year = 2009 and not exists (select * from section as T where semester = 'Spring' and year = 2010 and S.course_id = T.course_id)";
+			 */
+			/* VI----
+			 * String query = "SELECT dept_name, SUM(credits) FROM course INNER JOIN department USING (dept_name) WHERE credits <= 4 GROUP BY dept_name HAVING SUM(credits) < 13";
+			 */
+			/* VII-----
+			 * String query = "select * from instructor where dept_name in (select dept_name from department where building = 'Watson')";
+			 */
+			/* VIII----
+			 * String query = "(select course_id from section where semester = 'Fall' and year = 2009) except  (select course_id from section where semester = 'Spring' and year = 2010)";
+			 */
+			/* IX-----
+			 * String query = "select name, title from (instructor natural join teaches) join course using (course_id)";
+			 */
+			/* X----
+			 * String query = "SELECT dept_name, COUNT(DISTINCT course_id) FROM course LEFT OUTER JOIN takes USING(course_id) GROUP BY dept_name";
+			 */
+			/* XI-----
+			 * String query = "SELECT takes.course_id FROM student INNER JOIN takes ON(student.id=takes.id) INNER JOIN course ON(course.course_id=takes.course_id) WHERE student.id = '12345'";
+			 */
+			/* XII----
+			 * String query = "select distinct s.id, s.name from student s, takes t where s.id = t.id and  t.grade != 'F'";
+			 */
+			/* XIII----
+			 * String query = "Select * from section join teaches on section.course_id = teaches.course_id ";
+			 */
+			/* XIV----
+			 * String query="select course_id,count(id) from course inner join takes where grade=?";			
+			 */
+			/* XV-----
+			 * String query = "SELECT id FROM takes WHERE grade < (SELECT MIN(grade) FROM takes WHERE year = 2010)";
+			 */
+			/* XVI----
+			 * String query = "select * from classroom, section where classroom.building = section.building and classroom.room_number = section.room_number";
+			 */
+			/* XVII----
+			 * String query = "SELECT dept_name, SUM(credits) FROM course INNER JOIN department USING (dept_name) WHERE credits <= 4 GROUP BY dept_name HAVING SUM(credits) < 13";	
+			 */
+			/* XVIII----
+			 * String query = "Select min(budget) from department";			
+			 */
+			/* XIX----
+			 * String query="select name,count(*) from student group by name";
+			 */
+			/* XX----
+			 * String query = "select id, name from student where tot_cred>30";
+			 */
+			/* XXI----
+			 * String query="select id,name from student";
+			 */
+			/*String query = "SELECT course_id, title FROM course inner join section WHERE year = 2010 and  EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201' AND prereq.course_id = course.course_id) ";
+			 * ---->>>problem with this particular query
+			 */
+			//String query = "select name from instructor where salary is null";
+			
+			
 			File schemaFile=new File("test/universityTest/DDL.sql");
 			File sampleDataFile=new File("test/universityTest/sampleData.sql");
 			boolean orderDependent=false;
+			/* runtime analysis for regression test */
+			long startTime = System.currentTimeMillis();
 			String tempFilePath=File.separator +queryId;
 			
 			GenerateDataSet d=new GenerateDataSet();
@@ -235,7 +310,10 @@ public class GenerateDataSet {
 			
 			//end
 			d.generateDatasetForQuery(conn,queryId,query,  schemaFile,  sampleDataFile,  orderDependent,  tempFilePath, obj);
-			
+			long stopTime = System.currentTimeMillis();
+			long elapsedTime = stopTime - startTime;
+	        System.out.println("Total time taken fro data generation of the query is: ");
+	        System.out.print(elapsedTime);
 		}
 	
 }
