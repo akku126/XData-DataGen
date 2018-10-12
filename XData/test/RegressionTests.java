@@ -260,7 +260,10 @@ public class RegressionTests {
 		String schemaFile="test/universityTest/DDL.sql";
 		//Path of file containing sampleData
 		String sampleDataFile="test/universityTest/sampleData.sql";
-		
+		/* runtime analysis for regression test */
+		long startTime = System.currentTimeMillis();
+		//System.out.println("Starting time of regression test is:");
+        //System.out.println(startTime);
 		RegressionTests r=new RegressionTests(basePath,schemaFile,sampleDataFile);
 		Map<Integer,List<String>> errorsMap=r.runRegressionTests();
 		
@@ -281,6 +284,12 @@ public class RegressionTests {
 		}
 		Utilities.writeFile(basePath+File.separator+"test_result.log", errors);
 		System.out.println(errors);
+		long stopTime = System.currentTimeMillis();
+		//System.out.println("Stopping time of regression test is: ");
+	    //System.out.println(stopTime);
+        long elapsedTime = stopTime - startTime;
+        System.out.println("Total time taken by regression test is: ");
+        System.out.print(elapsedTime);
 		
 	}
 	
