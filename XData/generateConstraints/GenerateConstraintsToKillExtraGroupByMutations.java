@@ -139,10 +139,10 @@ public static ArrayList<Column> getListOfExtraColumns(	ArrayList<Table> tempFrom
 						flag=false;
 						break;
 					}
-				
+				}
 			if(flag)/** If this not a group by node column */
 					extraColumn.add(col);
-			}
+			//}
 		}
 		/** Added by Shree for adding reference columns to missing group by dataset generation **/
 		/**Check if the projected tables refers to any other table. If so add the referenced columns also

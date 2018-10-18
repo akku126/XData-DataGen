@@ -36,7 +36,7 @@ public class UnintendedJoinsMutationsInOuterQueryBlock {
 			generateDataForkillingUnintendedJoinsMutationsInOuterQueryBlock(cvc);
 		}
 		else{
-			//generateDataForkillingUnintendedJoinsMutationsInOuterQueryBlockSMT(cvc);
+			generateDataForkillingUnintendedJoinsMutationsInOuterQueryBlock(cvc);
 		}
 		
 	}

@@ -8,8 +8,10 @@ import java.util.logging.Logger;
 import parsing.Column;
 import parsing.ConjunctQueryStructure;
 import parsing.Node;
+import parsing.Table;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
+import util.Configuration;
 import util.ConstraintObject;
 
 /**
@@ -23,6 +25,22 @@ public class GenerateJoinPredicateConstraints {
 	
 	private static Logger logger = Logger.getLogger(GenerateJoinPredicateConstraints.class.getName());
 	
+	
+	private static boolean isTempJoin = false;
+	
+	/**
+	 * Constructor
+	 */
+	public GenerateJoinPredicateConstraints(){
+		 
+		 if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true")){
+			 this.isTempJoin = true;
+		 }else {
+			 this.isTempJoin = false;
+		 }
+	}
+	
+	
 	public static String getConstraintsforEquivalenceClasses(GenerateCVC1 cvc, QueryBlockDetails queryBlock, ConjunctQueryStructure conjunct) throws Exception{
 		String constraintString="";
 		Vector<Vector<Node>> equivalenceClasses = conjunct.getEquivalenceClasses();
@@ -33,6 +51,26 @@ public class GenerateJoinPredicateConstraints {
 				Node n2 = ec.get(i+1);
 				constraintString += GenerateJoinPredicateConstraints.getConstraintsForEquiJoins1(cvc, queryBlock, n1,n2);
 			}
+		}
+		
+		if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true")){
+			 isTempJoin = true;
+		 }else {
+			 isTempJoin = false;
+		 }
+		if(isTempJoin) {
+			String constr,declare="";
+			int st_index=0,end_index=0;
+			constr = constraintString;
+			while(constr.indexOf("(declare-datatypes ()") != -1) {
+			st_index = constr.indexOf("(declare-datatypes ()");
+			end_index = constr.indexOf("_TupleType))")+12;
+			if(!declare.contains(constr.substring(st_index, end_index)))
+				declare += constr.substring(st_index, end_index) + " \n";
+			constr = constr.substring(0, st_index)+constr.substring(end_index);
+			}
+			
+			constraintString =  declare + constr;
 		}
 		
 		return constraintString;
@@ -111,6 +149,12 @@ public class GenerateJoinPredicateConstraints {
 		return constraintString;
 	}
 
+	public static String getConstraintsForNonEquiJoinsTJ(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Node n) throws Exception{
+
+		String constraintString = "";
+			constraintString += getConstraintsForNonEquiJoins(cvc, queryBlock, n.getLeft(), n.getRight(), n.getOperator());
+		return constraintString;
+	}
 
 	/**
 	 * Wrapper method Used to generate constraints negative for the non equi join conditions of the conjunct
@@ -333,65 +377,146 @@ public class GenerateJoinPredicateConstraints {
 
 		String constraintString = "";
 
-		/** get the details of each node */
-		String t1 = getTableName(n1);
-		String t2 = getTableName(n2);
-
-		int pos1 = cvc.getTableMap().getTable(t1).getColumnIndex(getColumn(n1).getColumnName());
-		int pos2 = cvc.getTableMap().getTable(t2).getColumnIndex(getColumn(n2).getColumnName());
-
-		String r1 = getTableNameNo(n1);
-		String r2 = getTableNameNo(n2);
-		logger.log(Level.INFO,"relation2 name num  ---"+r2);
 		
-		int offset1 = cvc.getRepeatedRelNextTuplePos().get(r1)[1];
-		int offset2 = cvc.getRepeatedRelNextTuplePos().get(r2)[1];
-
-		/** Get number of tuples of each relation occurrence */
-		int tuples1 = 0, tuples2=0;
-		if(cvc.getNoOfTuples().containsKey(r1)){
-
-			tuples1 = cvc.getNoOfTuples().get(r1);
-		}
-
-		if(cvc.getNoOfTuples().containsKey(r2)){
-
-			tuples2 = cvc.getNoOfTuples().get(r2);
-		}
-
-		int noOfgroups = UtilsRelatedToNode.getNoOfGroupsForThisNode(cvc, queryBlock, n1);
-		
-		ConstraintGenerator constrGen = new ConstraintGenerator();
-		ArrayList<ConstraintObject> constrObjList = new ArrayList<ConstraintObject>();
+		if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true")){
+			 isTempJoin = true;
+		 }else {
+			 isTempJoin = false;
+		 }
+		if(!isTempJoin) {
+			/** get the details of each node */
+			String t1 = getTableName(n1);
+			String t2 = getTableName(n2);
 	
-		for(int i=0; i<noOfgroups; i++){
-			/**Do a round robin for the smaller value*/
-			for(int k=1,l=1;; k++,l++){
-
-				//constraintString += "ASSERT ("+ GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n1, ((i*tuples1)+k+offset1-1))+ operator + 
-					//	GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n2, ((i*tuples2)+l+offset2-1))+");\n";
-				/*ConstraintObject constrObj = new ConstraintObject();
-				constrObj.setLeftConstraint(constrGen.genPositiveCondsForPred(queryBlock, n1, ((i*tuples1)+k+offset1-1)));
-				constrObj.setRightConstraint(constrGen.genPositiveCondsForPred(queryBlock, n2, ((i*tuples2)+l+offset2-1)));
-				constrObj.setOperator(operator);
-				constrObjList.add(constrObj);
-				*/
-				
-				constraintString += constrGen.getAssertConstraint(constrGen.genPositiveCondsForPred(queryBlock, n1, ((i*tuples1)+k+offset1-1)),operator,constrGen.genPositiveCondsForPred(queryBlock, n2, ((i*tuples2)+l+offset2-1)));
-
-				if(tuples1>tuples2){
-					if(l==tuples2 && k<tuples1)	l=0;
-					if(k>=tuples1) break;
-				}
-				else if(tuples1<tuples2){
-					if(l<tuples2 && k==tuples1)	k=0;
-					if(l>=tuples2) break;				
-				}
-				else{/** if tuples1==tuples2 */
-					if(l==tuples1) break;
-				}
+			int pos1 = cvc.getTableMap().getTable(t1).getColumnIndex(getColumn(n1).getColumnName());
+			int pos2 = cvc.getTableMap().getTable(t2).getColumnIndex(getColumn(n2).getColumnName());
+	
+			String r1 = getTableNameNo(n1);
+			String r2 = getTableNameNo(n2);
+			logger.log(Level.INFO,"relation2 name num  ---"+r2);
+			
+			int offset1 = cvc.getRepeatedRelNextTuplePos().get(r1)[1];
+			int offset2 = cvc.getRepeatedRelNextTuplePos().get(r2)[1];
+	
+			/** Get number of tuples of each relation occurrence */
+			int tuples1 = 0, tuples2=0;
+			if(cvc.getNoOfTuples().containsKey(r1)){
+	
+				tuples1 = cvc.getNoOfTuples().get(r1);
 			}
+	
+			if(cvc.getNoOfTuples().containsKey(r2)){
+	
+				tuples2 = cvc.getNoOfTuples().get(r2);
+			}
+	
+			int noOfgroups = UtilsRelatedToNode.getNoOfGroupsForThisNode(cvc, queryBlock, n1);
+			
+			ConstraintGenerator constrGen = new ConstraintGenerator();
+			ArrayList<ConstraintObject> constrObjList = new ArrayList<ConstraintObject>();
+		
+		
+			for(int i=0; i<noOfgroups; i++){
+				/**Do a round robin for the smaller value*/
+				for(int k=1,l=1;; k++,l++){
+	
+					//constraintString += "ASSERT ("+ GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n1, ((i*tuples1)+k+offset1-1))+ operator + 
+						//	GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n2, ((i*tuples2)+l+offset2-1))+");\n";
+					/*ConstraintObject constrObj = new ConstraintObject();
+					constrObj.setLeftConstraint(constrGen.genPositiveCondsForPred(queryBlock, n1, ((i*tuples1)+k+offset1-1)));
+					constrObj.setRightConstraint(constrGen.genPositiveCondsForPred(queryBlock, n2, ((i*tuples2)+l+offset2-1)));
+					constrObj.setOperator(operator);
+					constrObjList.add(constrObj);
+					*/
+					
+					constraintString += constrGen.getAssertConstraint(constrGen.genPositiveCondsForPred(queryBlock, n1, ((i*tuples1)+k+offset1-1)),operator,constrGen.genPositiveCondsForPred(queryBlock, n2, ((i*tuples2)+l+offset2-1)));
+	
+					if(tuples1>tuples2){
+						if(l==tuples2 && k<tuples1)	l=0;
+						if(k>=tuples1) break;
+					}
+					else if(tuples1<tuples2){
+						if(l<tuples2 && k==tuples1)	k=0;
+						if(l>=tuples2) break;				
+					}
+					else{// if tuples1==tuples2 
+						if(l==tuples1) break;
+					}
+				}
+			
+			} 
 		}
+		else if(isTempJoin){
+	// Join Temp table implementation	
+			Vector<String> tablesAdded = new Vector<String>();
+			Table f1,f2;
+			String temp1,temp2,joinTable,ColName;
+			int t1Columnindex, t2Columnindex;
+			int findex = 0;
+			f1 = n1.getTable();
+			f2 = n2.getTable();
+			temp1 = f1.getTableName();
+			temp2 = f2.getTableName();
+			joinTable = temp1 + "join" + temp2;
+				if(!tablesAdded.contains(joinTable)){
+					constraintString += "\n (declare-datatypes () (("+joinTable +"_TupleType" + "("+joinTable +"_TupleType ";
+				}
+				
+				for(String key : f1.getColumns().keySet()) {
+					ColName = f1.getColumns().get(key).getColumnName();
+					String s = f1.getColumns().get(key).getCvcDatatype();
+						if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
+							constraintString += "("+joinTable+"_"+f1.getColumns().get(key)+findex+" "+s + ") ";
+						else
+							constraintString += "("+joinTable+"_"+f1.getColumns().get(key)+findex+" "+ColName + ") ";						
+						findex++;
+				}
+				int delimit = findex;
+				for(String key : f2.getColumns().keySet()) {
+					ColName = f2.getColumns().get(key).getColumnName();
+					String s = f2.getColumns().get(key).getCvcDatatype();
+						if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
+							constraintString += "("+joinTable+"_"+f2.getColumns().get(key)+findex+" "+s + ") ";
+						else
+							constraintString += "("+joinTable+"_"+f2.getColumns().get(key)+findex+" "+ColName + ") ";						
+						findex++;
+				}
+				constraintString += ") )) )\n";
+				//Now create the Array for this TupleType
+				constraintString += "(declare-fun O_" + joinTable + "() (Array Int " + joinTable + "_TupleType))\n\n";
+				
+			
+			t1Columnindex	= n1.getColumn().getTable().getColumnIndex(n1.getColumn().getColumnName());
+			t2Columnindex	= n2.getColumn().getTable().getColumnIndex(n2.getColumn().getColumnName());
+			ConstraintGenerator constrGen = new ConstraintGenerator();
+				
+			String constraint1 = constrGen.genPositiveCondsForPredF(queryBlock, n1, "i1");
+			String constraint2 = constrGen.genPositiveCondsForPredF(queryBlock, n2, "j1");
+	
+	
+			
+			constraintString += "(assert (forall ((i1 Int)(j1 Int))(=> ("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " )":" "+ ") \n");
+			//constraintString += "(forall ((i1 Int)(j1 Int))(=> ("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " )":" "+ ") \n");
+			
+			
+			String constraint3 = "("+joinTable+"_"+n1.getColumn().getColumnName()+t1Columnindex;
+			constraint3 += "("+" select O_"+joinTable+" "+" k1 ) )";
+			
+			constraintString += "(exists ((k1 Int)) (and (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" "+ ")) \n");
+			
+			t2Columnindex += delimit;
+			String constraint4 = "("+joinTable+"_"+n2.getColumn().getColumnName()+t2Columnindex;
+			constraint4 += "("+" select O_"+joinTable+" "+" k1 ) )";
+			
+			constraintString += "(" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" "+ ")))))) \n\n");
+		
+			//constraintString += "(assert (forall ((k1 Int)) (exists ((i1 Int)(j1 Int)) (and (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" " + " )\n");
+			
+			//constraintString +=  "("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" " +  ")))))\n");
+			
+		}
+	// Join Temp table implementation end
+		
 	//	constraintString =constrGen.generateANDConstraintsWithAssert(constrObjList);
 		return constraintString;
 	}
@@ -442,53 +567,131 @@ public class GenerateJoinPredicateConstraints {
 		int pos1 = cvc.getTableMap().getTable(t1).getColumnIndex(n1.getColumn().getColumnName());
 		int pos2 = cvc.getTableMap().getTable(t2).getColumnIndex(n2.getColumn().getColumnName());
 
-		String r1 = n1.getTableNameNo();
-		String r2 = n2.getTableNameNo();
-		int offset1 = cvc.getRepeatedRelNextTuplePos().get(r1)[1];
-		int offset2 = cvc.getRepeatedRelNextTuplePos().get(r2)[1];
-
-		/** Get number of tuples of each relation occurrence */
-		int tuples1 = 0, tuples2=0;
-		if(cvc.getNoOfTuples().containsKey(r1)){
-
-			tuples1 = cvc.getNoOfTuples().get(r1)*UtilsRelatedToNode.getNoOfGroupsForThisNode(cvc, queryBlock, n1);
-		}
-
-		if(cvc.getNoOfTuples().containsKey(r2)){
-
-			tuples2 = cvc.getNoOfTuples().get(r2)*UtilsRelatedToNode.getNoOfGroupsForThisNode(cvc, queryBlock, n2);
-		}
-
-		int noOfgroups = UtilsRelatedToNode.getNoOfGroupsForThisNode(cvc, queryBlock, n1);
-		ConstraintGenerator constrGen = new ConstraintGenerator();
-		ArrayList<ConstraintObject> constrObjList = new ArrayList<ConstraintObject>();
+		if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true")){
+			 isTempJoin = true;
+		 }else {
+			 isTempJoin = false;
+		 }
 		
-		for(int i=0; i<noOfgroups; i++){
-			/**Do a round robin for the smaller value*/
-			for(int k=1,l=1;; k++,l++){
-
-				//constraintString += "("+ GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n1, ((i*tuples1)+k+offset1-1))+ operator + 
-					//	GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n2, ((i*tuples2)+l+offset2-1))+") AND ";
-				ConstraintObject constrObj = new ConstraintObject();
-				constrObj.setLeftConstraint(constrGen.genPositiveCondsForPred(queryBlock, n1, ((i*tuples1)+k+offset1-1)));
-				constrObj.setRightConstraint(constrGen.genPositiveCondsForPred(queryBlock, n2, ((i*tuples2)+l+offset2-1)));
-				constrObj.setOperator(operator);
-				constrObjList.add(constrObj);
-
-				if(tuples1>tuples2){
-					if(l==tuples2 && k<tuples1)	l=0;
-					if(k>=tuples1) break;
-				}
-				else if(tuples1<tuples2){
-					if(l<tuples2 && k==tuples1)	k=0;
-					if(l>=tuples2) break;				
-				}
-				else{/** if tuples1==tuples2 */
-					if(l==tuples1) break;
+		if(!isTempJoin) {
+			String r1 = n1.getTableNameNo();
+			String r2 = n2.getTableNameNo();
+			int offset1 = cvc.getRepeatedRelNextTuplePos().get(r1)[1];
+			int offset2 = cvc.getRepeatedRelNextTuplePos().get(r2)[1];
+	
+			/** Get number of tuples of each relation occurrence */
+			int tuples1 = 0, tuples2=0;
+			if(cvc.getNoOfTuples().containsKey(r1)){
+	
+				tuples1 = cvc.getNoOfTuples().get(r1)*UtilsRelatedToNode.getNoOfGroupsForThisNode(cvc, queryBlock, n1);
+			}
+	
+			if(cvc.getNoOfTuples().containsKey(r2)){
+	
+				tuples2 = cvc.getNoOfTuples().get(r2)*UtilsRelatedToNode.getNoOfGroupsForThisNode(cvc, queryBlock, n2);
+			}
+	
+			int noOfgroups = UtilsRelatedToNode.getNoOfGroupsForThisNode(cvc, queryBlock, n1);
+			ConstraintGenerator constrGen = new ConstraintGenerator();
+			ArrayList<ConstraintObject> constrObjList = new ArrayList<ConstraintObject>();
+			
+			for(int i=0; i<noOfgroups; i++){
+				/**Do a round robin for the smaller value*/
+				for(int k=1,l=1;; k++,l++){
+	
+					//constraintString += "("+ GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n1, ((i*tuples1)+k+offset1-1))+ operator + 
+						//	GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, n2, ((i*tuples2)+l+offset2-1))+") AND ";
+					ConstraintObject constrObj = new ConstraintObject();
+					constrObj.setLeftConstraint(constrGen.genPositiveCondsForPred(queryBlock, n1, ((i*tuples1)+k+offset1-1)));
+					constrObj.setRightConstraint(constrGen.genPositiveCondsForPred(queryBlock, n2, ((i*tuples2)+l+offset2-1)));
+					constrObj.setOperator(operator);
+					constrObjList.add(constrObj);
+	
+					if(tuples1>tuples2){
+						if(l==tuples2 && k<tuples1)	l=0;
+						if(k>=tuples1) break;
+					}
+					else if(tuples1<tuples2){
+						if(l<tuples2 && k==tuples1)	k=0;
+						if(l>=tuples2) break;				
+					}
+					else{/** if tuples1==tuples2 */
+						if(l==tuples1) break;
+					}
 				}
 			}
+			constraintString =constrGen.generateANDConstraintsWithAssert(constrObjList);
 		}
-		constraintString =constrGen.generateANDConstraintsWithAssert(constrObjList);
+		else if(isTempJoin){
+			// Join Temp table implementation	
+					Vector<String> tablesAdded = new Vector<String>();
+					Table f1,f2;
+					String temp1,temp2,joinTable,ColName;
+					int t1Columnindex, t2Columnindex;
+					int findex = 0;
+					f1 = n1.getTable();
+					f2 = n2.getTable();
+					temp1 = f1.getTableName();
+					temp2 = f2.getTableName();
+					joinTable = temp1 + "join" + temp2;
+						if(!tablesAdded.contains(joinTable)){
+							constraintString += "\n (declare-datatypes () (("+joinTable +"_TupleType" + "("+joinTable +"_TupleType ";
+						}
+						
+						for(String key : f1.getColumns().keySet()) {
+							ColName = f1.getColumns().get(key).getColumnName();
+							String s = f1.getColumns().get(key).getCvcDatatype();
+								if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
+									constraintString += "("+joinTable+"_"+f1.getColumns().get(key)+findex+" "+s + ") ";
+								else
+									constraintString += "("+joinTable+"_"+f1.getColumns().get(key)+findex+" "+ColName + ") ";						
+								findex++;
+						}
+						int delimit = findex;
+						for(String key : f2.getColumns().keySet()) {
+							ColName = f2.getColumns().get(key).getColumnName();
+							String s = f2.getColumns().get(key).getCvcDatatype();
+								if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
+									constraintString += "("+joinTable+"_"+f2.getColumns().get(key)+findex+" "+s + ") ";
+								else
+									constraintString += "("+joinTable+"_"+f2.getColumns().get(key)+findex+" "+ColName + ") ";						
+								findex++;
+						}
+						constraintString += ") )) )\n";
+						//Now create the Array for this TupleType
+						constraintString += "(declare-fun O_" + joinTable + "() (Array Int " + joinTable + "_TupleType))\n\n";
+						
+					
+					t1Columnindex	= n1.getColumn().getTable().getColumnIndex(n1.getColumn().getColumnName());
+					t2Columnindex	= n2.getColumn().getTable().getColumnIndex(n2.getColumn().getColumnName());
+					ConstraintGenerator constrGen = new ConstraintGenerator();
+						
+					String constraint1 = constrGen.genPositiveCondsForPredF(queryBlock, n1, "i1");
+					String constraint2 = constrGen.genPositiveCondsForPredF(queryBlock, n2, "j1");
+			
+			
+					
+					constraintString += "(assert (forall ((i1 Int)(j1 Int))(=> ("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " )":" "+ ") \n");
+					//constraintString += "(forall ((i1 Int)(j1 Int))(=> ("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " )":" "+ ") \n");
+					
+					
+					String constraint3 = "("+joinTable+"_"+n1.getColumn().getColumnName()+t1Columnindex;
+					constraint3 += "("+" select O_"+joinTable+" "+" k1 ) )";
+					
+					constraintString += "(exists ((k1 Int)) (and (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" "+ ") \n");
+					
+					t2Columnindex += delimit;
+					String constraint4 = "("+joinTable+"_"+n2.getColumn().getColumnName()+t2Columnindex;
+					constraint4 += "("+" select O_"+joinTable+" "+" k1 ) )";
+					
+					constraintString += " (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" "+ ")))))) \n");
+				
+					constraintString += "(assert (forall ((k1 Int)) (exists ((i1 Int)(j1 Int)) (and (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" " + " )\n");
+					
+					constraintString +=  "("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" " +  ")))))\n");
+					
+		}
+			// Join Temp table implementation end
 		return constraintString;
 	}
 

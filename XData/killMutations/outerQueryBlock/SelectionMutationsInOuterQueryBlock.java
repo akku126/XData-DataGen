@@ -23,6 +23,7 @@ import parsing.DisjunctQueryStructure;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
+import util.Configuration;
 import util.ConstraintObject;
 import util.TagDatasets;
 
@@ -34,6 +35,7 @@ import util.TagDatasets;
 public class SelectionMutationsInOuterQueryBlock {
 
 	private static Logger logger = Logger.getLogger(SelectionMutationsInOuterQueryBlock.class.getName());
+	public static boolean isTempJoin = false;
 	
 
 	/**
@@ -257,13 +259,27 @@ public class SelectionMutationsInOuterQueryBlock {
 				}
 				
 				Vector<Node> allConds = conjunct.getAllConds();
-				for(int k=0; k<allConds.size(); k++){
-					//constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, qbt, allConds) +" AND ";
-					ConstraintObject constrObj = new ConstraintObject();
-					constrObj.setLeftConstraint(GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, qbt, allConds));
-					constrList.add(constrObj);
+				if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true")){
+					 isTempJoin = true;
+				 }else {
+					 isTempJoin = false;
+				 }
+				if(!isTempJoin){
+					for(int k=0; k<allConds.size(); k++) {
+						//constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, qbt, allConds) +" AND ";
+						ConstraintObject constrObj = new ConstraintObject();
+						constrObj.setLeftConstraint(GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, qbt, allConds));
+						constrList.add(constrObj);
+					}
 				}
-			
+				else {
+					for(Node n: allConds) {
+						ConstraintObject constrObj = new ConstraintObject();
+						constrObj.setLeftConstraint(GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoinsTJ(cvc, qbt, n));
+						constrList.add(constrObj);
+					}
+				}
+				
 				
 			
 				//constrList = new ArrayList<ConstraintObject>();

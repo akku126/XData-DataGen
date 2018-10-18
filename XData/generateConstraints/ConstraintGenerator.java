@@ -38,6 +38,7 @@ public class ConstraintGenerator {
 	private static boolean isCVC3 = false;
 	private String constraintSolver;
 	private static String solverSpecificCommentCharacter;
+	private static boolean isTempJoin = false;
 	
 	/**
 	 * Constructor
@@ -51,6 +52,12 @@ public class ConstraintGenerator {
 		 }else {
 			 this.isCVC3 = false;
 			 solverSpecificCommentCharacter = ";";
+		 }
+		 
+		 if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true")){
+			 this.isTempJoin = true;
+		 }else {
+			 this.isTempJoin = false;
 		 }
 	}
 	
@@ -1412,7 +1419,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 		if(isCVC3){
 			return "\nASSERT "+cvcMap(c, index)+" = "+nullVal+"; \n";
 		}else{
-			return "\n (assert (= ("+smtMap(c, index)+") "+nullVal+"  )) \n";
+			return "\n (assert (= "+smtMap(c, index)+" "+nullVal+"  )) \n";
 		}
 	}
 	
@@ -1475,7 +1482,43 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 			}
 		}else{
 			if(generateSMTOrConstraints(constraintList,null) != null && !generateSMTOrConstraints(constraintList,null).isEmpty()){
-				constraint = "\n (assert "+generateSMTOrConstraints(constraintList,null)+") \n";
+				/*if(isTempJoin) {
+					String constr,declare="";
+					int st_index=0,end_index=0;
+					constr = generateSMTOrConstraints(constraintList,null);
+					while(constr.indexOf("(declare-datatypes ()") != -1) {
+					st_index = constr.indexOf("(declare-datatypes ()");
+					end_index = constr.indexOf("_TupleType))")+12;
+					if(!declare.contains(constr.substring(st_index, end_index)))
+						declare += constr.substring(st_index, end_index) + " \n";
+					constr = constr.substring(0, st_index)+constr.substring(end_index);
+					}
+					
+					constraint =  declare + "\n (assert "+constr+") \n";
+				} */
+
+				 if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true")){
+					 isTempJoin = true;
+				 }else {
+					 isTempJoin = false;
+				 }
+				 
+				if(isTempJoin) {
+					String constr,declare="";
+					int st_index=0,end_index=0;
+					constr = generateSMTOrConstraints(constraintList,null);
+					while(constr.indexOf("(declare-datatypes ()") != -1) {
+					st_index = constr.indexOf("(declare-datatypes ()");
+					end_index = constr.indexOf("_TupleType))")+12;
+					if(!declare.contains(constr.substring(st_index, end_index)))
+						declare += constr.substring(st_index, end_index) + " \n";
+					constr = constr.substring(0, st_index)+constr.substring(end_index);
+					}
+					
+					constraint =  declare + "\n (assert "+constr+") \n";
+				}
+				else
+					constraint =  "\n (assert "+generateSMTOrConstraints(constraintList,null)+") \n";
 			}
 		}
 		return constraint;
@@ -1550,7 +1593,7 @@ public String generateSMTAndConstraints(ArrayList<ConstraintObject> constraintLi
 	if(constraintStr == null || constraintStr == ""){
 		return "";
 	}
-	else {
+	else if(constraintList!= null && constraintList.size() > 1) {
 		constraintStr = " (and " + constraintStr + ")";
 	}
 	return constraintStr;
@@ -1582,10 +1625,11 @@ public String generateSMTOrConstraints(ArrayList<ConstraintObject> constraintLis
 		constraintStr = constr1+"\n\t\t";
 	}
 	
+	
 	if(constraintStr == null || constraintStr == ""){
 		constraintStr = "";
 	}
-	else {
+	else if(constraintList!= null && constraintList.size() > 1) {
 		constraintStr = " (or " + constraintStr + ")";
 	}
 	
@@ -2579,7 +2623,12 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 		}
 		else{
 			
-				
+			
+			String[] tablenames = new String[cvc.getResultsetTables().size()];
+			for(int i=0;i<cvc.getResultsetTables().size();i++){
+				tablenames[i] = cvc.getResultsetTables().get(i).getTableName();
+			}
+			
 			for(int i=0;i<cvc.getResultsetTables().size();i++){
 				int index = 0;
 				t = cvc.getResultsetTables().get(i);
@@ -2601,8 +2650,8 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 				tempStr += ") )) )\n";
 				//Now create the Array for this TupleType
 				tempStr += "(declare-fun O_" + temp + "() (Array Int " + temp + "_TupleType))\n\n";
-			}
-			
+				
+						}
 		}
 		return tempStr;
 		
@@ -2705,6 +2754,35 @@ public static String getAssertNotCondition(String constr1, String operator,Strin
 		return null;
 	}
 	
+	
+	public static String genPositiveCondsForPredF(QueryBlockDetails queryBlock, Node n, String index){
+		if(n.getType().equalsIgnoreCase(Node.getColRefType())){			
+			if(isCVC3){
+				return cvcMap(n.getColumn(), index+" ");
+			}else{				
+				return smtMap(n.getColumn(), (index+" "));
+			}
+		}
+		else if(n.getType().equalsIgnoreCase(Node.getValType())){
+			if(!n.getStrConst().contains("$"))
+				return n.getStrConst();
+			else
+				return queryBlock.getParamMap().get(n.getStrConst());
+		}
+		else if(n.getType().equalsIgnoreCase(Node.getBroNodeType()) || n.getType().equalsIgnoreCase(Node.getBaoNodeType()) || n.getType().equalsIgnoreCase(Node.getLikeNodeType()) ||
+				n.getType().equalsIgnoreCase(Node.getAndNodeType()) || n.getType().equalsIgnoreCase(Node.getOrNodeType())){
+			if(isCVC3){
+					return "( "+ genPositiveCondsForPredF(queryBlock, n.getLeft(), index) +" "+ n.getOperator() +" "+ 
+							genPositiveCondsForPredF(queryBlock, n.getRight(), index) +")";
+			}else{
+				
+				return "( "+ (n.getOperator().equals("/=")? "not (= ": n.getOperator()) + " " +genPositiveCondsForPredF(queryBlock, n.getLeft(), index) +" "+ 
+						genPositiveCondsForPredF(queryBlock, n.getRight(), index) 
+						+(n.getOperator().equals("/=")? " )": "")+" )";
+			}
+		}	
+		return null;
+	}
 	
 	/**
 	 * Generate SMT/CVC constraints for the given node
@@ -3170,6 +3248,8 @@ public String getConstraintSolver() {
 public void setConstraintSolver(String constraintSolver) {
 	this.constraintSolver = constraintSolver;
 }
+
+
 /**
  * 
  * @param queryBlock

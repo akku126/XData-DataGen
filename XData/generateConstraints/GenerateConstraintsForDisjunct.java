@@ -9,9 +9,11 @@ import parsing.DisjunctQueryStructure;
 import parsing.Node;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
+import util.Configuration;
 import util.ConstraintObject;
 
 public class GenerateConstraintsForDisjunct {
+	private static boolean isTempJoin = false;
 
 	public static Constraints getConstraintsForDisjuct(GenerateCVC1 cvc, QueryBlockDetails queryBlock, DisjunctQueryStructure disjunct) throws Exception{
 		Constraints constraints=new Constraints();
@@ -54,14 +56,27 @@ public class GenerateConstraintsForDisjunct {
 		}
 		
 		Vector<Node> allConds = disjunct.getAllConds();
-		 
-		for(int k=0; k<allConds.size(); k++){
-			String nonEquiJoinConstraint = GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds);
-		//	constraints.constraints.add(constraintString);
-			//constraintString = "";
-			ConstraintObject constrnObj = new ConstraintObject();
-			constrnObj.setLeftConstraint(nonEquiJoinConstraint);
-			constrObjList.add(constrnObj);
+		if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true")){
+			 isTempJoin = true;
+		 }else {
+			 isTempJoin = false;
+		 }
+		if(!isTempJoin)
+			for(int k=0; k<allConds.size(); k++){
+				String nonEquiJoinConstraint = GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds);
+			//	constraints.constraints.add(constraintString);
+				//constraintString = "";
+				ConstraintObject constrnObj = new ConstraintObject();
+				constrnObj.setLeftConstraint(nonEquiJoinConstraint);
+				constrObjList.add(constrnObj);
+			}
+		else {
+			for(Node n: allConds) {
+				String nonEquiJoinConstraint = GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoinsTJ(cvc, queryBlock, n);
+				ConstraintObject constrnObj = new ConstraintObject();
+				constrnObj.setLeftConstraint(nonEquiJoinConstraint);
+				constrObjList.add(constrnObj);
+			}	
 		}
 		
 		Vector<Node> stringSelectionConds = disjunct.getStringSelectionConds();

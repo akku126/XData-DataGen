@@ -9,10 +9,13 @@ import parsing.Column;
 import parsing.ConjunctQueryStructure;
 import parsing.Disjunct;
 import parsing.DisjunctQueryStructure;
+import parsing.FromClauseElement;
 import parsing.Node;
+import parsing.QueryStructure;
 import parsing.Table;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
+import util.Configuration;
 import util.ConstraintObject;
 
 /**
@@ -24,6 +27,7 @@ import util.ConstraintObject;
 
 public class GenerateConstraintsForConjunct {
 
+	private static boolean isTempJoin = false;
 	/**
 	 * This method generates constraints by considering all the conditions of the given conjunct
 	 * @param cvc
@@ -99,9 +103,22 @@ public class GenerateConstraintsForConjunct {
 		/** Get the constraints for the non equi-join conditions */
 		//Vector<Node> allConds = conjunct.getAllConds();
 		Vector<Node> allConds = conjunct.getJoinCondsAllOther();
-		for(int k=0; k<allConds.size(); k++)
-			constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds) +"\n";
-
+		if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true")){
+			 isTempJoin = true;
+		 }else {
+			 isTempJoin = false;
+		 }
+		if(!isTempJoin){
+			for(int k=0; k<allConds.size(); k++)
+				constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds) +"\n";
+		}
+		else {
+			for(Node n: allConds) {
+				constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoinsTJ(cvc, queryBlock, n);
+			}
+		}
+		
+			
 
 
 		constraintString +=  ConstraintGenerator.addCommentLine(" STRING SELECTION CLASS CONSTRAINTS");
@@ -259,10 +276,138 @@ public class GenerateConstraintsForConjunct {
 		//End OF CASE CONDITION		
 		//Vector<Node> allConds = conjunct.getAllConds();
 		Vector<Node> allConds = conjunct.getJoinCondsAllOther();
-		for(int k=0; k<allConds.size(); k++) {
+		
+		if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true")){
+			 isTempJoin = true;
+		 }else {
+			 isTempJoin = false;
+		 }
+		if(!isTempJoin)
+			for(int k=0; k<allConds.size(); k++){
+				String nonEquiJoinConstraint = GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds);
+			//	constraints.constraints.add(constraintString);
+				//constraintString = "";
+				ConstraintObject constrnObj = new ConstraintObject();
+				constrnObj.setLeftConstraint(nonEquiJoinConstraint);
+				constrObjList.add(constrnObj);
+			}
+		else {
+			/////////////////////////////////////////////////////////////////////////////////////***//***
+			//QueryStructure qs;
+			//Vector<FromClauseElement> fromListElements = qs.fromListElements;
+			HashMap<String, Integer> tableIndex = new HashMap<String, Integer>();
+			HashMap<String, String> tablevar = new HashMap<String, String>();
+			String joinTable="";
+			for ( String key : cvc.getBaseRelation().keySet() ) {
+				joinTable += key+"join";
+			    tableIndex.put(key,0);
+			}
 			
-			String nonEquiJoinConstraint = GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds);
+			String declaration = "";
+			declaration += "\n (declare-datatypes () (("+joinTable +"_TupleType" + "("+joinTable +"_TupleType ";
 			
+			int findex=0;
+			Vector<String> tablesAdded = new Vector<String>();
+			for(Node n: allConds) {
+					Node n1 = n.getLeft();
+					Node n2 = n.getRight();
+					String operator = n.getOperator();
+			// Join Temp table implementation	
+					
+					Table f1,f2;
+					String temp1,temp2,ColName;
+					int t1Columnindex, t2Columnindex;
+					f1 = n1.getTable();
+					f2 = n2.getTable();
+					temp1 = f1.getTableName();
+					temp2 = f2.getTableName();
+						if(!tablesAdded.contains(temp1)){
+							tableIndex.put(temp1,findex);
+							for(String key : f1.getColumns().keySet()) {
+								ColName = f1.getColumns().get(key).getColumnName();
+								String s = f1.getColumns().get(key).getCvcDatatype();
+									if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
+										declaration += "("+joinTable+"_"+f1.getColumns().get(key)+findex+" "+s + ") ";
+									else
+										declaration += "("+joinTable+"_"+f1.getColumns().get(key)+findex+" "+ColName + ") ";						
+									findex++;
+							}
+							tablesAdded.add(temp1);
+						}	
+						
+						if(!tablesAdded.contains(temp2)){
+							tableIndex.put(temp2,findex);
+							for(String key : f2.getColumns().keySet()) {
+								ColName = f2.getColumns().get(key).getColumnName();
+								String s = f2.getColumns().get(key).getCvcDatatype();
+									if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
+										declaration += "("+joinTable+"_"+f2.getColumns().get(key)+findex+" "+s + ") ";
+									else
+										declaration += "("+joinTable+"_"+f2.getColumns().get(key)+findex+" "+ColName + ") ";						
+									findex++;
+							}
+							tablesAdded.add(temp2);
+						}	
+					}
+			declaration += ") )) )\n";
+			declaration += "(declare-fun O_" + joinTable + "() (Array Int " + joinTable + "_TupleType))\n\n";
+			System.out.println(declaration);
+			//String forall= "(assert (forall ((i1 Int)(j1 Int))(=> (and";
+			String forall = "(assert (and (forall (";
+			String ex = " (forall ((k1 Int)) (exists (";
+			for(int i=1; i <= tablesAdded.size();i++) {
+				forall += "(i"+i+" Int)";
+				ex += "(i"+i+" Int)";
+				tablevar.put(tablesAdded.get(i-1),"i"+i);
+			}
+			forall += ")(=> (and";
+			ex += ") (and ";
+			String exists= "(exists ((k1 Int)) (and";
+			/////////////////////////////////////////////////////////////////////////////////////////***//***			
+			for(Node n: allConds) {
+				String nonEquiJoinConstraint = GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoinsTJ(cvc, queryBlock, n);
+				
+				//////////////////////
+				
+				Node n1 = n.getLeft();
+				Node n2 = n.getRight();
+				String operator = n.getOperator();
+				int t1Columnindex	= n1.getColumn().getTable().getColumnIndex(n1.getColumn().getColumnName());
+				int t2Columnindex	= n2.getColumn().getTable().getColumnIndex(n2.getColumn().getColumnName());
+				ConstraintGenerator constrGen1 = new ConstraintGenerator();
+					
+				String constraint1 = constrGen1.genPositiveCondsForPredF(queryBlock, n1, tablevar.get(n1.getColumn().getTableName()));
+				String constraint2 = constrGen1.genPositiveCondsForPredF(queryBlock, n2, tablevar.get(n2.getColumn().getTableName()));
+		
+				
+				
+				forall += " ("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " )":" "+ ") \n");
+				//constraintString += "(forall ((i1 Int)(j1 Int))(=> ("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " )":" "+ ") \n");
+				
+				t1Columnindex += tableIndex.get(n1.getColumn().getTableName());
+				String constraint3 = "("+joinTable+"_"+n1.getColumn().getColumnName()+t1Columnindex;
+				constraint3 += "("+" select O_"+joinTable+" "+" k1 ) )";
+				
+				exists += " (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" "+ ") \n");
+				
+				t2Columnindex += tableIndex.get(n2.getColumn().getTableName());
+				String constraint4 = "("+joinTable+"_"+n2.getColumn().getColumnName()+t2Columnindex;
+				constraint4 += "("+" select O_"+joinTable+" "+" k1 ) )";
+				
+				exists += " (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" "+ ") \n\n");
+			
+				//////////////////////
+				
+				ex += " (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" " + " )\n");
+				
+				ex +=  "("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" " +  ")\n");
+
+				
+			}	
+			forall += ")";
+			exists += "))))";
+			ex += ") )))";
+			String nonEquiJoinConstraint=declaration + "\n"+forall + "\n" + exists + "\n" + ex;
 			ConstraintObject constrnObj = new ConstraintObject();
 			constrnObj.setLeftConstraint(nonEquiJoinConstraint);
 			constrObjList.add(constrnObj);
@@ -509,9 +654,20 @@ public class GenerateConstraintsForConjunct {
 		/** Get the constraints for the non equi-join conditions */
 		//Vector<Node> allConds = conjunct.getAllConds();
 		Vector<Node> allConds = conjunct.getJoinCondsAllOther();
-		for(int k=0; k<allConds.size(); k++)
-			constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds) +"\n";
-
+		if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true")){
+			 isTempJoin = true;
+		 }else {
+			 isTempJoin = false;
+		 }
+		if(!isTempJoin){
+			for(int k=0; k<allConds.size(); k++)
+				constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds) +"\n";
+		}
+		else {
+			for(Node n: allConds) {
+				constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoinsTJ(cvc, queryBlock, n);
+			}
+		}
 
 
 		constraintString +=  ConstraintGenerator.addCommentLine(" STRING SELECTION CLASS CONSTRAINTS");
@@ -637,9 +793,20 @@ public class GenerateConstraintsForConjunct {
 		/** Get the constraints for the non equi-join conditions */
 		//Vector<Node> allConds = conjunct.getAllConds();
 		Vector<Node> allConds = conjunct.getJoinCondsAllOther();
-		for(int k=0; k<allConds.size(); k++)
-			constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds) +"\n";
-
+		if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true")){
+			 isTempJoin = true;
+		 }else {
+			 isTempJoin = false;
+		 }
+		if(!isTempJoin){
+			for(int k=0; k<allConds.size(); k++)
+				constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds) +"\n";
+		}
+		else {
+			for(Node n: allConds) {
+				constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoinsTJ(cvc, queryBlock, n);
+			}
+		}
 
 
 		constraintString +=  ConstraintGenerator.addCommentLine(" LIKE CLAUSE CONSTRAINTS");
@@ -733,9 +900,20 @@ public class GenerateConstraintsForConjunct {
 		/** Get the constraints for the non equi-join conditions */
 		//Vector<Node> allConds = conjunct.getAllConds();
 		Vector<Node> allConds = conjunct.getJoinCondsAllOther();
-		for(int k=0; k<allConds.size(); k++)
-			constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds) +"\n";
-
+		if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true")){
+			 isTempJoin = true;
+		 }else {
+			 isTempJoin = false;
+		 }
+		if(!isTempJoin){
+			for(int k=0; k<allConds.size(); k++)
+				constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds) +"\n";
+		}
+		else {
+			for(Node n: allConds) {
+				constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoinsTJ(cvc, queryBlock, n);
+			}
+		}
 
 
 		constraintString +=  ConstraintGenerator.addCommentLine(" STRING SELECTION CLASS CONSTRAINTS");
@@ -846,9 +1024,20 @@ public class GenerateConstraintsForConjunct {
 		/** Get the constraints for the non equi-join conditions */
 		//Vector<Node> allConds = conjunct.getAllConds();
 		Vector<Node> allConds = conjunct.getJoinCondsAllOther();
-		for(int k=0; k<allConds.size(); k++)
-			constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds) +"\n";
-
+		if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true")){
+			 isTempJoin = true;
+		 }else {
+			 isTempJoin = false;
+		 }
+		if(!isTempJoin){
+			for(int k=0; k<allConds.size(); k++)
+				constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds) +"\n";
+		}
+		else {
+			for(Node n: allConds) {
+				constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoinsTJ(cvc, queryBlock, n);
+			}
+		}
 
 
 		constraintString +=  ConstraintGenerator.addCommentLine(" STRING SELECTION CLASS CONSTRAINTS");
