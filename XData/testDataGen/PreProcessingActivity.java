@@ -254,7 +254,15 @@ public class PreProcessingActivity {
 				//end
 				
 				cvc.initializeQueryDetailsQStructure(cvc.getqStructure() );
+				
+				ArrayList<ForeignKey> foreignK = new ArrayList<ForeignKey>();
 			
+				for(ForeignKey key : cvc.getForeignKeysModified()) {
+					if(!foreignK.contains(key)) {
+						foreignK.add(key);
+					}
+				}
+				cvc.setForeignKeysModified(foreignK);
 				logger.log(Level.INFO," Query Parser output = "+ cvc.getqStructure());
 				/**Delete data sets in the path*/
 				//RelatedToPreprocessing.deleteDatasets(cvc.getFilePath());
