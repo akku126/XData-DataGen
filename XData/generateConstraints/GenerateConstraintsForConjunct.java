@@ -252,6 +252,31 @@ public class GenerateConstraintsForConjunct {
 				constrnObj.setRightConstraint(constrGen.genPositiveCondsForPred(queryBlock,selectionConds.get(k).getRight(), (l+offset-1)));
 				constrnObj.setOperator(selectionConds.get(k).getOperator());
 				constrObjList.add(constrnObj);
+				
+				ConstraintObject constrnObjNull = new ConstraintObject();
+				
+				/*Removing NUll enumerations*/
+				Node n = selectionConds.get(k).getLeft();
+				if(n.getType().equalsIgnoreCase(Node.getColRefType())){	
+					String left = constrGen.genNULLCheckConstraints(n,(l+offset-1));
+					if(!left.isEmpty()) {
+						constrnObjNull.setLeftConstraint(left);
+						constrnObjNull.setRightConstraint("");
+						//constrnObjNull.setOperator("get"+n.getColumn().getColumnName());
+						constrObjList.add(constrnObjNull);
+					}
+				}
+				
+				n = selectionConds.get(k).getRight();
+				if(n.getType().equalsIgnoreCase(Node.getColRefType())){	
+					String right = constrGen.genNULLCheckConstraints(n,(l+offset-1));
+					if(!right.isEmpty()) {
+						constrnObjNull.setLeftConstraint(right);
+						constrnObjNull.setRightConstraint("");
+						//constrnObjNull.setOperator("get"+n.getColumn().getColumnName());
+						constrObjList.add(constrnObjNull);
+					}
+				}
 			}
 			
 		}

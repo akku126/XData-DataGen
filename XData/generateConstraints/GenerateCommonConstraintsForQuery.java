@@ -106,8 +106,11 @@ public class GenerateCommonConstraintsForQuery {
 			/** Add not null constraints */
 			cvc.getConstraints().add( ConstraintGenerator.addCommentLine(" NOT NULL CONSTRAINTS"));
 			//CVCStr += GenerateCVCConstraintForNode.cvcSetNotNull(cvc);
-			CVCStr += GenerateCVCConstraintForNode.solverSetNotNull(cvc);
-
+			/* Removing NUll enumerations*/
+			if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3"))
+			{	
+				CVCStr += GenerateCVCConstraintForNode.solverSetNotNull(cvc);
+			}
 			cvc.setDatatypeColumns( new ArrayList<String>() );
 			String CVC3_HEADER = GetSolverHeaderAndFooter.generateSolver_Header(cvc, unique);
 			

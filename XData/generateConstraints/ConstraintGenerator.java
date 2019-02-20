@@ -2216,9 +2216,11 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			constraint += isNullMembers;
 		}else{
 			HashMap<String, Integer> nullValuesInt = new HashMap<String, Integer>();
-			for(int k=-99996;k>=-99999;k--){
+			/*Removing NUll enumerations*/
+			/*for(int k=-99996;k>=-99999;k--){
 				nullValuesInt.put(k+"",0);
-			}
+			}*/
+			nullValuesInt.put("-99996", 0);
 			constraint += defineIsNull(nullValuesInt, col);			
 		}
 		return constraint +"\n\n";
@@ -2283,9 +2285,12 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			constraint += isNullMembers;			
 		}else{
 			HashMap<String, Integer> nullValuesInt = new HashMap<String, Integer>();
-			for(int k=-99996;k>=-99999;k--){
+			/*Removing NUll enumerations*/
+			/*for(int k=-99996;k>=-99999;k--){
 				nullValuesInt.put(k+"",0);
 			}
+			*/
+			nullValuesInt.put("-99996",0);
 			constraint +=defineIsNull(nullValuesInt, col);			
 		}
 		return constraint+"\n\n";
@@ -2313,7 +2318,13 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			
 		}
 		
-		IsNullValueString += getOrForNullDataTypes("null_"+col, colValueMap.keySet(), "");//Get OR of all null columns
+		/* Removing NUll enumerations*/
+		/*if(!isCVC3) {
+			IsNullValueString += "(= null_"+col+" NULL_"+col+"_1";
+		}
+		else
+		 */	
+			IsNullValueString += getOrForNullDataTypes("null_"+col, colValueMap.keySet(), "");//Get OR of all null columns
 		IsNullValueString += ")";
 		return IsNullValueString +"\n\n";
 	}
@@ -2379,7 +2390,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			tStr = "(or "+tempstring;	
 		}
 		if(colValue != null && colValue.startsWith("-")){
-			tStr +=" (= "+colconst+" (- "+colValue.substring(1,colValue.length())+"))";
+			tStr +=" (= "+colconst+" -"+colValue.substring(1,colValue.length())+")";
 		}else{
 			tStr +=" (= "+colconst+" "+colValue+")";
 		}
@@ -2495,21 +2506,29 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			if(columnValue.size()!=0){
 				constraint += " (";
 			}
+			/*
 			for(int k=1;k<=4;k++){
 				constraint += "NULL_"+col+"_"+k;
 				if(k < 4){
 					constraint += ") (";
 				}
-			}						
-			constraint += "))))"+"\n";		
+			}	
+			*/					
+			constraint += "NULL_"+col+"_"+"1"+"))))"+"\n";		
 			
-		
+			/*Removing NUll enumerations*/
+			/*
 			for(int k=1;k<=4;k++){
 				//isNullMembers += "ASSERT ISNULL_" + columnName+"(NULL_"+columnName+"_"+k+");\n";
 				nullValuesChar.put("NULL_"+col+"_"+k, 0);
-			}	
-			constraint += defineNotIsNull(notnullValuesChar, col)+"\n";
+			}	*/
+			
+			nullValuesChar.put("NULL_"+col+"_"+1, 0);
+			
+			//constraint += defineNotIsNull(notnullValuesChar, col)+"\n";
+			
 			constraint +=defineIsNull(nullValuesChar, col)+"\n";
+
 			}
 
 		
@@ -2717,7 +2736,34 @@ public static String getAssertNotCondition(String constr1, String operator,Strin
 		return subQueryConstraints;
 	}
 
-	
+	/*
+	 * Generate not null check constraints in assert statements
+	 * 
+	 */
+	public static String genNULLCheckConstraints(Node n, int index) {
+		/*Removing NUll enumerations*/
+		String constraint="";
+		Column col = n.getColumn();
+		if(!isCVC3) {
+			Table table = col.getTable();
+			String type = col.getCvcDatatype();
+			String tableName = col.getTableName();
+			String columnName = col.getColumnName();
+			int pos = table.getColumnIndex(columnName);
+			String datatype = col.getCvcDatatype();
+			
+			String smtCond = "";
+			String colName = tableName+"_"+columnName+pos;
+			if(datatype!= null && (datatype.equalsIgnoreCase("INT") || datatype.equalsIgnoreCase("REAL") || datatype.equalsIgnoreCase("TIME") || datatype.equalsIgnoreCase("DATE") || datatype.equalsIgnoreCase("TIMESTAMP")))
+				constraint = "get"+n.getColumn().getColumnName() + "("+colName+" "+"(select O_"+tableName+" "+index +") )";
+			else
+				constraint = "not (ISNULL_"+n.getColumn().getColumnName()+" ("+colName+" "+"(select O_"+tableName+" "+index +") ))";
+		}
+		
+		return constraint;
+	}
+
+
 	/**
 	 * Generate CVC3 constraints for the given node and its tuple position
 	 * @param queryBlock
@@ -2745,10 +2791,34 @@ public static String getAssertNotCondition(String constr1, String operator,Strin
 					return "( "+ genPositiveCondsForPred(queryBlock, n.getLeft(), index) +" "+ n.getOperator() +" "+ 
 							genPositiveCondsForPred(queryBlock, n.getRight(), index) +")";
 			}else{
+				/* Removing NUll enumerations */
 				
 				return "( "+ (n.getOperator().equals("/=")? "not (= ": n.getOperator()) + " " +genPositiveCondsForPred(queryBlock, n.getLeft(), index) +" "+ 
-						genPositiveCondsForPred(queryBlock, n.getRight(), index) 
-						+(n.getOperator().equals("/=")? " )": "")+" )";
+				genPositiveCondsForPred(queryBlock, n.getRight(), index) 
+				+(n.getOperator().equals("/=")? " )": "")+" )";
+				
+				/*---------------
+				if(col != null && col.getCvcDatatype() != null && (col.getCvcDatatype().equalsIgnoreCase("INT") || col.getCvcDatatype().equalsIgnoreCase("REAL") || col.getCvcDatatype().equalsIgnoreCase("TIME")
+						||col.getCvcDatatype().equalsIgnoreCase("TIMESTAMP") || col.getCvcDatatype().equalsIgnoreCase("DATE")))
+				{
+					if(isCVC3){
+						constraint = "\nASSERT NOT ISNULL_"+col.getColumnName()+"("+cvcMap(col, index+"")+");";
+					}else{
+						//	constraint += "\n (assert NOTISNULL_"+col.getColumnName()+" "+smtMap(col,Integer.toString(index))+")";
+						constraint = "\n (assert (get"+col.getColumnName()+" "+smtMap(col,Integer.toString(index))+"))";
+					}
+				
+				}
+				else{
+					if(isCVC3){
+						constraint = "\nASSERT NOT ISNULL_"+col.getCvcDatatype()+"("+cvcMap(col, index+"")+");";
+					}else{
+						constraint = "\n (assert (NOTISNULL_"+col.getCvcDatatype()+" " +smtMap(col,Integer.toString(index))+"))";
+					}
+				}
+				
+				---------------*/
+				
 			}
 		}	
 		return null;
@@ -3475,8 +3545,12 @@ public static void getCountExeFile(String filePath, String cmdString, GenerateCV
 		cmdString +=Configuration.smtsolver+" "+ Configuration.homeDir+"temp_cvc" + filePath + "/getCount.cvc | grep -e 'Valid' > isNotValid \n";
 		cmdString += "grep -e 'COUNT = ' "+ Configuration.homeDir+"temp_cvc" + filePath + "/COUNTCVC" +" | awk -F \" \" '{print $4}' | awk -F \")\" '{print $1}' > "+Configuration.homeDir+"temp_cvc" +filePath + "/COUNT\n";
 	}else{
-		cmdString += Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"temp_cvc" +filePath+ "/getCount.cvc > "+Configuration.homeDir+"/temp_cvc" + filePath + "/COUNTCVC \n";
-		cmdString +=Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"temp_cvc" + filePath + "/getCount.cvc | grep -e 'unsat' > isNotValid \n";
+		
+		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_cvc" +filePath+ "/getCount.cvc > "+Configuration.homeDir+"/temp_cvc" + filePath + "/COUNTCVC \n";
+		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_cvc" +filePath+ "/getCount.cvc | grep -e 'unsat' > isNotValid \n";
+
+		//cmdString += Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"temp_cvc" +filePath+ "/getCount.cvc > "+Configuration.homeDir+"/temp_cvc" + filePath + "/COUNTCVC \n";
+		//cmdString +=Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"temp_cvc" + filePath + "/getCount.cvc | grep -e 'unsat' > isNotValid \n";
 		cmdString += "grep -e '((COUNT' "+ Configuration.homeDir+"temp_cvc" + filePath + "/COUNTCVC" +" | awk -F \" \" '{print $2}' | awk -F \")\" '{print $1}' > "+Configuration.homeDir+"temp_cvc" +filePath + "/COUNT\n";
 	}
 	
