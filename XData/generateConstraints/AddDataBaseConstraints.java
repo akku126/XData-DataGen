@@ -723,13 +723,18 @@ public class AddDataBaseConstraints {
 
 		//Implementation to be changed for SMT constraint Solver to use FORALL 
 		if(cvc.getConstraintSolver().equals("cvc3")){
-
+			Vector<Column> temp = new Vector<Column>();
 
 			for(int j=1;j <= fkCount; j++){
 				String temp1 = "";
 				String temp2 = "";
 				for (Column fSingleCol : fCol)
-				{
+				{   
+					if(!temp.contains(fSingleCol)) {
+						temp.add(fSingleCol);
+					}
+					else
+						continue;
 					Column pSingleCol = pCol.get(fCol.indexOf(fSingleCol));
 					if(fSingleCol.getCvcDatatype() != null)
 					{
@@ -761,8 +766,17 @@ public class AddDataBaseConstraints {
 			for(int j=1;j <= fkCount; j++){
 
 				String temp2 = "";
+				
+				Vector<Column> temp = new Vector<Column>();
+				
 				for (Column fSingleCol : fCol)
-				{
+				{	
+					if(!temp.contains(fSingleCol)) {
+						temp.add(fSingleCol);
+					}
+					else
+						continue;
+					
 					Column pSingleCol = pCol.get(fCol.indexOf(fSingleCol));
 					String tableName1 = fSingleCol.getTable().getTableName();
 					if(fSingleCol.getCvcDatatype() != null)
