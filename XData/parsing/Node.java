@@ -818,7 +818,8 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 					return this.getOperator() +" "+this.getLeft().toSMTString(base, paramMap) + " "+ this.getRight().toSMTString(base, paramMap);
 			}  
 			else
-				return "(" + this.getOperator() +" "+this.getLeft().toSMTString(base, paramMap)  +" " + this.getRight().toSMTString(base, paramMap) + ")";
+				// '=' operator for constrained aggregation
+				return  this.getOperator() +" "+this.getLeft().toSMTString(base, paramMap)  +" " + this.getRight().toSMTString(base, paramMap) ;
 		}
 	}
 
