@@ -236,8 +236,9 @@ public class AddDataBaseConstraints {
 						))
 
 					 */
-					for(int p=0; p<primaryKeys.size();p++){
+					//for(int p=0; p<primaryKeys.size();p++){
 
+						int p = 0;
 						String temp1 = "";
 
 						Column pkeyColumn = primaryKeys.get(p);
@@ -247,7 +248,7 @@ public class AddDataBaseConstraints {
 
 						for(String col : table.getColumns().keySet()){
 							if(!( primaryKeys.toString().contains(col))){
-
+								impliedConstraint = new ConstraintObject();
 								impliedConstraint.setLeftConstraint(ConstraintGenerator.smtMap(table.getColumn(col),"ipk"+p));
 								impliedConstraint.setRightConstraint(ConstraintGenerator.smtMap(table.getColumn(col),"jpk"+p));
 								impliedConstraint.setOperator("=");
@@ -264,7 +265,7 @@ public class AddDataBaseConstraints {
 						temp1 +=")) \n";
 
 						pkConstraint += temp1;
-					}
+					//}
 				}
 
 
@@ -763,8 +764,8 @@ public class AddDataBaseConstraints {
 
 
 		}else{
-			for(int j=1;j <= fkCount; j++){
-
+			//for(int j=1;j <= fkCount; j++){
+				int j = 1;
 				String temp2 = "";
 				
 				Vector<Column> temp = new Vector<Column>();
@@ -793,7 +794,7 @@ public class AddDataBaseConstraints {
 						fkConstraint +=")) \n";
 					}
 				}
-			}
+			//}
 		}
 
 		return fkConstraint;
