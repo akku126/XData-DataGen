@@ -152,7 +152,15 @@ public class AddDataBaseConstraints {
 				String tableName = table.getTableName();
 
 				/**Get the primary keys of this table*/
-				ArrayList<Column> primaryKeys = new ArrayList<Column>( table.getPrimaryKey() );
+				ArrayList<Column> primaryKey = new ArrayList<Column>( table.getPrimaryKey() );
+				
+				ArrayList<Column> primaryKeys = new ArrayList<Column>();
+				
+				for (Column element : primaryKey) { 
+		            if (!primaryKeys.contains(element)) { 
+		            	primaryKeys.add(element); 
+		            } 
+		        } 
 
 				/**If there are no primary keys, then nothing need to be done */
 				if( primaryKeys.size() <= 0)
@@ -936,7 +944,16 @@ public class AddDataBaseConstraints {
 					continue ;
 
 				/**Get the primary keys of this table*/
-				ArrayList<Column> primaryKeys = new ArrayList<Column>( table.getPrimaryKey() );
+				ArrayList<Column> primaryKey = new ArrayList<Column>( table.getPrimaryKey() );
+				
+				ArrayList<Column> primaryKeys = new ArrayList<Column>();
+				
+				for (Column element : primaryKey) { 
+		            if (!primaryKeys.contains(element)) { 
+		            	primaryKeys.add(element); 
+		            } 
+		        } 
+
 
 				/**If there are no primary keys, then nothing need to be done */
 				if( primaryKeys.size() <= 0)
