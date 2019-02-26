@@ -586,7 +586,9 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 			}else{
 				String dataType = n.getRight().getColumn().getCvcDatatype();
 				if(dataType != null){
-					returnStr = "(define-fun MAX_"+n.getRight().getColumn()+" ((x "+dataType+")) "+dataType+" ("+n.getOperator()+" "+n.getLeft().toCVCString(10, queryBlock.getParamMap())+ "x) (";
+					returnStr = "(declare-const MAX_"+n.getRight().getColumn()+" "+dataType+")\n";
+					returnStr = "(assert ("+n.getOperator()+" "+n.getLeft().toCVCString(10, queryBlock.getParamMap())+" MAX_"+n.getRight().getColumn()+"))\n ";
+					//returnStr = "(define-fun MAX_"+n.getRight().getColumn()+" ((x "+dataType+")) "+dataType+" ("+n.getOperator()+" "+n.getLeft().toCVCString(10, queryBlock.getParamMap())+ "x) (";
 					if(n.getOperator().equalsIgnoreCase("<") || n.getOperator().equalsIgnoreCase("<=")){ 
 						returnStr += "< x 10000000 )";
 					}
@@ -663,17 +665,18 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 				
 				String dataType = n.getRight().getColumn().getCvcDatatype();
 				if(dataType != null){
-					returnStr = "(define-fun MIN_"+n.getRight().getColumn()+" ((x "+dataType+")) "+dataType+" ("+n.getOperator()+" "+n.getLeft().toCVCString(10, queryBlock.getParamMap())+" x) (";
-					if(n.getOperator().equalsIgnoreCase("<") || n.getOperator().equalsIgnoreCase("<=")){ 
-						returnStr += "< x 10000000 )";
+					returnStr = "(declare-const MIN_"+n.getRight().getColumn()+" "+dataType+")\n";
+					returnStr += "(assert ("+n.getOperator()+" "+n.getLeft().toCVCString(10, queryBlock.getParamMap())+" MIN_"+n.getRight().getColumn()+"))\n ";
+
+					if(n.getOperator().equalsIgnoreCase(">") || n.getOperator().equalsIgnoreCase(">=")){ 
+						returnStr += "(assert (> MIN_"+n.getRight().getColumn()+" 0))\n";
 					}
-					else if(n.getOperator().equalsIgnoreCase(">") || n.getOperator().equalsIgnoreCase(">=")){
-						returnStr += " > x 0)";
+					else if(n.getOperator().equalsIgnoreCase("<") || n.getOperator().equalsIgnoreCase("<=")){
+						returnStr += "(assert (< MIN_"+n.getRight().getColumn()+" 10000000))\n";
 					}else{
 						returnStr += ")";
 					}
 					
-					returnStr += "))";
 				}		
 			}
 			
@@ -851,14 +854,17 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 			
 			myCount = cvc.getNoOfTuples().get(innerTableNo);
 			offset = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
-	
+			String function = "MIN_"+tableName+"_"+columnName;
+
+			
+			
 			returnStr += "\n(assert ";
 			if(totalRows > 1)
 				returnStr += "(and";
 			for(int i=1;i<=totalRows;i++){
 				int tuplePos=(groupNumber)*myCount+i;
 				int row = tuplePos+offset-1;
-				returnStr += "\n ( >= MIN_"+columnName+" ("+tableName+"_"+columnName+index+" (select O_"+tableName+" "+row+") ))"; 				
+				returnStr += "\n ( >= MIN_"+columnName+" ("+function+"("+tableName+"_"+columnName+index+"(select O_"+tableName+" "+row+")) ))"; 				
 			}
 			if(totalRows > 1)
 				returnStr += ")";
@@ -870,7 +876,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 			for(int i=1;i<=totalRows;i++){
 				int tuplePos=(groupNumber)*myCount+i;
 				int row = tuplePos+offset-1;
-				returnStr += "\n ( = MIN_"+columnName+" ("+tableName+"_"+columnName+index+" (select O_"+tableName+" "+row+") ))"; 
+				returnStr += "\n ( = MIN_"+columnName+" ("+function+"("+tableName+"_"+columnName+index+"(select O_"+tableName+" "+row+") )))"; 
 			}
 			if(totalRows > 1)
 				returnStr += ")";
@@ -926,7 +932,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 			String tableName = af.getAggExp().getColumn().getTable().getTableName();
 			String columnName = af.getAggExp().getColumn().getColumnName();
 			int index = af.getAggExp().getColumn().getTable().getColumnIndex(columnName);
-			
+			String function = "MAX_"+tableName+"_"+columnName;
 			
 			myCount = cvc.getNoOfTuples().get(innerTableNo);
 			offset = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
@@ -937,7 +943,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 			for(int i=1;i<=totalRows;i++){
 				int tuplePos=(groupNumber)*myCount+i;
 				int row = tuplePos+offset-1;
-				returnStr += "\n ( <= MAX_"+columnName+" ("+tableName+"_"+columnName+index+" (select O_"+tableName+" "+row+") ))"; 				
+				returnStr += "\n ( <= MAX_"+columnName+" ("+function+"("+tableName+"_"+columnName+index+" (select O_"+tableName+" "+row+")) ))"; 				
 			}
 			if(totalRows > 1)
 				returnStr += ")";
@@ -949,7 +955,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 			for(int i=1;i<=totalRows;i++){
 				int tuplePos=(groupNumber)*myCount+i;
 				int row = tuplePos+offset-1;
-				returnStr += "\n ( = MAX_"+columnName+" ("+tableName+"_"+columnName+index+" (select O_"+tableName+" "+row+") ))"; 
+				returnStr += "\n ( = MAX_"+columnName+" ("+function+"("+tableName+"_"+columnName+index+" (select O_"+tableName+" "+row+")) ))"; 
 			}
 			if(totalRows > 1)
 				returnStr += ")";
@@ -981,7 +987,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 			
 			for(int i=1,j=0;i<=myCount;i++,j++){
 				int tuplePos=(groupNumber)*myCount+i;
-
+				
 				if(j<extras)
 					returnStr += (multiples+1)+"*("+ GenerateCVCConstraintForNode.cvcMapNode(agg, tuplePos+offset-1+"")+")";
 				else
@@ -1003,11 +1009,12 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 				if(i<=myCount && str1 != null && !str1.isEmpty()){
 					returnStr += "(+ "+str+" ";
 				}
-				
+				String function = "SUM_"+agg.getTable().getTableName()+"_"+agg.getColumn().getColumnName();
+
 				if(j<extras)
-					str = "(* "+(multiples+1)+" "+ getMapNode(agg, (tuplePos+offset-1)+"")+")";
+					str = "\n \t (* "+(multiples+1)+" ("+function+getMapNode(agg, (tuplePos+offset-1)+"")+"))";
 				else
-					str = "(* "+(multiples)+" "+ getMapNode(agg, (tuplePos+offset-1)+"")+")";
+					str = "\n \t (* "+(multiples)+" ("+function+ getMapNode(agg, (tuplePos+offset-1)+"")+"))";
 
 				if(i<=myCount && str1 != null && !str1.isEmpty()){
 					returnStr += str+ ") ";
@@ -3616,6 +3623,39 @@ public String getStrConstWithScale(String strConstant, Integer epsilon,String op
 	}
 	return strConst;
 	
+}
+
+public String generateCVCForNullCheckInHaving(String innerTableName,String columnName,String Datatype,String type) {
+	if(isCVC3) {
+		return "";
+	}
+	String returnStr="";
+	returnStr = "\n (declare-const "+columnName+" "+Datatype+") \n";
+	returnStr += "(define-fun "+type+"_"+innerTableName+"_"+columnName+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
+	returnStr += "(if (= "+columnName+" ";
+	if(Datatype.equalsIgnoreCase("REAL")) {
+		if(type.equals("MAX"))
+			returnStr += "-99996.0) \n \t -99996.0 \n";
+		else if(type.equals("MIN"))
+			returnStr += "-99996.0) \n \t 99996.0 \n";
+		else if(type.equals("SUM"))
+			returnStr += "-99996.0) \n \t 0.0 \n";
+		else if(type.equals("AVG"))
+		{}	
+	}
+	else {
+		if(type.equals("MAX"))
+			returnStr += "-99996) \n \t -99996 \n";
+		else if(type.equals("MIN"))
+			returnStr += "-99996) \n \t 99996 \n";
+		else if(type.equals("SUM"))
+			returnStr += "-99996) \n \t 0 \n";	
+		else if(type.equals("AVG"))
+		{}	
+	}
+	returnStr += "\t "+columnName+") \n ) \n";
+	
+	return returnStr;
 }
 
 }

@@ -24,7 +24,8 @@ public class GenerateConstraintsForHavingClause {
 		}
 		else{
 			String returnStr = "";
-			returnStr = getCVCForHavingConstraintRepeated(cvc, queryBlock, havingClause,totalRows,groupNumber);
+			returnStr = getCVCForNullCheckInHaving(cvc, queryBlock, havingClause,totalRows,groupNumber);
+			returnStr += getCVCForHavingConstraintRepeated(cvc, queryBlock, havingClause,totalRows,groupNumber);
 			if(returnStr.equalsIgnoreCase(""))
 				return "";
 			else
@@ -191,6 +192,8 @@ public class GenerateConstraintsForHavingClause {
 				boolean isDistinct=af.isDistinct();
 				
 
+				
+				
 			/*	for(int i=1,j=0;i<=myCount;i++,j++){
 					int tuplePos=(groupNumber)*myCount+i;
 
@@ -225,6 +228,124 @@ public class GenerateConstraintsForHavingClause {
 		}		
 		else return ""; //TODO: Code for Binaty Arithmetic Operator. This will be required in case of complex (arbitrary) having clauses.
 	}
+	
+	
+	
+	
+	/**
+	 * Generate NULL check constraints for constrained aggregation
+	 * FOR SUM : if null, replace it by 0
+	 * FOR MIN : if null, replace it by MAX value (99996)
+	 * FOR MAX : if null, replace it by MIN value (-99996)
+	 * @param cvc
+	 * @param queryBlock
+	 * @param n
+	 * @param totalRows
+	 * @param groupNumber
+	 * @return
+	 * @throws Exception
+	 */
+	public static String getCVCForNullCheckInHaving(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Node n, int totalRows, int groupNumber) throws Exception {
+
+		ConstraintGenerator consGen = new ConstraintGenerator();
+		if(n.getType().equalsIgnoreCase(Node.getBroNodeType())){
+			
+			if(n.getLeft().getType().equalsIgnoreCase(Node.getAggrNodeType())){
+				
+				if(n.getLeft().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMAX())){
+					AggregateFunction af = n.getLeft().getAgg();
+					String innerTableName = af.getAggExp().getTable().getTableName();
+					String columnName = af.getAggExp().getColumn().getColumnName();
+					String Datatype = af.getAggExp().getColumn().getCvcDatatype();
+					
+					return consGen.generateCVCForNullCheckInHaving(innerTableName,columnName,Datatype,"MAX");
+					
+				}
+				else if(n.getLeft().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMIN())){
+					AggregateFunction af = n.getLeft().getAgg();
+					String innerTableName = af.getAggExp().getTable().getTableName();
+					String columnName = af.getAggExp().getColumn().getColumnName();
+					String Datatype = af.getAggExp().getColumn().getCvcDatatype();
+					
+					return consGen.generateCVCForNullCheckInHaving(innerTableName,columnName,Datatype,"MIN");
+
+				}
+				else if(n.getLeft().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggCOUNT())){
+					return "";
+				}
+				else 
+					return getCVCForNullCheckInHaving(cvc, queryBlock, n.getLeft(), totalRows,   groupNumber) + "\n" +
+							getCVCForNullCheckInHaving(cvc, queryBlock, n.getRight(), totalRows,  groupNumber);				
+			}
+			else if(n.getRight().getType().equalsIgnoreCase(Node.getAggrNodeType())){
+				if(n.getRight().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMAX())){
+					AggregateFunction af = n.getRight().getAgg();
+					String innerTableName = af.getAggExp().getTable().getTableName();
+					String columnName = af.getAggExp().getColumn().getColumnName();
+					String Datatype = af.getAggExp().getColumn().getCvcDatatype();
+					
+					return consGen.generateCVCForNullCheckInHaving(innerTableName,columnName,Datatype,"MAX");
+
+				}
+				else if(n.getRight().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMIN())){
+					AggregateFunction af = n.getRight().getAgg();
+					String innerTableName = af.getAggExp().getTable().getTableName();
+					String columnName = af.getAggExp().getColumn().getColumnName();
+					String Datatype = af.getAggExp().getColumn().getCvcDatatype();
+					
+					return consGen.generateCVCForNullCheckInHaving(innerTableName,columnName,Datatype,"MIN");
+				}
+				else if(n.getRight().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggCOUNT())){
+					return "";
+				}
+				else 
+					return getCVCForNullCheckInHaving(cvc, queryBlock, n.getLeft(), totalRows,  groupNumber) + "\n" +
+							getCVCForNullCheckInHaving(cvc, queryBlock, n.getRight(),totalRows,  groupNumber) ;				
+			}
+			else{
+				logger.log(Level.INFO,"Not an Aggregation!!");
+				return "";
+			}
+		}
+		else if(n.getType().equalsIgnoreCase(Node.getValType())){
+			return "";
+		}
+		else if(n.getType().equalsIgnoreCase(Node.getAggrNodeType())){
+			AggregateFunction af = n.getAgg();
+			if(n.getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggAVG())){
+				/*String returnStr = "";
+				String innerTableNo=af.getAggExp().getTableNameNo();
+				if(innerTableNo == null){
+					innerTableNo = getTableNameNoForBAONode(af.getAggExp());
+				
+				}
+				int myCount = cvc.getNoOfTuples().get(innerTableNo);
+				int multiples = totalRows/myCount;
+				int extras = totalRows%myCount;
+
+				int offset = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
+				boolean isDistinct=af.isDistinct();
+				return consGen.getAVGConstraint(myCount,groupNumber,multiples,totalRows,af.getAggExp(), offset);
+				
+				*/
+				String innerTableName = af.getAggExp().getTable().getTableName();
+				String columnName = af.getAggExp().getColumn().getColumnName();
+				String Datatype = af.getAggExp().getColumn().getCvcDatatype();
+				return consGen.generateCVCForNullCheckInHaving(innerTableName,columnName,Datatype,"AVG");
+			}
+			else if(n.getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggSUM())){
+				
+				String innerTableName = af.getAggExp().getTable().getTableName();
+				String columnName = af.getAggExp().getColumn().getColumnName();
+				String Datatype = af.getAggExp().getColumn().getCvcDatatype();
+				
+				return consGen.generateCVCForNullCheckInHaving(innerTableName,columnName,Datatype,"SUM");
+			}
+			else return ""; //TODO: Code for COUNT
+		}		
+		else return ""; //TODO: Code for Binaty Arithmetic Operator. This will be required in case of complex (arbitrary) having clauses.
+	}
+	
 	
 	
 	/**
