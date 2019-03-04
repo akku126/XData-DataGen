@@ -67,6 +67,9 @@ public class AddDataBaseConstraints {
 			dbConstraints +=  ConstraintGenerator.addCommentLine("FOREIGN  KEY CONSTRAINTS");
 			dbConstraints += generateConstraintsForForeignKeys(cvc);
 			dbConstraints +=  ConstraintGenerator.addCommentLine("END OF FOREIGN  KEY CONSTRAINTS");
+			
+			ConstraintGenerator constraintGenerator = new ConstraintGenerator();
+			dbConstraints += constraintGenerator.getDomainConstraintsforZ3(cvc);
 
 			/** Now add primary key constraints */
 			dbConstraints +=  ConstraintGenerator.addCommentLine("PRIMARY KEY CONSTRAINTS");

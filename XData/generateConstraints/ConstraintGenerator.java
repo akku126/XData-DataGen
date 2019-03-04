@@ -854,7 +854,8 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 			
 			myCount = cvc.getNoOfTuples().get(innerTableNo);
 			offset = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
-			String function = "MIN_"+tableName+"_"+columnName;
+			String function = "MIN_REPLACE_NULL_"+tableName+"_"+columnName;
+			String Nullfunction = "MIN_CHECKALL_NULL_"+tableName+"_"+columnName;
 
 			
 			
@@ -868,7 +869,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 			}
 			if(totalRows > 1)
 				returnStr += ")";
-			returnStr += ")";
+			returnStr += ")\n";
 			
 			returnStr += "\n(assert ";
 			if(totalRows > 1)
@@ -880,7 +881,19 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 			}
 			if(totalRows > 1)
 				returnStr += ")";
-			returnStr += ")";
+			returnStr += ")\n";
+			
+			returnStr += "\n(assert ";
+			if(totalRows > 1)
+				returnStr += "(not (and";
+			for(int i=1;i<=totalRows;i++){
+				int tuplePos=(groupNumber)*myCount+i;
+				int row = tuplePos+offset-1;
+				returnStr += "\n ("+Nullfunction+"("+tableName+"_"+columnName+index+" (select O_"+tableName+" "+row+")) )"; 
+			}
+			if(totalRows > 1)
+				returnStr += ")";
+			returnStr += "))";
 		}
 		
 		return returnStr;
@@ -907,6 +920,8 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 		int offset = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
 		
 		if(isCVC3){
+			returnStr += "\nASSERT EXISTS(i: MAX): (";
+
 			
 			for(int i=1;i<=totalRows;i++){
 				int tuplePos=(groupNumber)*myCount+i;
@@ -932,7 +947,8 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 			String tableName = af.getAggExp().getColumn().getTable().getTableName();
 			String columnName = af.getAggExp().getColumn().getColumnName();
 			int index = af.getAggExp().getColumn().getTable().getColumnIndex(columnName);
-			String function = "MAX_"+tableName+"_"+columnName;
+			String function = "MAX_REPLACE_NULL_"+tableName+"_"+columnName;
+			String Nullfunction = "MAX_CHECKALL_NULL_"+tableName+"_"+columnName;
 			
 			myCount = cvc.getNoOfTuples().get(innerTableNo);
 			offset = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
@@ -947,7 +963,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 			}
 			if(totalRows > 1)
 				returnStr += ")";
-			returnStr += ")";
+			returnStr += ")\n";
 			
 			returnStr += "\n(assert ";
 			if(totalRows > 1)
@@ -959,7 +975,20 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 			}
 			if(totalRows > 1)
 				returnStr += ")";
-			returnStr += ")";
+			returnStr += ")\n";
+			
+			
+			returnStr += "\n(assert ";
+			if(totalRows > 1)
+				returnStr += "(not (and";
+			for(int i=1;i<=totalRows;i++){
+				int tuplePos=(groupNumber)*myCount+i;
+				int row = tuplePos+offset-1;
+				returnStr += "\n ("+Nullfunction+"("+tableName+"_"+columnName+index+" (select O_"+tableName+" "+row+")) )"; 
+			}
+			if(totalRows > 1)
+				returnStr += ")";
+			returnStr += "))";
 		}
 		
 		return returnStr;
@@ -1009,7 +1038,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 				if(i<=myCount && str1 != null && !str1.isEmpty()){
 					returnStr += "(+ "+str+" ";
 				}
-				String function = "SUM_"+agg.getTable().getTableName()+"_"+agg.getColumn().getColumnName();
+				String function = "SUM_REPLACE_NULL_"+agg.getTable().getTableName()+"_"+agg.getColumn().getColumnName();
 
 				if(j<extras)
 					str = "\n \t (* "+(multiples+1)+" ("+function+getMapNode(agg, (tuplePos+offset-1)+"")+"))";
@@ -3630,8 +3659,35 @@ public String generateCVCForNullCheckInHaving(String innerTableName,String colum
 		return "";
 	}
 	String returnStr="";
-	returnStr = "\n (declare-const "+columnName+" "+Datatype+") \n";
-	returnStr += "(define-fun "+type+"_"+innerTableName+"_"+columnName+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
+	returnStr = "\n(declare-const "+columnName+" "+Datatype+") \n\n";
+
+	
+	returnStr += "(define-fun "+type+"_CHECKALL_NULL_"+innerTableName+"_"+columnName+"(("+columnName+" "+Datatype+")) Bool \n";
+	returnStr += "(= ";
+	if(Datatype.equalsIgnoreCase("REAL")) {
+		if(type.equals("MAX"))
+			returnStr += "-99996.0" + " " + columnName+"";
+		else if(type.equals("MIN"))
+			returnStr += "99996.0"+ " " + columnName+" ";
+		else if(type.equals("SUM"))
+			returnStr += "-99996.0"+ " " + columnName+" ";
+		else if(type.equals("AVG"))
+		{}	
+	}
+	else {
+		if(type.equals("MAX"))
+			returnStr += "-99996" + " " + columnName+" ";
+		else if(type.equals("MIN"))
+			returnStr += "-99996" + " " + columnName+"";
+		else if(type.equals("SUM"))
+			returnStr += "-99996" + " " + columnName+"";	
+		else if(type.equals("AVG"))
+		{}	
+	}
+	returnStr += "\t )) \n";
+	
+	
+	returnStr += "\n(define-fun "+type+"_REPLACE_NULL_"+innerTableName+"_"+columnName+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
 	returnStr += "(if (= "+columnName+" ";
 	if(Datatype.equalsIgnoreCase("REAL")) {
 		if(type.equals("MAX"))
@@ -3658,5 +3714,43 @@ public String generateCVCForNullCheckInHaving(String innerTableName,String colum
 	return returnStr;
 }
 
+public String getDomainConstraintsforZ3(GenerateCVC1 cvc) {
+	
+	String domainConstraints="";
+	
+	if(isCVC3) {
+		return "";
+	}
+	
+	domainConstraints += addCommentLine("DOMAIN CONSTRAINTS");
+
+
+	int turn = 0;
+	
+	for(int i=0; i < cvc.getResultsetTables().size(); i++){
+
+		Table table = cvc.getResultsetTables().get(i);
+
+		String tableName = table.getTableName();
+		
+		for(String col : table.getColumns().keySet()){
+			if((table.getColumn(col).getCvcDatatype()).equalsIgnoreCase("INT") || (table.getColumn(col).getCvcDatatype()).equalsIgnoreCase("REAL")) {
+				if(turn++ == 0)
+				domainConstraints += "\n (assert (forall ((i Int)) (=>(and (<= 1 i) (<= i "+cvc.getNoOfOutputTuples().get(tableName)+ ")) (and \n   ";
+				domainConstraints += " (or (get"+col+ConstraintGenerator.smtMap(table.getColumn(col),"i")+") ";
+				domainConstraints += "(ISNULL_"+col+ConstraintGenerator.smtMap(table.getColumn(col),"i")+")) \n   ";
+			}
+		
+		}
+
+	}
+
+	if(turn>0)
+		domainConstraints += ")))) \n";
+	
+	domainConstraints += addCommentLine("END OF DOMAIN CONSTRAINTS");
+
+	return domainConstraints;
+}
 }
 
