@@ -3728,6 +3728,7 @@ public String getDomainConstraintsforZ3(GenerateCVC1 cvc) {
 	int turn = 0;
 	
 	for(int i=0; i < cvc.getResultsetTables().size(); i++){
+		turn = 0;
 
 		Table table = cvc.getResultsetTables().get(i);
 
@@ -3735,6 +3736,7 @@ public String getDomainConstraintsforZ3(GenerateCVC1 cvc) {
 		
 		for(String col : table.getColumns().keySet()){
 			if((table.getColumn(col).getCvcDatatype()).equalsIgnoreCase("INT") || (table.getColumn(col).getCvcDatatype()).equalsIgnoreCase("REAL")) {
+				
 				if(turn++ == 0)
 				domainConstraints += "\n (assert (forall ((i Int)) (=>(and (<= 1 i) (<= i "+cvc.getNoOfOutputTuples().get(tableName)+ ")) (and \n   ";
 				domainConstraints += " (or (get"+col+ConstraintGenerator.smtMap(table.getColumn(col),"i")+") ";
@@ -3742,11 +3744,12 @@ public String getDomainConstraintsforZ3(GenerateCVC1 cvc) {
 			}
 		
 		}
+		if(turn>0)
+			domainConstraints += ")))) \n";
 
 	}
 
-	if(turn>0)
-		domainConstraints += ")))) \n";
+	
 	
 	domainConstraints += addCommentLine("END OF DOMAIN CONSTRAINTS");
 
