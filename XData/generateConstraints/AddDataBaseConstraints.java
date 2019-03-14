@@ -70,6 +70,8 @@ public class AddDataBaseConstraints {
 			
 			ConstraintGenerator constraintGenerator = new ConstraintGenerator();
 			dbConstraints += constraintGenerator.getDomainConstraintsforZ3(cvc);
+			
+			dbConstraints += constraintGenerator.generateCVCForNullCheckInHaving();
 
 			/** Now add primary key constraints */
 			dbConstraints +=  ConstraintGenerator.addCommentLine("PRIMARY KEY CONSTRAINTS");
@@ -740,6 +742,7 @@ public class AddDataBaseConstraints {
 			for(int j=1;j <= fkCount; j++){
 				String temp1 = "";
 				String temp2 = "";
+				temp.clear();
 				for (Column fSingleCol : fCol)
 				{   
 					if(!temp.contains(fSingleCol)) {
