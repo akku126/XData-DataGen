@@ -987,38 +987,59 @@ public class AddDataBaseConstraints {
 				if(totalTuples == 1)
 					continue;
 
+				
+				if(!cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
+					
+					constraintString += "(assert (or \n";
+					
+					for(int p = 0; p < primaryKeys.size(); p++){
+						ConstraintObject con = new ConstraintObject();
+						/** Get column details */
+						Column pkeyColumn = primaryKeys.get(p);
+
+						/**get the column index in the base table*/
+						int pos = table.getColumnIndex(pkeyColumn.getColumnName());
+						
+						for(int k=1; k <= totalTuples; k++) {
+							if(k==1)
+							constraintString += "\t(distinct ";
+							
+							constraintString += "\n \t ("+tableName+"_"+pkeyColumn.getColumnName()+pos+" (select O_"+tableName+" " + Integer.valueOf(k + offset - 1) +")"+")";
+						
+							if(k==totalTuples)
+							constraintString += "\n\t) \n";
+						}
+						
+					}
+					constraintString += "))\n";
+					
+				}
+				else {
 				/** Get the actual constraints */
-				for(int k = 1; k <= totalTuples; k++){
-					for(int j = k+1; j <= totalTuples; j++){
+					
+					
+					
+					
+					for(int p = 0; p < primaryKeys.size(); p++){
+						ConstraintObject con = new ConstraintObject();
+						/** Get column details */
+						Column pkeyColumn = primaryKeys.get(p);
 
-						//constraintString += "ASSERT ";
-						/** Any of the attribute of the primary key can be distinct across multiple tuples*/
-						for(int p = 0; p < primaryKeys.size(); p++){
-							ConstraintObject con = new ConstraintObject();
-							/** Get column details */
-							Column pkeyColumn = primaryKeys.get(p);
-
-							/**get the column index in the base table*/
-							int pos = table.getColumnIndex(pkeyColumn.getColumnName());
-
-							//con = constraintGenerator.getConstraint(tableName,Integer.valueOf(k + offset - 1),Integer.valueOf(pos),
-							//tableName,Integer.valueOf(j + offset - 1),Integer.valueOf(pos),
-							//pkeyColumn,pkeyColumn,"DISTINCT");
+						/**get the column index in the base table*/
+						int pos = table.getColumnIndex(pkeyColumn.getColumnName());
+						
 
 							//conList.add(con);
-							con.setLeftConstraint(constraintGenerator.getDistinctConstraints(tableName, pkeyColumn, Integer.valueOf(k + offset - 1), pos, tableName, pkeyColumn, (j + offset - 1), pos));
+							con.setLeftConstraint(constraintGenerator.getDistinctConstraints(tableName, pkeyColumn,totalTuples , pos));
 							conList.add(con);
 							//constraintString +=
 							//constraintString += " DISTINCT ( O_"+tableName+"[" + (k + offset - 1) + "]."+pos+" , O_"+tableName+"["+ (j + offset - 1) +"]."+pos + ") OR ";
 						}
-						constraintString = constraintGenerator.generateOrConstraintsWithAssert(conList)+"\n";
-						//int lastIndex = constraintString.lastIndexOf("OR");
-						//constraintString = constraintString.substring(0, lastIndex-1) + " ;\n";
+						constraintString += constraintGenerator.generateOrConstraintsWithAssert(conList)+"\n";
+							
 					}
-				}
-
+					
 			}
-
 			return constraintString;
 		}catch(Exception e){
 			logger.log(Level.SEVERE,e.getMessage(),e);		

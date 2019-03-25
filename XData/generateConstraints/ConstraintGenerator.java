@@ -278,16 +278,18 @@ public String  getMinAssertConstraintForSubQ(String constraint1, String operator
 	 * @param operator
 	 * @return
 	 */
-	public String getDistinctConstraints(String tableName1,Column col1, Integer index1,Integer pos1,String tableName2, Column col2, Integer index2, Integer pos2){
+	public String getDistinctConstraints(String tableName1,Column col1, Integer totalno,Integer pos1){
 		
-		String constraint = "";
+		String constraint = "DISTINCT (";
 		if(isCVC3){
-			constraint += "DISTINCT (O_"+tableName1+"["+index1+"]."+pos1+ ",  O_"+tableName2+"["+index2+"]."+pos2+")\n" ;
+			for(int index1 = 1; index1 <= totalno; index1++) {
+				if(index1 != 1)
+					constraint += ", ";
+				constraint += "O_"+tableName1+"["+index1+"]."+pos1;
+			}
+			constraint += ")";
 		}
-		else{
-			constraint += " not (= ("+tableName1+"_"+col1.getColumnName()+pos1+" (select O_"+tableName1+" " + index1 +")"+") ("
-							+tableName2+"_"+col2.getColumnName()+pos2+" (select O_"+tableName2+" "+ index2 +")"+")) \n";						
-		}
+		
 		return constraint;
 	}
 	
@@ -720,12 +722,47 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 	}
 	else{
 		//Check if it is correct - 
-		returnStr += " (/ (";
+		//returnStr += " (/ (";
+		String str = "";
+		
 		for(int i=1,j=0;i<=myCount;i++,j++){
-			String str = "";
+			
+			String str1 = str;
 			int tuplePos=(groupNumber)*myCount+i;
 
-			if(i<myCount && str != null && !str.isEmpty()){
+			if(i<=myCount && str1 != null && !str1.isEmpty()){
+				returnStr += "(+ "+str+" ";
+			}
+			String function = "SUM_REPLACE_NULL_"+agg.getColumn().getCvcDatatype();
+
+			if(j<extras)
+				str = "\n \t (* "+(multiples+1)+" ("+function+getMapNode(agg, (tuplePos+offset-1)+"")+"))";
+			else
+				str = "\n \t (* "+(multiples)+" ("+function+ getMapNode(agg, (tuplePos+offset-1)+"")+"))";
+
+			if(i<=myCount && str1 != null && !str1.isEmpty()){
+				returnStr += str+ ") ";
+			}
+			if(returnStr!= null && !returnStr.isEmpty()){
+				str = returnStr;
+				if(i != myCount){
+				   returnStr="";
+				}
+			}
+			
+			if(myCount==1 && i==myCount){
+				returnStr = str;
+			}
+					
+		}
+		return "(/  \n "+returnStr+" \n"+myCount+")";
+		
+		/*
+		for(int i=1,j=0;i<=myCount;i++,j++){
+			
+			int tuplePos=(groupNumber)*myCount+i;
+
+			if(i<=myCount && str != null && !str.isEmpty()){
 				returnStr += "(+ "+str+" (";
 			}
 			
@@ -742,6 +779,8 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 			}
 		}
 		return returnStr + ") "+totalRows + ") \n";
+		
+	*/	
 	}
 	}
 	
@@ -854,8 +893,8 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 			
 			myCount = cvc.getNoOfTuples().get(innerTableNo);
 			offset = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
-			String function = "MIN_REPLACE_NULL_"+tableName+"_"+columnName;
-			String Nullfunction = "MIN_CHECKALL_NULL_"+tableName+"_"+columnName;
+			String function = "MIN_REPLACE_NULL_"+af.getAggExp().getColumn().getCvcDatatype();
+			String Nullfunction = "CHECKALL_NULL_"+af.getAggExp().getColumn().getCvcDatatype();
 
 			
 			
@@ -947,8 +986,8 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 			String tableName = af.getAggExp().getColumn().getTable().getTableName();
 			String columnName = af.getAggExp().getColumn().getColumnName();
 			int index = af.getAggExp().getColumn().getTable().getColumnIndex(columnName);
-			String function = "MAX_REPLACE_NULL_"+tableName+"_"+columnName;
-			String Nullfunction = "MAX_CHECKALL_NULL_"+tableName+"_"+columnName;
+			String function = "MAX_REPLACE_NULL_"+af.getAggExp().getColumn().getCvcDatatype();
+			String Nullfunction = "CHECKALL_NULL_"+af.getAggExp().getColumn().getCvcDatatype();
 			
 			myCount = cvc.getNoOfTuples().get(innerTableNo);
 			offset = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
@@ -1038,7 +1077,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 				if(i<=myCount && str1 != null && !str1.isEmpty()){
 					returnStr += "(+ "+str+" ";
 				}
-				String function = "SUM_REPLACE_NULL_"+agg.getTable().getTableName()+"_"+agg.getColumn().getColumnName();
+				String function = "SUM_REPLACE_NULL_"+agg.getColumn().getCvcDatatype();
 
 				if(j<extras)
 					str = "\n \t (* "+(multiples+1)+" ("+function+getMapNode(agg, (tuplePos+offset-1)+"")+"))";
@@ -3654,62 +3693,62 @@ public String getStrConstWithScale(String strConstant, Integer epsilon,String op
 	
 }
 
-public String generateCVCForNullCheckInHaving(String innerTableName,String columnName,String Datatype,String type) {
+public String generateCVCForNullCheckInHaving() {
 	if(isCVC3) {
 		return "";
 	}
 	String returnStr="";
+	String columnName = "Realcol";
+	String Datatype = "Real";
+	
+	
 	returnStr = "\n(declare-const "+columnName+" "+Datatype+") \n\n";
 
-	
-	returnStr += "(define-fun "+type+"_CHECKALL_NULL_"+innerTableName+"_"+columnName+"(("+columnName+" "+Datatype+")) Bool \n";
+	returnStr += "(define-fun CHECKALL_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) Bool \n";
 	returnStr += "(= ";
-	if(Datatype.equalsIgnoreCase("REAL")) {
-		if(type.equals("MAX"))
-			returnStr += "-99996.0" + " " + columnName+"";
-		else if(type.equals("MIN"))
-			returnStr += "99996.0"+ " " + columnName+" ";
-		else if(type.equals("SUM"))
-			returnStr += "-99996.0"+ " " + columnName+" ";
-		else if(type.equals("AVG"))
-		{}	
-	}
-	else {
-		if(type.equals("MAX"))
-			returnStr += "-99996" + " " + columnName+" ";
-		else if(type.equals("MIN"))
-			returnStr += "-99996" + " " + columnName+"";
-		else if(type.equals("SUM"))
-			returnStr += "-99996" + " " + columnName+"";	
-		else if(type.equals("AVG"))
-		{}	
-	}
-	returnStr += "\t )) \n";
+	returnStr += "-99996.0" + " " + columnName+"\t )) \n";
 	
 	
-	returnStr += "\n(define-fun "+type+"_REPLACE_NULL_"+innerTableName+"_"+columnName+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
+	returnStr += "\n(define-fun MAX_REPLACE_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
 	returnStr += "(if (= "+columnName+" ";
-	if(Datatype.equalsIgnoreCase("REAL")) {
-		if(type.equals("MAX"))
-			returnStr += "-99996.0) \n \t -99996.0 \n";
-		else if(type.equals("MIN"))
-			returnStr += "-99996.0) \n \t 99996.0 \n";
-		else if(type.equals("SUM"))
-			returnStr += "-99996.0) \n \t 0.0 \n";
-		else if(type.equals("AVG"))
-		{}	
-	}
-	else {
-		if(type.equals("MAX"))
-			returnStr += "-99996) \n \t -99996 \n";
-		else if(type.equals("MIN"))
-			returnStr += "-99996) \n \t 99996 \n";
-		else if(type.equals("SUM"))
-			returnStr += "-99996) \n \t 0 \n";	
-		else if(type.equals("AVG"))
-		{}	
-	}
+	returnStr += "-99996.0) \n \t -99996.0 \n";
 	returnStr += "\t "+columnName+") \n ) \n";
+	
+	returnStr += "\n(define-fun SUM_REPLACE_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
+	returnStr += "(if (= "+columnName+" ";
+	returnStr += "0.0) \n \t -99996.0 \n";
+	returnStr += "\t "+columnName+") \n ) \n";
+	
+	returnStr += "\n(define-fun MIN_REPLACE_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
+	returnStr += "(if (= "+columnName+" ";
+	returnStr += "-99996.0) \n \t 99996.0 \n";
+	returnStr += "\t "+columnName+") \n ) \n";
+	
+	
+	columnName = "Intcol";
+	Datatype = "Int";
+	
+	returnStr += "\n(declare-const "+columnName+" "+Datatype+") \n\n";
+
+	returnStr += "(define-fun CHECKALL_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) Bool \n";
+	returnStr += "(= ";
+	returnStr += "-99996" + " " + columnName+"\t )) \n";
+	
+	returnStr += "\n(define-fun MAX_REPLACE_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
+	returnStr += "(if (= "+columnName+" ";
+	returnStr += "-99996) \n \t -99996 \n";
+	returnStr += "\t "+columnName+") \n ) \n";
+	
+	returnStr += "\n(define-fun SUM_REPLACE_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
+	returnStr += "(if (= "+columnName+" ";
+	returnStr += "0) \n \t -99996 \n";
+	returnStr += "\t "+columnName+") \n ) \n";
+	
+	returnStr += "\n(define-fun MIN_REPLACE_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
+	returnStr += "(if (= "+columnName+" ";
+	returnStr += "-99996) \n \t 99996 \n";
+	returnStr += "\t "+columnName+") \n ) \n";
+	
 	
 	return returnStr;
 }
