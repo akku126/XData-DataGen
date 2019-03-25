@@ -311,6 +311,69 @@ public class GenerateCVCConstraintForNode {
 		return retVal;
 	}
 	
+public static String primaryKeysSetNotNull(GenerateCVC1 cvc){
+		
+		String retVal = ConstraintGenerator.addCommentLine("NOT NULL CONSTRAINTS\n\n");
+		
+		try{
+			/** For each table in the result tables */
+			for(int i=0; i < cvc.getResultsetTables().size(); i++){
+
+				/** Get this data base table */
+				Table table = cvc.getResultsetTables().get(i);
+
+				/**Get table name */
+				String tableName = table.getTableName();
+
+				/**Get the primary keys of this table*/
+				ArrayList<Column> primaryKey = new ArrayList<Column>( table.getPrimaryKey() );
+				
+				ArrayList<Column> primaryKeys = new ArrayList<Column>();
+				
+				for (Column element : primaryKey) { 
+		            if (!primaryKeys.contains(element)) { 
+		            	primaryKeys.add(element); 
+		            } 
+		        } 
+
+				/**If there are no primary keys, then nothing need to be done */
+				if( primaryKeys.size() <= 0)
+					continue;
+
+
+				/**Get the number of tuples for this relation  */
+				int noOfTuples = cvc.getNoOfOutputTuples().get(tableName);
+
+
+						int p = 0;
+						String temp1 = "";
+
+						Column pkeyColumn = primaryKeys.get(p);
+						int pos = table.getColumnIndex(pkeyColumn.getColumnName());
+						temp1 = "\n(assert (forall ((ipk"+p+" Int)) \n";
+						temp1 += " (and \n";
+
+						for(String col : table.getColumns().keySet()){
+							if( primaryKeys.toString().contains(col)){
+								
+								temp1 += "\t(not ( ISNULL_"+col+ConstraintGenerator.smtMap(pkeyColumn,"ipk"+p)+") )\n";
+							}
+						}
+						
+						temp1 +=" )\n))\n";
+						retVal += temp1;
+
+			}
+		}catch(Exception e){
+			logger.log(Level.SEVERE,"\n Exception in GenerateCVCconstraintforNode.java: Function primaryKeysSetNotNull : ",e);
+			throw e;
+		}
+		
+		retVal += ConstraintGenerator.addCommentLine("END OF NOT NULL CONSTRAINTS\n\n");
+
+		return retVal;
+	}
+	
 	
 	/**
 	 * DOC FOR THIS METHOD

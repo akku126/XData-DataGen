@@ -111,6 +111,8 @@ public class GenerateCommonConstraintsForQuery {
 			{	
 				CVCStr += GenerateCVCConstraintForNode.solverSetNotNull(cvc);
 			}
+			else
+				CVCStr += GenerateCVCConstraintForNode.primaryKeysSetNotNull(cvc);
 			cvc.setDatatypeColumns( new ArrayList<String>() );
 			String CVC3_HEADER = GetSolverHeaderAndFooter.generateSolver_Header(cvc, unique);
 			
