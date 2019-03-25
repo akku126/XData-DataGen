@@ -53,6 +53,7 @@ public class CountEstimationRelated {
 
 
 		String CVCText = "";
+		ConstraintGenerator consGen = new ConstraintGenerator();
 	
 		Iterator itr = queryBlock.getColAggMap().keySet().iterator();
 		while(itr.hasNext()){
@@ -61,6 +62,7 @@ public class CountEstimationRelated {
 			//CVCText += cvc.getCVC3_HEADER();
 			cvc.getDatatypeColumns().clear();
 			CVCText += GetSolverHeaderAndFooter.generateSolver_Header(cvc);
+			CVCText += consGen.generateCVCForNullCheckInHaving();
 			for(int i=0;i<aggCons.size();i++)			
 				CVCText += GenerateConstraintsForHavingClause.getHavingClauseConstraints(cvc, queryBlock, aggCons.get(i), queryBlock.getFinalCount(), 0) ;
 

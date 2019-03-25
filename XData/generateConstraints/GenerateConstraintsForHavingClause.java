@@ -24,7 +24,7 @@ public class GenerateConstraintsForHavingClause {
 		}
 		else{
 			String returnStr = "";
-			returnStr = getCVCForNullCheckInHaving(cvc, queryBlock, havingClause,totalRows,groupNumber);
+			//returnStr = getCVCForNullCheckInHaving(cvc, queryBlock, havingClause,totalRows,groupNumber);
 			returnStr += getCVCForHavingConstraintRepeated(cvc, queryBlock, havingClause,totalRows,groupNumber);
 			if(returnStr.equalsIgnoreCase(""))
 				return "";
@@ -241,11 +241,12 @@ public class GenerateConstraintsForHavingClause {
 	 * @param queryBlock
 	 * @param n
 	 * @param totalRows
+	 * @param paramId: This is not used in this function, then why did this was there??
 	 * @param groupNumber
 	 * @return
 	 * @throws Exception
 	 */
-	public static String getCVCForNullCheckInHaving(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Node n, int totalRows, int groupNumber) throws Exception {
+	/*public static String getCVCForNullCheckInHaving(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Node n, int totalRows, int groupNumber) throws Exception {
 
 		ConstraintGenerator consGen = new ConstraintGenerator();
 		if(n.getType().equalsIgnoreCase(Node.getBroNodeType())){
@@ -313,21 +314,7 @@ public class GenerateConstraintsForHavingClause {
 		else if(n.getType().equalsIgnoreCase(Node.getAggrNodeType())){
 			AggregateFunction af = n.getAgg();
 			if(n.getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggAVG())){
-				/*String returnStr = "";
-				String innerTableNo=af.getAggExp().getTableNameNo();
-				if(innerTableNo == null){
-					innerTableNo = getTableNameNoForBAONode(af.getAggExp());
 				
-				}
-				int myCount = cvc.getNoOfTuples().get(innerTableNo);
-				int multiples = totalRows/myCount;
-				int extras = totalRows%myCount;
-
-				int offset = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
-				boolean isDistinct=af.isDistinct();
-				return consGen.getAVGConstraint(myCount,groupNumber,multiples,totalRows,af.getAggExp(), offset);
-				
-				*/
 				String innerTableName = af.getAggExp().getTable().getTableName();
 				String columnName = af.getAggExp().getColumn().getColumnName();
 				String Datatype = af.getAggExp().getColumn().getCvcDatatype();
@@ -346,7 +333,7 @@ public class GenerateConstraintsForHavingClause {
 		else return ""; //TODO: Code for Binaty Arithmetic Operator. This will be required in case of complex (arbitrary) having clauses.
 	}
 	
-	
+	*/
 	
 	/**
 	 * Get the table name number from the BAO node. It contains expression with a column
