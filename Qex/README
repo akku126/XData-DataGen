@@ -1,1 +1,5 @@
-This directory currently only has sample code for internal use.  The eventual goal is to have an implementation of the Qex system from Microsoft for data generation for SQL queries.
+This directory currently only has sample code for internal use.  
+The eventual goal is to have an implementation of the Qex system from 
+Microsoft for data generation for SQL queries, for performance testing.
+This is not meant for general use, and Qex does not include any techniques
+for killing mutants.
