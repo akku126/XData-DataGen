@@ -55,30 +55,12 @@ public class GenerateConstraintsForHavingClause {
 			if(n.getLeft().getType().equalsIgnoreCase(Node.getAggrNodeType())){
 				
 				if(n.getLeft().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMAX())){
-					/*returnStr = "MAX: TYPE = SUBTYPE(LAMBDA(x: INT): " + " x " + n.getOperator() + n.getRight().toCVCString(10, queryBlock.getParamMap());
-					if(n.getOperator().equalsIgnoreCase("<") || n.getOperator().equalsIgnoreCase("<=")){ 
-						returnStr += " AND x > 0 );";
-					}
-					else if(n.getOperator().equalsIgnoreCase(">") || n.getOperator().equalsIgnoreCase(">=")){
-						returnStr += " AND x < 10000000 );";
-					}
-					else{//operator is = or /=
-						returnStr += ");";
-					}*/
+					
 					returnStr += consGen.getMaxConstraint(queryBlock, n,true);// n.getRight().toCVCString(10, queryBlock.getParamMap()), 
 					return returnStr + getCVCForHavingConstraintRepeated(cvc, queryBlock, n.getLeft(), totalRows,groupNumber);
 				}
 				else if(n.getLeft().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMIN())){
-					/*returnStr = "MIN: TYPE = SUBTYPE(LAMBDA(x: INT): " + " x " + n.getOperator() + n.getRight().toCVCString(10, queryBlock.getParamMap());
-					if(n.getOperator().equalsIgnoreCase("<") || n.getOperator().equalsIgnoreCase("<=")){ 
-						returnStr += " AND x > 0 );";
-					}
-					else if(n.getOperator().equalsIgnoreCase(">") || n.getOperator().equalsIgnoreCase(">=")){
-						returnStr += " AND x < 10000000 );";
-					}
-					else{//operator is = or /=
-						returnStr += ");";
-					}*/
+					
 					returnStr += consGen.getMinConstraint(queryBlock, n,true);// n.getRight().toCVCString(10, queryBlock.getParamMap())
 					return returnStr + getCVCForHavingConstraintRepeated(cvc, queryBlock,  n.getLeft(), totalRows, groupNumber);
 				}
@@ -92,30 +74,11 @@ public class GenerateConstraintsForHavingClause {
 			}
 			else if(n.getRight().getType().equalsIgnoreCase(Node.getAggrNodeType())){
 				if(n.getRight().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMAX())){
-					/*returnStr = "MAX: TYPE = SUBTYPE(LAMBDA(x: INT): " + n.getLeft().toCVCString(10, queryBlock.getParamMap()) + " " + n.getOperator() + " x ";
-					if(n.getOperator().equalsIgnoreCase("<") || n.getOperator().equalsIgnoreCase("<=")){
-						returnStr += " AND x < 10000000 );";
-					}
-					else if(n.getOperator().equalsIgnoreCase(">") || n.getOperator().equalsIgnoreCase(">=")){
-						returnStr += " AND x > 0 );";
-					}
-					else{//operator is = or /=
-						returnStr += ";";
-					}*/
+					
 					returnStr += consGen.getMaxConstraint(queryBlock, n,false);//n.getLeft().toCVCString(10, queryBlock.getParamMap()),
 					return returnStr + getCVCForHavingConstraintRepeated(cvc, queryBlock, n.getRight(), totalRows,   groupNumber);
 				}
 				else if(n.getRight().getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMIN())){
-					/*returnStr = "MIN: TYPE = SUBTYPE(LAMBDA(x: INT): " + n.getLeft().toCVCString(10, queryBlock.getParamMap()) + " " + n.getOperator() + " x ";
-					if(n.getOperator().equalsIgnoreCase("<") || n.getOperator().equalsIgnoreCase("<=")){
-						returnStr += " AND x < 10000000 );";
-					}
-					else if(n.getOperator().equalsIgnoreCase(">") || n.getOperator().equalsIgnoreCase(">=")){
-						returnStr += " AND x > 0 );";
-					}
-					else{//operator is = or /=
-						returnStr += ");";
-					}*/
 					
 					returnStr += consGen.getMinConstraint(queryBlock, n,false);// n.getLeft().toCVCString(10, queryBlock.getParamMap()),
 					return returnStr + getCVCForHavingConstraintRepeated(cvc, queryBlock, n.getRight(), totalRows,  groupNumber);
@@ -159,20 +122,6 @@ public class GenerateConstraintsForHavingClause {
 				int offset = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
 				boolean isDistinct=af.isDistinct();
 
-				/*for(int i=1,j=0;i<=myCount;i++,j++){
-
-					int tuplePos=(groupNumber)*myCount+i;
-
-					if(j<extras)
-						returnStr += (multiples+1)+"*("+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), tuplePos+offset-1+"")+")";
-					else
-						returnStr += (multiples)+"*("+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), tuplePos+offset-1+"")+")";
-
-					if(i<myCount){
-						returnStr += "+";
-					}
-				}
-				return returnStr + ") / "+totalRows + " ";*/
 				return consGen.getAVGConstraint(myCount,groupNumber,multiples,totalRows,af.getAggExp(), offset);
 			}
 			else if(n.getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggSUM())){
@@ -190,24 +139,7 @@ public class GenerateConstraintsForHavingClause {
 
 				int offset = cvc.getRepeatedRelNextTuplePos().get(innerTableNo)[1];
 				boolean isDistinct=af.isDistinct();
-				
-
-				
-				
-			/*	for(int i=1,j=0;i<=myCount;i++,j++){
-					int tuplePos=(groupNumber)*myCount+i;
-
-					if(j<extras)
-						returnStr += (multiples+1)+"*("+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), tuplePos+offset-1+"")+")";
-					else
-						returnStr += (multiples)+"*("+ GenerateCVCConstraintForNode.cvcMapNode(af.getAggExp(), tuplePos+offset-1+"")+")";
-
-					if(i<myCount){
-						returnStr += "+";
-					}
-				}*/
-				
-				//return returnStr;
+			
 				return consGen.getSUMConstraint(myCount,groupNumber,multiples,totalRows,af.getAggExp(), offset);
 			}
 			else if(n.getAgg().getFunc().equalsIgnoreCase(AggregateFunction.getAggMAX())){
@@ -226,7 +158,7 @@ public class GenerateConstraintsForHavingClause {
 			}
 			else return ""; //TODO: Code for COUNT
 		}		
-		else return ""; //TODO: Code for Binaty Arithmetic Operator. This will be required in case of complex (arbitrary) having clauses.
+		else return ""; //TODO: Code for Binary Arithmetic Operator. This will be required in case of complex (arbitrary) having clauses.
 	}
 	
 	

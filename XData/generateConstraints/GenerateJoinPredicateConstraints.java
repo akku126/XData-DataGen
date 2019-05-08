@@ -58,6 +58,7 @@ public class GenerateJoinPredicateConstraints {
 		 }else {
 			 isTempJoin = false;
 		 }
+		/*
 		if(isTempJoin) {
 			String constr,declare="";
 			int st_index=0,end_index=0;
@@ -71,7 +72,7 @@ public class GenerateJoinPredicateConstraints {
 			}
 			
 			constraintString =  declare + constr;
-		}
+		}*/
 		
 		return constraintString;
 	}

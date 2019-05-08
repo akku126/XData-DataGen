@@ -796,7 +796,7 @@ public class AddDataBaseConstraints {
 					String tableName1 = fSingleCol.getTable().getTableName();
 					if(fSingleCol.getCvcDatatype() != null)
 					{
-						fkConstraint += "\n (assert (forall ((ifk"+j+" Int) (jfk"+j+" Int)) ";
+						fkConstraint += "\n (assert (forall ((ifk"+j+" Int)) (exists ((jfk"+j+" Int)) ";
 						if(fSingleCol.isNullable()){
 							fkConstraint +="(or ";
 						}
@@ -805,7 +805,7 @@ public class AddDataBaseConstraints {
 						if(fSingleCol.isNullable()){
 							fkConstraint += constraintGenerator.getIsNullCondition(tableName1,fSingleCol,"ifk"+j) +")";
 						}
-						fkConstraint +=")) \n";
+						fkConstraint +="))) \n";
 					}
 				}
 			//}

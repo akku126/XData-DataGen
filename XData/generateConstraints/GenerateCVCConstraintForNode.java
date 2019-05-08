@@ -348,15 +348,17 @@ public static String primaryKeysSetNotNull(GenerateCVC1 cvc){
 						int p = 0;
 						String temp1 = "";
 
-						Column pkeyColumn = primaryKeys.get(p);
-						int pos = table.getColumnIndex(pkeyColumn.getColumnName());
+						
 						temp1 = "\n(assert (forall ((ipk"+p+" Int)) \n";
 						temp1 += " (and \n";
 
 						for(String col : table.getColumns().keySet()){
 							if( primaryKeys.toString().contains(col)){
+								Column pkeyColumn = primaryKeys.get(p);
+								int pos = table.getColumnIndex(pkeyColumn.getColumnName());
 								
-								temp1 += "\t(not ( ISNULL_"+col+ConstraintGenerator.smtMap(pkeyColumn,"ipk"+p)+") )\n";
+								temp1 += "\t(not ( ISNULL_"+col+ConstraintGenerator.smtMap(pkeyColumn,"ipk0")+") )\n";
+								p++;
 							}
 						}
 						
