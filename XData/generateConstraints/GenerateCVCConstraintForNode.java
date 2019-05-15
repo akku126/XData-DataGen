@@ -356,8 +356,12 @@ public static String primaryKeysSetNotNull(GenerateCVC1 cvc){
 							if( primaryKeys.toString().contains(col)){
 								Column pkeyColumn = primaryKeys.get(p);
 								int pos = table.getColumnIndex(pkeyColumn.getColumnName());
-								
-								temp1 += "\t(not ( ISNULL_"+col+ConstraintGenerator.smtMap(pkeyColumn,"ipk0")+") )\n";
+								String col_datatype = pkeyColumn.getCvcDatatype();
+								if(col_datatype!= null && (col_datatype.equalsIgnoreCase("INT") || col_datatype.equalsIgnoreCase("REAL") || col_datatype.equalsIgnoreCase("TIME") || col_datatype.equalsIgnoreCase("DATE") || col_datatype.equalsIgnoreCase("TIMESTAMP")))
+									temp1 += "\t(not ( ISNULL_"+col+ConstraintGenerator.smtMap(pkeyColumn,"ipk0")+") )\n";
+								else
+									temp1 += "\t(not ( ISNULL_"+pkeyColumn.getCvcDatatype()+ConstraintGenerator.smtMap(pkeyColumn,"ipk0")+") )\n";
+
 								p++;
 							}
 						}

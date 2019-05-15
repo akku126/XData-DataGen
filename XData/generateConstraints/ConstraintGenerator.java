@@ -2002,6 +2002,7 @@ public String getSMTOrConstraint(ConstraintObject con, String s1,ArrayList<Const
 	if(s1 != null && !s1.isEmpty() || (s1 != null && !s1.isEmpty() && conList!= null && conList.size() > 1)){
 	//	cvcStr +=")  ";
 	}
+	cvcStr = "(or "+cvcStr+")";
 	return cvcStr;
 }
 
@@ -2737,7 +2738,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 						if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
 							tempStr += "("+temp+"_"+c+index+" "+s + ") ";
 						else
-							tempStr+= "("+temp+"_"+c+index+" "+c.getColumnName() + ") ";						
+							tempStr+= "("+temp+"_"+c+index+" "+c.getCvcDatatype() + ") ";						
 						index++;
 					}
 				}
