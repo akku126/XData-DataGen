@@ -16,6 +16,7 @@ import dk.brics.automaton.Automaton;
 import dk.brics.automaton.BasicOperations;
 import parsing.Column;
 import parsing.Table;
+import util.Configuration;
 import util.TableMap;
 import util.Utilities;
 
@@ -187,6 +188,7 @@ public class StringConstraintSolver implements Serializable
 			Vector<StringConstraint> result= solveRelatedConstraints(rel);	
 			if(result== null || result.size()==0 ){
 				Vector<String> v=new Vector<String>();
+				if(Configuration.getProperty("smtsolver").equalsIgnoreCase("cvc3"))
 				v.add("ASSERT  (1=2);\n");
 				return v;
 			}
