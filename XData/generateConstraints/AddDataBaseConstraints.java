@@ -239,18 +239,68 @@ public class AddDataBaseConstraints {
 
 
 					}
-				}else{
-					/*
-					 (assert (forall ((ipk Int)(jpk Int)) 
-						(=> (= (DEPARTMENT_DEPT_NAME0 (select O_DEPARTMENT ipk)) (DEPARTMENT_DEPT_NAME0 (select O_DEPARTMENT jpk)) ) 
-    								(and (= (DEPARTMENT_BUILDING1 (select O_DEPARTMENT ipk)) (DEPARTMENT_BUILDING1 (select O_DEPARTMENT jpk))) 
-	 						(= (DEPARTMENT_BUDGET2 (select O_DEPARTMENT ipk)) (DEPARTMENT_BUDGET2 (select O_DEPARTMENT jpk)))
-						))
-						))
+				}
+				
+				
+				else{
+					
+					
+					for(int k=1; k<=noOfTuples; k++){
+						for(int j=k+1; j<=noOfTuples; j++){
 
-					 */
-					//for(int p=0; p<primaryKeys.size();p++){
+							pkConstraint += "(assert (=> ";
+							
+							if(primaryKeys.size() > 1)
+								pkConstraint += "(and ";
 
+							/**Generate the constraint for each primary key attribute */					
+							for(int p=0; p<primaryKeys.size();p++){
+
+								/** Get column details */
+								Column pkeyColumn = primaryKeys.get(p);
+								int pos = table.getColumnIndex(pkeyColumn.getColumnName());
+
+								/**If this pk attribute is equal*/
+								//pkConstraint += "O_" + tableName + "[" + k + "]." + pos + " = O_" + tableName + "[" + j +"]." + pos + " AND ";	
+								pkConstraint += "(= ";
+								pkConstraint += ConstraintGenerator.smtMap(table.getColumn(pkeyColumn.getColumnName()),k+"");
+								pkConstraint += ConstraintGenerator.smtMap(table.getColumn(pkeyColumn.getColumnName()),j+"") + " )";
+
+							}
+							
+							if(primaryKeys.size() > 1)
+								pkConstraint += " ) ";
+
+							//pkConstraint = pkConstraint.substring(0,pkConstraint.length()-4);
+							pkConstraint += "(and ";
+
+							boolean x = false;
+							for(String col : table.getColumns().keySet()){
+								if(!( primaryKeys.toString().contains(col))){
+									x = true;
+									int pos = table.getColumnIndex(col);
+
+									/**This attribute has to be equal */
+									//pkConstraint += "(O_"+tableName+"["+k+"]."+pos+" = O_"+tableName+"["+ j +"]."+pos+") AND ";
+									pkConstraint += "(= ";
+									pkConstraint += ConstraintGenerator.smtMap(table.getColumn(col),k+"");
+									pkConstraint += ConstraintGenerator.smtMap(table.getColumn(col),j+"") + " )";
+									
+								}
+							}
+							/*if(x == false){
+								pkConstraint += "TRUE;\n";	//TODO: Should it imply FALSE???
+							}
+							else
+								pkConstraint = pkConstraint.substring(0,pkConstraint.length()-4)+";\n";
+								*/
+							pkConstraint += ") )) \n\n";
+						}
+
+
+					}
+				
+						/*
 						int p = 0;
 						String temp1 = "";
 
@@ -279,6 +329,7 @@ public class AddDataBaseConstraints {
 
 						pkConstraint += temp1;
 					//}
+						*/
 				}
 
 
@@ -778,12 +829,12 @@ public class AddDataBaseConstraints {
 
 
 		}else{
-			//for(int j=1;j <= fkCount; j++){
-				int j = 1;
 				String temp2 = "";
 				
 				Vector<Column> temp = new Vector<Column>();
 				
+				/* With forall construct
+				 * 
 				for (Column fSingleCol : fCol)
 				{	
 					if(!temp.contains(fSingleCol)) {
@@ -808,7 +859,35 @@ public class AddDataBaseConstraints {
 						fkConstraint +="))) \n";
 					}
 				}
-			//}
+				*/
+				
+				for(int j=1;j <= fkCount; j++){
+					for (Column fSingleCol : fCol)
+					{	
+						if(!temp.contains(fSingleCol)) {
+							temp.add(fSingleCol);
+						}
+						else
+							continue;
+						
+						Column pSingleCol = pCol.get(fCol.indexOf(fSingleCol));
+						String tableName1 = fSingleCol.getTable().getTableName();
+						if(fSingleCol.getCvcDatatype() != null)
+						{
+							fkConstraint += "\n (assert ";
+							if(fSingleCol.isNullable()){
+								fkConstraint +="(or ";
+							}
+							fkConstraint += "(= "+constraintGenerator.smtMap(fSingleCol, j+"")+" "+constraintGenerator.smtMap(pSingleCol, j+"")+")";
+	
+							if(fSingleCol.isNullable()){
+								fkConstraint += constraintGenerator.getIsNullCondition(tableName1,fSingleCol,""+j) +")";
+							}
+							fkConstraint +=") \n";
+						}
+					}
+				}
+			
 		}
 
 		return fkConstraint;
