@@ -828,9 +828,7 @@ public class AddDataBaseConstraints {
 			}
 
 
-		}else{
-				String temp2 = "";
-				
+		}else{				
 				Vector<Column> temp = new Vector<Column>();
 				
 				/* With forall construct
@@ -862,6 +860,7 @@ public class AddDataBaseConstraints {
 				*/
 				
 				for(int j=1;j <= fkCount; j++){
+					temp.clear();
 					for (Column fSingleCol : fCol)
 					{	
 						if(!temp.contains(fSingleCol)) {
@@ -878,10 +877,10 @@ public class AddDataBaseConstraints {
 							if(fSingleCol.isNullable()){
 								fkConstraint +="(or ";
 							}
-							fkConstraint += "(= "+constraintGenerator.smtMap(fSingleCol, j+"")+" "+constraintGenerator.smtMap(pSingleCol, j+"")+")";
+							fkConstraint += "(= "+constraintGenerator.smtMap(fSingleCol, j + fkOffset -1 + "")+" "+constraintGenerator.smtMap(pSingleCol, j + pkOffset -1 + "")+")";
 	
 							if(fSingleCol.isNullable()){
-								fkConstraint += constraintGenerator.getIsNullCondition(tableName1,fSingleCol,""+j) +")";
+								fkConstraint += constraintGenerator.getIsNullCondition(tableName1,fSingleCol,j + fkOffset -1 + "") +")";
 							}
 							fkConstraint +=") \n";
 						}
