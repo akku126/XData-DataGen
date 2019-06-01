@@ -74,7 +74,7 @@ public class CountEstimationRelated {
 			String filePath =  cvc.getFilePath().replace(" ", "\\ ");
 			
 			/**write these constraints into a file and execute*/
-			Utilities.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints.cvc", CVCText);
+			Utilities.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints.smt", CVCText);
 			Runtime r = Runtime.getRuntime();
 			ConstraintGenerator.getAggConstraintExeFile(filePath,cvc);
 			
@@ -318,7 +318,7 @@ public class CountEstimationRelated {
 					CVCStr = ConstraintGenerator.generateCVCForCNTForPositiveINT( queryBlock, havingColConds, col, c);
 
 					/**write these constraints into a file and execute*/
-					Utilities.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/getCount.cvc", CVCStr);
+					Utilities.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/getCount.smt", CVCStr);
 					
 					ConstraintGenerator.getCountExeFile(filePath, cmdString, cvc);
 					

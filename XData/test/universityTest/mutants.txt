@@ -57,4 +57,19 @@
 46|select course_id from section as S where semester = 'Fall' and year = !2009 and not exists (select * from section as T where semester = 'Spring' and year != 2010 and S.course_id = T.course_id)
 47|select min(salary)from instructor
 48|select max(salary)from instructor
-
+49|select count(c.room_number) from classroom as c, department as d where c.building = d.building and dept_name='Comp. Sci.'
+49|select count(C.room_number) from (select building from department D where D.dept_name='Comp. Sci.') as R,classroom C where C.building=R.building
+49|select count(*) from department, classroom where department.building = classroom.building and department.dept_name = 'Comp. Sci.'
+49|select count(room_number) as no_of_rooms from classroom where building in (select building from department where dept_name = 'Comp. Sci.')
+49|select count(*) from classroom where building = (select building from department where dept_name = 'Comp. Sci.')
+49|select count(distinct room_number) from classroom, department where department.dept_name = 'Comp. Sci.' and department.building = classroom.building
+50|select dept_name from department where budget in(SELECT MAX(budget) FROM department WHERE budget NOT IN (SELECT MAX(budget) FROM department))
+50|select dept_name from department,( select min(budget) from department) as dept_min(min_budget)where budget = min_budget
+50|select dept_name from department where budget <= (  select min(budget) from department)
+50|select dept_name from department where budget <= all(select budget from department)
+51|select ID,name from (student natural join takes) where course_id = 'CS-101' and year = 2009 and semester ='Fall' order by name
+51|select student.id , name from student,takes where student.id = takes.id and takes.course_id = 'CS-101' and takes.semester = 'Fall' and takes.year = 2009 order by name asc
+51|select student.ID, student.name from student, takes where semester = 'Fall' and  year= 2009 and course_id = 'CS-101' and takes.ID = student.ID order by student.name
+51|select s.id, s.name from student s, takes t where t.semester = 'Fall' and t.year = 2009 and t.id = s.id and t.course_id = 'CS-101'
+51|select S.ID,S.name from student as S,takes as T where S.ID=T.ID and T.semester='Fall' and T.year=2009 and T.course_id='CS-101' order by S.name
+52|select instructor.ID,count(s_ID) from instructor left outer join advisor on advisor.i_id = instructor.ID group by instructor.ID

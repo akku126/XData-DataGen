@@ -136,10 +136,10 @@ public class GenerateCommonConstraintsForQuery {
 				
 				/** Call CVC3 Solver with constraints */
 				logger.log(Level.INFO,"cvc count =="+cvc.getCount());
-				Utilities.writeFile(Configuration.homeDir + "/temp_cvc" + cvc.getFilePath() + "/cvc3_" + cvc.getCount() + ".cvc", CVCStr);
+				Utilities.writeFile(Configuration.homeDir + "/temp_cvc" + cvc.getFilePath() + "/cvc3_" + cvc.getCount() + ".smt", CVCStr);
 				
 				success= new PopulateTestData().killedMutants("cvc3_" + cvc.getCount() 
-						+ ".cvc", cvc.getQuery(), 
+						+ ".smt", cvc.getQuery(), 
 						"DS" + cvc.getCount(), cvc.getQueryString(), cvc.getFilePath(), cvc.getNoOfOutputTuples(), cvc.getTableMap(), 
 						cvc.getResultsetColumns(), cvc.getRepeatedRelationCount().keySet(),cvc.getDBAppparams()) ;
 			
@@ -153,10 +153,10 @@ public class GenerateCommonConstraintsForQuery {
 			}else{
 				/** Call CVC3 Solver with constraints */
 				logger.log(Level.INFO,"cvc count =="+cvc.getCount());
-				Utilities.writeFile(Configuration.homeDir + "temp_cvc" + cvc.getFilePath() + "/cvc4_" + cvc.getCount() + ".cvc", CVCStr);
+				Utilities.writeFile(Configuration.homeDir + "temp_cvc" + cvc.getFilePath() + "/z3_" + cvc.getCount() + ".smt", CVCStr);
 				
-				success= new PopulateTestData().killedMutantsForSMT("cvc4_" + cvc.getCount() 
-						+ ".cvc", cvc.getQuery(), 
+				success= new PopulateTestData().killedMutantsForSMT("z3_" + cvc.getCount() 
+						+ ".smt", cvc.getQuery(), 
 						"DS" + cvc.getCount(), cvc.getQueryString(), cvc.getFilePath(), cvc.getNoOfOutputTuples(), cvc.getTableMap(), 
 						cvc.getResultsetColumns(), cvc.getRepeatedRelationCount().keySet(),cvc.getDBAppparams()) ;
 				cvc.setOutput( cvc.getOutput() + success);

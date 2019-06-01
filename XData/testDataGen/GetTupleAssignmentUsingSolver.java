@@ -1141,14 +1141,14 @@ public class GetTupleAssignmentUsingSolver {
 		//Escape the White Spaces in the file name for using it in BASH script. This is OS Specific and work for *nix and Mac
 		String filePath= getFilePath().replace(" ", "\\ ");
 		/**write these constraints to a cvc file*/
-		Utilities.writeFile(Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/tupleAssignment.cvc", constraints);
+		Utilities.writeFile(Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/tupleAssignment.smt", constraints);
 
 		String cmdString = "";
 
 		cmdString = "#!/bin/bash\n";
 
 		/**command to redirect output*/
-		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc"+ filePath +"/tupleAssignment.cvc > tupleAssignmentOutput \n";
+		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc"+ filePath +"/tupleAssignment.smt > tupleAssignmentOutput \n";
 
 		/**command to check if solution is valid/ not i.e. possible or not*/
 		//cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/tupleAssignment.cvc | grep -e 'Valid' > isValid \n";

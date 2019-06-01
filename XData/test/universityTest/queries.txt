@@ -44,4 +44,8 @@
 46|select course_id from section as S where semester = 'Fall' and year = 2009 and not exists (select * from section as T where semester = 'Spring' and year = 2010 and S.course_id = T.course_id)
 47|select min(salary)from instructor where dept_name = 'Comp. Sci.'
 48|select max(salary)from instructor where dept_name = 'Comp. Sci.'
+49|select count(room_number) from classroom where  building = (select d.building from department as d where dept_name='Comp. Sci.')
+50|select dept_name from department where budget = (select min(budget) from department)
+51|select takes.ID, name from takes, student where takes.ID = student.ID and course_id = 'CS-101' and semester='Fall' and year = 2009 order by name
+52|select ID, count(s_id) from instructor left outer join advisor on (instructor.ID = advisor.i_id) group by ID
 

@@ -1,5 +1,5 @@
 package generateConstraints;
-
+import com.microsoft.z3.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,6 +24,10 @@ import util.Configuration;
 import util.ConstraintObject;
 import util.TagDatasets.QueryBlock;
 import util.Utilities;
+
+//import static com.microsoft.z3.Constructor.of;
+import com.microsoft.z3.enumerations.Z3_ast_print_mode;
+import java.util.Map;
 
 /**
  * This class generates the constraints based on solver in XData.Properties file
@@ -2231,8 +2235,8 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			return header;
 		}
 		else{
-			header = "(set-logic ALL_SUPPORTED)";
-			header += "\n (set-option:produce-models true) \n (set-option :interactive-mode true) \n (set-option :produce-assertions true) \n (set-option :produce-assignments true) ";
+			//header = "(set-logic ALL_SUPPORTED)";
+			header += "(set-option:produce-models true) \n (set-option :interactive-mode true) \n (set-option :produce-assertions true) \n (set-option :produce-assignments true) ";
 		}
 		return header +"\n\n";
 	}
@@ -2716,9 +2720,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 					tempStr += "O_" + temp + ": ARRAY INT OF " + temp + "_TupleType;\n";
 				}
 		}
-		else{
-			
-			
+		else{			
 			String[] tablenames = new String[cvc.getResultsetTables().size()];
 			for(int i=0;i<cvc.getResultsetTables().size();i++){
 				tablenames[i] = cvc.getResultsetTables().get(i).getTableName();
@@ -3504,7 +3506,7 @@ public static String generateCVCForCNTForPositiveINT(QueryBlockDetails queryBloc
 		}else{
 			
 			int min = 0,min1=0, max=0,max1=0;
-			CVCStr += "(set-logic ALL_SUPPORTED) \n (set-option:produce-models true) \n (set-option :interactive-mode true) \n (set-option :produce-assertions true) \n (set-option :produce-assignments true) \n";
+			CVCStr += "(set-option:produce-models true) \n (set-option :interactive-mode true) \n (set-option :produce-assertions true) \n (set-option :produce-assignments true) \n";
 			CVCStr += "(declare-const SUM Int) \n (declare-const MIN Int) \n (declare-const MAX Int) \n (declare-const AVG Real) \n (declare-const COUNT Int) \n";
 			CVCStr += "(declare-const CNT Real) \n (declare-const MIN1 Int) \n (declare-const MAX1 Int) \n\n";
 
@@ -3622,8 +3624,8 @@ public static void getCountExeFile(String filePath, String cmdString, GenerateCV
 		cmdString += "grep -e 'COUNT = ' "+ Configuration.homeDir+"temp_cvc" + filePath + "/COUNTCVC" +" | awk -F \" \" '{print $4}' | awk -F \")\" '{print $1}' > "+Configuration.homeDir+"temp_cvc" +filePath + "/COUNT\n";
 	}else{
 		
-		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_cvc" +filePath+ "/getCount.cvc > "+Configuration.homeDir+"/temp_cvc" + filePath + "/COUNTCVC \n";
-		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_cvc" +filePath+ "/getCount.cvc | grep -e 'unsat' > isNotValid \n";
+		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_cvc" +filePath+ "/getCount.smt > "+Configuration.homeDir+"/temp_cvc" + filePath + "/COUNTCVC \n";
+		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_cvc" +filePath+ "/getCount.smt | grep -e 'unsat' > isNotValid \n";
 
 		//cmdString += Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"temp_cvc" +filePath+ "/getCount.cvc > "+Configuration.homeDir+"/temp_cvc" + filePath + "/COUNTCVC \n";
 		//cmdString +=Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"temp_cvc" + filePath + "/getCount.cvc | grep -e 'unsat' > isNotValid \n";
@@ -3645,7 +3647,7 @@ public static void getAggConstraintExeFile(String filePath,GenerateCVC1 cvc) {
 	if(isCVC3){
 		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_cvc" +filePath+ "/checkAggConstraints.cvc | grep -e 'Invalid' > isValid \n";
 	}else{
-		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_cvc" +filePath+ "/checkAggConstraints.cvc | grep -e 'sat' > isValid \n";
+		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_cvc" +filePath+ "/checkAggConstraints.smt | grep -e 'sat' > isValid \n";
 		//cmdString += Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"temp_cvc" +filePath+ "/checkAggConstraints.cvc | grep -e 'true' > isValid \n";
 	}
 	Utilities.writeFile(Configuration.homeDir+"temp_cvc" + cvc.getFilePath() + "/checkAggConstraints", cmdString);
@@ -3701,8 +3703,10 @@ public String generateCVCForNullCheckInHaving() {
 	String returnStr="";
 	String columnName = "Realcol";
 	String Datatype = "Real";
-	
-	
+	//Context ctx;
+	//String columnName = (String) ctx.mkConst(ctx.mkSymbol("Realcol"),
+	//		ctx.mkRealSort());
+	//returnStr = ctx.mkConst(columnName,Datatype);
 	returnStr = "\n(declare-const "+columnName+" "+Datatype+") \n\n";
 
 	returnStr += "(define-fun CHECKALL_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) Bool \n";

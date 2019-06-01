@@ -217,16 +217,24 @@ public class GenerateDataSet {
 			
 			int queryId=1;
 			//String query = "select name from instructor where salary > some (select salary from instructor where dept_name = ’Biology’)";
-			String query = "with recursive c_prereq(course_id , prereq_id)as(select course_id , prereq_id from prereq union select prereq.prereq_id , c_prereq.course_id from prereq , c_prereq where prereq.course_id = c_prereq.prereq_id) select course_id,prereq_id from c_prereq";
+			//String query = "select count(distinct room_number) from classroom, department where department.dept_name = 'Comp. Sci.' and department.building = classroom.building";
 			//String query = "with max_budget (value) as (select max(budget) from department) select budget from department, max_budget where department.budget = max_budget.value";
 			//String query = "select dept_name, avg_salary from (select dept_name, avg (salary) from instructor group by dept name) as dept avg (dept_name, avg_salary) where avg_salary > 42000";
 			//String query = "select dept_name from department where building = 'T%'";
 			//String query = "select dept_name from department where building like '%Watson%'";
 			//String query = "SELECT takes.course_id FROM student INNER JOIN takes ON(student.id=takes.id) INNER JOIN course ON(course.course_id=takes.course_id) WHERE student.id = '12345'";
-			//String query="select * from student join takes on student.ID = takes.ID";	
+			//String query="select * from student where tot_cred >5";	
 			//String query ="select dept_name, avg(salary) as avg_salary from instructor group by dept_name having avg(salary) > 42000";
 			//String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year > 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201')";
-			
+			//String query = "select name, title from (instructor natural join teaches) join course using (course_id)";
+//			String query = "(select course_id\n" + 
+//					"from section\n" + 
+//					"where semester = 'Fall' and year= 2009)\n" + 
+//					"union\n" + 
+//					"(select course_id\n" + 
+//					"from section\n" + 
+//					"where semester = 'Spring' and year= 2010)";
+			 String query = "select id, name from student where tot_cred>30";
 			/* I----*/
 			//  String query = "select id, name from student where tot_cred>30";
 			 
@@ -312,7 +320,7 @@ public class GenerateDataSet {
 			d.generateDatasetForQuery(conn,queryId,query,  schemaFile,  sampleDataFile,  orderDependent,  tempFilePath, obj);
 			long stopTime = System.currentTimeMillis();
 			long elapsedTime = stopTime - startTime;
-	        System.out.println("Total time taken fro data generation of the query is: ");
+	        System.out.println("Total time taken for data generation of the query is: ");
 	        System.out.print(elapsedTime);
 		}
 	

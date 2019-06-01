@@ -114,3 +114,8 @@ create table prereq
 	 foreign key (prereq_id) references course
 	);
 
+create table grade_value
+	(grade 		varchar(2),
+	 value 		numeric(4,2),	
+	 primary key(grade)
+	);
