@@ -125,7 +125,7 @@ public class PopulateTestData {
 				InputStreamReader myIStreamReader = new InputStreamReader(myProcess.getInputStream());
 
 				//Writing output to .out file
-				BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+filePath+"/" + cvcFileName.substring(0,cvcFileName.lastIndexOf(".cvc")) + ".out"));
+				BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+filePath+"/" + cvcFileName.substring(0,cvcFileName.lastIndexOf(".smt")) + ".out"));
 
 				while ((ch = myIStreamReader.read()) != -1) 
 				{ 
@@ -156,7 +156,7 @@ public class PopulateTestData {
 			throw new Exception("Process interrupted or timed out.", e);
 		}
 
-		return cvcFileName.substring(0,cvcFileName.lastIndexOf(".cvc")) + ".out";
+		return cvcFileName.substring(0,cvcFileName.lastIndexOf(".smt")) + ".out";
 	}
 
 	public String cutRequiredOutput(String cvcOutputFileName, String filePath){
