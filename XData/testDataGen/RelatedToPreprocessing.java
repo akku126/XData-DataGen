@@ -318,8 +318,8 @@ public class RelatedToPreprocessing {
 	public static void deletePreviousDatasets(GenerateDataset_new g, String query) throws IOException,InterruptedException {
 
 		//Runtime r = Runtime.getRuntime();
-		logger.log(Level.INFO,Configuration.homeDir+"/temp_cvc"+g.getFilePath()+"/");
-		File f=new File(Configuration.homeDir+"/temp_cvc"+g.getFilePath()+"/");
+		logger.log(Level.INFO,Configuration.homeDir+"/temp_smt"+g.getFilePath()+"/");
+		File f=new File(Configuration.homeDir+"/temp_smt"+g.getFilePath()+"/");
 		
 		if(f.exists()){		
 			File f2[]=f.listFiles();
@@ -327,13 +327,13 @@ public class RelatedToPreprocessing {
 			for(int i=0;i<f2.length;i++){
 				if(f2[i].isDirectory() && f2[i].getName().startsWith("DS")){
 					
-					Utilities.deletePath(Configuration.homeDir+"/temp_cvc"+g.getFilePath()+"/"+f2[i].getName());
+					Utilities.deletePath(Configuration.homeDir+"/temp_smt"+g.getFilePath()+"/"+f2[i].getName());
 				}
 			}
 		}
 		
 
-		File dir= new File(Configuration.homeDir+"/temp_cvc"+g.getFilePath());
+		File dir= new File(Configuration.homeDir+"/temp_smt"+g.getFilePath());
 		if(dir.exists()){
 			for(File file: dir.listFiles()) {
 				file.delete();
@@ -343,8 +343,8 @@ public class RelatedToPreprocessing {
 			dir.mkdirs();
 		}
 		
-		BufferedWriter ord = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+g.getFilePath()+"/queries.txt"));
-		BufferedWriter ord1 = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+g.getFilePath()+"/queries_mutant.txt"));
+		BufferedWriter ord = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_smt"+g.getFilePath()+"/queries.txt"));
+		BufferedWriter ord1 = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_smt"+g.getFilePath()+"/queries_mutant.txt"));
 		ord.write(query);
 		ord1.write(query);
 		ord.close();
@@ -354,8 +354,8 @@ public class RelatedToPreprocessing {
 	public static void deletePreviousDatasets(GenerateCVC1 g, String query) throws IOException,InterruptedException {
 
 		//Runtime r = Runtime.getRuntime();
-		logger.log(Level.INFO,Configuration.homeDir+"/temp_cvc"+g.getFilePath()+"/");
-		File f=new File(Configuration.homeDir+"/temp_cvc"+g.getFilePath()+"/");
+		logger.log(Level.INFO,Configuration.homeDir+"/temp_smt"+g.getFilePath()+"/");
+		File f=new File(Configuration.homeDir+"/temp_smt"+g.getFilePath()+"/");
 		
 		if(f.exists()){		
 			File f2[]=f.listFiles();
@@ -363,13 +363,13 @@ public class RelatedToPreprocessing {
 			for(int i=0;i<f2.length;i++){
 				if(f2[i].isDirectory() && f2[i].getName().startsWith("DS")){
 					
-					Utilities.deletePath(Configuration.homeDir+"/temp_cvc"+g.getFilePath()+"/"+f2[i].getName());
+					Utilities.deletePath(Configuration.homeDir+"/temp_smt"+g.getFilePath()+"/"+f2[i].getName());
 				}
 			}
 		}
 		
 
-		File dir= new File(Configuration.homeDir+"/temp_cvc"+g.getFilePath());
+		File dir= new File(Configuration.homeDir+"/temp_smt"+g.getFilePath());
 		if(dir.exists()){
 			for(File file: dir.listFiles()) {
 				file.delete();
@@ -379,8 +379,8 @@ public class RelatedToPreprocessing {
 			dir.mkdirs();
 		}
 		
-		BufferedWriter ord = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+g.getFilePath()+"/queries.txt"));
-		BufferedWriter ord1 = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+g.getFilePath()+"/queries_mutant.txt"));
+		BufferedWriter ord = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_smt"+g.getFilePath()+"/queries.txt"));
+		BufferedWriter ord1 = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_smt"+g.getFilePath()+"/queries_mutant.txt"));
 		ord.write(query);
 		ord1.write(query);
 		ord.close();
@@ -398,7 +398,7 @@ public class RelatedToPreprocessing {
 		ArrayList<String> fileListVector = new ArrayList<String>();		
 		ArrayList<String> datasets = new ArrayList<String>();
 
-		String fileList[]=new File(Configuration.homeDir+"/temp_cvc" + gd.getFilePath()).list();
+		String fileList[]=new File(Configuration.homeDir+"/temp_smt" + gd.getFilePath()).list();
 
 		for(int k=0;k<fileList.length;k++){
 			fileListVector.add(fileList[k]);
@@ -406,7 +406,7 @@ public class RelatedToPreprocessing {
 		Collections.sort(fileListVector);	        
 		for(int i=0;i<fileList.length;i++)
 		{
-			File f1=new File(Configuration.homeDir+"/temp_cvc" + gd.getFilePath() +"/"+fileListVector.get(i));	          
+			File f1=new File(Configuration.homeDir+"/temp_smt" + gd.getFilePath() +"/"+fileListVector.get(i));	          
 			if(f1.isDirectory() && fileListVector.get(i).substring(0,2).equals("DS"))
 			{
 				datasets.add(fileListVector.get(i));
@@ -427,7 +427,7 @@ public class RelatedToPreprocessing {
 		ArrayList<String> fileListVector = new ArrayList<String>();		
 		ArrayList<String> datasets = new ArrayList<String>();
 
-		String fileList[]=new File(Configuration.homeDir+"/temp_cvc" + gd.getFilePath()).list();
+		String fileList[]=new File(Configuration.homeDir+"/temp_smt" + gd.getFilePath()).list();
 
 		for(int k=0;k<fileList.length;k++){
 			fileListVector.add(fileList[k]);
@@ -435,7 +435,7 @@ public class RelatedToPreprocessing {
 		Collections.sort(fileListVector);	        
 		for(int i=0;i<fileList.length;i++)
 		{
-			File f1=new File(Configuration.homeDir+"/temp_cvc" + gd.getFilePath() +"/"+fileListVector.get(i));	          
+			File f1=new File(Configuration.homeDir+"/temp_smt" + gd.getFilePath() +"/"+fileListVector.get(i));	          
 			if(f1.isDirectory() && fileListVector.get(i).substring(0,2).equals("DS"))
 			{
 				datasets.add(fileListVector.get(i));
@@ -532,7 +532,7 @@ public class RelatedToPreprocessing {
 		branchQueries.setNoOfBranchQueries(0);
 		try
 		{
-			input2 =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc"+ cvc.getFilePath() +"/branchQuery.txt"));
+			input2 =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+ cvc.getFilePath() +"/branchQuery.txt"));
 			String str = null;
 			while((str = input2.readLine()) != null)
 				branchQueries.setNoOfBranchQueries( branchQueries.getNoOfBranchQueries() + 1 );
@@ -558,11 +558,11 @@ public class RelatedToPreprocessing {
 
 		/** creates a file queries.txt in the specified folder*/
 
-		logger.log(Level.INFO,Configuration.homeDir+"/temp_cvc"+ cvc.getFilePath() +"/queries.txt");
+		logger.log(Level.INFO,Configuration.homeDir+"/temp_smt"+ cvc.getFilePath() +"/queries.txt");
 		try
 		{
-			input4 =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc"+ cvc.getFilePath() +"/branchQuery.txt"));
-			input3 =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc"+ cvc.getFilePath() +"/branchResult.txt"));
+			input4 =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+ cvc.getFilePath() +"/branchQuery.txt"));
+			input3 =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+ cvc.getFilePath() +"/branchResult.txt"));
 
 			/*for(int i = 0; i < branchQueries.getNoOfBranchQueries(); i++)
 				branchQueries.getBranchQueryString()[i] = input4.readLine().trim();

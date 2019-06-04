@@ -49,7 +49,7 @@ public class GetSolverHeaderAndFooter {
 		HashMap<Vector<String>,Boolean> equivalenceColumns = new HashMap<Vector<String>, Boolean>();
 		
 		
-		String equivalenceColumnsFile=Configuration.homeDir+"/temp_cvc" +cvc.getFilePath() + "/equivalenceColumns";
+		String equivalenceColumnsFile=Configuration.homeDir+"/temp_smt" +cvc.getFilePath() + "/equivalenceColumns";
 		
 		File f = new File(equivalenceColumnsFile);
 		f.createNewFile(); //this will create the equivalence columns file iff it is not already present

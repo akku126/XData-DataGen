@@ -136,7 +136,7 @@ public class GenerateCommonConstraintsForQuery {
 				
 				/** Call CVC3 Solver with constraints */
 				logger.log(Level.INFO,"cvc count =="+cvc.getCount());
-				Utilities.writeFile(Configuration.homeDir + "/temp_cvc" + cvc.getFilePath() + "/cvc3_" + cvc.getCount() + ".smt", CVCStr);
+				Utilities.writeFile(Configuration.homeDir + "/temp_smt" + cvc.getFilePath() + "/cvc3_" + cvc.getCount() + ".smt", CVCStr);
 				
 				success= new PopulateTestData().killedMutants("cvc3_" + cvc.getCount() 
 						+ ".smt", cvc.getQuery(), 
@@ -153,7 +153,7 @@ public class GenerateCommonConstraintsForQuery {
 			}else{
 				/** Call CVC3 Solver with constraints */
 				logger.log(Level.INFO,"cvc count =="+cvc.getCount());
-				Utilities.writeFile(Configuration.homeDir + "temp_cvc" + cvc.getFilePath() + "/z3_" + cvc.getCount() + ".smt", CVCStr);
+				Utilities.writeFile(Configuration.homeDir + "temp_smt" + cvc.getFilePath() + "/z3_" + cvc.getCount() + ".smt", CVCStr);
 				
 				success= new PopulateTestData().killedMutantsForSMT("z3_" + cvc.getCount() 
 						+ ".smt", cvc.getQuery(), 

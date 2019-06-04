@@ -93,7 +93,7 @@ public class GenerateDataset_new {
 	    RelatedToPreprocessing.deletePreviousDatasets(this, query);
 	
 		/**upload the details about the list of queries and the conditions between the branch queries*/
-		BufferedWriter ord2 = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+filePath+"/branchQuery.txt"));
+		BufferedWriter ord2 = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_smt"+filePath+"/branchQuery.txt"));
 		for(String str : branchQuery)
 		{
 			ord2.write(str);
@@ -101,7 +101,7 @@ public class GenerateDataset_new {
 		}
 		ord2.close();
 		
-		BufferedWriter ord3 = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+filePath+"/branchResult.txt"));
+		BufferedWriter ord3 = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_smt"+filePath+"/branchResult.txt"));
 		for(String str : branchResult)
 		{
 			ord3.write(str);

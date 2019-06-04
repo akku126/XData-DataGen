@@ -3619,20 +3619,20 @@ public static void getCountExeFile(String filePath, String cmdString, GenerateCV
 	cmdString = "#!/bin/bash\n";
 	
 	if(isCVC3){
-		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_cvc" +filePath+ "/getCount.cvc > "+Configuration.homeDir+"/temp_cvc" + filePath + "/COUNTCVC \n";
-		cmdString +=Configuration.smtsolver+" "+ Configuration.homeDir+"temp_cvc" + filePath + "/getCount.cvc | grep -e 'Valid' > isNotValid \n";
-		cmdString += "grep -e 'COUNT = ' "+ Configuration.homeDir+"temp_cvc" + filePath + "/COUNTCVC" +" | awk -F \" \" '{print $4}' | awk -F \")\" '{print $1}' > "+Configuration.homeDir+"temp_cvc" +filePath + "/COUNT\n";
+		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_smt" +filePath+ "/getCount.cvc > "+Configuration.homeDir+"/temp_smt" + filePath + "/COUNTCVC \n";
+		cmdString +=Configuration.smtsolver+" "+ Configuration.homeDir+"temp_smt" + filePath + "/getCount.cvc | grep -e 'Valid' > isNotValid \n";
+		cmdString += "grep -e 'COUNT = ' "+ Configuration.homeDir+"temp_smt" + filePath + "/COUNTCVC" +" | awk -F \" \" '{print $4}' | awk -F \")\" '{print $1}' > "+Configuration.homeDir+"temp_smt" +filePath + "/COUNT\n";
 	}else{
 		
-		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_cvc" +filePath+ "/getCount.smt > "+Configuration.homeDir+"/temp_cvc" + filePath + "/COUNTCVC \n";
-		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_cvc" +filePath+ "/getCount.smt | grep -e 'unsat' > isNotValid \n";
+		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_smt" +filePath+ "/getCount.smt > "+Configuration.homeDir+"/temp_smt" + filePath + "/COUNTCVC \n";
+		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_smt" +filePath+ "/getCount.smt | grep -e 'unsat' > isNotValid \n";
 
-		//cmdString += Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"temp_cvc" +filePath+ "/getCount.cvc > "+Configuration.homeDir+"/temp_cvc" + filePath + "/COUNTCVC \n";
-		//cmdString +=Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"temp_cvc" + filePath + "/getCount.cvc | grep -e 'unsat' > isNotValid \n";
-		cmdString += "grep -e '((COUNT' "+ Configuration.homeDir+"temp_cvc" + filePath + "/COUNTCVC" +" | awk -F \" \" '{print $2}' | awk -F \")\" '{print $1}' > "+Configuration.homeDir+"temp_cvc" +filePath + "/COUNT\n";
+		//cmdString += Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"temp_smt" +filePath+ "/getCount.cvc > "+Configuration.homeDir+"/temp_smt" + filePath + "/COUNTCVC \n";
+		//cmdString +=Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"temp_smt" + filePath + "/getCount.cvc | grep -e 'unsat' > isNotValid \n";
+		cmdString += "grep -e '((COUNT' "+ Configuration.homeDir+"temp_smt" + filePath + "/COUNTCVC" +" | awk -F \" \" '{print $2}' | awk -F \")\" '{print $1}' > "+Configuration.homeDir+"temp_smt" +filePath + "/COUNT\n";
 	}
 	
-	Utilities.writeFile(Configuration.homeDir+"temp_cvc" + cvc.getFilePath() + "/execCOUNT", cmdString);
+	Utilities.writeFile(Configuration.homeDir+"temp_smt" + cvc.getFilePath() + "/execCOUNT", cmdString);
 } 
 
 /**
@@ -3645,12 +3645,12 @@ public static void getAggConstraintExeFile(String filePath,GenerateCVC1 cvc) {
 	String cmdString = "";
 	cmdString = "#!/bin/bash\n";
 	if(isCVC3){
-		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_cvc" +filePath+ "/checkAggConstraints.cvc | grep -e 'Invalid' > isValid \n";
+		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_smt" +filePath+ "/checkAggConstraints.cvc | grep -e 'Invalid' > isValid \n";
 	}else{
-		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_cvc" +filePath+ "/checkAggConstraints.smt | grep -e 'sat' > isValid \n";
-		//cmdString += Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"temp_cvc" +filePath+ "/checkAggConstraints.cvc | grep -e 'true' > isValid \n";
+		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_smt" +filePath+ "/checkAggConstraints.smt | grep -e 'sat' > isValid \n";
+		//cmdString += Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"temp_smt" +filePath+ "/checkAggConstraints.cvc | grep -e 'true' > isValid \n";
 	}
-	Utilities.writeFile(Configuration.homeDir+"temp_cvc" + cvc.getFilePath() + "/checkAggConstraints", cmdString);
+	Utilities.writeFile(Configuration.homeDir+"temp_smt" + cvc.getFilePath() + "/checkAggConstraints", cmdString);
 }
 
 /**

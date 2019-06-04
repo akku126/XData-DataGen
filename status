@@ -1,0 +1,682 @@
+[33mcommit 5c26845cdd785b3074cd404e727b05f84944df77[m
+Author: Bikash Chandra <bikash2911@gmail.com>
+Date:   Fri Jun 29 11:53:16 2018 +0530
+
+    Adding university schema and sample data to run regression tests
+
+[33mcommit b80b8f28470c13a0e8935ff52598362f58dcf2d4[m
+Author: Bikash Chandra <bikash2911@gmail.com>
+Date:   Thu Jun 28 20:16:16 2018 +0530
+
+    Regression testing for data generation
+
+[33mcommit 3fab6a3effee9e1d1f08cd6837b3338917531ee4[m
+Author: Bikash Chandra <bikash2911@gmail.com>
+Date:   Mon Jun 25 17:52:56 2018 +0530
+
+    Join bug fix
+
+[33mcommit 92668e73903bea975e11279681cf7a4c4692d4ce[m
+Author: udbhas <163050025@iitb.ac.in>
+Date:   Thu May 24 13:38:27 2018 +0530
+
+    NULL check in all/exists conversation added
+
+[33mcommit 411b11a9583ff7b0794c4eb5da56ddfb95916205[m
+Author: Ananyo Banerjee <ananyo@cse.iitb.ac.in>
+Date:   Tue May 22 18:44:22 2018 +0530
+
+    Composite node null check added
+
+[33mcommit 3ef40772a0db87483d8635bb1a8d16697b73b3ac[m
+Author: Ananyo Banerjee <ananyo@cse.iitb.ac.in>
+Date:   Mon May 21 20:43:19 2018 +0530
+
+    join condition added while from clause subquery flattening
+
+[33mcommit 1e57548e26c20ff1e54740b72b856d3bef009996[m
+Author: udbhas <163050025@iitb.ac.in>
+Date:   Mon May 21 14:29:36 2018 +0530
+
+    Flatten bug fixed
+
+[33mcommit 12d3557d3505c3122e7d5a7aa249e25710b6fa52[m
+Author: Ananyo Banerjee <ananyo@cse.iitb.ac.in>
+Date:   Mon May 21 18:42:21 2018 +0530
+
+    Inner Join from clause subquery flattening
+
+[33mcommit 3b7c600ca337831677574702d78615b3b8b84df7[m
+Author: udbhas <163050025@iitb.ac.in>
+Date:   Wed May 16 12:35:22 2018 +0530
+
+    NULL check added
+
+[33mcommit 75cf02933656b34e09ada307cf5f078dbe26a809[m
+Author: Ananyo Banerjee <ananyo@cse.iitb.ac.in>
+Date:   Wed May 16 16:23:21 2018 +0530
+
+    Composite select node decomposition
+
+[33mcommit 5a4f79b5edf2438238f5d770bf240ecd97b47709[m
+Author: udbhas <163050025@iitb.ac.in>
+Date:   Tue May 15 13:06:36 2018 +0530
+
+    Distinct bug fixed
+
+[33mcommit 1cace791cdc057bbb3b0f2ef46064f150a0d662d[m
+Author: udbhas <163050025@iitb.ac.in>
+Date:   Tue May 8 12:54:24 2018 +0530
+
+    set operator bug fixed
+
+[33mcommit ac4495c291e5e556ded03d13708bdce49aa28635[m
+Author: udbhas <163050025@iitb.ac.in>
+Date:   Mon Apr 9 15:45:53 2018 +0530
+
+    equivalence class creation bug fixed
+
+[33mcommit 6f8d5433df24a0a53724a7ae1d5cab7bf9a84cd1[m
+Author: udbhas <163050025@iitb.ac.in>
+Date:   Mon Apr 9 15:27:34 2018 +0530
+
+    transformation functions created for WITH queries
+
+[33mcommit af744ccbadd0702e1741eb7246f4458d68a5a7f1[m
+Author: Ananyo Banerjee <ananyo@cse.iitb.ac.in>
+Date:   Tue Apr 3 20:25:11 2018 +0530
+
+    Serializablity added in aggregates
+
+[33mcommit deb0c6e13f10ad7b30b636261dff04180c9d023c[m
+Author: Ananyo Banerjee <ananyo@cse.iitb.ac.in>
+Date:   Tue Apr 3 19:09:23 2018 +0530
+
+    null checks added
+
+[33mcommit 41e1349d51bde6892aea15be5bcd6fc973174bb0[m
+Author: udbhas <163050025@iitb.ac.in>
+Date:   Mon Mar 26 16:42:50 2018 +0530
+
+    NULL pointer bug fixed
+
+[33mcommit 2ea51bf0a7cf587299b86e5ec83d6f9c52158c41[m
+Author: udbhas <163050025@iitb.ac.in>
+Date:   Wed Mar 21 16:20:34 2018 +0530
+
+    NOTIN to NOTEXITS, ALL/ANY to NOTEXISTS/EXISTS transformation added
+
+[33mcommit 37d37e86fa4b241d38f1e5ed9d185e49b37549e1[m
+Author: Ananyo Banerjee <ananyo@cse.iitb.ac.in>
+Date:   Wed Mar 21 19:31:07 2018 +0530
+
+    Private to public get set methods
+
+[33mcommit 595ccd894bc8e0bec2e9daf93fb8c3223bb65f44[m
+Author: udbhas <163050025@iitb.ac.in>
+Date:   Wed Mar 14 16:55:54 2018 +0530
+
+    IN to EXISTS transformation added
+
+[33mcommit 1c49dc62dc545be1f29105267ecfd43afa4bede4[m
+Author: udbhas <163050025@iitb.ac.in>
+Date:   Mon Feb 12 15:07:08 2018 +0530
+
+    query parsing bug fixed
+
+[33mcommit e7c0db48747ebb11078b763e3325f5a0d0bf6a96[m
+Author: Shreevidhya <sshreevi@yahoo.com>
+Date:   Sun Dec 17 19:43:16 2017 +0530
+
+    SMT-LIB and CVC3 constraint generation changes
+
+[33mcommit 8322e549d00830f3aa3a8bea2e83dac74e20b910[m
+Author: udbhas <163050025@iitb.ac.in>
+Date:   Mon Sep 18 03:12:40 2017 +0530
+
+    string constant checking added
+
+[33mcommit 74c8800db999fd279ac1083f7174044f1c5425db[m
+Author: udbhas <163050025@iitb.ac.in>
+Date:   Tue Sep 12 04:12:40 2017 +0530
+
+    equals function bug fixed
+
+[33mcommit 25d3b4008210dc6676dac545c370eb0e1b164ffe[m
+Author: Bikash Chandra <bikash2911@gmail.com>
+Date:   Wed Sep 6 17:37:05 2017 +0530
+
+    Serialization copy added in Utilities
+
+[33mcommit ec894cb565b7eaab4e8bce01cf95872c0bcd7801[m
+Author: udbhas <163050025@iitb.ac.in>
+Date:   Mon Jul 31 01:54:54 2017 +0530
+
+    Code clean up
+
+[33mcommit 4b7b4b790d62d96687ab3d3b5ed3b8f2a707e52e[m
+Author: udbhas <163050025@iitb.ac.in>
+Date:   Mon Jul 24 07:52:48 2017 +0530
+
+    set operator bug fixed
+
+[33mcommit 811199dd876e10ceaa2ddd6b5c73e974c8c89d81[m
+Author: udbhas <163050025@iitb.ac.in>
+Date:   Fri Jul 21 04:34:22 2017 +0530
+
+    Parsing newline and space bug fixed
+
+[33mcommit 410cd4f412dd27c3fa21a964aabcb40b48e655d0[m
+Author: Bikash Chandra <bikash2911@gmail.com>
+Date:   Sun Jul 16 15:29:41 2017 +0530
+
+    Updating jdbc driver for postgres 9.6
+
+[33mcommit c53e430a7b52e6f4fc9576fab36511aadf6cb924[m
+Author: udbhas <163050025@iitb.ac.in>
+Date:   Fri Jul 7 04:07:59 2017 +0530
+
+    Empty dataset generation for set operators - bug fixed
+
+[33mcommit 25b135ff665650adf103ccccbd08c33b074b457a[m
+Merge: d3fdd11 066b801
+Author: Neha Garg <nehagarg@cse.iitb.ac.in>
+Date:   Sat Jul 1 23:41:46 2017 +0530
+
+    Merge branch 'developer' of https://gitlab.com/xdata/XData-DataGen into developer
+
+[33mcommit 066b801a8e54ecddcdf5a5703800c33ecc5980ed[m
+Author: Bikash Chandra <bikash2911@gmail.com>
+Date:   Fri Jun 30 15:55:43 2017 +0530
+
+    Parsing error when no space before/after new line
+
+[33mcommit d3fdd1136d38617b8186563e34ca4a3c76060ee2[m
+Author: Neha Garg <nehagarg@cse.iitb.ac.in>
+Date:   Fri Jun 30 11:09:00 2017 +0530
+
+    added new method as entry point from XData-Pro
+
+[33mcommit 322fa27f11e5305273537de0770c25fbff7e53ad[m
+Author: Bikash Chandra <bikash2911@gmail.com>
+Date:   Thu Jun 22 17:20:39 2017 +0530
+
+    Logger file limit changed and branch query log removed
+
+[33mcommit 97ff7c1d628ca0e7df9b51b5878e02a3255b53ec[m
+Author: Bikash Chandra <bikash2911@gmail.com>
+Date:   Thu Jun 22 15:11:33 2017 +0530
+
+    Query structure overloaded function
+
+[33mcommit 3cf630adde45eb47bbed805f87636d2f875ae382[m
+Author: Bikash Chandra <bikash2911@gmail.com>
+Date:   Tue Jun 20 15:01:18 2017 +0530
+
+    App testing null check added
+
+[33mcommit 312f9c42e4fee614f099a678eed0f59f2a5d3dab[m
+Author: Bikash Chandra <bikash2911@gmail.com>
+Date:   Mon Jun 19 18:20:11 2017 +0530
+
+    Parsing errors fixed
+
+[33mcommit a77e8602f96c67d069175783bd41d60d12fb24ab[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Tue May 2 16:21:44 2017 +0530
+
+    App testing issues  with GenerateUnionCvc solved
+
+[33mcommit c3c99ea47fd43b0a0ad9055df544530524a2eda3[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Tue May 2 16:00:35 2017 +0530
+
+    Changes to handle scalar subquery
+
+[33mcommit 20fcf77f2861f560edcc9993494869433b2cb1fe[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Wed Apr 26 11:06:11 2017 +0530
+
+    Compilation error
+
+[33mcommit e1a64b1bda864586adfc9aee4d1bc756f64df004[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Tue Apr 25 16:13:23 2017 +0530
+
+    Merge issues with Parsing
+
+[33mcommit 8ec4c473963aa4b48cf1de2d1bbae1e02608630c[m
+Author: Neha Garg <nehagarg@cse.iitb.ac.in>
+Date:   Mon Apr 17 15:59:53 2017 +0530
+
+    adding application testing changes
+
+[33mcommit bf7a471d36f85a93a8085f6dc73f9a8648d3a573[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Wed Apr 12 12:16:30 2017 +0530
+
+    Reverting SMT / CVC3 changes that were committed without testing for CVC3
+
+[33mcommit 1717ed39802e6b5b92473665cc67a8979c021a2c[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Tue Apr 11 11:12:31 2017 +0530
+
+    SMT changes to call database constraints
+
+[33mcommit 234b1b0da7962c92fc78e310958d5e865bb47b4e[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Fri Apr 7 16:44:49 2017 +0530
+
+    SMT ASSERT constraint changes
+
+[33mcommit 9512f8efccf3c9f653cc9b432518f742d85f208e[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Fri Apr 7 16:31:38 2017 +0530
+
+    Changes for SMT LIB constraints
+
+[33mcommit 9a0eeebf2405f6c7a7e6e329e13c877088a79849[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Tue Apr 4 16:03:01 2017 +0530
+
+    compilation error due to Missed file
+
+[33mcommit f9a3a230e5ce6fc2042439c6394d9c56d51f125c[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Tue Apr 4 15:56:55 2017 +0530
+
+    Trial changes for SMT solver - database constraints and CVC headers - common file for handling solver type
+
+[33mcommit ac0d6898d7b22a2be3311b5e645bdc14beaf48eb[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Mon Apr 3 16:38:03 2017 +0530
+
+    comments removed
+
+[33mcommit 3ea6344574bfbf34723605ca70771e7ef6d7a8c6[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Mon Apr 3 16:23:23 2017 +0530
+
+    Trial changes for CVC/SMT constraint generation
+
+[33mcommit 6b5cd14814044f79f37e6419d93dfbaf6590f51c[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Wed Mar 29 16:18:02 2017 +0530
+
+    SMT LIB -NotIsNull,IsNull functions and limiting functions for Int and Real datatype added
+
+[33mcommit 35a51918b161b524253bff3e9ee60fbb0026a24d[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Tue Mar 28 14:58:11 2017 +0530
+
+    SMT-LIB constraint generation  changes
+
+[33mcommit 8f8b320ae4eca1f58cacb48a190f2266e30929f9[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Tue Mar 28 13:03:48 2017 +0530
+
+    SMT LIB trial  changes
+
+[33mcommit a5f3dc92f7f1415224861ff00b09e07592649e03[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Mon Mar 27 12:35:52 2017 +0530
+
+    CVC4- SMT constraint trial version changes
+
+[33mcommit 566a0e27ec17bc82aecaa8a181622e0dcf645fc1[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Fri Mar 24 16:37:51 2017 +0530
+
+    SMT Constraint generation files - Trial version
+
+[33mcommit b46eebd9aa2b68c457e0988e15035e56129e92ea[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Fri Mar 24 15:25:07 2017 +0530
+
+    New files for SMT-LIB Database constraints-trial version
+
+[33mcommit 3492718ddce279352cabcc48a591fb7a3993d964[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Mon Mar 20 15:47:35 2017 +0530
+
+    CallableProcess timeout error-fix
+
+[33mcommit e70256cf89023f394b751f539fd049018aff095b[m
+Merge: 4657caf e0b7203
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Mon Mar 20 12:03:46 2017 +0530
+
+    Merge local code base
+    
+    Merge branch 'developer' of https://gitlab.com/xdata/XData-DataGen into developer
+
+[33mcommit e0b72032ee13bdd9cd8452dc46fb31e8e5bd854f[m
+Author: MathewJoseph31 <mathew_joseph31@yahoo.com>
+Date:   Thu Mar 16 14:21:29 2017 +0530
+
+    foreign key closure inferencing method added to parsing/Util.java
+
+[33mcommit 4657caff4dfeba2ae4507ce73ad1ca415bd6da0b[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Tue Mar 14 17:25:54 2017 +0530
+
+    Changes for CVC4-SMT LIB constraint generation
+
+[33mcommit 8f988df96f1ee5e052fa69593212f4939b7686f0[m
+Author: MathewJoseph31 <mathew_joseph31@yahoo.com>
+Date:   Fri Mar 10 13:15:13 2017 +0530
+
+    deprecates lstJoinTables from QueryStructure.java removed
+
+[33mcommit 66a1f1089b4a5617ff206dcf129eb7782e8ea046[m
+Author: MathewJoseph31 <mathew_joseph31@yahoo.com>
+Date:   Tue Mar 7 15:41:15 2017 +0530
+
+     exception handling added for column not found in table exception
+
+[33mcommit 78c489f11daba066f825288df3d106332ed91a70[m
+Author: MathewJoseph31 <mathew_joseph31@yahoo.com>
+Date:   Tue Mar 7 12:21:52 2017 +0530
+
+    JSQL jars updated in jars folder
+
+[33mcommit ca48b920cfdb0aac08031a4674e562dfe3af8736[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Tue Mar 7 11:11:50 2017 +0530
+
+    Queryparser changed to QueryStructure
+
+[33mcommit 519ce3daecc75afe01b1035e14c47192a1c3a5f1[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Mon Mar 6 13:03:27 2017 +0530
+
+    Bug fixes - Data Generation Tuple estimation
+
+[33mcommit 970512e10495f1792ad3469ca21fa28d618dbf9b[m
+Author: Shreevidhya <sshreevi@yahoo.com>
+Date:   Mon Mar 6 11:25:11 2017 +0530
+
+    Bug fixes for null pointer exceptions
+
+[33mcommit 4129f2d5a375a8839bb89dad0cde5f1fafefdbdf[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Fri Mar 3 17:30:44 2017 +0530
+
+    Compilation error fixes
+
+[33mcommit 8a4a6f64707ee94bdad1bc651e3f440f66306c4b[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Fri Mar 3 17:26:58 2017 +0530
+
+    New JSQLParser Jar related changes
+
+[33mcommit ccda6ac45f5be9efcfac02631b848bf241ad5ab3[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Fri Mar 3 17:11:23 2017 +0530
+
+    Old parser files added again- reqd to resolve  compilation errors
+
+[33mcommit fb5d3295a8e1c11fd3d9d5fced0992c747f1608f[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Fri Mar 3 17:07:19 2017 +0530
+
+    Parsing changes with partial marking changes for partial marking Demo
+
+[33mcommit 10d8f6082d1f387bf80c61f323c40b209161cad8[m
+Author: MathewJoseph31 <mathew_joseph31@yahoo.com>
+Date:   Tue Feb 28 15:47:56 2017 +0530
+
+    bug fixed in incrementing/decrementing number of inner joins after a redundant relation is deleted
+
+[33mcommit 56aeb3cfaafa91e1d36246dad4e9667294aed5f1[m
+Author: MathewJoseph31 <mathew_joseph31@yahoo.com>
+Date:   Thu Feb 23 21:46:32 2017 +0530
+
+    initialization code added for members numberOfOuterJoins and numberOfInnerJoins
+
+[33mcommit 42e05bf5ac9f88603e0752733673b706e07b0d03[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Wed Feb 22 11:33:53 2017 +0530
+
+    Add missing file
+
+[33mcommit f3472e6d0cdaed7f660593bc3d14c832cf8c5bd7[m
+Author: MathewJoseph31 <mathew_joseph31@yahoo.com>
+Date:   Wed Feb 15 08:48:34 2017 +0530
+
+    code cleaning
+
+[33mcommit 1ee266c8397b043fb289b502d3417d8e5ce2b508[m
+Author: MathewJoseph31 <mathew_joseph31@yahoo.com>
+Date:   Tue Feb 14 21:52:12 2017 +0530
+
+    code cleaning
+
+[33mcommit 7537ddc1bf702a62f5967afa394e9c3026c12763[m
+Author: MathewJoseph31 <mathew_joseph31@yahoo.com>
+Date:   Tue Feb 14 19:57:19 2017 +0530
+
+    Unwanted files removed from parsing package: CodeCleaning
+
+[33mcommit 3138d0eaafd6b1aa827bfddee3653591f1b7831b[m
+Author: MathewJoseph31 <mathew_joseph31@yahoo.com>
+Date:   Tue Feb 14 17:42:59 2017 +0530
+
+    QUERY PARSER REMOVED -- associated code changes
+
+[33mcommit 344ee6057597aa1b0b381c727a200bc08cd6c22f[m
+Merge: c51ccc9 4ed257d
+Author: MathewJoseph31 <mathew_joseph31@yahoo.com>
+Date:   Mon Feb 13 21:22:31 2017 +0530
+
+    Merge branch 'developer' of https://gitlab.com/xdata/XData-DataGen into developer
+
+[33mcommit c51ccc97d622bb364a5193bd77060313bb01a0e7[m
+Author: MathewJoseph31 <mathew_joseph31@yahoo.com>
+Date:   Mon Feb 13 21:21:48 2017 +0530
+
+    parsing/QueryData.java removed: associated changes
+
+[33mcommit 5eb16d4c335d2a0432dbfb2b0b2943ec4c46892a[m
+Author: MathewJoseph31 <mathew_joseph31@yahoo.com>
+Date:   Mon Feb 13 16:48:03 2017 +0530
+
+    a null pointer removed
+
+[33mcommit 4ed257dab6d8801a579473a4dd8aef135a4ce99b[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Mon Feb 13 15:55:42 2017 +0530
+
+    Bug Fixes
+
+[33mcommit 10231beb13f4127a02571e3e5dbcb581340b8d9d[m
+Author: MathewJoseph31 <mathew_joseph31@yahoo.com>
+Date:   Sun Feb 12 17:08:19 2017 +0530
+
+    JSQL Parser jar updated for supporting  subquery aliases with projection list arguments. eg: (Select col1, col2, .. from ... ) as subQAlias( alias1, alias2, ..)
+
+[33mcommit d2db384489a997a2736feb1acc8ac3c585593f99[m
+Author: MathewJoseph31 <mathew_joseph31@yahoo.com>
+Date:   Sat Feb 11 19:38:57 2017 +0530
+
+    a small fix in traverseAncestorsForAbsoluteNameTransformation
+
+[33mcommit 9ea3de4f134e4b866d3e251f67c314a855abb630[m
+Author: MathewJoseph31 <mathew_joseph31@yahoo.com>
+Date:   Sat Feb 11 14:42:28 2017 +0530
+
+    Subclasses created for QueryStructure and ProcessSelectClause files for adapting existing query processing methods for data generation
+
+[33mcommit f40c13539f40c12d8ba8a4891c4d9ffc753c96bf[m
+Author: MathewJoseph31 <mathew_joseph31@yahoo.com>
+Date:   Thu Feb 9 21:57:58 2017 +0530
+
+    printing of in and composite nodes corrected
+
+[33mcommit 8029d9a212d513548de24c3de903232da3576ed0[m
+Author: MathewJoseph31 <mathew_joseph31@yahoo.com>
+Date:   Thu Feb 9 15:35:59 2017 +0530
+
+    a possiblity of a null pointer exception eliminated by commenting an unwanted line
+
+[33mcommit bc05f333344fca7649902c4b692bb3c2627db2b0[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Wed Feb 8 15:35:24 2017 +0530
+
+    Bug fixes with parsing for data generation
+
+[33mcommit e338be190c84a6d8fe47873f5146c043b77b80d3[m
+Author: MathewJoseph31 <mathew_joseph31@yahoo.com>
+Date:   Mon Feb 6 12:06:57 2017 +0530
+
+    compareTo method added in Node.java for sorting a collection of Nodes
+
+[33mcommit 6b180a2dcbabbee6e6d6eade9098c16fddb218c7[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Sun Feb 5 19:14:33 2017 +0530
+
+    New files added for new parser interface
+
+[33mcommit 32d50b19490efdb564451627fdfcf0546a42997a[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Fri Feb 3 15:25:23 2017 +0530
+
+    Compilation error fixes
+
+[33mcommit 44f7ca1df274b258a016aa3a6d3220ff4ceabe06[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Fri Feb 3 15:04:05 2017 +0530
+
+    Changes for New Parser Interface
+
+[33mcommit 62167f38a480812bd49e42f9c279704244a0d669[m
+Author: Bikash Chandra <bikash2911@gmail.com>
+Date:   Sat Jan 7 19:16:06 2017 +0530
+
+    Fixing selection conditions with NOT
+
+[33mcommit ccc548cebd9bc6cc263b4a7f01fe3eb598d9e05d[m
+Author: Bikash Chandra <bikash2911@gmail.com>
+Date:   Fri Jan 6 21:02:07 2017 +0530
+
+    Temporary fix for data generation for parameters
+
+[33mcommit d6f344171c219bc075873876fce304f071aedf5e[m
+Author: Bikash Chandra <bikash2911@gmail.com>
+Date:   Fri Jan 6 12:10:48 2017 +0530
+
+    Fixing issue with no TableMaps created
+
+[33mcommit 93861ed8fafd4ceb70db90523cdb7e9b89bc8d71[m
+Author: Bikash Chandra <bikash2911@gmail.com>
+Date:   Thu Jan 5 14:28:25 2017 +0530
+
+    Data generation without using web interface
+    TableMap bug fixed
+
+[33mcommit e62d4e9806229914892b747406d7aa0931de6378[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Wed Jan 4 14:30:15 2017 +0530
+
+    Added Deprecated keyword
+
+[33mcommit d36eb66f98c3a7530d66017567e13f7c3e65f8f5[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Thu Oct 20 14:35:54 2016 +0530
+
+    Code Revamping
+
+[33mcommit 9b6d17d86eca8ca5820d610c9dee6d5cdf10703b[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Tue Oct 18 12:06:53 2016 +0530
+
+    Handle whitespaces in file path when writing to bash script
+
+[33mcommit e717a6b29f79b7cbbea647ed613a1a6783139d4e[m
+Author: Bikash Chandra <bikash2911@gmail.com>
+Date:   Thu Oct 13 17:16:59 2016 +0530
+
+    Changes to handle data generation where path name has whitespaces
+    Adding function to delete directories recursively
+    Changing exec calls to java calls
+
+[33mcommit 309caefb45de22d090e529f10806f2b7edfc9d9c[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Mon Oct 10 13:29:46 2016 +0530
+
+    Duplicate code deleted
+
+[33mcommit 31612d8f7850ee4cb5d3e7c476b57357c0580f7b[m
+Author: mathew <mathew@mathew-X551CAP.(none)>
+Date:   Mon Oct 10 08:53:51 2016 +0200
+
+    processSelectClause.java added to parsing package
+
+[33mcommit 595e0fe270226b754771a43c88bb3e1f2ebf5f36[m
+Merge: 8a76c9b ad63af6
+Author: mathew <mathew@mathew-X551CAP.(none)>
+Date:   Mon Oct 10 08:50:27 2016 +0200
+
+    Merge branch 'developer' of https://gitlab.com/xdata/XData-DataGen into developer
+
+[33mcommit 8a76c9b0aedcb3ddbc3f4b9e5265c84d49bc4484[m
+Author: mathew <mathew@mathew-X551CAP.(none)>
+Date:   Mon Oct 10 08:42:05 2016 +0200
+
+    processSelectClause.java added to parsing package
+
+[33mcommit ad63af6b24032bd36758d470dc3e7f5eb901121d[m
+Merge: f9b3212 30dad5c
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Mon Oct 10 10:29:35 2016 +0530
+
+    Suggested changes for Guest UI and bug fixes
+    Merge branch 'developer' of https://gitlab.com/xdata/XData-DataGen into developer
+
+[33mcommit f9b321203116fdd2fe7f46b1635684a95d716af4[m
+Author: sshreevi <sshreevi@yahoo.com>
+Date:   Mon Oct 10 10:28:19 2016 +0530
+
+    BUG Fixes -  Guest Student UI suggested corrections
+
+[33mcommit 30dad5ca5797ad59ee59cb3b02fe3d4868963a76[m
+Author: mathew <mathew@mathew-X551CAP.(none)>
+Date:   Sat Oct 8 11:46:22 2016 +0200
+
+     code for parsing updated
+
+[33mcommit 15dae209a17c8ef3155eb401b9733055b2b95fbb[m
+Author: mathew <mathew@mathew-X551CAP.(none)>
+Date:   Sat Oct 8 11:44:34 2016 +0200
+
+     code for parsing updated
+
+[33mcommit 7362891a9bfb79bdcefd315b96ae21c3ade33799[m
+Author: mathew <mathew@mathew-X551CAP.(none)>
+Date:   Wed Oct 5 07:15:01 2016 +0200
+
+    parsing code modified
+
+[33mcommit 41d85ee0892387fd32f2375506742622420f3998[m
+Author: mathew <mathew@mathew-X551CAP.(none)>
+Date:   Wed Oct 5 02:25:44 2016 +0200
+
+    parsing code updated
+
+[33mcommit 936d2d66a13c9f9605851c2d751951fa2b812e5d[m
+Author: mathew <mathew@mathew-X551CAP.(none)>
+Date:   Wed Oct 5 02:05:41 2016 +0200
+
+    parsing code updated
+
+[33mcommit 86806f518bce201c6e5f090bc3fbacdaac21097d[m
+Author: mathew <mathew@mathew-X551CAP.(none)>
+Date:   Tue Oct 4 17:16:53 2016 +0200
+
+    code for parsing updated
+
+[33mcommit 6f3954e733b116c868c2006ee49ccaccdb1d9e30[m
+Author: Bikash Chandra <bikash2911@gmail.com>
+Date:   Mon Sep 26 01:40:49 2016 +0530
+
+    XData data generation checkin

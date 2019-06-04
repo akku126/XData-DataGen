@@ -1141,40 +1141,40 @@ public class GetTupleAssignmentUsingSolver {
 		//Escape the White Spaces in the file name for using it in BASH script. This is OS Specific and work for *nix and Mac
 		String filePath= getFilePath().replace(" ", "\\ ");
 		/**write these constraints to a cvc file*/
-		Utilities.writeFile(Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/tupleAssignment.smt", constraints);
+		Utilities.writeFile(Configuration.homeDir+"/temp_smt"+ getFilePath() +"/tupleAssignment.smt", constraints);
 
 		String cmdString = "";
 
 		cmdString = "#!/bin/bash\n";
 
 		/**command to redirect output*/
-		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc"+ filePath +"/tupleAssignment.smt > tupleAssignmentOutput \n";
+		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_smt"+ filePath +"/tupleAssignment.smt > tupleAssignmentOutput \n";
 
 		/**command to check if solution is valid/ not i.e. possible or not*/
-		//cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/tupleAssignment.cvc | grep -e 'Valid' > isValid \n";
+		//cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_smt"+ getFilePath() +"/tupleAssignment.cvc | grep -e 'Valid' > isValid \n";
 
 		/**remove previous file*/
-		cmdString += "rm "+Configuration.homeDir+"/temp_cvc"+ filePath + "/assignment\n";
+		cmdString += "rm "+Configuration.homeDir+"/temp_smt"+ filePath + "/assignment\n";
 
 		/**command to check if solution exist or not*/
-		cmdString += "grep -e 'Valid' "+ Configuration.homeDir+"/temp_cvc"+ filePath +"/tupleAssignmentOutput  > isValid \n";
+		cmdString += "grep -e 'Valid' "+ Configuration.homeDir+"/temp_smt"+ filePath +"/tupleAssignmentOutput  > isValid \n";
 
 		/**command to get tuple assignment (count) to each relation*/
-		cmdString += "grep -e 'ASSERT (COUNT\\[' "+ Configuration.homeDir+"/temp_cvc"+ filePath +"/tupleAssignmentOutput >> "+
-				Configuration.homeDir+"/temp_cvc"+ filePath + "/assignment\n";
+		cmdString += "grep -e 'ASSERT (COUNT\\[' "+ Configuration.homeDir+"/temp_smt"+ filePath +"/tupleAssignmentOutput >> "+
+				Configuration.homeDir+"/temp_smt"+ filePath + "/assignment\n";
 
 		/**command to get unique elements inferred*/
-		cmdString += "grep -e 'ASSERT UNIQUE(' "+ Configuration.homeDir+"/temp_cvc"+ filePath +"/tupleAssignmentOutput >> "+
-				Configuration.homeDir+"/temp_cvc"+ filePath + "/assignment\n";
+		cmdString += "grep -e 'ASSERT UNIQUE(' "+ Configuration.homeDir+"/temp_smt"+ filePath +"/tupleAssignmentOutput >> "+
+				Configuration.homeDir+"/temp_smt"+ filePath + "/assignment\n";
 
 		/**write these command to a file*/
-		Utilities.writeFile(Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/execTupleAssgnCVC", cmdString);
+		Utilities.writeFile(Configuration.homeDir+"/temp_smt"+ getFilePath() +"/execTupleAssgnCVC", cmdString);
 
 		startT = System.currentTimeMillis();
 		/**execute these commands using process*/
 		ProcessBuilder pb = new ProcessBuilder("/bin/bash", "execTupleAssgnCVC");
 
-		pb.directory(new File(Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/"));
+		pb.directory(new File(Configuration.homeDir+"/temp_smt"+ getFilePath() +"/"));
 
 		Process myProcess = pb.start();
 		int exitVal = myProcess.waitFor();
@@ -1186,7 +1186,7 @@ public class GetTupleAssignmentUsingSolver {
 		logger.log(Level.INFO,"Constraint Solving Time: " + (endT-startT) );
 
 		/**check if is success or not*/
-		BufferedReader input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/isValid"));
+		BufferedReader input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+ getFilePath() +"/isValid"));
 		String line = input.readLine();
 
 		input.close();
@@ -1206,7 +1206,7 @@ public class GetTupleAssignmentUsingSolver {
 	 */
 	private void updateJoinGraph() throws Exception {
 
-		BufferedReader input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc"+ getFilePath() +"/assignment"));
+		BufferedReader input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+ getFilePath() +"/assignment"));
 		String line = "";
 
 		getGta().setUniqueElements( new HashSet<HashSet<Node>>() );

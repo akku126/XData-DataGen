@@ -84,7 +84,7 @@ public class GenerateDataSet {
 				appTestParams=new AppTest_Parameters();
 			cvc.setDBAppparams(appTestParams);
 			//end
-			FileWriter fw=new FileWriter(Configuration.homeDir+"/temp_cvc" +cvc.getFilePath()+"/queries.txt");
+			FileWriter fw=new FileWriter(Configuration.homeDir+"/temp_smt" +cvc.getFilePath()+"/queries.txt");
 			fw.write(query);
 			fw.close();
 			
@@ -164,14 +164,14 @@ public class GenerateDataSet {
 		private List<String> listOfDatasets(GenerateCVC1 cvc) {
 			ArrayList<String> fileListVector = new ArrayList<String>();		
 			ArrayList<String> datasets = new ArrayList<String>();
-			String fileList[]=new File(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath()).list();
+			String fileList[]=new File(Configuration.homeDir+"/temp_smt" + cvc.getFilePath()).list();
 			for(int k=0;k<fileList.length;k++){
 				fileListVector.add(fileList[k]);
 			}
 			Collections.sort(fileListVector);	        
 			for(int i=0;i<fileList.length;i++)
 			{
-				File f1=new File(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() +"/"+fileListVector.get(i));	          
+				File f1=new File(Configuration.homeDir+"/temp_smt" + cvc.getFilePath() +"/"+fileListVector.get(i));	          
 				
 				if(f1.isDirectory() && fileListVector.get(i).startsWith("DS"))
 				{
@@ -184,7 +184,7 @@ public class GenerateDataSet {
 		
 		public static void deletePreviousDatasets(GenerateCVC1 cvc) throws IOException,InterruptedException {
 			
-			File f=new File(Configuration.homeDir+"/temp_cvc"+cvc.getFilePath()+"/");
+			File f=new File(Configuration.homeDir+"/temp_smt"+cvc.getFilePath()+"/");
 			
 			if(f.exists()){		
 				File f2[]=f.listFiles();
@@ -192,12 +192,12 @@ public class GenerateDataSet {
 				for(int i=0;i<f2.length;i++){
 					if(f2[i].isDirectory() && f2[i].getName().startsWith("DS")){
 						
-						Utilities.deletePath(Configuration.homeDir+"/temp_cvc"+cvc.getFilePath()+"/"+f2[i].getName());
+						Utilities.deletePath(Configuration.homeDir+"/temp_smt"+cvc.getFilePath()+"/"+f2[i].getName());
 					}
 				}
 			}
 			
-			File dir= new File(Configuration.homeDir+"/temp_cvc"+cvc.getFilePath());
+			File dir= new File(Configuration.homeDir+"/temp_smt"+cvc.getFilePath());
 			if(dir.exists()){
 				for(File file: dir.listFiles()) {
 					file.delete();
