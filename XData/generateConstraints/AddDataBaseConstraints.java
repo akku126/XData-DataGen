@@ -44,7 +44,7 @@ public class AddDataBaseConstraints {
 		 * These constraints must be added to only that occurrence of the table
 		 * FIXME: Killing partial group by case 2 is a special case here
 		 * FIXME: We should consider repeated relation occurrences here*/
-		String unConstraints = ConstraintGenerator.addCommentLine("UNIQUE CONSTRAINTS  FOR PRIMARY KEY TO SATISFY CONSTRAINED AGGREGATION");		
+		String unConstraints = ConstraintGenerator.addCommentLine("UNIQUE CONSTRAINTS FOR PRIMARY KEY TO SATISFY CONSTRAINED AGGREGATION");		
 
 		try{
 			/** Add constraints for outer query block, if there is constrained aggregation */

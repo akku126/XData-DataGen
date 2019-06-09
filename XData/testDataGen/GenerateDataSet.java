@@ -313,9 +313,9 @@ public class GenerateDataSet {
 			
 			GenerateDataSet d=new GenerateDataSet();
 			//Application Testing
-			AppTest_Parameters obj = new AppTest_Parameters ();
+			AppTest_Parameters obj = new AppTest_Parameters();
 
-			
+
 			//end
 			d.generateDatasetForQuery(conn,queryId,query,  schemaFile,  sampleDataFile,  orderDependent,  tempFilePath, obj);
 			long stopTime = System.currentTimeMillis();

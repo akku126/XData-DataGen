@@ -153,7 +153,7 @@ public class GenerateCommonConstraintsForQuery {
 			}else{
 				/** Call CVC3 Solver with constraints */
 				logger.log(Level.INFO,"cvc count =="+cvc.getCount());
-				Utilities.writeFile(Configuration.homeDir + "temp_smt" + cvc.getFilePath() + "/z3_" + cvc.getCount() + ".smt", CVCStr);
+				Utilities.writeFile(Configuration.homeDir + "/temp_smt" + cvc.getFilePath() + "/z3_" + cvc.getCount() + ".smt", CVCStr);
 				
 				success= new PopulateTestData().killedMutantsForSMT("z3_" + cvc.getCount() 
 						+ ".smt", cvc.getQuery(), 
