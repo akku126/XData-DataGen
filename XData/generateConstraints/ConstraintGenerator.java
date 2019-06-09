@@ -43,6 +43,8 @@ public class ConstraintGenerator {
 	private String constraintSolver;
 	private static String solverSpecificCommentCharacter;
 	private static boolean isTempJoin = false;
+	private Context ctx = new Context();
+	private Solver solver = ctx.mkSolver();
 	
 	/**
 	 * Constructor
@@ -65,6 +67,20 @@ public class ConstraintGenerator {
 		 }
 	}
 	
+	/*
+	 * Returns the Z3 context
+	 */
+	public Context getCtx() {
+		return this.ctx;
+	}
+	
+	/*
+	 * Returns the Z3 solver corresponding to context
+	 */
+	public Solver getSolver() {
+		return this.solver;
+	}
+	
 	/**
 	 * This method takes in the col name, table name, offset and position for columns on which the constraint is to be generated.
 	 * This also takes the operator that joins the constraints. Checks the ConstraintContext for CVC/SMT.
@@ -82,6 +98,7 @@ public class ConstraintGenerator {
 	 * @param operator
 	 * @return
 	 */
+	
 	public ConstraintObject getConstraint(String tableName1, Integer offset1, Integer pos1, String tableName2, Integer offset2, Integer pos2,
 			Column col1, Column col2,String operator){
 		
@@ -99,7 +116,7 @@ public class ConstraintGenerator {
 		}
 		return con;
 	}	
-	
+    
 	
 	/**
 	 * This method returns an assert constraint statement for the passed in columns and tupleIndices based on the solver.
@@ -258,19 +275,24 @@ public String  getMinAssertConstraintForSubQ(String constraint1, String operator
 	 * @param operator
 	 * @return
 	 */
-	public String getDistinctConstraint(String tableName1,Column col1, Integer index1,Integer pos1,String tableName2, Column col2, Integer index2, Integer pos2){
+	public String getDistinctConstraint(String tableName1,Column col1, Integer index1,Integer pos1, String tableName2, Column col2, Integer index2, Integer pos2){
 		
 		String constraint = "";
 		if(isCVC3){
 			constraint += "DISTINCT (O_"+tableName1+"["+index1+"]."+pos1+ ",  O_"+tableName2+"["+index2+"]."+pos2+");\n" ;
 		}
-		else{
+		else {
+			Context ctx = new Context();
+			// do something with context
+			//ctx.mkSelect(tableName1, index1);
+			ctx.close();
+			
+			
 			constraint += "not (= ("+tableName1+"_"+col1.getColumnName()+pos1+" (select O_"+tableName1+" " + index1 +")"+") ("
 							+tableName2+"_"+col2.getColumnName()+pos2+" (select O_"+tableName2+" "+ index2 +")"+")) \n";						
 		}
 		return constraint;
 	}
-	
 	/**
 	 * This method returns an DISTINCT constraint statement for the passed in columns and tupleIndices based on the solver.
 	 * 
@@ -2235,6 +2257,11 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			return header;
 		}
 		else{
+			Params p = this.ctx.mkParams();
+			p.add("produce-models", true); // other options invalid in z3 API
+			this.solver.setParameters(p);
+			//System.out.println(this.solver.getParameterDescriptions());
+
 			//header = "(set-logic ALL_SUPPORTED)";
 			header += "(set-option:produce-models true) \n (set-option :interactive-mode true) \n (set-option :produce-assertions true) \n (set-option :produce-assignments true) ";
 		}
@@ -2547,71 +2574,58 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			constraint += isNullMembers;
 			
 		}
-		else{//If SMT SOLVER
-			
-			constraint +="\n"+"(declare-datatypes () (("+col;
+		else { // if another SMT SOLVER
 			HashMap<String, Integer> nullValuesChar = new HashMap<String, Integer>();
 			HashMap<String, Integer> notnullValuesChar = new HashMap<String, Integer>();
-			
-			if(columnValue.size()>0){
+			Vector<String> colValues = new Vector<String>();
+
+			if(columnValue.size()>0) {
 				if(!unique || !uniqueValues.contains(columnValue.get(0))){
 					colValue =  Utilities.escapeCharacters(col.getColumnName())+"__"+Utilities.escapeCharacters(columnValue.get(0));//.trim());
-					constraint += " (_"+colValue+") ";
+					colValues.add("_"+colValue);
 					uniqueValues.add(columnValue.get(0));
 				}
 				colValue = "";
-				for(int j=1; j<columnValue.size() || j < 4; j++){
-					if(j<columnValue.size())
-					{
-						if(!unique || !uniqueValues.contains(columnValue.get(j))){
-							colValue =  Utilities.escapeCharacters(col.getColumnName())+"__"+Utilities.escapeCharacters(columnValue.get(j));
+				for(int j=1; j<columnValue.size() || j < 4; j++) {
+					if (j<columnValue.size()) {
+						if (!unique || !uniqueValues.contains(columnValue.get(j))) {
+							colValue =  Utilities.escapeCharacters(col.getColumnName()) + "__" + Utilities.escapeCharacters(columnValue.get(j));
 						}
 					}
 					else {
-						if(!uniqueValues.contains(((Integer)j).toString())){
-							colValue =  Utilities.escapeCharacters(col.getColumnName())+"__"+j;
-						}else{
+						if (!uniqueValues.contains(((Integer)j).toString())) {
+							colValue =  Utilities.escapeCharacters(col.getColumnName()) + "__" + j;
+						} else {
 							continue;
 						}
 					}
-					 
-					if(!colValue.isEmpty()){
-						constraint += ""+"(_"+colValue+")";
+
+					if (!colValue.isEmpty()) {
+						colValues.add("_"+colValue);
 					}
 					notnullValuesChar.put("_"+colValue, 0);
 				}
-			}			
-		
-			//Adding support for NULL values
-			if(columnValue.size()!=0){
-				constraint += " (";
 			}
-			/*
-			for(int k=1;k<=4;k++){
-				constraint += "NULL_"+col+"_"+k;
-				if(k < 4){
-					constraint += ") (";
-				}
-			}	
-			*/					
-			constraint += "NULL_"+col+"_"+"1"+"))))"+"\n";		
+
+			String nullVal = "NULL_"+col+"_"+"1";
+			colValues.add(nullVal);
+			nullValuesChar.put(nullVal, 0);
 			
-			/*Removing NUll enumerations*/
-			/*
-			for(int k=1;k<=4;k++){
-				//isNullMembers += "ASSERT ISNULL_" + columnName+"(NULL_"+columnName+"_"+k+");\n";
-				nullValuesChar.put("NULL_"+col+"_"+k, 0);
-			}	*/
+			EnumSort colSort = this.ctx.mkEnumSort(col.getColumnName(), colValues.toArray(new String[colValues.size()]));
+			this.solver = this.ctx.mkSolver();
+			this.solver.push();
 			
-			nullValuesChar.put("NULL_"+col+"_"+1, 0);
-			
-			//constraint += defineNotIsNull(notnullValuesChar, col)+"\n";
-			
+			// as of this writing, the API doesn't serialize unused declarations, therefore dummy assertions are used
+			Expr dummyVal = ctx.mkConst("dummy", colSort);
+			BoolExpr dummyAssert = ctx.mkDistinct(dummyVal);
+			this.solver.add(dummyAssert);
+			String z3APIString = this.solver.toString();
+			this.solver.pop(1); // pop out dummyVal and dummyAssert
+			constraint = z3APIString.substring(0, z3APIString.indexOf("(declare-fun"));
+
 			constraint +=defineIsNull(nullValuesChar, col)+"\n";
+		}
 
-			}
-
-		
 		return constraint;
 	}
 

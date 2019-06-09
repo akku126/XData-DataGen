@@ -198,32 +198,27 @@ public class PopulateTestData {
 			File testFile = new File(Configuration.homeDir+"/temp_smt"+filePath+"/cut_" + cvcOutputFileName);
 			BufferedReader input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+filePath+"/" + cvcOutputFileName));
 			try {
-                String line = null; 
-                while ((line = input.readLine()) != null) {
-                    if(line.contains("(define-fun ")  && line.contains("_TupleType")){
-                        //setContents(testFile,line, true);
-                        while ((line = input.readLine()) != null) {
-                            if(!line.contains("(ite") && !line.contains("!")) {
-                                    if(line.contains("define-fun")) {
-                                        //input.mark(1000);
-                                        input.reset();
-                                        break;
-                                    } else if (line.startsWith(")")) {
-                                        break;
-                                    }
-                                    setContents(testFile,line+"\n", true);
-                            }
-                            input.mark(100);
-                        }
-                        //if(!line.contains("!"))
-                        //setContents(testFile,line+"\n", true);
-                    }
-                    //Application Testing - to include value of program parameters
-                    if(line.startsWith("ASSERT (parameter")){
-                        setContents(testFile, line+"\n", true);
-                    }
-                }
-            }catch(Exception e){
+				String line = null; 
+				while (( line = input.readLine()) != null){
+					if(line.contains("(define-fun ")  && line.contains("_TupleType")){
+						//setContents(testFile,line, true);
+						while ((line = input.readLine()) != null && !line.contains("))")) {
+							if(!line.contains("(ite") && !line.contains("!")) {
+									if(line.contains(")"))
+										setContents(testFile,line+"\n", true);
+									else
+										setContents(testFile,line, true);
+							}		
+						}
+						if(!line.contains("!"))
+						setContents(testFile,line+"\n", true);
+					}
+					//Application Testing - to include value of program parameters
+					if(line.startsWith("ASSERT (parameter")){
+						setContents(testFile, line+"\n", true);
+					}
+				}
+			}catch(Exception e){
 				logger.log(Level.SEVERE,"PopulateTestData-cutRequiredOutput :  "+e.getStackTrace(),e);
 			}
 			finally {
@@ -640,7 +635,6 @@ public class PopulateTestData {
 		//String tableName = cvcOutputLine.substring(cvcOutputLine.indexOf("O_")+2,cvcOutputLine.indexOf(" (store ("));
 		String tableName = cvcOutputLine.substring(cvcOutputLine.indexOf("(")+1,cvcOutputLine.indexOf("_"));
 		String temp = cvcOutputLine.substring(cvcOutputLine.indexOf("_TupleType ")+11);
-		System.out.println(temp);
 		String insertTupleValues = temp.substring(temp.indexOf("_"),temp.indexOf(")"));
 		insertTupleValues = cleanseCopyString(insertTupleValues);
 		insertTupleValues = insertTupleValues.trim().replaceAll(" +", " ");
