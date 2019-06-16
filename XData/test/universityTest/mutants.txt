@@ -27,7 +27,7 @@
 20|SELECT dept_name, SUM(credits) FROM course INNER JOIN department USING (dept_name) WHERE credits >= 4 GROUP BY dept_name HAVING SUM(credits) < 13
 21|SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year > 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201')
 22|select name, title from instructor natural join teaches, course where teaches.course_id = course.course_id
-23|select * from (select * from student where dept_name = 'Comp.Sci') natural full outer join (select * from takes where semester = 'Spring' and year != 2009)
+23|select * from (select * from student where dept_name = 'Comp.Sci') as T1 natural full outer join (select * from takes where semester = 'Spring' and year != 2009) as T2
 24|select course_id from section as S where semester = 'Fall' and year = 2009 and exists (select * from section as T where semester = 'Spring' and year = 2010 and S.course_id = T.course_id)
 25|select * from instructor where dept_name in (select dept_name from department where building != 'Watson')
 26|select * from instructor where dept_name not in (select dept_name from department)

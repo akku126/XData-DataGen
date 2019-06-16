@@ -2277,37 +2277,19 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 	public String getIntegerDatatypes(Column col, int minVal, int maxVal){
 		
 		String constraint ="";
-		if(isCVC3){
+		if (isCVC3) {
 			constraint = "\n"+col+" : TYPE = SUBTYPE (LAMBDA (x: INT) : (x > "+(minVal-4)+" AND x < "+(maxVal+4)+") OR (x > -100000 AND x < -99995));\n";
 		}
 		else {
-			//constraint = "\n(define-sort i_"+col+"() Int)";
-			
 			FuncDecl getCol = ctx.mkFuncDecl("get"+col, ctx.mkIntSort(), ctx.mkBoolSort());
-			String funcDeclTest = getCol.toString();
 			constraint = getCol.toString() + "\n";
 			IntExpr[] iColArray = new IntExpr[]{ctx.mkIntConst("i_"+col)};
 			Expr getColCall = getCol.apply(iColArray);
 			Expr condition = ctx.mkAnd(ctx.mkGt(iColArray[0], ctx.mkInt((minVal-4)>0?(minVal-4):0)), ctx.mkLt(iColArray[0], ctx.mkInt(maxVal+4)));
 			Expr body = ctx.mkEq(getColCall, condition);
-			Expr funcQuantifier = ctx.mkForall(iColArray, body, 1, null, null, ctx.mkSymbol("q_get"+col), ctx.mkSymbol("sk_get"+col));
-			
+			Expr funcQuantifier = ctx.mkForall(iColArray, body, 1, null, null, null, null);
+
 			constraint += "(assert " + funcQuantifier.toString() + ")";
-			//constraint += "\n(define-fun get"+col+" ((i_"+col+" Int)) Bool \n\t\t(and " +
-			//																									"\n\t\t\t(> i_"+col+" "+((minVal-4)>0?(minVal-4):0)+") " +
-			//																									"\n\t\t\t(< i_"+col+" "+(maxVal+4)+")) " +")";	
-																											//"\n\t\t    (and " +
-																											//	"\n\t\t\t(> i_"+col+" (- "+100000+")) " +
-																											//	"\n\t\t\t(< i_"+col+" "+"(- "+99995+"))
-			
-			/*
-			 			constraint += "\n(define-fun get"+col+" ((i_"+col+" Int)) Bool \n\t\t(or (and " +
-																												"\n\t\t\t(> i_"+col+" "+((minVal-4)>0?(minVal-4):0)+") " +
-																												"\n\t\t\t(< i_"+col+" "+(maxVal+4)+")) " +
-																											"\n\t\t    (and " +
-																												"\n\t\t\t(> i_"+col+" (- "+100000+")) " +
-																												"\n\t\t\t(< i_"+col+" "+"(- "+99995+")))))";
-			 */
 		}
 		return constraint +"\n\n";
 	}
@@ -2330,12 +2312,12 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			}
 			constraint += isNullMembers;
 		}else{
-			HashMap<String, Integer> nullValuesInt = new HashMap<String, Integer>();
+			HashMap<Expr, Integer> nullValuesInt = new HashMap<Expr, Integer>();
 			/*Removing NUll enumerations*/
 			/*for(int k=-99996;k>=-99999;k--){
 				nullValuesInt.put(k+"",0);
 			}*/
-			nullValuesInt.put("-99996", 0);
+			nullValuesInt.put(ctx.mkInt("-99996"), 0);
 			constraint += defineIsNull(nullValuesInt, col);			
 		}
 		return constraint +"\n\n";
@@ -2358,24 +2340,16 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			constraint = "\n"+col+" : TYPE = SUBTYPE (LAMBDA (x: REAL) : (x >= "+(minStr)+" AND x <= "+(maxStr)+") OR (x > -100000 AND x < -99995));\n";			
 		}
 		else{
-			constraint += "\n(define-sort r_"+col+"() Real)";
-			constraint += "\n(define-fun get"+col+" ((r_"+col+" Real)) Bool \n\t\t(and " +
-																												"\n\t\t\t(>= r_"+col+" "+minVal+") " +
-																												"\n\t\t\t(<= r_"+col+" "+maxVal+")) " +")";
-																											//"\n\t\t    (and " +
-																											//	"\n\t\t\t(> r_"+col+" (- "+100000+")) " +
-																											//	"\n\t\t\t(< r_"+col+" "+"(- "+99995+")))))";
 			
-			/*
-			 constraint += "\n(define-fun get"+col+" ((r_"+col+" Real)) Bool \n\t\t(or (and " +
-																												"\n\t\t\t(>= r_"+col+" "+minVal+") " +
-																												"\n\t\t\t(<= r_"+col+" "+maxVal+")) " +
-																											"\n\t\t    (and " +
-																												"\n\t\t\t(> r_"+col+" (- "+100000+")) " +
-																												"\n\t\t\t(< r_"+col+" "+"(- "+99995+")))))";
-			 */
-			
-			
+			FuncDecl getCol = ctx.mkFuncDecl("get"+col, ctx.mkRealSort(), ctx.mkBoolSort());
+			constraint = getCol.toString() + "\n";
+			RealExpr[] rColArray = new RealExpr[]{ctx.mkRealConst("r_"+col)};
+			Expr getColCall = getCol.apply(rColArray);
+			Expr condition = ctx.mkAnd(ctx.mkGe(rColArray[0], ctx.mkReal(String.valueOf(minVal))), ctx.mkLe(rColArray[0], ctx.mkReal(String.valueOf(maxVal))));
+			Expr body = ctx.mkEq(getColCall, condition);
+			Expr funcQuantifier = ctx.mkForall(rColArray, body, 1, null, null, null, null);
+
+			constraint += "(assert " + funcQuantifier.toString() + ")";
 		}
 		return constraint +"\n\n";
 	}
@@ -2398,15 +2372,15 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 				
 			}
 			constraint += isNullMembers;			
-		}else{
-			HashMap<String, Integer> nullValuesInt = new HashMap<String, Integer>();
+		} else {
+			HashMap<Expr, Integer> nullValuesReal = new HashMap<Expr, Integer>();
 			/*Removing NUll enumerations*/
 			/*for(int k=-99996;k>=-99999;k--){
 				nullValuesInt.put(k+"",0);
 			}
 			*/
-			nullValuesInt.put("-99996",0);
-			constraint +=defineIsNull(nullValuesInt, col);			
+			nullValuesReal.put(ctx.mkReal("-99996"),0);
+			constraint +=defineIsNull(nullValuesReal, col);			
 		}
 		return constraint+"\n\n";
 	}
@@ -2418,60 +2392,34 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 	 * @param col
 	 * @return
 	 */
-	
-public static String defineIsNull (HashMap<String, Integer> colValueMap, Column col) {
-		
-		String IsNullValueString = "";
-		Expr colNull = null; // should be in the else block.
-		if (col.getCvcDatatype() != null && col.getCvcDatatype().equalsIgnoreCase("Int")){
-			IsNullValueString +="\n(declare-const null_"+col+" Int)"; //declare constant of form   (declare-const null_column_name ColumnName)
-			IsNullValueString += "\n(define-fun ISNULL_"+col+" ((null_"+col+" Int)) Bool ";
-		} else if (col.getCvcDatatype() != null && col.getCvcDatatype().equalsIgnoreCase("Real")){
-			IsNullValueString +="\n(declare-const null_"+col+" r_"+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
-			IsNullValueString += "\n(define-fun ISNULL_"+col+" ((null_"+col+" r_"+col+")) Bool ";
-		} else {
-			//colNull = ctx.mkConst("null_"+col, ctxSorts.get(col.getColumnName()));
-			IsNullValueString +="\n(declare-const null_"+col+" "+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
-			
-			IsNullValueString += "\n(define-fun ISNULL_"+col+" ((null_"+col+" "+col+")) Bool ";
-		}
-		
-		/* Removing NUll enumerations*/
-		/*if(!isCVC3) {
-			IsNullValueString += "(= null_"+col+" NULL_"+col+"_1";
-		}
-		else
-		 */	
-		IsNullValueString += getOrForNullDataTypes("null_"+col, colValueMap.keySet(), "");//Get OR of all null columns
-		IsNullValueString += ")";
-		return IsNullValueString +"\n\n";
-	}
 
-	public static String defineIsNull2(HashMap<Expr, Integer> colValueMap, Column col) {
+	public static String defineIsNull(HashMap<Expr, Integer> colValueMap, Column col) {
 		
 		String IsNullValueString = "";
-		Expr colNull = null; // should be in the else block.
-		if (col.getCvcDatatype() != null && col.getCvcDatatype().equalsIgnoreCase("Int")){
-			IsNullValueString +="\n(declare-const null_"+col+" Int)"; //declare constant of form   (declare-const null_column_name ColumnName)
-			IsNullValueString += "\n(define-fun ISNULL_"+col+" ((null_"+col+" Int)) Bool ";
-		} else if (col.getCvcDatatype() != null && col.getCvcDatatype().equalsIgnoreCase("Real")){
-			IsNullValueString +="\n(declare-const null_"+col+" r_"+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
-			IsNullValueString += "\n(define-fun ISNULL_"+col+" ((null_"+col+" r_"+col+")) Bool ";
+		Expr colNull = null;
+		if (col.getCvcDatatype() != null && col.getCvcDatatype().equalsIgnoreCase("Int")) {
+			colNull = ctx.mkConst(col.getColumnName().toLowerCase(), ctx.getIntSort());
+		} else if (col.getCvcDatatype() != null && col.getCvcDatatype().equalsIgnoreCase("Real")) {
+			colNull = ctx.mkConst(col.getColumnName().toLowerCase(), ctx.getRealSort());
 		} else {
-			colNull = ctx.mkConst("null_"+col, ctxSorts.get(col.getColumnName()));
-			IsNullValueString +="\n(declare-const null_"+col+" "+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
-			
-			IsNullValueString += "\n(define-fun ISNULL_"+col+" ((null_"+col+" "+col+")) Bool ";
+			colNull = ctx.mkConst(col.getColumnName().toLowerCase(), ctxSorts.get(col.getColumnName()));
 		}
 		
-		/* Removing NUll enumerations*/
-		/*if(!isCVC3) {
-			IsNullValueString += "(= null_"+col+" NULL_"+col+"_1";
-		}
-		else
-		 */	
-		IsNullValueString += getOrForNullDataTypes(colNull, colValueMap.keySet(), "");//Get OR of all null columns
-		IsNullValueString += ")";
+		FuncDecl isNullCol = ctx.mkFuncDecl("ISNULL_"+col, colNull.getSort(), ctx.mkBoolSort());
+		IsNullValueString += isNullCol.toString() + "\n";
+		
+		Expr[] nullColArray = new Expr[]{colNull};
+		Expr isNullColCall = isNullCol.apply(nullColArray);
+		
+		BoolExpr[] nullEqualityConds = colValueMap.keySet().stream().map(
+				colValue -> ctx.mkEq(nullColArray[0], colValue)).toArray(
+						size -> new BoolExpr[size]);
+		BoolExpr nullValsOrCond = ctx.mkOr(nullEqualityConds);
+		
+		Expr body = ctx.mkEq(isNullColCall, nullValsOrCond);
+		Expr funcQuantifier = ctx.mkForall(nullColArray, body, 1, null, null, null, null);
+		IsNullValueString += "(assert " + funcQuantifier.toString() + ")\n";
+
 		return IsNullValueString +"\n\n";
 	}
 	
@@ -2483,8 +2431,8 @@ public static String defineIsNull (HashMap<String, Integer> colValueMap, Column 
 	 */
 	public static String defineNotIsNull(HashMap<String, Integer> colValueMap, Column col){
 		String NotIsNullValueString = "";
-		
-		if(col.getCvcDatatype() != null && col.getCvcDatatype().equalsIgnoreCase("Int")){
+
+		if (col.getCvcDatatype() != null && col.getCvcDatatype().equalsIgnoreCase("Int")) {
 			NotIsNullValueString +="\n(declare-const notnull_"+col+" i_"+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
 			NotIsNullValueString += "\n(define-fun NOTISNULL_"+col+" ((notnull_"+col+" i_"+col+")) Bool ";
 		}else if(col.getCvcDatatype() != null && col.getCvcDatatype().equalsIgnoreCase("Real")){
@@ -2493,15 +2441,14 @@ public static String defineIsNull (HashMap<String, Integer> colValueMap, Column 
 		}else{
 			NotIsNullValueString +="\n(declare-const notnull_"+col+" "+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
 			NotIsNullValueString += "\n(define-fun NOTISNULL_"+col+" ((notnull_"+col+" "+col+")) Bool ";
-			
 		}
-		
+
 		NotIsNullValueString += getOrForNullDataTypes("notnull_"+col, colValueMap.keySet(), "");;//Get OR of all non-null columns
 		
 		NotIsNullValueString += ")";
 		return NotIsNullValueString +"\n";
 	}
-	
+
 	/**
 	 * This method returns the <b>SMT Constraint</b> that holds the allowed Null values for a column concatenated with OR
 	 * @param colconst
@@ -2523,14 +2470,6 @@ public static String defineIsNull (HashMap<String, Integer> colValueMap, Column 
 		return tempString;
 	}
 
-	
-	public static String getOrForNullDataTypes(Expr colconst, Set<Expr> columnValues, String colName) {
-		BoolExpr[] nullEqualityConds = columnValues.stream().map(
-				colValue -> ctx.mkEq(colconst, colValue)).toArray(
-						size -> new BoolExpr[size]);
-	    BoolExpr nullValsOrCond = ctx.mkOr(nullEqualityConds);
-		return nullValsOrCond.toString();
-	}
 	/**
 	 * This method returns the <b>SMT Constraint</b> that holds the allowed Not-Null values for a column concatenated with OR
 	 * @param colconst
@@ -2676,9 +2615,9 @@ public static String defineIsNull (HashMap<String, Integer> colValueMap, Column 
 			solver.add(dummyAssert);
 			String z3APIString = solver.toString();
 			solver.pop(1); // pop out dummyVal and dummyAssert
-			constraint = z3APIString.substring(0, z3APIString.indexOf("(declare-fun"));
+			constraint = z3APIString.substring(0, z3APIString.indexOf("(declare-fun")) + "\n";
 
-			constraint +=defineIsNull2(nullValuesChar, col)+"\n";
+			constraint +=defineIsNull(nullValuesChar, col)+"\n";
 		}
 
 		return constraint;
