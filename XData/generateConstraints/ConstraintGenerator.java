@@ -44,16 +44,21 @@ public class ConstraintGenerator {
 	private String constraintSolver;
 	private static String solverSpecificCommentCharacter;
 	private static boolean isTempJoin = false;
+
 	private static Context ctx = new Context();
 	private static Solver solver = ctx.mkSolver();
 	private static HashMap<String, Sort> ctxSorts = new HashMap<String, Sort>();  // for storing Z3 context sorts; not able to extract directly from ctx.
+	private static HashMap<String, FuncDecl> ctxFuncDecls = new HashMap<String, FuncDecl>();  // for storing Z3 context function declarations
 	
+	private static IntExpr intNull = ctx.mkIntConst("intNullVal");
+	private static RealExpr realNull = ctx.mkRealConst("realNullVal");
+
 	/**
 	 * Constructor
 	 */
-	public ConstraintGenerator(){
+	public ConstraintGenerator() {
 		setConstraintSolver(Configuration.getProperty("smtsolver"));
-		
+
 		 if(Configuration.getProperty("smtsolver").equalsIgnoreCase("cvc3")){
 			 this.isCVC3 = true;
 			 solverSpecificCommentCharacter="%";
@@ -2253,7 +2258,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 		if(isCVC3){
 			return header;
 		}
-		else{
+		else {
 			Params p = ctx.mkParams();
 			p.add("produce-models", true); // other options invalid in z3 API
 			p.add("smt.macro_finder", true); // check whether this is the right option name
@@ -2261,6 +2266,16 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 
 			//header = "(set-logic ALL_SUPPORTED)";
 			header += "(set-option:produce-models true) \n (set-option :interactive-mode true) \n (set-option :produce-assertions true) \n (set-option :produce-assignments true) \n (set-option :smt.macro_finder true) \n";
+			
+			BoolExpr assertionIntNull = ctx.mkEq(ConstraintGenerator.intNull, ctx.mkInt(-99996));
+			BoolExpr assertionRealNull = ctx.mkEq(ConstraintGenerator.realNull, ctx.mkReal("-99996.0"));
+
+			Solver dummySolver = ctx.mkSolver();
+			dummySolver.add(assertionIntNull);
+			dummySolver.add(assertionRealNull);
+			
+			header += "\n" + dummySolver.toString();
+
 		}
 		return header +"\n\n";
 	}
@@ -2317,7 +2332,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			/*for(int k=-99996;k>=-99999;k--){
 				nullValuesInt.put(k+"",0);
 			}*/
-			nullValuesInt.put(ctx.mkInt("-99996"), 0);
+			nullValuesInt.put(ConstraintGenerator.intNull, 0);
 			constraint += defineIsNull(nullValuesInt, col);			
 		}
 		return constraint +"\n\n";
@@ -2379,7 +2394,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 				nullValuesInt.put(k+"",0);
 			}
 			*/
-			nullValuesReal.put(ctx.mkReal("-99996"),0);
+			nullValuesReal.put(ConstraintGenerator.realNull, 0);
 			constraint +=defineIsNull(nullValuesReal, col);			
 		}
 		return constraint+"\n\n";
@@ -2404,8 +2419,10 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 		} else {
 			colNull = ctx.mkConst(col.getColumnName().toLowerCase(), ctxSorts.get(col.getColumnName()));
 		}
-		
-		FuncDecl isNullCol = ctx.mkFuncDecl("ISNULL_"+col, colNull.getSort(), ctx.mkBoolSort());
+
+		String funcName = "ISNULL_" + col;
+		FuncDecl isNullCol = ctx.mkFuncDecl(funcName, colNull.getSort(), ctx.mkBoolSort());
+		ctxFuncDecls.put(funcName, isNullCol);
 		IsNullValueString += isNullCol.toString() + "\n";
 		
 		Expr[] nullColArray = new Expr[]{colNull};
@@ -2422,7 +2439,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 
 		return IsNullValueString +"\n\n";
 	}
-	
+
 	/**
 	 * This method returns the <b>SMT Constraint</b> that holds the allowed Not-Null values for given column
 	 * @param colValueMap
@@ -3708,58 +3725,71 @@ public String generateCVCForNullCheckInHaving() {
 	if(isCVC3) {
 		return "";
 	}
+
 	String returnStr="";
-	String columnName = "Realcol";
-	String Datatype = "Real";
-	
-	returnStr = "\n(declare-const "+columnName+" "+Datatype+") \n\n";
+	String[] Datatypes = new String[] {"Real", "Int"};
 
-	returnStr += "(define-fun CHECKALL_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) Bool \n";
-	returnStr += "(= ";
-	returnStr += "-99996.0" + " " + columnName+"\t )) \n";
-	
-	
-	returnStr += "\n(define-fun MAX_REPLACE_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
-	returnStr += "(if (= "+columnName+" ";
-	returnStr += "-99996.0) \n \t -99996.0 \n";
-	returnStr += "\t "+columnName+") \n ) \n";
-	
-	returnStr += "\n(define-fun SUM_REPLACE_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
-	returnStr += "(if (= "+columnName+" ";
-	returnStr += "0.0) \n \t -99996.0 \n";
-	returnStr += "\t "+columnName+") \n ) \n";
-	
-	returnStr += "\n(define-fun MIN_REPLACE_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
-	returnStr += "(if (= "+columnName+" ";
-	returnStr += "-99996.0) \n \t 99996.0 \n";
-	returnStr += "\t "+columnName+") \n ) \n";
-	
-	
-	columnName = "Intcol";
-	Datatype = "Int";
-	
-	returnStr += "\n(declare-const "+columnName+" "+Datatype+") \n\n";
+	for (String Datatype : Datatypes) {
+		String columnName = Datatype + "col";
+		Expr[] nullArr = null;
+		FuncDecl checkAllNull = null;
+		FuncDecl maxRepNull = null;
+		FuncDecl sumRepNull = null;
+		FuncDecl minRepNull = null;
+		
+		ArithExpr nullVal = null;
+		ArithExpr zeroVal = null;
 
-	returnStr += "(define-fun CHECKALL_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) Bool \n";
-	returnStr += "(= ";
-	returnStr += "-99996" + " " + columnName+"\t )) \n";
-	
-	returnStr += "\n(define-fun MAX_REPLACE_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
-	returnStr += "(if (= "+columnName+" ";
-	returnStr += "-99996) \n \t -99996 \n";
-	returnStr += "\t "+columnName+") \n ) \n";
-	
-	returnStr += "\n(define-fun SUM_REPLACE_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
-	returnStr += "(if (= "+columnName+" ";
-	returnStr += "0) \n \t -99996 \n";
-	returnStr += "\t "+columnName+") \n ) \n";
-	
-	returnStr += "\n(define-fun MIN_REPLACE_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
-	returnStr += "(if (= "+columnName+" ";
-	returnStr += "-99996) \n \t 99996 \n";
-	returnStr += "\t "+columnName+") \n ) \n";
-	
-	
+		if (Datatype.endsWith("Real")) {
+			nullArr = new Expr[] {ctx.mkRealConst(columnName)};
+			checkAllNull = ctx.mkFuncDecl("CHECKALL_NULL_"+Datatype, ctx.getRealSort(), ctx.mkBoolSort());
+			maxRepNull = ctx.mkFuncDecl("MAX_REPLACE_NULL_"+Datatype, ctx.getRealSort(), ctx.getRealSort());
+			sumRepNull = ctx.mkFuncDecl("SUM_REPLACE_NULL_"+Datatype, ctx.getRealSort(), ctx.getRealSort());
+			minRepNull = ctx.mkFuncDecl("MIN_REPLACE_NULL_"+Datatype, ctx.getRealSort(), ctx.getRealSort());
+			
+			nullVal = ConstraintGenerator.realNull;
+			zeroVal = ctx.mkReal("0.0");
+		}
+		else if (Datatype.endsWith("Int")) {
+			nullArr = new Expr[] {ctx.mkIntConst(columnName)};
+			checkAllNull = ctx.mkFuncDecl("CHECKALL_NULL_"+Datatype, ctx.getIntSort(), ctx.mkBoolSort());
+			maxRepNull = ctx.mkFuncDecl("MAX_REPLACE_NULL_"+Datatype, ctx.getIntSort(), ctx.getIntSort());
+			sumRepNull = ctx.mkFuncDecl("SUM_REPLACE_NULL_"+Datatype, ctx.getIntSort(), ctx.getIntSort());
+			minRepNull = ctx.mkFuncDecl("MIN_REPLACE_NULL_"+Datatype, ctx.getIntSort(), ctx.getIntSort());
+			
+			nullVal = ConstraintGenerator.intNull;
+			zeroVal = ctx.mkInt(0);
+		}
+
+		// CHECKALL_NULL_*
+		Expr checkAllNullCall = checkAllNull.apply(nullArr);
+		Expr funcBody = ctx.mkEq(nullArr[0], nullVal);
+		Expr quantBody = ctx.mkEq(checkAllNullCall, funcBody);
+		Expr funcQuantifier = ctx.mkForall(nullArr, quantBody, 1, null, null, null, null);
+		returnStr += "\n" + checkAllNull.toString() + "\n(assert " + funcQuantifier.toString() + ")\n";
+
+		// MAX_REPLACE_NULL_* - why do we need this?
+		Expr maxRepNullCall = maxRepNull.apply(nullArr);
+		funcBody = ctx.mkITE(ctx.mkEq(nullArr[0], nullVal), nullVal, nullArr[0]);
+		quantBody = ctx.mkEq(maxRepNullCall, funcBody);
+		funcQuantifier = ctx.mkForall(nullArr, quantBody, 1, null, null, null, null);
+		returnStr += "\n" + maxRepNull.toString() + "\n(assert " + funcQuantifier.toString() + ")\n";
+
+		// SUM_REPLACE_NULL_*
+		Expr sumRepNullCall = sumRepNull.apply(nullArr);
+		funcBody = ctx.mkITE(ctx.mkEq(nullArr[0], zeroVal), nullVal, nullArr[0]);
+		quantBody = ctx.mkEq(sumRepNullCall, funcBody);
+		funcQuantifier = ctx.mkForall(nullArr, quantBody, 1, null, null, null, null);
+		returnStr += "\n" + sumRepNull.toString() + "\n(assert " + funcQuantifier.toString() + ")\n";
+
+		// MIN_REPLACE_NULL_*
+		Expr minRepNullCall = minRepNull.apply(nullArr);
+		funcBody = ctx.mkITE(ctx.mkEq(nullArr[0], nullVal), ctx.mkSub(zeroVal, nullVal), nullArr[0]);
+		quantBody = ctx.mkEq(minRepNullCall, funcBody);
+		funcQuantifier = ctx.mkForall(nullArr, quantBody, 1, null, null, null, null);
+		returnStr += "\n" + minRepNull.toString() + "\n(assert " + funcQuantifier.toString() + ")\n";
+	}
+
 	return returnStr;
 }
 
