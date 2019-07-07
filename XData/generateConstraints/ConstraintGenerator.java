@@ -2432,7 +2432,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 				colValue -> ctx.mkEq(nullColArray[0], colValue)).toArray(
 						size -> new BoolExpr[size]);
 		BoolExpr nullValsOrCond = ctx.mkOr(nullEqualityConds);
-		
+
 		Expr body = ctx.mkEq(isNullColCall, nullValsOrCond);
 		Expr funcQuantifier = ctx.mkForall(nullColArray, body, 1, null, null, null, null);
 		IsNullValueString += "(assert " + funcQuantifier.toString() + ")\n";
@@ -3777,7 +3777,7 @@ public String generateCVCForNullCheckInHaving() {
 
 		// SUM_REPLACE_NULL_*
 		Expr sumRepNullCall = sumRepNull.apply(nullArr);
-		funcBody = ctx.mkITE(ctx.mkEq(nullArr[0], zeroVal), nullVal, nullArr[0]);
+		funcBody = ctx.mkITE(ctx.mkEq(nullArr[0], nullVal), zeroVal, nullArr[0]);
 		quantBody = ctx.mkEq(sumRepNullCall, funcBody);
 		funcQuantifier = ctx.mkForall(nullArr, quantBody, 1, null, null, null, null);
 		returnStr += "\n" + sumRepNull.toString() + "\n(assert " + funcQuantifier.toString() + ")\n";
