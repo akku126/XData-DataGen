@@ -2274,7 +2274,15 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			dummySolver.add(assertionIntNull);
 			dummySolver.add(assertionRealNull);
 			
-			header += "\n" + dummySolver.toString();
+			
+			// Setting the right order for macro detection
+			String[] tempArr = dummySolver.toString().split("\n");
+			String declaration = "\n" + tempArr[1];
+			tempArr[1] = tempArr[2];
+			tempArr[2] = declaration;
+			
+			
+			header += "\n" + String.join("\n", tempArr);
 
 		}
 		return header +"\n\n";
