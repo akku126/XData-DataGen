@@ -2727,6 +2727,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 		String temp;
 		Vector<String> tablesAdded = new Vector<String>();
 		tempStr += addCommentLine(" Tuple Types for Relations\n ");	
+		
 		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
 			
 				tempStr += ConstraintGenerator.addCommentLine(" Tuple Types for Relations\n ");			 
@@ -2753,10 +2754,8 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 					 */
 					tempStr += "O_" + temp + ": ARRAY INT OF " + temp + "_TupleType;\n";
 				}
-		}
-		else {
-			Solver dummySol = ctx.mkSolver();
-			dummySol.push();
+		} else {
+			Solver dummySol = ctx.mkSolver();  // for getting string form of z3 context declarations
 			
 			String[] tablenames = new String[cvc.getResultsetTables().size()];
 			for(int i=0;i<cvc.getResultsetTables().size();i++){
@@ -2765,12 +2764,8 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			
 			for(int i=0;i<cvc.getResultsetTables().size();i++) {
 				int index = 0;
-				//ArrayList<Table> test = cvc.getResultsetTables();
 				t = cvc.getResultsetTables().get(i);
 				temp = t.getTableName();
-				if(!tablesAdded.contains(temp)) {  // Why do we need this if condition?
-					tempStr += "\n (declare-datatypes () (("+temp +"_TupleType" + "("+temp +"_TupleType ";
-				}
 
 				String[] attrNames = new String[t.getNoOfColumn()];
 				Sort[] attrTypes = new Sort[t.getNoOfColumn()];
@@ -2788,29 +2783,21 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 						else {
 							attrTypes[index] = ctxSorts.get(c.getColumnName());
 						}
+						
 						attrNames[index] = temp+"_"+c+index;
-						
-						// previous method
-						if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
-							tempStr += "("+temp+"_"+c+index+" "+s + ") ";
-						else
-							tempStr+= "("+temp+"_"+c+index+" "+c.getCvcDatatype() + ") ";						
-						
 						index++;
 					}
 				}
-				tempStr += ") )) )\n";
-				//Now create the Array for this TupleType
-				tempStr += "(declare-fun O_" + temp + "() (Array Int " + temp + "_TupleType))\n\n";
 				
 				String tupleTypeName = temp+"_TupleType";
 				Constructor[] cons = new Constructor[] {ctx.mkConstructor(tupleTypeName, "is_"+tupleTypeName, attrNames, attrTypes, null)};
 				DatatypeSort tupleType = ctx.mkDatatypeSort(tupleTypeName, cons);
 				ctxSorts.put(tupleTypeName, tupleType);
+				ArraySort asort = ctx.mkArraySort(ctx.getIntSort(), tupleType);
+				Expr aex = ctx.mkConst("O_"+temp, asort);
 				
-				// adding dummy consts so that solver has relevant declarations in string returned by toString() 
-				Expr dummyVal = ctx.mkConst("dummy", tupleType);
-				BoolExpr dummyAssert = ctx.mkDistinct(dummyVal);
+				// adding dummy asserts so that solver has relevant declarations in string returned by toString() 
+				BoolExpr dummyAssert = ctx.mkDistinct(aex);
 				dummySol.add(dummyAssert);
 			}
 		
@@ -2825,13 +2812,11 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			}
 			int end = start;
 			while (end++ < z3Statements.length) {
-				if (z3Statements[end].contains("dummy")) {
+				if (z3Statements[end].contains("assert")) {
 					break;
 				}
 			}
-			String z3Str = String.join("\n", Arrays.copyOfRange(z3Statements, start, end));
-			
-			//z3APIString.substring(0, z3APIString.indexOf("(declare-fun")) + "\n";
+			tempStr += String.join("\n", Arrays.copyOfRange(z3Statements, start, end));
 		}
 		return tempStr;
 	}
