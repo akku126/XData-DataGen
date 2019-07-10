@@ -2794,8 +2794,10 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 				DatatypeSort tupleType = ctx.mkDatatypeSort(tupleTypeName, cons);
 				ctxSorts.put(tupleTypeName, tupleType);
 				ArraySort asort = ctx.mkArraySort(ctx.getIntSort(), tupleType);
-				Expr aex = ctx.mkConst("O_"+temp, asort);
-				
+				String arrName = "O_"+temp;
+				Expr aex = ctx.mkConst(arrName, asort);
+				ctxSorts.put(arrName, asort);
+
 				// adding dummy asserts so that solver has relevant declarations in string returned by toString() 
 				BoolExpr dummyAssert = ctx.mkDistinct(aex);
 				dummySol.add(dummyAssert);
