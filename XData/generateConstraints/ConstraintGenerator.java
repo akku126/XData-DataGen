@@ -2,6 +2,7 @@ package generateConstraints;
 
 import com.microsoft.z3.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -2576,7 +2577,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 				if(k < 4){
 					constraint += " | ";
 				}
-			}						
+			}
 			constraint = constraint+" END\n;";
 			constraint += "ISNULL_" + col +" : "+ col + " -> BOOLEAN;\n";
 			HashMap<String, Integer> nullValuesChar = new HashMap<String, Integer>();
@@ -2753,27 +2754,48 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 					tempStr += "O_" + temp + ": ARRAY INT OF " + temp + "_TupleType;\n";
 				}
 		}
-		else{			
+		else {
+			Solver dummySol = ctx.mkSolver();
+			dummySol.push();
+			
 			String[] tablenames = new String[cvc.getResultsetTables().size()];
 			for(int i=0;i<cvc.getResultsetTables().size();i++){
 				tablenames[i] = cvc.getResultsetTables().get(i).getTableName();
 			}
 			
-			for(int i=0;i<cvc.getResultsetTables().size();i++){
+			for(int i=0;i<cvc.getResultsetTables().size();i++) {
 				int index = 0;
+				//ArrayList<Table> test = cvc.getResultsetTables();
 				t = cvc.getResultsetTables().get(i);
 				temp = t.getTableName();
-				if(!tablesAdded.contains(temp)){
+				if(!tablesAdded.contains(temp)) {  // Why do we need this if condition?
 					tempStr += "\n (declare-datatypes () (("+temp +"_TupleType" + "("+temp +"_TupleType ";
 				}
-				for(int j=0;j<cvc.getResultsetColumns().size();j++){				
+
+				String[] attrNames = new String[t.getNoOfColumn()];
+				Sort[] attrTypes = new Sort[t.getNoOfColumn()];
+				
+				for(int j=0; j<cvc.getResultsetColumns().size(); j++) {				
 					c = cvc.getResultsetColumns().get(j);
-					if(c.getTableName().equalsIgnoreCase(temp)){						
-						String s=c.getCvcDatatype();
+					if(c.getTableName().equalsIgnoreCase(temp)) {						
+						String s = c.getCvcDatatype();
+						if (s!=null && (s.equalsIgnoreCase("Int") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP"))) {  // TODO: check datetime types
+							attrTypes[index] = ctx.getIntSort();
+						}
+						else if (s!=null && (s.equalsIgnoreCase("Real"))) {
+							attrTypes[index] = ctx.getRealSort();
+						}
+						else {
+							attrTypes[index] = ctxSorts.get(c.getColumnName());
+						}
+						attrNames[index] = temp+"_"+c+index;
+						
+						// previous method
 						if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
 							tempStr += "("+temp+"_"+c+index+" "+s + ") ";
 						else
 							tempStr+= "("+temp+"_"+c+index+" "+c.getCvcDatatype() + ") ";						
+						
 						index++;
 					}
 				}
@@ -2781,10 +2803,37 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 				//Now create the Array for this TupleType
 				tempStr += "(declare-fun O_" + temp + "() (Array Int " + temp + "_TupleType))\n\n";
 				
-						}
+				String tupleTypeName = temp+"_TupleType";
+				Constructor[] cons = new Constructor[] {ctx.mkConstructor(tupleTypeName, "is_"+tupleTypeName, attrNames, attrTypes, null)};
+				DatatypeSort tupleType = ctx.mkDatatypeSort(tupleTypeName, cons);
+				ctxSorts.put(tupleTypeName, tupleType);
+				
+				// adding dummy consts so that solver has relevant declarations in string returned by toString() 
+				Expr dummyVal = ctx.mkConst("dummy", tupleType);
+				BoolExpr dummyAssert = ctx.mkDistinct(dummyVal);
+				dummySol.add(dummyAssert);
+			}
+		
+			// Temporary procedure to extract relevant declarations from the solver string
+			String[] z3Statements = dummySol.toString().split("\n");
+			
+			int start = 0;
+			while (start++ < z3Statements.length) {
+				if (z3Statements[start].contains("TupleType ")) {
+					break;
+				}
+			}
+			int end = start;
+			while (end++ < z3Statements.length) {
+				if (z3Statements[end].contains("dummy")) {
+					break;
+				}
+			}
+			String z3Str = String.join("\n", Arrays.copyOfRange(z3Statements, start, end));
+			
+			//z3APIString.substring(0, z3APIString.indexOf("(declare-fun")) + "\n";
 		}
 		return tempStr;
-		
 	}
 	
 	public static String getAssertNotCondition(QueryBlockDetails queryBlock, Node n, int index){
