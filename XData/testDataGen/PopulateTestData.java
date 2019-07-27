@@ -21,10 +21,12 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 
+import com.microsoft.z3.*;
 
 import parsing.*;
 import util.*;
 
+import generateConstraints.ConstraintGenerator;
 
 class CallableProcess implements Callable {
 	private Process p;
@@ -107,8 +109,22 @@ public class PopulateTestData {
 
 			smtCommand[0] = Configuration.smtsolver;
 			smtCommand[1] = Configuration.homeDir+"/temp_smt"+filePath+"/" + cvcFileName;
+            String tempPath = Configuration.homeDir+"/z3_5.smt";
 
+			BoolExpr[] exprs = ConstraintGenerator.ctx.parseSMTLIB2File(tempPath, null, null, null, null);
+			Params p = ConstraintGenerator.ctx.mkParams();
+			p.add("produce-models", true);
+			p.add("smt.macro_finder", true);
 
+			Solver s = ConstraintGenerator.ctx.mkSolver();
+			s.add(exprs);
+			if (s.check() == Status.SATISFIABLE) {
+				Model m = s.getModel();
+				FuncDecl[] arrayDep = m.getDecls();
+				ArrayExpr res = (ArrayExpr) m.getConstInterp(arrayDep[0]);
+				System.out.println(res.getArgs()[0]);
+			}
+			
 			ExecutorService service = Executors.newSingleThreadExecutor();
 			Process myProcess = r.exec(smtCommand);	
 			try {

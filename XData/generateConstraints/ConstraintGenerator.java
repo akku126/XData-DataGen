@@ -46,10 +46,12 @@ public class ConstraintGenerator {
 	private static String solverSpecificCommentCharacter;
 	private static boolean isTempJoin = false;
 
-	private static Context ctx = new Context();
+	public static Context ctx = new Context();
 	private static Solver solver = ctx.mkSolver();
-	private static HashMap<String, Sort> ctxSorts = new HashMap<String, Sort>();  // for storing Z3 context sorts; not able to extract directly from ctx.
+	// TODO: rename ctxSorts to something more meaningful; it has declarations other than sorts
+	public static HashMap<String, Sort> ctxSorts = new HashMap<String, Sort>();  // for storing Z3 context sorts; not able to extract directly from ctx.
 	private static HashMap<String, FuncDecl> ctxFuncDecls = new HashMap<String, FuncDecl>();  // for storing Z3 context function declarations
+	public static HashMap<String, Expr> ctxConsts = new HashMap<String, Expr>();
 	
 	private static IntExpr intNull = ctx.mkIntConst("intNullVal");
 	private static RealExpr realNull = ctx.mkRealConst("realNullVal");
@@ -2797,7 +2799,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 				String arrName = "O_"+temp;
 				Expr aex = ctx.mkConst(arrName, asort);
 				ctxSorts.put(arrName, asort);
-
+				ctxConsts.put(arrName, aex);
 				// adding dummy asserts so that solver has relevant declarations in string returned by toString() 
 				BoolExpr dummyAssert = ctx.mkDistinct(aex);
 				dummySol.add(dummyAssert);
