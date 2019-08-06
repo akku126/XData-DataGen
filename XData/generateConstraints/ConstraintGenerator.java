@@ -2128,6 +2128,36 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 		else return "";
 	}
 
+	
+	/**
+	 * Used to get SMT LIB constraint for this column for the given tuple position
+	 * 
+	 * @param col
+	 * @param index
+	 * @return
+	 */
+	public static String smtMap(Column col, IntExpr index) {
+		
+		// TODO: return Expr instead of String
+			Table table = col.getTable();
+			String tableName = col.getTableName();
+			String columnName = col.getColumnName();
+			int pos = table.getColumnIndex(columnName);
+			
+			// relations are represented as ArrayExpr's
+			ArrayExpr relation = (ArrayExpr) ctxConsts.get("O_"+tableName);
+			
+			// tuples are represented as DatatypeExpr's
+			DatatypeExpr tuple = (DatatypeExpr) ctx.mkSelect(relation, index);
+		    
+			DatatypeSort tupSort = (DatatypeSort) tuple.getSort();
+		    FuncDecl[] tupAccessors = tupSort.getAccessors()[0];  // tuples declared will have only one constructor, hence[0].
+		    FuncDecl colAccessor = tupAccessors[pos];
+		    Expr colValue = colAccessor.apply(tuple);
+		    System.out.println(colValue.toString());
+			
+		    return colValue.toString();
+		}
 
 	/**
 	 * Used to get SMT LIB constraint for this column for the given tuple position
@@ -2136,12 +2166,12 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 	 * @param index
 	 * @return
 	 */
-	public static String smtMap(Column col, String index){
+	public static String smtMap(Column col, String index) {
 			Table table = col.getTable();
 			String tableName = col.getTableName();
 			String columnName = col.getColumnName();
 			int pos = table.getColumnIndex(columnName);
-			
+
 			String smtCond = "";
 			//String colName =tableName+"_"+columnName;
 			String colName = tableName+"_"+columnName+pos;
