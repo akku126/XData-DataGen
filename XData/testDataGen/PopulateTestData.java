@@ -132,7 +132,7 @@ public class PopulateTestData {
 				Future<Integer> future = service.submit(call);
 				int exitValue = future.get(180, TimeUnit.SECONDS);
 
-				if(myProcess.exitValue() != 0){
+				if (myProcess.exitValue() != 0) {
 					logger.log(Level.SEVERE," GenerateCvcOutput function :  Generating CVC Output failed.");
 					myProcess.destroy();	
 					service.shutdown();
@@ -142,9 +142,8 @@ public class PopulateTestData {
 
 				//Writing output to .out file
 				BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_smt"+filePath+"/" + cvcFileName.substring(0,cvcFileName.lastIndexOf(".smt")) + ".out"));
-
-				while ((ch = myIStreamReader.read()) != -1) 
-				{ 
+				
+				while ((ch = myIStreamReader.read()) != -1) { 
 					out.write((char)ch); 
 				} 	
 
@@ -803,11 +802,12 @@ public class PopulateTestData {
 		String test = generateCvcOutput(cvcOutputFileName, filePath);
 		BufferedReader br =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+filePath+"/"+test));
 		String str = br.readLine();
+		br.close();
 
 		if((str == null || str.equals("") || (str.equalsIgnoreCase("unsupported") && (br.readLine().equalsIgnoreCase("unsat"))))) {
 			return false;
 		}
-		br.close();
+
 		String cutFile = cutRequiredOutputForSMT(test, filePath);
 		Vector<String> listOfCopyFiles = generateCopyFileForSMT(cutFile, filePath, noOfOutputTuples, 
 				tableMap,columns,existingTableNames, dbAppParameters);			

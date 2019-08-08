@@ -376,7 +376,6 @@ public class GenerateConstraintsForConjunct {
 					}
 			declaration += ") )) )\n";
 			declaration += "(declare-fun O_" + joinTable + "() (Array Int " + joinTable + "_TupleType))\n\n";
-			System.out.println(declaration);
 			//String forall= "(assert (forall ((i1 Int)(j1 Int))(=> (and";
 			String forall = "(assert (and (forall (";
 			String ex = " (forall ((k1 Int)) (exists (";

@@ -2154,7 +2154,6 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 		    FuncDecl[] tupAccessors = tupSort.getAccessors()[0];  // tuples declared will have only one constructor, hence[0].
 		    FuncDecl colAccessor = tupAccessors[pos];
 		    Expr colValue = colAccessor.apply(tuple);
-		    System.out.println(colValue.toString());
 			
 		    return colValue.toString();
 		}
@@ -2794,7 +2793,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 				tablenames[i] = cvc.getResultsetTables().get(i).getTableName();
 			}
 			
-			for(int i=0;i<cvc.getResultsetTables().size();i++) {
+			for (int i=0;i<cvc.getResultsetTables().size();i++) {
 				int index = 0;
 				t = cvc.getResultsetTables().get(i);
 				temp = t.getTableName();
@@ -2834,27 +2833,24 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 				BoolExpr dummyAssert = ctx.mkDistinct(aex);
 				dummySol.add(dummyAssert);
 			}
-		
+
 			// Temporary procedure to extract relevant declarations from the solver string
 			String[] z3Statements = dummySol.toString().split("\n");
+			Vector<String> includedStatements = new Vector<String>();
 			
-			int start = 0;
-			while (start++ < z3Statements.length) {
-				if (z3Statements[start].contains("TupleType ")) {
+			for (String statement : z3Statements) {
+				if (statement.contains("_TupleType ") || statement.contains("declare-fun O_")) {
+					includedStatements.add(statement);
+				}
+				if (statement.contains("(assert")) {
 					break;
 				}
 			}
-			int end = start;
-			while (end++ < z3Statements.length) {
-				if (z3Statements[end].contains("assert")) {
-					break;
-				}
-			}
-			tempStr += String.join("\n", Arrays.copyOfRange(z3Statements, start, end));
+			tempStr += String.join("\n\n", includedStatements);
 		}
 		return tempStr;
 	}
-	
+
 	public static String getAssertNotCondition(QueryBlockDetails queryBlock, Node n, int index){
 		
 		String subQueryConstraints = "";//"ASSERT NOT ";
