@@ -882,6 +882,7 @@ public class AddDataBaseConstraints {
 		for (int j = 1; j <= fkCount; j++) {
 			temp.clear();
 			for (int k = 0; k < fCol.size(); k++) {
+				orConstraints.clear();
 				Column fSingleCol = fCol.get(k);
 
 				if (!temp.contains(fSingleCol)) {
