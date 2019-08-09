@@ -453,26 +453,52 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 	 * @return
 	 */
 	public String getIsNullCondition(String tableName, Column col,String offSet){
-		
+
 		String isNullConstraint = "";
+
 		if(col.getCvcDatatype().equals("INT")|| col.getCvcDatatype().equals("REAL") || col.getCvcDatatype().equals("DATE") 
 				|| col.getCvcDatatype().equals("TIME") || col.getCvcDatatype().equals("TIMESTAMP"))
 		{	
-			if(isCVC3){
-				isNullConstraint ="ISNULL_" + col.getColumnName() + "(" + cvcMap(col, offSet + "") + ")";
+			if (isCVC3) {
+				isNullConstraint = "ISNULL_" + col.getColumnName() + "(" + cvcMap(col, offSet + "") + ")";
 			}
-			else{
-				isNullConstraint ="(ISNULL_" + col.getColumnName() + " " + smtMap(col, offSet+ "") + ")";
+			else {
+				isNullConstraint = "(ISNULL_" + col.getColumnName() + " " + smtMap(col, offSet+ "") + ")";
 			}
-		}else{
-			if(isCVC3){
+		} else {
+			if (isCVC3) {
 				isNullConstraint = "ISNULL_" + col.getCvcDatatype() + "(" + cvcMap(col, offSet+ "") + ")";
-			}else{
-				isNullConstraint ="(ISNULL_" + col.getCvcDatatype() + " " + smtMap(col, offSet+ "") + ")";
+			} else {
+				isNullConstraint = "(ISNULL_" + col.getCvcDatatype() + " " + smtMap(col, offSet+ "") + ")";
 			}
 		}
 		return isNullConstraint;
 	}
+	
+	/**
+	 * This method returns an Expr with ISNULL constraint (for Z3)
+	 * 
+	 * @param cvc
+	 * @param col
+	 * @param offSet
+	 * @return
+	 */
+	public BoolExpr getIsNullConditionZ3(String tableName, Column col,String offSet) {
+		String suffix;
+		
+		if(col.getCvcDatatype().equals("INT")|| col.getCvcDatatype().equals("REAL") || col.getCvcDatatype().equals("DATE") 
+				|| col.getCvcDatatype().equals("TIME") || col.getCvcDatatype().equals("TIMESTAMP")) {
+			suffix = col.getColumnName();
+		} else {
+			suffix = col.getCvcDatatype();
+		}
+		
+		FuncDecl isNullDecl = ctxFuncDecls.get("ISNULL_"+suffix);
+		BoolExpr isNullApply = (BoolExpr) isNullDecl.apply(smtMap(col, ctx.mkInt(offSet)));
+
+		return isNullApply;
+	}
+
 	
 	/**
 	 * This method returns the constraint String that holds MAX constraint for SubQuery Aggregate condition.
@@ -2133,30 +2159,28 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 	 * Used to get SMT LIB constraint for this column for the given tuple position
 	 * 
 	 * @param col
-	 * @param index
+	 * @param fIndex
 	 * @return
 	 */
-	public static String smtMap(Column col, IntExpr index) {
+	public static Expr smtMap(Column col, IntNum fIndex) {
+		Table table = col.getTable();
+		String tableName = col.getTableName();
+		String columnName = col.getColumnName();
+		int pos = table.getColumnIndex(columnName);
 		
-		// TODO: return Expr instead of String
-			Table table = col.getTable();
-			String tableName = col.getTableName();
-			String columnName = col.getColumnName();
-			int pos = table.getColumnIndex(columnName);
-			
-			// relations are represented as ArrayExpr's
-			ArrayExpr relation = (ArrayExpr) ctxConsts.get("O_"+tableName);
-			
-			// tuples are represented as DatatypeExpr's
-			DatatypeExpr tuple = (DatatypeExpr) ctx.mkSelect(relation, index);
-		    
-			DatatypeSort tupSort = (DatatypeSort) tuple.getSort();
-		    FuncDecl[] tupAccessors = tupSort.getAccessors()[0];  // tuples declared will have only one constructor, hence[0].
-		    FuncDecl colAccessor = tupAccessors[pos];
-		    Expr colValue = colAccessor.apply(tuple);
-			
-		    return colValue.toString();
-		}
+		// relations are represented as ArrayExpr's
+		ArrayExpr relation = (ArrayExpr) ctxConsts.get("O_"+tableName);
+		
+		// tuples are represented as DatatypeExpr's
+		DatatypeExpr tuple = (DatatypeExpr) ctx.mkSelect(relation, fIndex);
+	    
+		DatatypeSort tupSort = (DatatypeSort) tuple.getSort();
+	    FuncDecl[] tupAccessors = tupSort.getAccessors()[0];  // tuples declared will have only one constructor, hence[0].
+	    FuncDecl colAccessor = tupAccessors[pos];
+	    Expr colValue = colAccessor.apply(tuple);
+
+	    return colValue;
+	}
 
 	/**
 	 * Used to get SMT LIB constraint for this column for the given tuple position

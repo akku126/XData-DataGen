@@ -122,7 +122,7 @@ public class PopulateTestData {
 				Model m = s.getModel();
 				FuncDecl[] arrayDep = m.getDecls();
 				ArrayExpr res = (ArrayExpr) m.getConstInterp(arrayDep[0]);
-				System.out.println(res.getArgs()[0]);
+				//System.out.println(res.getArgs()[0]);
 			}
 			
 			ExecutorService service = Executors.newSingleThreadExecutor();

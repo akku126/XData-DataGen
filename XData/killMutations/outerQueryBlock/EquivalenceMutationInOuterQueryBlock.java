@@ -121,8 +121,6 @@ public class EquivalenceMutationInOuterQueryBlock {
 								
 								cvc.getConstraints().add(ConstraintGenerator.addCommentLine(" END OF FROM CLAUSE SUBQUERY "));
 						}
-						System.out.println("Before\n\n\n");
-						System.out.println(cvc.getConstraints());
 						
 						Node eceNulled = ec.get(j);
 
@@ -130,8 +128,6 @@ public class EquivalenceMutationInOuterQueryBlock {
 						
 						if( RelatedToEquivalenceClassMutations.getConstraintsForNulledColumns(cvc, qbt, ec, eceNulled) == false)
 							continue;
-                        System.out.println("After\n\n\n");
-                        System.out.println(cvc.getConstraints());
 
 						/** Generate positive constraints for all the conditions of this  conjunct */
 						cvc.getConstraints().add( GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, qbt, conjunct) );

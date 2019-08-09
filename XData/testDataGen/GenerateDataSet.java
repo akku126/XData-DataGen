@@ -186,9 +186,9 @@ public class GenerateDataSet {
 			
 			File f=new File(Configuration.homeDir+"/temp_smt"+cvc.getFilePath()+"/");
 			
-			if(f.exists()){		
+			if (f.exists()) {		
 				File f2[]=f.listFiles();
-				if(f2 != null)
+				if (f2 != null)
 				for(int i=0;i<f2.length;i++){
 					if(f2[i].isDirectory() && f2[i].getName().startsWith("DS")){
 						
@@ -198,12 +198,12 @@ public class GenerateDataSet {
 			}
 			
 			File dir= new File(Configuration.homeDir+"/temp_smt"+cvc.getFilePath());
-			if(dir.exists()){
-				for(File file: dir.listFiles()) {
+			if (dir.exists()) {
+				for (File file: dir.listFiles()) {
 					file.delete();
 				}
 			}
-			else{
+			else {
 				dir.mkdirs();
 			}
 		}
@@ -218,7 +218,6 @@ public class GenerateDataSet {
 			int queryId=1;
 			
 			String query = "select * from classroom, section where classroom.building = section.building and classroom.room_number = section.room_number";
-			
 			//String query = "select name from instructor where salary > some (select salary from instructor where dept_name = ’Biology’)";
 			//String query = "select count(distinct room_number) from classroom, department where department.dept_name = 'Comp. Sci.' and department.building = classroom.building";
 			//String query = "with max_budget (value) as (select max(budget) from department) select budget from department, max_budget where department.budget = max_budget.value";
