@@ -3896,16 +3896,9 @@ public String generateCVCForNullCheckInHaving() {
 	return returnStr;
 }
 
-public String getDomainConstraintsforZ3(GenerateCVC1 cvc) {
+public Vector<Quantifier> getDomainConstraintsforZ3(GenerateCVC1 cvc) {
 	
-	String domainConstraints="";
-	
-	if(isCVC3) {
-		return "";
-	}
-	
-	domainConstraints += addCommentLine("DOMAIN CONSTRAINTS");
-
+	Vector<Quantifier> domainConstraints = new Vector<Quantifier>();
 
 	int turn = 0;
 	
@@ -3915,10 +3908,10 @@ public String getDomainConstraintsforZ3(GenerateCVC1 cvc) {
 		Table table = cvc.getResultsetTables().get(i);
 
 		String tableName = table.getTableName();
-		
+
 		for(String col : table.getColumns().keySet()){
 			if((table.getColumn(col).getCvcDatatype()).equalsIgnoreCase("INT") || (table.getColumn(col).getCvcDatatype()).equalsIgnoreCase("REAL")) {
-				
+
 				if (turn++ == 0) {
 					IntExpr[] qVarArray = new IntExpr[1];
 					IntExpr qVar = ctx.mkIntConst("i");  // i should not conflict with any global i
@@ -3934,14 +3927,12 @@ public String getDomainConstraintsforZ3(GenerateCVC1 cvc) {
 
 					Expr body = ctx.mkImplies(antecedant, consequent);
 					qVarArray[0] = qVar;
-					Expr funcQuantifier = ctx.mkForall(qVarArray, body, 1, null, null, null, null);
-					domainConstraints += "(assert " + funcQuantifier.toString() + ")\n\n";
+					Quantifier funcQuantifier = ctx.mkForall(qVarArray, body, 1, null, null, null, null);
+					domainConstraints.add(funcQuantifier);
 				}
 			}
 		}
 	}
-
-	domainConstraints += addCommentLine("END OF DOMAIN CONSTRAINTS");
 
 	return domainConstraints;
 	}

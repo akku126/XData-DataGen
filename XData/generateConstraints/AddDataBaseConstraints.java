@@ -73,10 +73,15 @@ public class AddDataBaseConstraints {
 			dbConstraints +=  ConstraintGenerator.addCommentLine("FOREIGN KEY CONSTRAINTS");
 			dbConstraints += generateConstraintsForForeignKeys(cvc);
 			dbConstraints +=  ConstraintGenerator.addCommentLine("END OF FOREIGN  KEY CONSTRAINTS");
-			
+
 			ConstraintGenerator constraintGenerator = new ConstraintGenerator();
-			dbConstraints += constraintGenerator.getDomainConstraintsforZ3(cvc);
-			
+			dbConstraints += ConstraintGenerator.addCommentLine("DOMAIN CONSTRAINTS");
+			Vector<Quantifier> domainConstraints = constraintGenerator.getDomainConstraintsforZ3(cvc);
+			dbConstraints += domainConstraints.stream().map(
+	        		quantifier -> "(assert "+quantifier.toString()+")"
+	        		).collect(Collectors.joining("\n\n"));
+			dbConstraints += ConstraintGenerator.addCommentLine("END OF DOMAIN CONSTRAINTS");
+
 			dbConstraints += constraintGenerator.generateCVCForNullCheckInHaving();
 
 			/** Now add primary key constraints */
