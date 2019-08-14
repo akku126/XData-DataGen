@@ -2162,7 +2162,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 	 * @param fIndex
 	 * @return
 	 */
-	public static Expr smtMap(Column col, IntNum fIndex) {
+	public static Expr smtMap(Column col, IntExpr fIndex) {
 		Table table = col.getTable();
 		String tableName = col.getTableName();
 		String columnName = col.getColumnName();
@@ -2360,7 +2360,9 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			constraint = "\n"+col+" : TYPE = SUBTYPE (LAMBDA (x: INT) : (x > "+(minVal-4)+" AND x < "+(maxVal+4)+") OR (x > -100000 AND x < -99995));\n";
 		}
 		else {
-			FuncDecl getCol = ctx.mkFuncDecl("get"+col, ctx.mkIntSort(), ctx.mkBoolSort());
+			String funcName = "get"+col;
+			FuncDecl getCol = ctx.mkFuncDecl(funcName, ctx.mkIntSort(), ctx.mkBoolSort());
+			ctxFuncDecls.put(funcName, getCol);
 			constraint = getCol.toString() + "\n";
 			IntExpr[] iColArray = new IntExpr[]{ctx.mkIntConst("i_"+col)};
 			Expr getColCall = getCol.apply(iColArray);
@@ -2419,8 +2421,9 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			constraint = "\n"+col+" : TYPE = SUBTYPE (LAMBDA (x: REAL) : (x >= "+(minStr)+" AND x <= "+(maxStr)+") OR (x > -100000 AND x < -99995));\n";			
 		}
 		else{
-			
-			FuncDecl getCol = ctx.mkFuncDecl("get"+col, ctx.mkRealSort(), ctx.mkBoolSort());
+			String funcName = "get"+col;
+			FuncDecl getCol = ctx.mkFuncDecl(funcName, ctx.mkRealSort(), ctx.mkBoolSort());
+			ctxFuncDecls.put(funcName, getCol);
 			constraint = getCol.toString() + "\n";
 			RealExpr[] rColArray = new RealExpr[]{ctx.mkRealConst("r_"+col)};
 			Expr getColCall = getCol.apply(rColArray);
@@ -2546,7 +2549,6 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 		while(it.hasNext()){
 			index++;
 			tempString = getIsNullOrString(colconst,((String)it.next()),tempString);
-			
 		}
 		return tempString;
 	}
@@ -3828,35 +3830,40 @@ public String generateCVCForNullCheckInHaving() {
 	for (String Datatype : Datatypes) {
 		String columnName = Datatype + "col";
 		Expr[] nullArr = null;
-		FuncDecl checkAllNull = null;
-		FuncDecl maxRepNull = null;
-		FuncDecl sumRepNull = null;
-		FuncDecl minRepNull = null;
-		
 		ArithExpr nullVal = null;
 		ArithExpr zeroVal = null;
+		Sort type = null;
 
 		if (Datatype.endsWith("Real")) {
 			nullArr = new Expr[] {ctx.mkRealConst(columnName)};
-			checkAllNull = ctx.mkFuncDecl("CHECKALL_NULL_"+Datatype, ctx.getRealSort(), ctx.mkBoolSort());
-			maxRepNull = ctx.mkFuncDecl("MAX_REPLACE_NULL_"+Datatype, ctx.getRealSort(), ctx.getRealSort());
-			sumRepNull = ctx.mkFuncDecl("SUM_REPLACE_NULL_"+Datatype, ctx.getRealSort(), ctx.getRealSort());
-			minRepNull = ctx.mkFuncDecl("MIN_REPLACE_NULL_"+Datatype, ctx.getRealSort(), ctx.getRealSort());
-			
+			type = ctx.getRealSort();
 			nullVal = ConstraintGenerator.realNull;
 			zeroVal = ctx.mkReal("0.0");
 		}
-		else if (Datatype.endsWith("Int")) {
+		else {  // Int case
 			nullArr = new Expr[] {ctx.mkIntConst(columnName)};
-			checkAllNull = ctx.mkFuncDecl("CHECKALL_NULL_"+Datatype, ctx.getIntSort(), ctx.mkBoolSort());
-			maxRepNull = ctx.mkFuncDecl("MAX_REPLACE_NULL_"+Datatype, ctx.getIntSort(), ctx.getIntSort());
-			sumRepNull = ctx.mkFuncDecl("SUM_REPLACE_NULL_"+Datatype, ctx.getIntSort(), ctx.getIntSort());
-			minRepNull = ctx.mkFuncDecl("MIN_REPLACE_NULL_"+Datatype, ctx.getIntSort(), ctx.getIntSort());
-			
+			type = ctx.getIntSort();
 			nullVal = ConstraintGenerator.intNull;
 			zeroVal = ctx.mkInt(0);
 		}
 
+		String checkAllNullName = "CHECKALL_NULL" + Datatype;
+		FuncDecl checkAllNull = ctx.mkFuncDecl(checkAllNullName, type, ctx.mkBoolSort());
+		ctxFuncDecls.put(checkAllNullName, checkAllNull);
+		
+		String maxRepNullName = "MAX_REPLACE_NULL_" + Datatype;
+		FuncDecl maxRepNull = ctx.mkFuncDecl(maxRepNullName, type, type);
+		ctxFuncDecls.put(maxRepNullName, maxRepNull);
+		
+		String sumRepNullName = "SUM_REPLACE_NULL_" + Datatype;
+		FuncDecl sumRepNull = ctx.mkFuncDecl(sumRepNullName, type, type);
+		ctxFuncDecls.put(sumRepNullName, sumRepNull);
+		
+		String minRepNullName = "MIN_REPLACE_NULL_" + Datatype;
+		FuncDecl minRepNull = ctx.mkFuncDecl(minRepNullName, type, type);
+		ctxFuncDecls.put(minRepNullName, minRepNull);
+		
+		
 		// CHECKALL_NULL_*
 		Expr checkAllNullCall = checkAllNull.apply(nullArr);
 		Expr funcBody = ctx.mkEq(nullArr[0], nullVal);
@@ -3912,23 +3919,31 @@ public String getDomainConstraintsforZ3(GenerateCVC1 cvc) {
 		for(String col : table.getColumns().keySet()){
 			if((table.getColumn(col).getCvcDatatype()).equalsIgnoreCase("INT") || (table.getColumn(col).getCvcDatatype()).equalsIgnoreCase("REAL")) {
 				
-				if(turn++ == 0)
-				domainConstraints += "\n (assert (forall ((i Int)) (=>(and (<= 1 i) (<= i "+cvc.getNoOfOutputTuples().get(tableName)+ ")) (and \n   ";
-				domainConstraints += " (or (get"+col+ConstraintGenerator.smtMap(table.getColumn(col),"i")+") ";
-				domainConstraints += "(ISNULL_"+col+ConstraintGenerator.smtMap(table.getColumn(col),"i")+")) \n   ";
-			}
-		
-		}
-		if(turn>0)
-			domainConstraints += ")))) \n";
+				if (turn++ == 0) {
+					IntExpr[] qVarArray = new IntExpr[1];
+					IntExpr qVar = ctx.mkIntConst("i");  // i should not conflict with any global i
+					BoolExpr ac1 = ctx.mkLe(ctx.mkInt("1"), qVar);
+					BoolExpr ac2 = ctx.mkLe(qVar, ctx.mkInt(Integer.toString(cvc.getNoOfOutputTuples().get(tableName))));
+					BoolExpr antecedant = ctx.mkAnd(ac1, ac2);
 
+					FuncDecl getFuncDecl = ctxFuncDecls.get("get"+col);
+					FuncDecl isNullFuncDecl = ctxFuncDecls.get("ISNULL_"+col);
+					Expr selectExpr = ConstraintGenerator.smtMap(table.getColumn(col), qVar);
+					BoolExpr con1 = ctx.mkOr((BoolExpr) getFuncDecl.apply(selectExpr), (BoolExpr) isNullFuncDecl.apply(selectExpr));
+					BoolExpr consequent = ctx.mkAnd(con1);
+
+					Expr body = ctx.mkImplies(antecedant, consequent);
+					qVarArray[0] = qVar;
+					Expr funcQuantifier = ctx.mkForall(qVarArray, body, 1, null, null, null, null);
+					domainConstraints += "(assert " + funcQuantifier.toString() + ")\n\n";
+				}
+			}
+		}
 	}
 
-	
-	
 	domainConstraints += addCommentLine("END OF DOMAIN CONSTRAINTS");
 
 	return domainConstraints;
-}
+	}
 }
 
