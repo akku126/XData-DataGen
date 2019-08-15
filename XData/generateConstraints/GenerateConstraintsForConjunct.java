@@ -399,12 +399,10 @@ public class GenerateConstraintsForConjunct {
 				int t1Columnindex	= n1.getColumn().getTable().getColumnIndex(n1.getColumn().getColumnName());
 				int t2Columnindex	= n2.getColumn().getTable().getColumnIndex(n2.getColumn().getColumnName());
 				ConstraintGenerator constrGen1 = new ConstraintGenerator();
-					
+
 				String constraint1 = constrGen1.genPositiveCondsForPredF(queryBlock, n1, tablevar.get(n1.getColumn().getTableName()));
 				String constraint2 = constrGen1.genPositiveCondsForPredF(queryBlock, n2, tablevar.get(n2.getColumn().getTableName()));
-		
-				
-				
+
 				forall += " ("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " )":" "+ ") \n");
 				//constraintString += "(forall ((i1 Int)(j1 Int))(=> ("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " )":" "+ ") \n");
 				

@@ -75,7 +75,7 @@ public class AddDataBaseConstraints {
 			dbConstraints +=  ConstraintGenerator.addCommentLine("END OF FOREIGN  KEY CONSTRAINTS");
 
 			ConstraintGenerator constraintGenerator = new ConstraintGenerator();
-			dbConstraints += ConstraintGenerator.addCommentLine("DOMAIN CONSTRAINTS");
+		    dbConstraints += ConstraintGenerator.addCommentLine("DOMAIN CONSTRAINTS");
 			Vector<Quantifier> domainConstraints = constraintGenerator.getDomainConstraintsforZ3(cvc);
 			dbConstraints += domainConstraints.stream().map(
 	        		quantifier -> "(assert "+quantifier.toString()+")"
@@ -269,13 +269,14 @@ public class AddDataBaseConstraints {
 
 								/** Get column details */
 								Column pkeyColumn = primaryKeys.get(p);
-								int pos = table.getColumnIndex(pkeyColumn.getColumnName());
-
+								IntExpr smtK = (IntExpr) ConstraintGenerator.ctx.mkInt(k);
+								IntExpr smtJ = (IntExpr) ConstraintGenerator.ctx.mkInt(j);
+								
 								/**If this pk attribute is equal*/
 								//pkConstraint += "O_" + tableName + "[" + k + "]." + pos + " = O_" + tableName + "[" + j +"]." + pos + " AND ";	
 								pkConstraint += "(= ";
-								pkConstraint += ConstraintGenerator.smtMap(table.getColumn(pkeyColumn.getColumnName()),k+"");
-								pkConstraint += ConstraintGenerator.smtMap(table.getColumn(pkeyColumn.getColumnName()),j+"") + " )";
+								pkConstraint += ConstraintGenerator.smtMap(table.getColumn(pkeyColumn.getColumnName()), smtK).toString();
+								pkConstraint += ConstraintGenerator.smtMap(table.getColumn(pkeyColumn.getColumnName()), smtJ).toString() + " )";
 
 							}
 							
@@ -289,13 +290,14 @@ public class AddDataBaseConstraints {
 							for(String col : table.getColumns().keySet()){
 								if(!( primaryKeys.toString().contains(col))){
 									x = true;
-									int pos = table.getColumnIndex(col);
+									IntExpr smtK = (IntExpr) ConstraintGenerator.ctx.mkInt(k);
+									IntExpr smtJ = (IntExpr) ConstraintGenerator.ctx.mkInt(j);
 
 									/**This attribute has to be equal */
 									//pkConstraint += "(O_"+tableName+"["+k+"]."+pos+" = O_"+tableName+"["+ j +"]."+pos+") AND ";
 									pkConstraint += "(= ";
-									pkConstraint += ConstraintGenerator.smtMap(table.getColumn(col),k+"");
-									pkConstraint += ConstraintGenerator.smtMap(table.getColumn(col),j+"") + " )";
+									pkConstraint += ConstraintGenerator.smtMap(table.getColumn(col),smtK).toString();
+									pkConstraint += ConstraintGenerator.smtMap(table.getColumn(col), smtJ).toString() + " )";
 									
 								}
 							}
@@ -899,8 +901,8 @@ public class AddDataBaseConstraints {
 				Column pSingleCol = pCol.get(k);
 				String tableName1 = fSingleCol.getTable().getTableName();
 				if (fSingleCol.getCvcDatatype() != null) {
-					IntNum fIndex = ctx.mkInt(j + fkOffset -1);
-					IntNum pIndex = ctx.mkInt(j + pkOffset -1);
+					IntExpr fIndex = (IntExpr) ctx.mkInt(j + fkOffset -1);  // making type cast explicit
+					IntExpr pIndex = (IntExpr) ctx.mkInt(j + pkOffset -1);
 
 					orConstraints.add(ConstraintGenerator.ctx.mkEq(ConstraintGenerator.smtMap(fSingleCol, fIndex), ConstraintGenerator.smtMap(pSingleCol, pIndex)));
 

@@ -146,7 +146,9 @@ public class ConstraintGenerator {
 			constraint += "ASSERT (" +cvcMap(c1, index1 + "") +" "+ operator+" "+cvcMap(c2,index2 + "") +" );\n" ;
 		}
 		else{
-			constraint += "(assert ("+(operator.trim().equals("/=")? "not (= ": operator) +" "+smtMap(c1, index1+"")+" "+smtMap(c2, index2+"")+(operator.trim().equals("/=")? ")":"")+")) \n";						
+			IntExpr smtIndex1 = (IntExpr) ctx.mkInt(index1);
+			IntExpr smtIndex2 = (IntExpr) ctx.mkInt(index2);
+			constraint += "(assert ("+(operator.trim().equals("/=")? "not (= ": operator) +" "+smtMap(c1, smtIndex1)+" "+smtMap(c2, smtIndex2)+(operator.trim().equals("/=")? ")":"")+")) \n";						
 		}
 		return constraint;
 	}
@@ -404,28 +406,7 @@ public String getAssertDistinctConstraint(String tableName1,Column col1, Integer
 					
 			return negConstraint;	
 	}
-/**
- * This method returns an assert constraint statement for the passed in columns and tupleIndices based on the solver.
- * @param cvc
- * @param c1
- * @param index1
- * @param c2
- * @param i2
- * @param operator
- * @return
- */
-public String getAssertConstraint(Column c1, Integer index1, Column c2, Node i2, String operator){
-		
-		String constraint = "";
-		if(isCVC3){
-			constraint += "(" +cvcMap(c1, index1 + "") +" "+ operator+" "+cvcMap(c2,i2 + "") +" \n" ;
-		}
-		else{
-			
-			constraint += ""+(operator.equals("/=")? "not (= ": operator)  +" "+smtMap(c1, index1+"")+" "+smtMap(c2, i2+"")+""+(operator.equals("/=")? ")":"") ;						
-		}
-		return constraint;
-	}
+
 
 /**
  * Generates positive CVC3 constraint for given nodes and columns
@@ -457,20 +438,10 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 		String isNullConstraint = "";
 
 		if(col.getCvcDatatype().equals("INT")|| col.getCvcDatatype().equals("REAL") || col.getCvcDatatype().equals("DATE") 
-				|| col.getCvcDatatype().equals("TIME") || col.getCvcDatatype().equals("TIMESTAMP"))
-		{	
-			if (isCVC3) {
-				isNullConstraint = "ISNULL_" + col.getColumnName() + "(" + cvcMap(col, offSet + "") + ")";
-			}
-			else {
-				isNullConstraint = "(ISNULL_" + col.getColumnName() + " " + smtMap(col, offSet+ "") + ")";
-			}
+				|| col.getCvcDatatype().equals("TIME") || col.getCvcDatatype().equals("TIMESTAMP")) {
+			isNullConstraint = "ISNULL_" + col.getColumnName() + "(" + cvcMap(col, offSet + "") + ")";
 		} else {
-			if (isCVC3) {
-				isNullConstraint = "ISNULL_" + col.getCvcDatatype() + "(" + cvcMap(col, offSet+ "") + ")";
-			} else {
-				isNullConstraint = "(ISNULL_" + col.getCvcDatatype() + " " + smtMap(col, offSet+ "") + ")";
-			}
+			isNullConstraint = "ISNULL_" + col.getCvcDatatype() + "(" + cvcMap(col, offSet+ "") + ")";
 		}
 		return isNullConstraint;
 	}
@@ -494,7 +465,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 		}
 		
 		FuncDecl isNullDecl = ctxFuncDecls.get("ISNULL_"+suffix);
-		BoolExpr isNullApply = (BoolExpr) isNullDecl.apply(smtMap(col, ctx.mkInt(offSet)));
+		BoolExpr isNullApply = (BoolExpr) isNullDecl.apply(smtMap(col, (IntExpr) ctx.mkInt(offSet)));
 
 		return isNullApply;
 	}
@@ -1547,11 +1518,11 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 	 * @param nullVal
 	 * @return
 	 */
-	public String getAssertNullValue(Column c,String index,String nullVal){
+	public String getAssertNullValue(Column c, String index, String nullVal){
 		if(isCVC3){
 			return "\nASSERT "+cvcMap(c, index)+" = "+nullVal+"; \n";
 		}else{
-			return "\n (assert (= "+smtMap(c, index)+" "+nullVal+"  )) \n";
+			return "\n (assert (= "+smtMap(c, (IntExpr) ctx.mkInt(index))+" "+nullVal+"  )) \n";
 		}
 	}
 	
@@ -2182,25 +2153,6 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 	    return colValue;
 	}
 
-	/**
-	 * Used to get SMT LIB constraint for this column for the given tuple position
-	 * 
-	 * @param col
-	 * @param index
-	 * @return
-	 */
-	public static String smtMap(Column col, String index) {
-			Table table = col.getTable();
-			String tableName = col.getTableName();
-			String columnName = col.getColumnName();
-			int pos = table.getColumnIndex(columnName);
-
-			String smtCond = "";
-			//String colName =tableName+"_"+columnName;
-			String colName = tableName+"_"+columnName+pos;
-			smtCond = "("+colName+" "+"(select O_"+tableName+" "+index +") )";
-			return smtCond;
-		}
 
 	/**
 	 * Used to get SMT LIB constraint for this column
@@ -2252,7 +2204,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 		if(isCVC3){
 			return cvcMap(col, index);
 		}else{
-			return smtMap(col, index);
+			return smtMap(col, (IntExpr) ctx.mkInt(Integer.parseInt(index))).toString();
 		}
 	}
 	/**
@@ -2266,7 +2218,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			return n.getStrConst();
 		}
 		else if(n.getType().equalsIgnoreCase(Node.getColRefType())){
-			return smtMap(n.getColumn(), index);
+			return smtMap(n.getColumn(), (IntExpr) ctx.mkInt(Integer.parseInt(index))).toString();
 		}
 		else if(n.getType().toString().equalsIgnoreCase("i")){
 			return "i";
@@ -2369,7 +2321,6 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			Expr condition = ctx.mkAnd(ctx.mkGt(iColArray[0], ctx.mkInt((minVal-4)>0?(minVal-4):0)), ctx.mkLt(iColArray[0], ctx.mkInt(maxVal+4)));
 			Expr body = ctx.mkEq(getColCall, condition);
 			Expr funcQuantifier = ctx.mkForall(iColArray, body, 1, null, null, null, null);
-
 			constraint += "(assert " + funcQuantifier.toString() + ")";
 		}
 		return constraint +"\n\n";
@@ -2977,7 +2928,7 @@ public static String getAssertNotCondition(String constr1, String operator,Strin
 			if(isCVC3){
 				return cvcMap(n.getColumn(), index+" ");
 			}else{				
-				return smtMap(n.getColumn(), (index+" "));
+				return smtMap(n.getColumn(), (IntExpr) ctx.mkInt(index)).toString();
 			}
 		}
 		else if(n.getType().equalsIgnoreCase(Node.getValType())){
@@ -3026,12 +2977,12 @@ public static String getAssertNotCondition(String constr1, String operator,Strin
 	}
 	
 	
-	public static String genPositiveCondsForPredF(QueryBlockDetails queryBlock, Node n, String index){
-		if(n.getType().equalsIgnoreCase(Node.getColRefType())){			
-			if(isCVC3){
+	public static String genPositiveCondsForPredF(QueryBlockDetails queryBlock, Node n, String index) {
+		if(n.getType().equalsIgnoreCase(Node.getColRefType())) {
+			if(isCVC3) {
 				return cvcMap(n.getColumn(), index+" ");
-			}else{				
-				return smtMap(n.getColumn(), (index+" "));
+			} else {		
+				return smtMap(n.getColumn(), ctx.mkIntConst(index)).toString();
 			}
 		}
 		else if(n.getType().equalsIgnoreCase(Node.getValType())){
@@ -3061,7 +3012,7 @@ public static String getAssertNotCondition(String constr1, String operator,Strin
 	 * @param n
 	 * @return
 	 */
-	public static String genPositiveCondsForPred(QueryBlockDetails queryBlock, Node n){
+	public static String genPositiveCondsForPred(QueryBlockDetails queryBlock, Node n) {
 		if(n.getType().equalsIgnoreCase(Node.getColRefType())){
 			if(isCVC3){
 				return cvcMap(n.getColumn(), n);
@@ -3157,7 +3108,7 @@ public static String genPositiveCondsForPredWithAssert(QueryBlockDetails queryBl
 			if(isCVC3){
 				return cvcMap(n.getColumn(), index+"");
 			}else{				
-				return smtMap(n.getColumn(), index+"");
+				return smtMap(n.getColumn(), ctx.mkIntConst(index+"")).toString();
 			}
 		}
 		else if(n.getType().equalsIgnoreCase(Node.getValType())){
@@ -3292,7 +3243,7 @@ public static String genPositiveCondsForPredWithAssert(QueryBlockDetails queryBl
 				constraint = "\nASSERT NOT ISNULL_"+col.getColumnName()+"("+cvcMap(col, index+"")+");";
 			}else{
 				//	constraint += "\n (assert NOTISNULL_"+col.getColumnName()+" "+smtMap(col,Integer.toString(index))+")";
-				constraint = "\n (assert (get"+col.getColumnName()+" "+smtMap(col,Integer.toString(index))+"))";
+				constraint = "\n (assert (get"+col.getColumnName()+" "+smtMap(col, (IntExpr) ctx.mkInt(index)).toString()+"))";
 			}
 		
 		}
@@ -3300,7 +3251,7 @@ public static String genPositiveCondsForPredWithAssert(QueryBlockDetails queryBl
 			if(isCVC3){
 				constraint = "\nASSERT NOT ISNULL_"+col.getCvcDatatype()+"("+cvcMap(col, index+"")+");";
 			}else{
-				constraint = "\n (assert (NOTISNULL_"+col.getCvcDatatype()+" " +smtMap(col,Integer.toString(index))+"))";
+				constraint = "\n (assert (NOTISNULL_"+col.getCvcDatatype()+" " + smtMap(col, (IntExpr) ctx.mkInt(index)).toString()+"))";
 			}
 		}
 		return constraint;
