@@ -216,8 +216,8 @@ public class GenerateDataSet {
 			Connection conn=DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));;
 			
 			int queryId=1;
-			
-			String query = "select * from classroom, section where classroom.building = section.building and classroom.room_number = section.room_number";
+			String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year = 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201' AND prereq.course_id = course.course_id)";
+			//String query = "select * from classroom, section where classroom.building = section.building and classroom.room_number = section.room_number";
 			//String query = "select name from instructor where salary > some (select salary from instructor where dept_name = ’Biology’)";
 			//String query = "select count(distinct room_number) from classroom, department where department.dept_name = 'Comp. Sci.' and department.building = classroom.building";
 			//String query = "with max_budget (value) as (select max(budget) from department) select budget from department, max_budget where department.budget = max_budget.value";

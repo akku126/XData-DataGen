@@ -2630,7 +2630,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 
 			String nullVal = "NULL_"+col+"_1";
 			colValues.add(nullVal);
-			
+
 			EnumSort colSort = ctx.mkEnumSort(col.getColumnName(), colValues.toArray(new String[colValues.size()]));
 			
 			for (int i=0; i < colSort.getConsts().length-1; i++) { // all but last value, which is for null

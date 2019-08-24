@@ -19,7 +19,6 @@
 12|SELECT name, COUNT(*) FROM instructor GROUP BY id, name
 13|select distinct s.id, s.name from student s, takes t where s.id = t.id 
 14|SELECT takes.course_id FROM student INNER JOIN takes ON(student.id=takes.id) INNER JOIN course ON(course.course_id=takes.course_id)
-15|SELECT dept_name FROM course LEFT OUTER JOIN takes USING(course_id) GROUP BY dept_name
 16|SELECT instructor.dept_name FROM  instructor, department 
 17|SELECT id FROM takes WHERE grade > (SELECT MIN(grade) FROM takes WHERE year = 2010)
 18|SELECT course.course_id FROM course LEFT OUTER JOIN (SELECT * from department WHERE department.budget < 70000) d USING (dept_name)
@@ -45,8 +44,8 @@
 32|(select course_id from section where year != 2009) except all (select course_id from section where year = 2010)
 33|select * from instructor where salary is null
 34|select * from instructor where salary is not null
-37|select count(distinct ID) from takes where (course_id , sec_id , semester , year)in(select course_id , sec_id , semester , year from teaches where teaches.ID != '10101')
-38|select count(distinct ID) from takes where (course_id , sec_id , semester , year)not in(select course_id , sec_id , semester , year from teaches where teaches.ID != '10101')
+37|select count(distinct ID) from takes where (course_id , sec_id , semester , year) in (select course_id , sec_id , semester , year from teaches where teaches.ID != '10101')
+38|select count(distinct ID) from takes where (course_id , sec_id , semester , year)not in (select course_id , sec_id , semester , year from teaches where teaches.ID != '10101')
 39|select  from instructor where dept_name = 'Physics' order by name
 40|select ID from instructor order by salary desc , name asc
 41|select dept_name from department where building not like '%Watson%'
@@ -58,7 +57,7 @@
 47|select min(salary)from instructor
 48|select max(salary)from instructor
 49|select count(c.room_number) from classroom as c, department as d where c.building = d.building and dept_name='Comp. Sci.'
-49|select count(C.room_number) from (select building from department D where D.dept_name='Comp. Sci.') as R,classroom C where C.building=R.building
+49|select count(C.room_number) from (select building from department D where D.dept_name='Comp. Sci.') as R, classroom C where C.building=R.building
 49|select count(*) from department, classroom where department.building = classroom.building and department.dept_name = 'Comp. Sci.'
 49|select count(room_number) as no_of_rooms from classroom where building in (select building from department where dept_name = 'Comp. Sci.')
 49|select count(*) from classroom where building = (select building from department where dept_name = 'Comp. Sci.')
@@ -66,7 +65,7 @@
 50|select dept_name from department where budget in(SELECT MAX(budget) FROM department WHERE budget NOT IN (SELECT MAX(budget) FROM department))
 50|select dept_name from department,( select min(budget) from department) as dept_min(min_budget)where budget = min_budget
 50|select dept_name from department where budget <= (  select min(budget) from department)
-50|select dept_name from department where budget <= all(select budget from department)
+50|select dept_name from department where budget <= all (select budget from department)
 51|select ID,name from (student natural join takes) where course_id = 'CS-101' and year = 2009 and semester ='Fall' order by name
 51|select student.id , name from student,takes where student.id = takes.id and takes.course_id = 'CS-101' and takes.semester = 'Fall' and takes.year = 2009 order by name asc
 51|select student.ID, student.name from student, takes where semester = 'Fall' and  year= 2009 and course_id = 'CS-101' and takes.ID = student.ID order by student.name
