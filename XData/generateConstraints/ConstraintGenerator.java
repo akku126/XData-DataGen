@@ -2730,38 +2730,38 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 	public String getTupleTypesForSolver(GenerateCVC1 cvc){
 		
 		String tempStr = "";
-		Column c;
 		Table t;
 		String temp;
 		Vector<String> tablesAdded = new Vector<String>();
 		tempStr += addCommentLine(" Tuple Types for Relations\n ");	
 		
 		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
-			
-				tempStr += ConstraintGenerator.addCommentLine(" Tuple Types for Relations\n ");			 
-				for(int i=0;i<cvc.getResultsetTables().size();i++){
-					t = cvc.getResultsetTables().get(i);
-					temp = t.getTableName();
-					if(!tablesAdded.contains(temp)){
-						tempStr += temp + "_TupleType: TYPE = [";
-					}
-					for(int j=0;j<cvc.getResultsetColumns().size();j++){
-						c = cvc.getResultsetColumns().get(j);
-						if(c.getTableName().equalsIgnoreCase(temp)){
-							String s=c.getCvcDatatype();
-							if(s!= null && (s.equalsIgnoreCase("INT") || s.equalsIgnoreCase("REAL") || s.equalsIgnoreCase("TIME") || s.equalsIgnoreCase("DATE") || s.equalsIgnoreCase("TIMESTAMP")))
-								tempStr += c.getColumnName() + ", ";
-							else
-								tempStr+=c.getCvcDatatype()+", ";
-						}
-					}
-					tempStr = tempStr.substring(0, tempStr.length()-2);
-					tempStr += "];\n";
-					/*
-					 * Now create the Array for this TupleType
-					 */
-					tempStr += "O_" + temp + ": ARRAY INT OF " + temp + "_TupleType;\n";
+			Column c;
+
+			tempStr += ConstraintGenerator.addCommentLine(" Tuple Types for Relations\n ");			 
+			for(int i=0;i<cvc.getResultsetTables().size();i++){
+				t = cvc.getResultsetTables().get(i);
+				temp = t.getTableName();
+				if(!tablesAdded.contains(temp)){
+					tempStr += temp + "_TupleType: TYPE = [";
 				}
+				for(int j=0;j<cvc.getResultsetColumns().size();j++){
+					c = cvc.getResultsetColumns().get(j);
+					if(c.getTableName().equalsIgnoreCase(temp)){
+						String s=c.getCvcDatatype();
+						if(s!= null && (s.equalsIgnoreCase("INT") || s.equalsIgnoreCase("REAL") || s.equalsIgnoreCase("TIME") || s.equalsIgnoreCase("DATE") || s.equalsIgnoreCase("TIMESTAMP")))
+							tempStr += c.getColumnName() + ", ";
+						else
+							tempStr+=c.getCvcDatatype()+", ";
+					}
+				}
+				tempStr = tempStr.substring(0, tempStr.length()-2);
+				tempStr += "];\n";
+				/*
+				 * Now create the Array for this TupleType
+				 */
+				tempStr += "O_" + temp + ": ARRAY INT OF " + temp + "_TupleType;\n";
+			}
 		} else {
 			Solver dummySol = ctx.mkSolver();  // for getting string form of z3 context declarations
 			
@@ -2778,8 +2778,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 				String[] attrNames = new String[t.getNoOfColumn()];
 				Sort[] attrTypes = new Sort[t.getNoOfColumn()];
 				
-				for(int j=0; j<cvc.getResultsetColumns().size(); j++) {				
-					c = cvc.getResultsetColumns().get(j);
+				for(Column c : cvc.getResultsetColumns()) {
 					if(c.getTableName().equalsIgnoreCase(temp)) {						
 						String s = c.getCvcDatatype();
 						if (s!=null && (s.equalsIgnoreCase("Int") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP"))) {  // TODO: check datetime types
@@ -2789,9 +2788,9 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 							attrTypes[index] = ctx.getRealSort();
 						}
 						else {
-							attrTypes[index] = ctxSorts.get(c.getColumnName());
+							attrTypes[index] = ctxSorts.get(s);
 						}
-						
+
 						attrNames[index] = temp+"_"+c+index;
 						index++;
 					}
