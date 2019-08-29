@@ -904,7 +904,7 @@ public class AddDataBaseConstraints {
 					IntExpr fIndex = (IntExpr) ctx.mkInt(j + fkOffset -1);  // making type cast explicit
 					IntExpr pIndex = (IntExpr) ctx.mkInt(j + pkOffset -1);
 
-					orConstraints.add(ConstraintGenerator.ctx.mkEq(ConstraintGenerator.smtMap(fSingleCol, fIndex), ConstraintGenerator.smtMap(pSingleCol, pIndex)));
+					orConstraints.add(ctx.mkEq(ConstraintGenerator.smtMap(fSingleCol, fIndex), ConstraintGenerator.smtMap(pSingleCol, pIndex)));
 
 					if (fSingleCol.isNullable()) {
 						orConstraints.add(constraintGenerator.getIsNullConditionZ3(tableName1,fSingleCol, j + fkOffset -1 + ""));
