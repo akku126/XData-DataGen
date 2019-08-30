@@ -12,7 +12,6 @@
 12|SELECT COUNT(*) FROM instructor GROUP BY id, name
 13|select distinct s.id, s.name from student s, takes t where s.id = t.id and  t.grade != 'F' 
 14|SELECT takes.course_id FROM student INNER JOIN takes ON(student.id=takes.id) INNER JOIN course ON(course.course_id=takes.course_id) WHERE student.id = '12345'
-15|SELECT dept_name, COUNT(DISTINCT course_id) FROM course LEFT OUTER JOIN takes USING(course_id) GROUP BY dept_name
 16|SELECT instructor.dept_name FROM  instructor INNER JOIN department ON instructor.dept_name=department.dept_name
 17|SELECT id FROM takes WHERE grade < (SELECT MIN(grade) FROM takes WHERE year = 2010)
 18|SELECT course.course_id, d.dept_name  FROM course LEFT OUTER JOIN (SELECT * from department WHERE department.budget > 70000) d using (dept_name)
@@ -20,7 +19,7 @@
 20|SELECT dept_name, SUM(credits) FROM course INNER JOIN department USING (dept_name) WHERE credits <= 4 GROUP BY dept_name HAVING SUM(credits) < 13 
 21|SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year = 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201' AND prereq.course_id = course.course_id)
 22|select name, title from (instructor natural join teaches) join course using (course_id)
-23|select * from (select * from student where dept_name = 'Comp.Sci') natural full outer join (select * from takes where semester = 'Spring' and year = 2009)
+23|select * from (select * from student where dept_name = 'Comp.Sci') AS q1 natural full outer join (select * from takes where semester = 'Spring' and year = 2009) AS q2
 24|select course_id from section as S where semester = 'Fall' and year = 2009 and not exists (select * from section as T where semester = 'Spring' and year = 2010 and S.course_id = T.course_id)
 25|select * from instructor where dept_name in (select dept_name from department where building = 'Watson')
 26|select * from instructor where dept_name not in (select dept_name from department where building != 'Watson')
@@ -32,8 +31,8 @@
 32|(select course_id from section where semester = 'Fall' and year = 2009) except all (select course_id from section where semester = 'Spring' and year = 2010)
 33|select name from instructor where salary is null
 34|select name from instructor where salary is not null
-37|select count(distinct ID) from takes where (course_id , sec_id , semester , year)in(select course_id , sec_id , semester , year from teaches where teaches.ID = '10101')
-38|select count(distinct ID) from takes where (course_id , sec_id , semester , year)not in(select course_id , sec_id , semester , year from teaches where teaches.ID = '10101')
+37|select count(distinct ID) from takes where (course_id , sec_id , semester , year) in (select course_id , sec_id , semester , year from teaches where teaches.ID = '10101')
+38|select count(distinct ID) from takes where (course_id , sec_id , semester , year)not in (select course_id , sec_id , semester , year from teaches where teaches.ID = '10101')
 39|select name from instructor where dept_name = 'Physics' order by name
 40|select * from instructor order by salary desc , name asc
 41|select dept_name from department where building like '%Watson%'

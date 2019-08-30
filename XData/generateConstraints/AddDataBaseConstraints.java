@@ -1,9 +1,11 @@
 package generateConstraints;
 
 import java.util.*;
+
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import parsing.Column;
 //import parsing.Conjunct;
@@ -14,6 +16,8 @@ import parsing.Table;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
 import util.ConstraintObject;
+
+import com.microsoft.z3.*;
 
 /**
  * This class contains the methods for generating constraints related to database such as foreign key constraints and check constraints
@@ -44,7 +48,7 @@ public class AddDataBaseConstraints {
 		 * These constraints must be added to only that occurrence of the table
 		 * FIXME: Killing partial group by case 2 is a special case here
 		 * FIXME: We should consider repeated relation occurrences here*/
-		String unConstraints = ConstraintGenerator.addCommentLine("UNIQUE CONSTRAINTS  FOR PRIMARY KEY TO SATISFY CONSTRAINED AGGREGATION");		
+		String unConstraints = ConstraintGenerator.addCommentLine("UNIQUE CONSTRAINTS FOR PRIMARY KEY TO SATISFY CONSTRAINED AGGREGATION");		
 
 		try{
 			/** Add constraints for outer query block, if there is constrained aggregation */
@@ -57,20 +61,27 @@ public class AddDataBaseConstraints {
 					unConstraints += getUniqueConstraintsForPrimaryKeys(cvc, queryBlock);	
 
 			/** Add constraints for each where clause nested sub query block, if there is constrained aggregation */
-			for(QueryBlockDetails queryBlock: cvc.getOuterBlock().getWhereClauseSubQueries())
-				if(queryBlock.isConstrainedAggregation())/** if there is constrained aggregation */
-					unConstraints += getUniqueConstraintsForPrimaryKeys(cvc, queryBlock);	
-
+			for(QueryBlockDetails queryBlock: cvc.getOuterBlock().getWhereClauseSubQueries()) {
+				if(queryBlock.isConstrainedAggregation()) {  /** if there is constrained aggregation */
+					unConstraints += getUniqueConstraintsForPrimaryKeys(cvc, queryBlock);
+				}
+			}
+			
 			unConstraints +=  ConstraintGenerator.addCommentLine("END OF UNIQUE CONSTRAINTS  FOR PRIMARY KEY TO SATISFY CONSTRAINED AGGREGATION");
 
 			/**Generate foreign key constraints */
-			dbConstraints +=  ConstraintGenerator.addCommentLine("FOREIGN  KEY CONSTRAINTS");
+			dbConstraints +=  ConstraintGenerator.addCommentLine("FOREIGN KEY CONSTRAINTS");
 			dbConstraints += generateConstraintsForForeignKeys(cvc);
 			dbConstraints +=  ConstraintGenerator.addCommentLine("END OF FOREIGN  KEY CONSTRAINTS");
-			
+
 			ConstraintGenerator constraintGenerator = new ConstraintGenerator();
-			dbConstraints += constraintGenerator.getDomainConstraintsforZ3(cvc);
-			
+		    dbConstraints += ConstraintGenerator.addCommentLine("DOMAIN CONSTRAINTS");
+			Vector<Quantifier> domainConstraints = constraintGenerator.getDomainConstraintsforZ3(cvc);
+			dbConstraints += domainConstraints.stream().map(
+	        		quantifier -> "(assert "+quantifier.toString()+")"
+	        		).collect(Collectors.joining("\n\n"));
+			dbConstraints += ConstraintGenerator.addCommentLine("END OF DOMAIN CONSTRAINTS");
+
 			dbConstraints += constraintGenerator.generateCVCForNullCheckInHaving();
 
 			/** Now add primary key constraints */
@@ -81,7 +92,7 @@ public class AddDataBaseConstraints {
 			//dbConstraints += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"CONSTRAINTS FOR TUPLE INDICES \n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
 			//dbConstraints += generateConstraintsForTupleIndices(cvc);
 			//dbConstraints += "\n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n"+cvc.getSolverSpecialCharacter()+"END OF CONSTRAINTS FOR TUPLE INDICES \n"+cvc.getSolverSpecialCharacter()+"---------------------------------\n";
-		}catch(Exception e){
+		} catch(Exception e) {
 			logger.log(Level.SEVERE,"\n Exception in AddDatabaseConstraints.java:Function addDBConstraints :",e);
 			throw e;
 		}		
@@ -258,13 +269,14 @@ public class AddDataBaseConstraints {
 
 								/** Get column details */
 								Column pkeyColumn = primaryKeys.get(p);
-								int pos = table.getColumnIndex(pkeyColumn.getColumnName());
-
+								IntExpr smtK = (IntExpr) ConstraintGenerator.ctx.mkInt(k);
+								IntExpr smtJ = (IntExpr) ConstraintGenerator.ctx.mkInt(j);
+								
 								/**If this pk attribute is equal*/
 								//pkConstraint += "O_" + tableName + "[" + k + "]." + pos + " = O_" + tableName + "[" + j +"]." + pos + " AND ";	
 								pkConstraint += "(= ";
-								pkConstraint += ConstraintGenerator.smtMap(table.getColumn(pkeyColumn.getColumnName()),k+"");
-								pkConstraint += ConstraintGenerator.smtMap(table.getColumn(pkeyColumn.getColumnName()),j+"") + " )";
+								pkConstraint += ConstraintGenerator.smtMap(table.getColumn(pkeyColumn.getColumnName()), smtK).toString();
+								pkConstraint += ConstraintGenerator.smtMap(table.getColumn(pkeyColumn.getColumnName()), smtJ).toString() + " )";
 
 							}
 							
@@ -278,13 +290,14 @@ public class AddDataBaseConstraints {
 							for(String col : table.getColumns().keySet()){
 								if(!( primaryKeys.toString().contains(col))){
 									x = true;
-									int pos = table.getColumnIndex(col);
+									IntExpr smtK = (IntExpr) ConstraintGenerator.ctx.mkInt(k);
+									IntExpr smtJ = (IntExpr) ConstraintGenerator.ctx.mkInt(j);
 
 									/**This attribute has to be equal */
 									//pkConstraint += "(O_"+tableName+"["+k+"]."+pos+" = O_"+tableName+"["+ j +"]."+pos+") AND ";
 									pkConstraint += "(= ";
-									pkConstraint += ConstraintGenerator.smtMap(table.getColumn(col),k+"");
-									pkConstraint += ConstraintGenerator.smtMap(table.getColumn(col),j+"") + " )";
+									pkConstraint += ConstraintGenerator.smtMap(table.getColumn(col),smtK).toString();
+									pkConstraint += ConstraintGenerator.smtMap(table.getColumn(col), smtJ).toString() + " )";
 									
 								}
 							}
@@ -415,10 +428,10 @@ public class AddDataBaseConstraints {
 			/** Get foreign key table details */
 			String fkTableName = foreignKey.getFKTablename();		
 
-			/**get the list of  equi join conditions on this foreign key table*/
+			/**get the list of equi join conditions on this foreign key table*/
 			Vector< Vector< Node > > equiJoins = cvc.getEquiJoins().get(fkTableName);
 
-			/**stores whether there are any equi joins conditions are between foreign key and primary key columns*/
+			/**stores whether there are any equi joins conditions between foreign key and primary key columns*/
 			HashMap<String, Boolean> presentinJoin = new HashMap<String, Boolean>();
 
 			/**if there are equi joins*/
@@ -455,8 +468,8 @@ public class AddDataBaseConstraints {
 
 					String fkTableNameNo = fkTableName + i;
 
-					/**means this foreign key relation occurrence do not have join conditions*/
-					if( !presentinJoin.containsKey(fkTableNameNo)){
+					/**means this foreign key relation occurrence does not have join conditions*/
+					if(!presentinJoin.containsKey(fkTableNameNo)) {
 
 						/**get the total count for this relation occurrence*/
 						int count = getTotalNumberOfTuples(cvc, fkTableNameNo);
@@ -468,14 +481,14 @@ public class AddDataBaseConstraints {
 						fkConstraint += getFkConstraint(cvc, foreignKey, fkTableNameNo, count, 0);
 
 						/**get the primary key tuple offset */
-						int pkOffset = cvc.getNoOfOutputTuples().get( foreignKey.getReferenceTable().getTableName() ) - fkCount[0];
+						int pkOffset = cvc.getNoOfOutputTuples().get(foreignKey.getReferenceTable().getTableName()) - fkCount[0];
 
 						//violate += getNegativeCondsForExtraTuples(cvc, foreignKey, fkTableNameNo, count, 0, pkOffset);			
 					}
 				}
 
 				/**once done for all relation occurrences in original query, then 
-				 * get constraints for the extra tuples (Added due to foreign key relation ship)*/
+				 * get constraints for the extra tuples (Added due to foreign key relationship)*/
 				/**get the number of tuples for which foreign keys are already added*/
 				int fOffset = cvc.getNoOfOutputTuples().get(foreignKey.getFKTablename()) - fkCount[0];
 
@@ -644,11 +657,7 @@ public class AddDataBaseConstraints {
 		}
 	}
 
-
-
-
-
-
+    // TODO: maybe rename fOffset param - almost identical to fkOffset
 	public static String getFkConstraint(GenerateCVC1 cvc, ForeignKey foreignKey, String fkTableNameNo, int fkCount, int fOffset) {
 
 		/**used to store foreign key occurrence*/
@@ -671,19 +680,14 @@ public class AddDataBaseConstraints {
 
 		/** update the extra tuples to be added for the primary key table*/
 		/**if there are no tuple*/
+		pkCount = fkCount;
 		if( cvc.getNoOfOutputTuples().get(pkTableName) == null || cvc.getNoOfOutputTuples().get(pkTableName) == 0){
-
-			pkCount = fkCount;
 			offset = 1;
 		}
 
 		else{
-
-			int totalCount = cvc.getNoOfOutputTuples().get(pkTableName);
-			offset = totalCount + 1;
-			pkCount = fkCount;
+			offset = cvc.getNoOfOutputTuples().get(pkTableName) + 1;
 		}
-
 
 		/**updates the number of tuples for primary key and foreign key table*/
 		updateTheNumberOfTuples(cvc, pkTableName, fkCount, pkCount);
@@ -698,10 +702,14 @@ public class AddDataBaseConstraints {
 		else
 			fkOffset = fOffset + 1;
 
-
-		fkConstraint = getCVCforForeignKey( cvc,foreignKey, fkCount, fkOffset, offset);
-
-
+		if (cvc.getConstraintSolver().equals("cvc3")) {
+			fkConstraint = getSMTforForeignKey(cvc, foreignKey, fkCount, fkOffset, offset);
+		} else {
+			Vector<BoolExpr> fkConstraintsVector = getSMTforForeignKeyZ3(cvc, foreignKey, fkCount, fkOffset, offset);
+	        fkConstraint = fkConstraintsVector.stream().map(
+	        		assertion -> "(assert "+assertion.toString()+")"
+	        		).collect(Collectors.joining("\n\n"));
+		}
 		return fkConstraint;
 	}	
 
@@ -716,16 +724,14 @@ public class AddDataBaseConstraints {
 	 * @return
 	 */
 
-	public static String getCVCforForeignKey(GenerateCVC1 cvc, ForeignKey foreignKey, int fkCount, int fkOffset, int pkOffset) {
-
-
+	public static String getSMTforForeignKey(GenerateCVC1 cvc, ForeignKey foreignKey, int fkCount, int fkOffset, int pkOffset) {
 		String fkConstraint = "";
 
 		/** Get foreign key column details */					
-		Vector<Column> fCol = (Vector<Column>)foreignKey.getFKeyColumns().clone();
+		Vector<Column> fCol = (Vector<Column>) foreignKey.getFKeyColumns().clone();
 
 		/** Get primary key column details*/
-		Vector<Column> pCol = (Vector<Column>)foreignKey.getReferenceKeyColumns().clone();
+		Vector<Column> pCol = (Vector<Column>) foreignKey.getReferenceKeyColumns().clone();
 
 		ConstraintGenerator constraintGenerator = new ConstraintGenerator();
 		ConstraintObject con = new ConstraintObject();
@@ -786,113 +792,132 @@ public class AddDataBaseConstraints {
 
 		}*/
 
-		//Implementation to be changed for SMT constraint Solver to use FORALL 
-		if(cvc.getConstraintSolver().equals("cvc3")){
-			Vector<Column> temp = new Vector<Column>();
+		//Implementation to be changed for SMT constraint Solver to use FORALL
+		Vector<Column> temp = new Vector<Column>();
 
-			for(int j=1;j <= fkCount; j++){
-				String temp1 = "";
-				String temp2 = "";
-				temp.clear();
-				for (Column fSingleCol : fCol)
-				{   
-					if(!temp.contains(fSingleCol)) {
-						temp.add(fSingleCol);
+		for(int j=1;j <= fkCount; j++){
+			String temp1 = "";
+			String temp2 = "";
+			temp.clear();
+			for (Column fSingleCol : fCol)
+			{   
+				if(!temp.contains(fSingleCol)) {
+					temp.add(fSingleCol);
+				}
+				else
+					continue;
+				Column pSingleCol = pCol.get(fCol.indexOf(fSingleCol));
+				if(fSingleCol.getCvcDatatype() != null)
+				{
+					temp1 += "(O_" + GenerateCVCConstraintForNode.cvcMap(fSingleCol, j + fkOffset -1 + "") + " = O_" + 
+							GenerateCVCConstraintForNode.cvcMap(pSingleCol, (j + pkOffset - 1) + "" ) + ") AND ";
+					if(fSingleCol.isNullable()){
+						if(fSingleCol.getCvcDatatype().equals("INT")|| fSingleCol.getCvcDatatype().equals("REAL") || fSingleCol.getCvcDatatype().equals("DATE") || fSingleCol.getCvcDatatype().equals("TIME") || fSingleCol.getCvcDatatype().equals("TIMESTAMP"))
+							temp2 += "ISNULL_" + fSingleCol.getColumnName() + "(O_" + GenerateCVCConstraintForNode.cvcMap(fSingleCol, j + fkOffset -1 + "") + ") AND ";
+						else
+							temp2 += "ISNULL_" + fSingleCol.getCvcDatatype() + "(O_" + GenerateCVCConstraintForNode.cvcMap(fSingleCol, j + fkOffset -1 + "") + ") AND ";
 					}
-					else
-						continue;
-					Column pSingleCol = pCol.get(fCol.indexOf(fSingleCol));
-					if(fSingleCol.getCvcDatatype() != null)
-					{
-						temp1 += "(O_" + GenerateCVCConstraintForNode.cvcMap(fSingleCol, j + fkOffset -1 + "") + " = O_" + 
-								GenerateCVCConstraintForNode.cvcMap(pSingleCol, (j + pkOffset - 1) + "" ) + ") AND ";
-						if(fSingleCol.isNullable()){
-							if(fSingleCol.getCvcDatatype().equals("INT")|| fSingleCol.getCvcDatatype().equals("REAL") || fSingleCol.getCvcDatatype().equals("DATE") || fSingleCol.getCvcDatatype().equals("TIME") || fSingleCol.getCvcDatatype().equals("TIMESTAMP"))
-								temp2 += "ISNULL_" + fSingleCol.getColumnName() + "(O_" + GenerateCVCConstraintForNode.cvcMap(fSingleCol, j + fkOffset -1 + "") + ") AND ";
-							else
-								temp2 += "ISNULL_" + fSingleCol.getCvcDatatype() + "(O_" + GenerateCVCConstraintForNode.cvcMap(fSingleCol, j + fkOffset -1 + "") + ") AND ";
-						}
-					}
-				}
-				if(temp1 != null && !temp1.isEmpty()){
-					temp1 = temp1.substring(0, temp1.length() - 5);
-				}
-
-				if(!temp2.isEmpty()){
-					temp2 = temp2.substring(0, temp2.length() - 5);
-					fkConstraint += "ASSERT (" + temp1 + ") OR (" + temp2 + ");\n";
-				}
-				else {
-					fkConstraint += "ASSERT (" + temp1 + ");\n";
 				}
 			}
+			if(temp1 != null && !temp1.isEmpty()){
+				temp1 = temp1.substring(0, temp1.length() - 5);
+			}
 
-
-		}else{				
-				Vector<Column> temp = new Vector<Column>();
-				
-				/* With forall construct
-				 * 
-				for (Column fSingleCol : fCol)
-				{	
-					if(!temp.contains(fSingleCol)) {
-						temp.add(fSingleCol);
-					}
-					else
-						continue;
-					
-					Column pSingleCol = pCol.get(fCol.indexOf(fSingleCol));
-					String tableName1 = fSingleCol.getTable().getTableName();
-					if(fSingleCol.getCvcDatatype() != null)
-					{
-						fkConstraint += "\n (assert (forall ((ifk"+j+" Int)) (exists ((jfk"+j+" Int)) ";
-						if(fSingleCol.isNullable()){
-							fkConstraint +="(or ";
-						}
-						fkConstraint += "(= "+constraintGenerator.smtMap(fSingleCol, "ifk"+j)+" "+constraintGenerator.smtMap(pSingleCol, "jfk"+j)+")";
-
-						if(fSingleCol.isNullable()){
-							fkConstraint += constraintGenerator.getIsNullCondition(tableName1,fSingleCol,"ifk"+j) +")";
-						}
-						fkConstraint +="))) \n";
-					}
-				}
-				*/
-				
-				for(int j=1;j <= fkCount; j++){
-					temp.clear();
-					for (Column fSingleCol : fCol)
-					{	
-						if(!temp.contains(fSingleCol)) {
-							temp.add(fSingleCol);
-						}
-						else
-							continue;
-						
-						Column pSingleCol = pCol.get(fCol.indexOf(fSingleCol));
-						String tableName1 = fSingleCol.getTable().getTableName();
-						if(fSingleCol.getCvcDatatype() != null)
-						{
-							fkConstraint += "\n (assert ";
-							if(fSingleCol.isNullable()){
-								fkConstraint +="(or ";
-							}
-							fkConstraint += "(= "+constraintGenerator.smtMap(fSingleCol, j + fkOffset -1 + "")+" "+constraintGenerator.smtMap(pSingleCol, j + pkOffset -1 + "")+")";
-	
-							if(fSingleCol.isNullable()){
-								fkConstraint += constraintGenerator.getIsNullCondition(tableName1,fSingleCol,j + fkOffset -1 + "") +")";
-							}
-							fkConstraint +=") \n";
-						}
-					}
-				}
-			
+			if(!temp2.isEmpty()){
+				temp2 = temp2.substring(0, temp2.length() - 5);
+				fkConstraint += "ASSERT (" + temp1 + ") OR (" + temp2 + ");\n";
+			}
+			else {
+				fkConstraint += "ASSERT (" + temp1 + ");\n";
+			}
 		}
 
 		return fkConstraint;
 	}
 
+	/**
+	 * Get Z3 constraints for foreign keys as a Vector<BoolExpr>
+	 * @param foreignKey
+	 * @param fkCount
+	 * @param fkOffset
+	 * @param pkOffset
+	 * @return
+	 */
 
+	public static Vector<BoolExpr> getSMTforForeignKeyZ3(GenerateCVC1 cvc, ForeignKey foreignKey, int fkCount, int fkOffset, int pkOffset) {
+
+		/** Get foreign key column details */					
+		Vector<Column> fCol = (Vector<Column>) foreignKey.getFKeyColumns().clone();
+
+		/** Get primary key column details*/
+		Vector<Column> pCol = (Vector<Column>) foreignKey.getReferenceKeyColumns().clone();
+
+		ConstraintGenerator constraintGenerator = new ConstraintGenerator();
+				
+		Vector<Column> temp = new Vector<Column>();
+		Vector<BoolExpr> fkConstraints = new Vector<BoolExpr>();
+		Vector<BoolExpr> orConstraints = new Vector<BoolExpr>();
+		
+		/* With forall construct
+		 * 
+		for (Column fSingleCol : fCol)
+		{	
+			if(!temp.contains(fSingleCol)) {
+				temp.add(fSingleCol);
+			}
+			else
+				continue;
+			
+			Column pSingleCol = pCol.get(fCol.indexOf(fSingleCol));
+			String tableName1 = fSingleCol.getTable().getTableName();
+			if(fSingleCol.getCvcDatatype() != null)
+			{
+				fkConstraint += "\n (assert (forall ((ifk"+j+" Int)) (exists ((jfk"+j+" Int)) ";
+				if(fSingleCol.isNullable()){
+					fkConstraint +="(or ";
+				}
+				fkConstraint += "(= "+constraintGenerator.smtMap(fSingleCol, "ifk"+j)+" "+constraintGenerator.smtMap(pSingleCol, "jfk"+j)+")";
+
+				if(fSingleCol.isNullable()){
+					fkConstraint += constraintGenerator.getIsNullCondition(tableName1,fSingleCol,"ifk"+j) +")";
+				}
+				fkConstraint +="))) \n";
+			}
+		}
+		*/
+		Context ctx = ConstraintGenerator.ctx;
+		for (int j = 1; j <= fkCount; j++) {
+			temp.clear();
+			for (int k = 0; k < fCol.size(); k++) {
+				orConstraints.clear();
+				Column fSingleCol = fCol.get(k);
+
+				if (!temp.contains(fSingleCol)) {
+					temp.add(fSingleCol);
+				} else {
+					continue;
+				}
+
+				Column pSingleCol = pCol.get(k);
+				String tableName1 = fSingleCol.getTable().getTableName();
+				if (fSingleCol.getCvcDatatype() != null) {
+					IntExpr fIndex = (IntExpr) ctx.mkInt(j + fkOffset -1);  // making type cast explicit
+					IntExpr pIndex = (IntExpr) ctx.mkInt(j + pkOffset -1);
+
+					orConstraints.add(ctx.mkEq(ConstraintGenerator.smtMap(fSingleCol, fIndex), ConstraintGenerator.smtMap(pSingleCol, pIndex)));
+
+					if (fSingleCol.isNullable()) {
+						orConstraints.add(constraintGenerator.getIsNullConditionZ3(tableName1,fSingleCol, j + fkOffset -1 + ""));
+					}
+					fkConstraints.add(ctx.mkOr(orConstraints.toArray(new BoolExpr[orConstraints.size()])));
+				}
+			}
+		}
+	    return fkConstraints;
+	}
+
+	
+	
 	/**
 	 * Updates the number of tuples of the tables
 	 * @param cvc

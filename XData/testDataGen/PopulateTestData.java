@@ -21,10 +21,12 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 
+import com.microsoft.z3.*;
 
 import parsing.*;
 import util.*;
 
+import generateConstraints.ConstraintGenerator;
 
 class CallableProcess implements Callable {
 	private Process p;
@@ -107,8 +109,7 @@ public class PopulateTestData {
 
 			smtCommand[0] = Configuration.smtsolver;
 			smtCommand[1] = Configuration.homeDir+"/temp_smt"+filePath+"/" + cvcFileName;
-
-
+			
 			ExecutorService service = Executors.newSingleThreadExecutor();
 			Process myProcess = r.exec(smtCommand);	
 			try {
@@ -116,7 +117,7 @@ public class PopulateTestData {
 				Future<Integer> future = service.submit(call);
 				int exitValue = future.get(180, TimeUnit.SECONDS);
 
-				if(myProcess.exitValue() != 0){
+				if (myProcess.exitValue() != 0) {
 					logger.log(Level.SEVERE," GenerateCvcOutput function :  Generating CVC Output failed.");
 					myProcess.destroy();	
 					service.shutdown();
@@ -126,9 +127,8 @@ public class PopulateTestData {
 
 				//Writing output to .out file
 				BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_smt"+filePath+"/" + cvcFileName.substring(0,cvcFileName.lastIndexOf(".smt")) + ".out"));
-
-				while ((ch = myIStreamReader.read()) != -1) 
-				{ 
+				
+				while ((ch = myIStreamReader.read()) != -1) { 
 					out.write((char)ch); 
 				} 	
 
@@ -198,27 +198,32 @@ public class PopulateTestData {
 			File testFile = new File(Configuration.homeDir+"/temp_smt"+filePath+"/cut_" + cvcOutputFileName);
 			BufferedReader input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+filePath+"/" + cvcOutputFileName));
 			try {
-				String line = null; 
-				while (( line = input.readLine()) != null){
-					if(line.contains("(define-fun ")  && line.contains("_TupleType")){
-						//setContents(testFile,line, true);
-						while ((line = input.readLine()) != null && !line.contains("))")) {
-							if(!line.contains("(ite") && !line.contains("!")) {
-									if(line.contains(")"))
-										setContents(testFile,line+"\n", true);
-									else
-										setContents(testFile,line, true);
-							}		
-						}
-						if(!line.contains("!"))
-						setContents(testFile,line+"\n", true);
-					}
-					//Application Testing - to include value of program parameters
-					if(line.startsWith("ASSERT (parameter")){
-						setContents(testFile, line+"\n", true);
-					}
-				}
-			}catch(Exception e){
+                String line = null; 
+                while ((line = input.readLine()) != null) {
+                    if(line.contains("(define-fun ")  && line.contains("_TupleType")) {
+                        //setContents(testFile,line, true);
+                        while ((line = input.readLine()) != null) {
+                            if(!line.contains("(ite") && !line.contains("!")) {
+                                    if(line.contains("define-fun")) {
+                                        //input.mark(1000);
+                                        input.reset();
+                                        break;
+                                    } else if (line.startsWith(")")) {
+                                        break;
+                                    }
+                                    setContents(testFile,line+"\n", true);
+                            }
+                            input.mark(100);
+                        }
+                        //if(!line.contains("!"))
+                        //setContents(testFile,line+"\n", true);
+                    }
+                    //Application Testing - to include value of program parameters
+                    if(line.startsWith("ASSERT (parameter")){
+                        setContents(testFile, line+"\n", true);
+                    }
+                }
+            } catch (Exception e) {
 				logger.log(Level.SEVERE,"PopulateTestData-cutRequiredOutput :  "+e.getStackTrace(),e);
 			}
 			finally {
@@ -782,11 +787,12 @@ public class PopulateTestData {
 		String test = generateCvcOutput(cvcOutputFileName, filePath);
 		BufferedReader br =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+filePath+"/"+test));
 		String str = br.readLine();
+		br.close();
 
 		if((str == null || str.equals("") || (str.equalsIgnoreCase("unsupported") && (br.readLine().equalsIgnoreCase("unsat"))))) {
 			return false;
 		}
-		br.close();
+
 		String cutFile = cutRequiredOutputForSMT(test, filePath);
 		Vector<String> listOfCopyFiles = generateCopyFileForSMT(cutFile, filePath, noOfOutputTuples, 
 				tableMap,columns,existingTableNames, dbAppParameters);			
