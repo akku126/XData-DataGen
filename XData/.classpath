@@ -17,5 +17,6 @@
 	<classpathentry exported="true" kind="lib" path="jars/gson-2.2.4.jar"/>
 	<classpathentry exported="true" kind="lib" path="jars/jsqlparser-0.9.7-SNAPSHOT.jar"/>
 	<classpathentry exported="true" kind="lib" path="/home/aarti/z3-master/build/com.microsoft.z3.jar"/>
+	<classpathentry exported="true" kind="lib" path="jars/mysql-connector-java-8.0.16.jar"/>
 	<classpathentry kind="output" path=""/>
 </classpath>

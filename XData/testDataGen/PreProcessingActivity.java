@@ -329,7 +329,7 @@ public class PreProcessingActivity {
 			}
 		}catch(Exception e){
 			logger.log(Level.SEVERE,""+e.getStackTrace(),e);
-			//e.printStackTrace();
+			e.printStackTrace();
 			throw e;
 		} 
 		finally {

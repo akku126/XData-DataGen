@@ -540,7 +540,7 @@ public class RelatedToPreprocessing {
 		}
 		catch(Exception e)
 		{
-			//logger.log(Level.INFO," "+e.getMessage(),e);
+			logger.log(Level.INFO," "+e.getMessage(),e);
 		}finally{
 			try {
 				if(input2 != null)
@@ -563,7 +563,6 @@ public class RelatedToPreprocessing {
 		{
 			input4 =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+ cvc.getFilePath() +"/branchQuery.txt"));
 			input3 =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+ cvc.getFilePath() +"/branchResult.txt"));
-
 			/*for(int i = 0; i < branchQueries.getNoOfBranchQueries(); i++)
 				branchQueries.getBranchQueryString()[i] = input4.readLine().trim();
 
@@ -595,7 +594,7 @@ public class RelatedToPreprocessing {
 		}
 		catch(Exception e)
 		{
-			//logger.log(Level.INFO,""+e.getMessage(),e);
+			logger.log(Level.INFO,""+e.getMessage(),e);
 		}finally{
 			try {
 				if(input4 != null)

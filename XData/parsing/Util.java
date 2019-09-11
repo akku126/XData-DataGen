@@ -1603,9 +1603,12 @@ public static void foreignKeyClosure(QueryStructure qParser) {
 	logger.log(Level.FINE,"FOREIGN KEY GRAPH : \n"+qParser.getTableMap().foreignKeyGraph);		
 	//for (String tableName : qParser.getQuery().getFromTables().keySet()) {	
 	for (String tableName : qParser.getLstRelations()) {
-		fkClosure.add( qParser.getTableMap().getTables().get(tableName.toUpperCase()));
-		fkClosureQueue.addLast(qParser.getTableMap().getTables().get(tableName.toUpperCase()));
-		logger.log(Level.FINE,"fkClosureQueue.add tables: \n "+qParser.getTableMap().getTables().get(tableName.toUpperCase()));
+		//fkClosure.add( qParser.getTableMap().getTables().get(tableName.toUpperCase()));
+		//fkClosureQueue.addLast(qParser.getTableMap().getTables().get(tableName.toUpperCase()));
+		fkClosure.add( qParser.getTableMap().getTables().get(tableName));// added by ram for mysql
+		fkClosureQueue.addLast(qParser.getTableMap().getTables().get(tableName)); // added by ram for mysql
+		//logger.log(Level.FINE,"fkClosureQueue.add tables: \n "+qParser.getTableMap().getTables().get(tableName.toUpperCase()));
+		logger.log(Level.FINE,"fkClosureQueue.add tables: \n "+qParser.getTableMap().getTables().get(tableName)); // added by ram for mysql 
 	}
 	while(!fkClosureQueue.isEmpty())
 	{

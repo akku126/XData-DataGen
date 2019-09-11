@@ -850,13 +850,17 @@ public class ProcessSelectClause{
 	 * 
 	 */
 	public static void processFromListTable(net.sf.jsqlparser.schema.Table jsqlTable, FromClauseElement frmListElement, QueryStructure qStruct){
-		String tableName = jsqlTable.getFullyQualifiedName().toUpperCase();// getWholeTableName();
-		Table table = qStruct.getTableMap().getTable(tableName.toUpperCase());
+		//String tableName = jsqlTable.getFullyQualifiedName().toUpperCase();// getWholeTableName();
+		String tableName = jsqlTable.getFullyQualifiedName();// getWholeTableName(); // added by ram for mysql
+//		String tableName = jsqlTable.getFullyQualifiedName();// getWholeTableName();
+		//Table table = qStruct.getTableMap().getTable(tableName.toUpperCase());
+		Table table = qStruct.getTableMap().getTable(tableName); // added by ram for mysql
 		String aliasName = "";
 		if (jsqlTable.getAlias() == null) {
 			aliasName = tableName;
 		} else {
-			aliasName = jsqlTable.getAlias().getName().toUpperCase();// getAlias();
+			//aliasName = jsqlTable.getAlias().getName().toUpperCase();// getAlias();
+			aliasName = jsqlTable.getAlias().getName();// added by ram
 		}
 		if (qStruct.getQuery().getRepeatedRelationCount().get(tableName) != null) {
 			qStruct.getQuery().putRepeatedRelationCount(tableName, qStruct.getQuery()

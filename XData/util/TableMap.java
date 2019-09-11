@@ -104,21 +104,34 @@ public class TableMap implements Serializable{
     public void createTableMap() {  
     	
         try {
-        
-            PreparedStatement s = this.conn.prepareStatement("CREATE TEMPORARY TABLE TEMPX()");
-            s.executeUpdate();
-            
-        	DatabaseMetaData meta = this.conn.getMetaData();
-            
+                	
+        	DatabaseMetaData meta = this.conn.getMetaData();       	
             ResultSet rs = null, rs1=null;
             
             // Note: Table types listed below are specific to PostgreSQL and could be different for other databases: Oracle, MySql etc
             // One way to work around is to remove the filter whole together which would mean all tables including the system tables will be returned.
-            String tableFilter[] = {"TEMPORARY TABLE"};
-                       
-            rs = meta.getTables(database, "", "%", tableFilter);
+            
+            // added by ram for mysql
+            //String dbType = meta.getDatabaseProductName(); 
+            //String tableFilter[] = {"TEMPORARY TABLE"};
+            
+            String dbType = meta.getDatabaseProductName(); 
+            
+            String tableFilter[] = new String[1];
+		    if (dbType.equalsIgnoreCase("MySql"))
+			{
+		    	tableFilter[0] = "TABLE";
+			}
+			else if(dbType.equalsIgnoreCase("PostgreSQL")) {
+				tableFilter[0] = "TEMPORARY TABLE";
+			}
+            
+			rs = meta.getTables(database, "", "%", tableFilter);           
+            
             while (rs.next()) {                          
-               String tableName = rs.getString("TABLE_NAME").toUpperCase(); 
+                //String tableName = rs.getString("TABLE_NAME").toUpperCase(); 
+            	String tableName = rs.getString("TABLE_NAME"); // added by ram for testing
+                System.out.println(tableName); //added by ram
                if(tables.get(tableName)==null){
             	   Table table = new Table(tableName);
                    tables.put(tableName, table );
@@ -131,18 +144,23 @@ public class TableMap implements Serializable{
             rs = null;    
             rs = meta.getColumns(database, "", "%","%");           
             while (rs.next()) {
-               String tableName = rs.getString("TABLE_NAME").toUpperCase();
+               //String tableName = rs.getString("TABLE_NAME").toUpperCase();
+            	String tableName = rs.getString("TABLE_NAME");
                Table table = getTable(tableName);
                if(table==null)
                    continue;
-               String columnName = rs.getString("COLUMN_NAME").toUpperCase();
+                String columnName = rs.getString("COLUMN_NAME").toUpperCase();
+                System.out.println(columnName+" "+rs.getInt("DATA_TYPE")); //added by ram
 
                Column col = new Column(columnName,table);
               //  logger.log(Level.INFO,"Table Values in TableMap = "+table+" and column = "+columnName);
                col.setDataType(rs.getInt("DATA_TYPE"));
-               if(col.getDataType()==Types.NUMERIC){ 
+               if(col.getDataType()==Types.NUMERIC || col.getDataType()==Types.DECIMAL){ //modified by ram for mysql
             	   
-            	   String query = "SELECT " + columnName + " FROM " + table;
+            	   //String query = "SELECT " + columnName + " FROM " + table;
+            	   //String query = "SELECT " + columnName + " FROM " + tableName.toLowerCase();//added by ram for mysql
+            	   String query = "SELECT " + columnName + " FROM " + tableName;//added by ram for mysql
+            	   System.out.println(query); //added by ram
                    PreparedStatement statement = this.conn.prepareStatement(query);
                    
                    ResultSet resultSet = statement.executeQuery();
@@ -174,10 +192,20 @@ public class TableMap implements Serializable{
               rs1 = null;
               rs1 = meta.getPrimaryKeys(database, "", tableName);
             
-           	  int size = rs1.getFetchSize();
+              //int size = rs1.getFetchSize();
+              // added by ram as above statement was always returning 0
+              int size = 0;
+              while(rs1.next()){
+            	  size++;
+              }//added by ram ends here
+              rs1 = meta.getPrimaryKeys(database, "", tableName);
+	      
            	  while(rs1.next()){
-           		Table table = getTable(tableName.toUpperCase());
-           		indexMap.remove(tableName.toUpperCase());
+           		//Table table = getTable(tableName.toUpperCase());
+           		//indexMap.remove(tableName.toUpperCase());
+           		 //added by ram
+           		Table table = getTable(tableName);
+           		indexMap.remove(tableName);
            		String columnName = rs1.getString("COLUMN_NAME").toUpperCase();
            		Column col = table.getColumn(columnName);
            		table.addColumnInPrimaryKey(col);
@@ -187,21 +215,25 @@ public class TableMap implements Serializable{
             }
             //For tables without primary keys, check if uniques indexes exists
             //We assume them as primary keys in the absence of primary key
-            Iterator it = indexMap.keySet().iterator();
+            //Iterator it = indexMap.keySet().iterator();
+            Iterator<String> it = indexMap.keySet().iterator();//added by ram for mysql
             while(it.hasNext()){
             	//get tablename from keyset using iterator
             	boolean listUniqueIndex = true;
             	String tname = (String)it.next();
-                ResultSet rset = meta.getIndexInfo(database,"", tname.toLowerCase(),listUniqueIndex, true);
+                //ResultSet rset = meta.getIndexInfo(database,"", tname.toLowerCase(),listUniqueIndex, true);
+            	ResultSet rset = meta.getIndexInfo(database,"", tname,listUniqueIndex, true);// added by ram for mysql
                 while(rset.next()) { 
                     String indexName = rset.getString("INDEX_NAME");
                     //String table = rset.getString("TABLE_NAME");
                    // String schema = rset.getString("TABLE_SCHEM");
+                    
                     String columnName = rset.getString("COLUMN_NAME").toUpperCase();
                     if(indexName == null) {
                         continue;
                     }
-                    Table table = getTable(tname.toUpperCase());
+                    //Table table = getTable(tname.toUpperCase());
+                    Table table = getTable(tname); // added by ram for mysql
                     Column col = table.getColumn(columnName);
                		table.addColumnInPrimaryKey(col);
                		
@@ -209,35 +241,42 @@ public class TableMap implements Serializable{
             }
             foreignKeyGraph = new Graph<Table,ForeignKey>(true);
             // logger.log(Level.INFO,"Create Foreign Key Graph");
-            rs = meta.getExportedKeys(conn.getCatalog(), "", "");
-            while(rs.next()){
-            	
-            	String fkName = rs.getString("FK_NAME");
-            	String fkTableName = rs.getString("FKTABLE_NAME").toUpperCase();
-                String fkColumnName = rs.getString("FKCOLUMN_NAME").toUpperCase();
-                Table fkTable = getTable(fkTableName);
-                Column fkColumn = fkTable.getColumn(fkColumnName);
-                if(fkColumnName.equals(""))
-                	continue;
-                int seq_no = rs.getInt("KEY_SEQ");
-                
-                String pkTableName = rs.getString("PKTABLE_NAME").toUpperCase();
-                String pkColumnName = rs.getString("PKCOLUMN_NAME").toUpperCase();
-                
-                Table pkTable = getTable(pkTableName);
-                pkTable.setIsExportedTable(true);
-                Column pkColumn = pkTable.getColumn(pkColumnName);
-                pkColumn.setIsUnique(true);
-                fkColumn.setReferenceTableName(pkTableName);
-                fkColumn.setReferenceColumn(pkColumn);
-                                
-                ForeignKey fk = fkTable.getForeignKey(fkName);
-                fk.addFKeyColumn(fkColumn, seq_no);
-                fk.addReferenceKeyColumn(pkColumn, seq_no);
-                fk.setReferenceTable(pkTable);
-                fkTable.addForeignKey(fk);
-                //logger.log(Level.INFO,"Foreign Key =  "+fkTableName+":" + fkColumnName + " --> "+pkTableName+": "+pkColumnName);
-             
+            rs1 = meta.getTables(database, "", "%", tableFilter);
+            while (rs1.next()) {                           
+              String tableName = rs1.getString("TABLE_NAME");
+	            rs = meta.getExportedKeys(conn.getCatalog(), "", tableName);
+	            while(rs.next()){
+	            	
+	            	String fkName = rs.getString("FK_NAME");
+	            	 //String fkTableName = rs.getString("FKTABLE_NAME").toUpperCase();
+	            	String fkTableName = rs.getString("FKTABLE_NAME"); // added by ram for mysql
+	                 String fkColumnName = rs.getString("FKCOLUMN_NAME").toUpperCase();
+	            	
+	                Table fkTable = getTable(fkTableName);
+	                Column fkColumn = fkTable.getColumn(fkColumnName);
+	                if(fkColumnName.equals(""))
+	                	continue;
+	                int seq_no = rs.getInt("KEY_SEQ");
+	                
+	                 //String pkTableName = rs.getString("PKTABLE_NAME").toUpperCase();
+	                String pkTableName = rs.getString("PKTABLE_NAME"); // added by ram for mysql
+	                 String pkColumnName = rs.getString("PKCOLUMN_NAME").toUpperCase();
+	                
+	                Table pkTable = getTable(pkTableName);
+	                pkTable.setIsExportedTable(true);
+	                Column pkColumn = pkTable.getColumn(pkColumnName);
+	                pkColumn.setIsUnique(true);
+	                fkColumn.setReferenceTableName(pkTableName);
+	                fkColumn.setReferenceColumn(pkColumn);
+	                                
+	                ForeignKey fk = fkTable.getForeignKey(fkName);
+	                fk.addFKeyColumn(fkColumn, seq_no);
+	                fk.addReferenceKeyColumn(pkColumn, seq_no);
+	                fk.setReferenceTable(pkTable);
+	                fkTable.addForeignKey(fk);
+	                //logger.log(Level.INFO,"Foreign Key =  "+fkTableName+":" + fkColumnName + " --> "+pkTableName+": "+pkColumnName);
+	             
+	            }
             }
             
            for(String tableName : tables.keySet()){
