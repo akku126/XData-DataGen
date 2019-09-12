@@ -9,6 +9,8 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.microsoft.z3.*;
+
 import parsing.AggregateFunction;
 import parsing.Column;
 import parsing.ConjunctQueryStructure;
@@ -314,16 +316,13 @@ public class GenerateCVCConstraintForNode {
 public static String primaryKeysSetNotNull(GenerateCVC1 cvc){
 		
 		String retVal = ConstraintGenerator.addCommentLine("NOT NULL CONSTRAINTS\n\n");
-		
+
 		try{
 			/** For each table in the result tables */
 			for(int i=0; i < cvc.getResultsetTables().size(); i++){
 
 				/** Get this data base table */
 				Table table = cvc.getResultsetTables().get(i);
-
-				/**Get table name */
-				String tableName = table.getTableName();
 
 				/**Get the primary keys of this table*/
 				ArrayList<Column> primaryKey = new ArrayList<Column>( table.getPrimaryKey() );
@@ -337,37 +336,33 @@ public static String primaryKeysSetNotNull(GenerateCVC1 cvc){
 		        } 
 
 				/**If there are no primary keys, then nothing need to be done */
-				if( primaryKeys.size() <= 0)
+				if( primaryKeys.size() <= 0) {
 					continue;
+				}
 
+				int p = 0;
+				String temp1 = "";
 
-				/**Get the number of tuples for this relation  */
-				int noOfTuples = cvc.getNoOfOutputTuples().get(tableName);
+				
+				temp1 = "\n(assert (forall ((ipk"+p+" Int)) \n";
+				temp1 += " (and \n";
 
-
-						int p = 0;
-						String temp1 = "";
-
-						
-						temp1 = "\n(assert (forall ((ipk"+p+" Int)) \n";
-						temp1 += " (and \n";
-
-						for(String col : table.getColumns().keySet()){
-							if( primaryKeys.toString().contains(col)){
-								Column pkeyColumn = primaryKeys.get(p);
-								int pos = table.getColumnIndex(pkeyColumn.getColumnName());
-								String col_datatype = pkeyColumn.getCvcDatatype();
-								if(col_datatype!= null && (col_datatype.equalsIgnoreCase("INT") || col_datatype.equalsIgnoreCase("REAL") || col_datatype.equalsIgnoreCase("TIME") || col_datatype.equalsIgnoreCase("DATE") || col_datatype.equalsIgnoreCase("TIMESTAMP")))
-									temp1 += "\t(not ( ISNULL_"+col+ConstraintGenerator.smtMap(pkeyColumn,"ipk0")+") )\n";
-								else
-									temp1 += "\t(not ( ISNULL_"+pkeyColumn.getCvcDatatype()+ConstraintGenerator.smtMap(pkeyColumn,"ipk0")+") )\n";
-
-								p++;
-							}
+				for(String col : table.getColumns().keySet()){
+					if( primaryKeys.toString().contains(col)){
+						Column pkeyColumn = primaryKeys.get(p);
+						String col_datatype = pkeyColumn.getCvcDatatype();
+						IntExpr ipk0 = ConstraintGenerator.ctx.mkIntConst("ipk0");
+						if(col_datatype!= null && (col_datatype.equalsIgnoreCase("INT") || col_datatype.equalsIgnoreCase("REAL") || col_datatype.equalsIgnoreCase("TIME") || col_datatype.equalsIgnoreCase("DATE") || col_datatype.equalsIgnoreCase("TIMESTAMP"))) {
+							temp1 += "\t(not ( ISNULL_"+col+ConstraintGenerator.smtMap(pkeyColumn, ipk0).toString() + ") )\n";
+						} else {
+							temp1 += "\t(not ( ISNULL_"+pkeyColumn.getCvcDatatype()+ConstraintGenerator.smtMap(pkeyColumn, ipk0).toString() + ") )\n";
 						}
-						
-						temp1 +=" )\n))\n";
-						retVal += temp1;
+						p++;
+					}
+				}
+				
+				temp1 +=" )\n))\n";
+				retVal += temp1;
 
 			}
 		}catch(Exception e){

@@ -650,19 +650,24 @@ public class GenerateConstraintsRelatedToBranchQuery {
 
 								if(fSingleCol.getCvcDatatype() != null){
 
-									int tupleIndexofFCol = cvc.getNoOfOutputTuples().get(fSingleCol.getTableName()) + k + tempTuplesAdded.get(fSingleCol.getTable());
+									int tupleIndexOfFCol = cvc.getNoOfOutputTuples().get(fSingleCol.getTableName()) + k + tempTuplesAdded.get(fSingleCol.getTable());
 
 									int tupleIndexofPCol = cvc.getNoOfOutputTuples().get(pSingleCol.getTableName()) + k + tempTuplesAdded.get(pSingleCol.getTable());
 									int pos1 = fSingleCol.getTable().getColumnIndex(fSingleCol.getColumnName());
 									int pos2 = pSingleCol.getTable().getColumnIndex(pSingleCol.getColumnName());
 									
-									con = constraintGenerator.getConstraint(fSingleCol.getTableName(),tupleIndexofFCol,Integer.valueOf(pos1),
+									con = constraintGenerator.getConstraint(fSingleCol.getTableName(),tupleIndexOfFCol,Integer.valueOf(pos1),
 											pSingleCol.getTableName(),tupleIndexofPCol,Integer.valueOf(pos2),fSingleCol,pSingleCol,"=");
 									//Add single constraint to the list of constraints. Later call constraintGenerator.generateANDConstraints to AND all constraints based on solver.
 									conList.add(con);
 									
-									if(fSingleCol.isNullable()){
-											isNullCon = constraintGenerator.getIsNullCondition(fSingleCol.getTableName(),fSingleCol,Integer.toString(tupleIndexofFCol));
+									if(fSingleCol.isNullable()) {
+										String indexStr = Integer.toString(tupleIndexOfFCol);
+										if (cvc.getConstraintSolver().equals("cvc3")) {
+											isNullCon = constraintGenerator.getIsNullCondition(fSingleCol.getTableName(), fSingleCol, indexStr);
+										} else {
+											isNullCon = constraintGenerator.getIsNullConditionZ3(fSingleCol.getTableName(), fSingleCol, indexStr).toString();
+										}
 											//Add single constraint to the list of constraints. Later call constraintGenerator.getNullConditionConjuncts to AND all Null constraints based on solver.
 											isNullConstraintList.add(isNullCon);
 									}
