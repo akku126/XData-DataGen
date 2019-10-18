@@ -319,7 +319,7 @@ public class GenerateDataSet {
 			//String query = "with max_budget (value) as (select max(budget) from department) select budget from department, max_budget where department.budget = max_budget.value";
 			//String query = "select dept_name, avg_salary from (select dept_name, avg (salary) from instructor group by dept name) as dept avg (dept_name, avg_salary) where avg_salary > 42000";
 			//String query = "select dept_name from department where building = 'T%'";
-			String query = "select dept_name from department where building like '%Watson%'";
+			//String query = "select dept_name from department where building like '%Watson%'";
 			//String query = "SELECT takes.course_id FROM student INNER JOIN takes ON(student.id=takes.id) INNER JOIN course ON(course.course_id=takes.course_id) WHERE student.id = '12345'";
 			//String query="select * from student where tot_cred >5";	
 			//String query ="select dept_name, avg(salary) as avg_salary from instructor group by dept_name having avg(salary) > 42000";
