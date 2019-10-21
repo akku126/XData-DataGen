@@ -509,7 +509,7 @@ public class GenerateJoinPredicateConstraints {
 			String constraint4 = "("+joinTable+"_"+n2.getColumn().getColumnName()+t2Columnindex;
 			constraint4 += "("+" select O_"+joinTable+" "+" k1 ) )";
 			
-			constraintString += "(" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" "+ ")))))) \n\n");
+			constraintString += "(" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" "+ "))))) \n\n");
 		
 			//constraintString += "(assert (forall ((k1 Int)) (exists ((i1 Int)(j1 Int)) (and (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" " + " )\n");
 			
@@ -685,7 +685,7 @@ public class GenerateJoinPredicateConstraints {
 					String constraint4 = "("+joinTable+"_"+n2.getColumn().getColumnName()+t2Columnindex;
 					constraint4 += "("+" select O_"+joinTable+" "+" k1 ) )";
 					
-					constraintString += " (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" "+ ")))))) \n");
+					constraintString += " (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" "+ "))))) \n");
 				
 					constraintString += "(assert (forall ((k1 Int)) (exists ((i1 Int)(j1 Int)) (and (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" " + " )\n");
 					

@@ -21,7 +21,7 @@ public class DataType {
 		return datatype;
 	}
 	
-	public int getDataType(int type){
+	public static int getDataType(int type){
 		String datatype = "";
 		int datatype_int = 0; 
 		

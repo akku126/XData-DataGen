@@ -71,7 +71,7 @@ import util.TableMap;
 		private static final long serialVersionUID = 8049915037697741933L;
 		public ORNode orNode;
 		private Query query;
-		private TableMap tableMap;
+		private TableMap tableMap; // It is being used at so many places what does it store? check this class.
 
 		private Vector<TreeNode> inOrderList;
 
@@ -580,13 +580,13 @@ import util.TableMap;
 		private static String fromListElementsToString(Vector<FromClauseElement> visitedFromListElements) {
 			String retString="";
 			for(FromClauseElement fle:visitedFromListElements){
-				if(fle!=null && (fle.getTableName()!=null||fle.getTableNameNo()!=null))
+				if(fle!=null && (fle.getTableName()!=null||fle.getTableNameNo()!=null)) // check if the from list is just a table
 					retString+="\n "+fle.toString();
-				else if(fle!=null && fle.getSubQueryStructure()!=null){
+				else if(fle!=null && fle.getSubQueryStructure()!=null){ // check if the from list is a subquery
 					retString+="\n "+fle.toString();
 					retString+=fromListElementsToString(fle.getSubQueryStructure().getFromListElements());
 				}
-				else if(fle!=null && fle.getBag()!=null && !fle.getBag().isEmpty()){
+				else if(fle!=null && fle.getBag()!=null && !fle.getBag().isEmpty()){ //WTH is this?
 					retString+="\n "+fle.toString();
 					retString+=fromListElementsToString(fle.getBag());				
 				}	
@@ -1548,7 +1548,7 @@ import util.TableMap;
 			if(withItem.getWithItemList()!=null &&!withItem.getWithItemList().isEmpty() ){
 				for(int i=0;i<withItem.getWithItemList().size();i++){
 					SelectItem withSelItem=withItem.getWithItemList().get(i);
-					if(selectClause.getSelectItems()!=null &&  !selectClause.getSelectItems().isEmpty() && selectClause.getSelectItems().size()>i){
+					if(selectClause.getSelectItems()!=null &&  !selectClause.getSelectItems().isEmpty() && selectClause.getSelectItems().size()>i){ // why would the size be less than i ans: the select statement may be returning less column compared to the number of columns indexed
 						SelectItem sItem=selectClause.getSelectItems().get(i);
 						if(sItem instanceof SelectExpressionItem){
 							SelectExpressionItem selExpItem=(SelectExpressionItem)sItem;

@@ -1,5 +1,4 @@
 package generateConstraints;
-import com.microsoft.z3.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,8 +8,6 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
-
 import parsing.AggregateFunction;
 import parsing.Column;
 import parsing.ConjunctQueryStructure;
@@ -22,12 +19,7 @@ import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
 import util.Configuration;
 import util.ConstraintObject;
-import util.TagDatasets.QueryBlock;
 import util.Utilities;
-
-//import static com.microsoft.z3.Constructor.of;
-import com.microsoft.z3.enumerations.Z3_ast_print_mode;
-import java.util.Map;
 
 /**
  * This class generates the constraints based on solver in XData.Properties file
@@ -51,17 +43,17 @@ public class ConstraintGenerator {
 		setConstraintSolver(Configuration.getProperty("smtsolver"));
 		
 		 if(Configuration.getProperty("smtsolver").equalsIgnoreCase("cvc3")){
-			 this.isCVC3 = true;
+			 ConstraintGenerator.isCVC3 = true;
 			 solverSpecificCommentCharacter="%";
 		 }else {
-			 this.isCVC3 = false;
+			 ConstraintGenerator.isCVC3 = false;
 			 solverSpecificCommentCharacter = ";";
 		 }
 		 
 		 if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true")){
-			 this.isTempJoin = true;
+			 ConstraintGenerator.isTempJoin = true;
 		 }else {
-			 this.isTempJoin = false;
+			 ConstraintGenerator.isTempJoin = false;
 		 }
 	}
 	
@@ -1450,7 +1442,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 		}else{
 			if(constraintString.contains("(and "))
 				{	
-				constraint1 += constraintString.replaceAll("(and ", "(or ");
+				constraint1 += constraintString.replace("(and ", "(or ");
 				
 				constraint += "(assert "+constraint1+") \n";
 				}
@@ -2554,7 +2546,8 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			HashMap<String, Integer> notnullValuesChar = new HashMap<String, Integer>();
 			
 			if(columnValue.size()>0){
-				if(!unique || !uniqueValues.contains(columnValue.get(0))){
+				if(!unique || !uniqueValues.contains(columnValue.get(0))){ 
+					// The "contains" condition above is redundant as the uniqueValues object is not being changed
 					colValue =  Utilities.escapeCharacters(col.getColumnName())+"__"+Utilities.escapeCharacters(columnValue.get(0));//.trim());
 					constraint += " (_"+colValue+") ";
 					uniqueValues.add(columnValue.get(0));

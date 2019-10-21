@@ -7,6 +7,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.*;
 
+import oracle.net.aso.a;
 import parsing.Column;
 import parsing.ConjunctQueryStructure;
 import parsing.Node;
@@ -34,6 +35,88 @@ public class GetSolverHeaderAndFooter {
 	public static String  generateSolver_Header( GenerateCVC1 cvc) throws Exception {
 		return generateSolver_Header(cvc, false);
 	}
+	
+	/**
+	 * For all the columns in the equivalence class, aggregate all the values into a single set. Since all the columns are equivalent we 
+	 * can put the same set for all the columns in the map.
+	 * @param columnToStringsMap
+	 * @param equivalenceClass
+	 */
+	public static void copyConstantsForEquivalenceClasses (Map<String, Set<String>> columnToStringsMap, Vector<Node> equivalenceClass) {
+		Set<String> allConstantSet = new HashSet<>();
+		List<String> allColumnsList = new ArrayList<>(); 
+		for (Node n: equivalenceClass) {
+			String columnName = n.getColumn().getColumnName();
+			if (columnToStringsMap.containsKey(columnName)) {
+				allConstantSet.addAll(columnToStringsMap.get(columnName));
+			}
+			allColumnsList.add(columnName);
+		}
+		for (String tempColumnName: allColumnsList) {
+			columnToStringsMap.put(tempColumnName, allConstantSet);
+		}
+	}
+	
+	/**
+	 * 
+	 * This function will find all the string constants that are declared in the query for each column.
+	 * For example if the query is "select * from employee where dept = 'CSE'", we will add to the map the column dept and the string 'CSE'.
+	 * 
+	 * @param cvc
+	 * @param equivalenceClasses1
+	 * @return columnToStringMap
+	 */
+	public static Map<String, Set<String>> getStringConstantsInQuery (GenerateCVC1 cvc, Vector<Vector<Node>> equivalenceClasses1) {
+		Map<String, Set<String>> columnToStringsMap = new HashMap<>();
+		List<ConjunctQueryStructure> conjunctQueryStructureList = cvc.getOuterBlock().getConjunctsQs();
+		for (ConjunctQueryStructure conjunctQueryStructure : conjunctQueryStructureList){
+			appendStringConstants(columnToStringsMap, conjunctQueryStructure);
+		};
+		List<QueryBlockDetails> whereClauseQueriesList = cvc.getOuterBlock().getWhereClauseSubQueries();
+		for (QueryBlockDetails query: whereClauseQueriesList) {
+			for (ConjunctQueryStructure conjunctQueryStructure: query.getConjunctsQs())
+				appendStringConstants(columnToStringsMap, conjunctQueryStructure);
+			for (QueryBlockDetails whereSubQuery: query.getWhereClauseSubQueries()) {
+				appendStringConstatsForQuery(columnToStringsMap, whereSubQuery);
+			}
+		}
+		for (Vector<Node> equivalenceClass: equivalenceClasses1)
+			copyConstantsForEquivalenceClasses(columnToStringsMap, equivalenceClass);
+		return columnToStringsMap;
+	}
+	
+	private static void appendStringConstatsForQuery (Map<String, Set<String>> columnToStringsMap,
+			QueryBlockDetails query) {
+		for (ConjunctQueryStructure conjunctQueryStructure: query.getConjunctsQs())
+			appendStringConstants(columnToStringsMap, conjunctQueryStructure);
+		for (QueryBlockDetails whereSubQuery: query.getWhereClauseSubQueries()) {
+			appendStringConstatsForQuery(columnToStringsMap, whereSubQuery);
+		}
+	}
+
+	/**
+	 * A conjunct query structure contains all the conditions that are declared in a query. We will parse through the ConjunctQueryStructure and find all the
+	 * string constants used in the query and their associated columns. We will finally add them to the map.
+	 * @param columnToStringsMap
+	 * @param conjunctQueryStructure
+	 */
+	private static void appendStringConstants(Map<String, Set<String>> columnToStringsMap,
+			ConjunctQueryStructure conjunctQueryStructure) {
+		if (conjunctQueryStructure.getSelectionConds() != null && !conjunctQueryStructure.getSelectionConds().isEmpty()) {
+			for (Node condition: conjunctQueryStructure.getSelectionConds()) {
+				if(DataType.getDataType(condition.getLeft().getColumn().getDataType()) != 3) // check if the column is of String type
+					continue;
+				Set<String> tempList;
+				if (!columnToStringsMap.containsKey(condition.getLeft().getColumn().getColumnName())) {
+					tempList = new HashSet<>();
+					columnToStringsMap.put(condition.getLeft().getColumn().getColumnName(), tempList);
+				}
+				tempList = columnToStringsMap.get(condition.getLeft().getColumn().getColumnName());
+				tempList.add(condition.getRight().getStrConst());
+			}
+		}
+	}
+	
 
 	/**
 	 * Generates CVC Data Type for each column
@@ -83,6 +166,10 @@ public class GetSolverHeaderAndFooter {
 			for(ConjunctQueryStructure con: qb.getConjunctsQs())
 				equivalenceClasses1.addAll(con.getEquivalenceClasses());
 		
+		//function to get all the string constants used in equality constraints
+		Map<String, Set<String>> columnToStringsMap =  getStringConstantsInQuery(cvc, equivalenceClasses1);
+		
+		
 		Vector<Column> eqColsVector = new Vector<Column>();
 		for(int i=1; i < cvc.getResultsetColumns().size(); i++){
 			if(i > 1){
@@ -95,6 +182,10 @@ public class GetSolverHeaderAndFooter {
 			
 			
 			Vector<String> columnValue = column.getColumnValues();
+			if (columnToStringsMap.containsKey(columnName)) {				
+				columnValue.addAll(columnToStringsMap.get(columnName));
+				columnValue = new Vector<>(new HashSet<>(columnValue));
+			}
 			columnType = dt.getDataType(column.getDataType());
 			cvc_tuple += columnName+", ";
 			boolean columnEquivalentAlreadyAdded = false;
@@ -205,54 +296,6 @@ public class GetSolverHeaderAndFooter {
 				
 				cvc_datatype += constraintGen.getStringDataTypes(columnValue,column,unique);
 				
-				/*cvc_datatype = "\nDATATYPE \n"+columnName+" = ";
-
-				if(columnValue.size()>0){
-					if(!unique || !uniqueValues.contains(columnValue.get(0))){
-						colValue =  Utilities.escapeCharacters(columnName)+"__"+Utilities.escapeCharacters(columnValue.get(0));//.trim());
-						cvc_datatype += "_"+colValue;
-						isNullMembers += "ASSERT NOT ISNULL_"+columnName+"(_"+colValue+");\n";
-						uniqueValues.add(columnValue.get(0));
-					}
-					
-					colValue = "";
-					for(int j=1; j<columnValue.size() || j < 4; j++){
-						if(j<columnValue.size())
-						{
-							if(!unique || !uniqueValues.contains(columnValue.get(j))){
-								colValue =  Utilities.escapeCharacters(columnName)+"__"+Utilities.escapeCharacters(columnValue.get(j));
-							}
-						}
-						else {
-							if(!uniqueValues.contains(((Integer)j).toString())){
-								colValue =  Utilities.escapeCharacters(columnName)+"__"+j;
-							}else{
-								continue;
-							}
-						}
-						 
-						if(!colValue.isEmpty()){
-							cvc_datatype = cvc_datatype+" | "+"_"+colValue;
-							isNullMembers += "ASSERT NOT ISNULL_"+columnName+"(_"+colValue+");\n";
-						}
-					}
-				}
-				
-				//Adding support for NULLs
-				if(columnValue.size()!=0){
-					cvc_datatype += " | ";
-				}
-				for(int k=1;k<=4;k++){
-					cvc_datatype += "NULL_"+columnName+"_"+k;
-					if(k < 4){
-						cvc_datatype += " | ";
-					}
-				}						
-				cvc_datatype = cvc_datatype+" END\n;";
-
-				//Adding function for testing NULL
-				cvc_datatype += "ISNULL_" + columnName +" : "+ columnName + " -> BOOLEAN;\n";
-				*/
 				HashMap<String, Integer> nullValuesChar = new HashMap<String, Integer>();
 				for(int k=1;k<=4;k++){
 					//isNullMembers += "ASSERT ISNULL_" + columnName+"(NULL_"+columnName+"_"+k+");\n";

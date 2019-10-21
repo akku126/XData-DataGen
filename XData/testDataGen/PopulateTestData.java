@@ -104,10 +104,9 @@ public class PopulateTestData {
 			//Executing the CVC file generated for given query
 			Runtime r = Runtime.getRuntime();
 			String[] smtCommand = new String[2];
-
+			
 			smtCommand[0] = Configuration.smtsolver;
 			smtCommand[1] = Configuration.homeDir+"/temp_smt"+filePath+"/" + cvcFileName;
-
 
 			ExecutorService service = Executors.newSingleThreadExecutor();
 			Process myProcess = r.exec(smtCommand);	
@@ -146,7 +145,11 @@ public class PopulateTestData {
 				Utilities.closeProcessStreams(myProcess);
 				myProcess.destroy();		    	
 				throw new Exception("Process timed out", e);
-			} finally {
+			} catch (IOException ie) {
+				logger.log(Level.SEVERE, "Error while writing into the output");
+				Utilities.closeProcessStreams(myProcess);
+				// throw new Exception("Unable to write to the output", ie);
+			}finally {
 				service.shutdown();
 			}			
 

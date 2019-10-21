@@ -183,7 +183,6 @@ public class GenerateCommonConstraintsForQuery {
 				logger.log(Level.INFO,"DATA SETS FOR QUERY ARE GENERATED");
 			}
 			logger.log(Level.INFO,"\n\n***********************************************************************\n");
-			GenerateDataset_new fp = new GenerateDataset_new( cvc.getFilePath());
 			
 			
 			return success;

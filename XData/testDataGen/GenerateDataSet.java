@@ -234,7 +234,7 @@ public class GenerateDataSet {
 //					"(select course_id\n" + 
 //					"from section\n" + 
 //					"where semester = 'Spring' and year= 2010)";
-			 String query = "select id, name from student where tot_cred>30";
+			// String query = "select id, name from student where tot_cred>30";
 			/* I----*/
 			//  String query = "select id, name from student where tot_cred>30";
 			 
@@ -298,8 +298,12 @@ public class GenerateDataSet {
 			/* XXI----
 			 * String query="select id,name from student";
 			 */
-			/*String query = "SELECT course_id, title FROM course inner join section WHERE year = 2010 and  EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201' AND prereq.course_id = course.course_id) ";
-			 * ---->>>problem with this particular query
+			String query = "SELECT course_id, title FROM course "
+					+ "inner join section WHERE year = 2010 and course.course_id = 'CS-203' "
+					+ "and  EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201' "
+					//+ "AND prereq.course_id = course.course_id) ";
+					+ ")";
+			 /* ---->>>problem with this particular query
 			 */
 			//String query = "select name from instructor where salary is null";
 			

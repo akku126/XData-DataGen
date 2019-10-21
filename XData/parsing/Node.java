@@ -16,6 +16,7 @@ import util.*;
 public class Node implements Cloneable, Serializable, NodeInterface{
 	
 	private static final long serialVersionUID = -7192918525557389737L;
+	// All these names should have been in an enum
 	private static String valType = "VALUE";
 	private static String colRefType = "COLREF";
 	private static String andNodeType = "AND NODE";

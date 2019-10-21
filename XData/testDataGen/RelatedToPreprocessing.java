@@ -75,6 +75,7 @@ public class RelatedToPreprocessing {
 				
 				Column column;
 				Table table;
+				// REFACTOR: We can use set instead of a vector and the for loop can be modified into a lambda.
 				Collection<Table> tables  = new Vector<Table>();
 				tables.addAll(query.getFromTables().values());
 		
@@ -85,6 +86,7 @@ public class RelatedToPreprocessing {
 		
 				logger.log(Level.INFO,"tables  = " + tables);
 		
+				// REFACTOR: can be converted into a lambda using flatmap.
 				//Also add the foreign key tables
 				Iterator iter = tables.iterator();
 				while(iter.hasNext()){
@@ -109,7 +111,7 @@ public class RelatedToPreprocessing {
 				Iterator iter1 = cvc.getTablesOfOriginalQuery().iterator();
 				
 				while(iter1.hasNext()){
-					Table t = (Table)iter1.next();
+					Table t = (Table)iter1.next(); // No type casting required
 					
 					if(t.hasForeignKey()){
 						Map<String, ForeignKey> fks = t.getForeignKeys();
@@ -132,6 +134,9 @@ public class RelatedToPreprocessing {
 				Iterator t = tables.iterator();
 				cvc.getResultsetColumns().add(new Column("dummy","dummy"));
 				
+				// If a table is present in the table vector and not the result set tables then we add the table to the list of result set tables and
+				// fetch values of that table for each column that are stored in the db. if the number of distinct values are less than 20 then we create dummy values 
+				// and add them to the list of distinct values of that column
 				while(t.hasNext()){
 					table = (Table)t.next();
 					if(!cvc.getResultsetTables().contains(table)){
@@ -142,6 +147,8 @@ public class RelatedToPreprocessing {
 					
 					Iterator c = columns.iterator();
 					
+					// This while loops performance can be increased by fetching the values of all the columns at once. This way we don't have to 
+					// query the DB multiple times.
 					while(c.hasNext()){
 						column = (Column)c.next();
 						
@@ -177,15 +184,7 @@ public class RelatedToPreprocessing {
 								column.addColumnValues(column.getColumnName() + "_" + count);
 							}
 						}
-						/*if(rsmd.getColumnTypeName(1).equals("numeric") && column.getColumnName())
-						{
-							while(count < 50)
-							{
-								String value=Integer.toString(count); 
-								count++;
-								column.addColumnValues(value);
-							} 
-						}*/
+					
 						for(int i = 0; i < noOfBranchQueries; i++)
 						{
 							Vector<Node> tempColNode = cvc.getBranchQueries().getqParser1()[i].getProjectedCols();
