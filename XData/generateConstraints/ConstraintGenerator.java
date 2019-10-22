@@ -1,5 +1,8 @@
 package generateConstraints;
+
+import com.microsoft.z3.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -8,6 +11,9 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
+
 import parsing.AggregateFunction;
 import parsing.Column;
 import parsing.ConjunctQueryStructure;
@@ -19,7 +25,11 @@ import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
 import util.Configuration;
 import util.ConstraintObject;
+import util.TagDatasets.QueryBlock;
 import util.Utilities;
+
+//import static com.microsoft.z3.Constructor.of;
+import com.microsoft.z3.enumerations.Z3_ast_print_mode;
 
 /**
  * This class generates the constraints based on solver in XData.Properties file
@@ -35,26 +45,50 @@ public class ConstraintGenerator {
 	private String constraintSolver;
 	private static String solverSpecificCommentCharacter;
 	private static boolean isTempJoin = false;
+
+	public static Context ctx = new Context();
+	private static Solver solver = ctx.mkSolver();
+	// TODO: rename ctxSorts to something more meaningful; it has declarations other than sorts
+	public static HashMap<String, Sort> ctxSorts = new HashMap<String, Sort>();  // for storing Z3 context sorts; not able to extract directly from ctx.
+	private static HashMap<String, FuncDecl> ctxFuncDecls = new HashMap<String, FuncDecl>();  // for storing Z3 context function declarations
+	public static HashMap<String, Expr> ctxConsts = new HashMap<String, Expr>();
 	
+	private static IntExpr intNull = ctx.mkIntConst("intNullVal");
+	private static RealExpr realNull = ctx.mkRealConst("realNullVal");
+
 	/**
 	 * Constructor
 	 */
-	public ConstraintGenerator(){
+	public ConstraintGenerator() {
 		setConstraintSolver(Configuration.getProperty("smtsolver"));
-		
+
 		 if(Configuration.getProperty("smtsolver").equalsIgnoreCase("cvc3")){
-			 ConstraintGenerator.isCVC3 = true;
+			 this.isCVC3 = true;
 			 solverSpecificCommentCharacter="%";
 		 }else {
-			 ConstraintGenerator.isCVC3 = false;
+			 this.isCVC3 = false;
 			 solverSpecificCommentCharacter = ";";
 		 }
 		 
 		 if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true")){
-			 ConstraintGenerator.isTempJoin = true;
+			 this.isTempJoin = true;
 		 }else {
-			 ConstraintGenerator.isTempJoin = false;
+			 this.isTempJoin = false;
 		 }
+	}
+	
+	/*
+	 * Returns the Z3 context
+	 */
+	public Context getCtx() {
+		return ctx;
+	}
+	
+	/*
+	 * Returns the Z3 solver corresponding to context
+	 */
+	public Solver getSolver() {
+		return solver;
 	}
 	
 	/**
@@ -74,6 +108,7 @@ public class ConstraintGenerator {
 	 * @param operator
 	 * @return
 	 */
+	
 	public ConstraintObject getConstraint(String tableName1, Integer offset1, Integer pos1, String tableName2, Integer offset2, Integer pos2,
 			Column col1, Column col2,String operator){
 		
@@ -91,7 +126,7 @@ public class ConstraintGenerator {
 		}
 		return con;
 	}	
-	
+    
 	
 	/**
 	 * This method returns an assert constraint statement for the passed in columns and tupleIndices based on the solver.
@@ -111,7 +146,9 @@ public class ConstraintGenerator {
 			constraint += "ASSERT (" +cvcMap(c1, index1 + "") +" "+ operator+" "+cvcMap(c2,index2 + "") +" );\n" ;
 		}
 		else{
-			constraint += "(assert ("+(operator.trim().equals("/=")? "not (= ": operator) +" "+smtMap(c1, index1+"")+" "+smtMap(c2, index2+"")+(operator.trim().equals("/=")? ")":"")+")) \n";						
+			IntExpr smtIndex1 = (IntExpr) ctx.mkInt(index1);
+			IntExpr smtIndex2 = (IntExpr) ctx.mkInt(index2);
+			constraint += "(assert ("+(operator.trim().equals("/=")? "not (= ": operator) +" "+smtMap(c1, smtIndex1)+" "+smtMap(c2, smtIndex2)+(operator.trim().equals("/=")? ")":"")+")) \n";						
 		}
 		return constraint;
 	}
@@ -250,19 +287,19 @@ public String  getMinAssertConstraintForSubQ(String constraint1, String operator
 	 * @param operator
 	 * @return
 	 */
-	public String getDistinctConstraint(String tableName1,Column col1, Integer index1,Integer pos1,String tableName2, Column col2, Integer index2, Integer pos2){
+	public String getDistinctConstraint(String tableName1,Column col1, Integer index1,Integer pos1, String tableName2, Column col2, Integer index2, Integer pos2){
 		
 		String constraint = "";
 		if(isCVC3){
 			constraint += "DISTINCT (O_"+tableName1+"["+index1+"]."+pos1+ ",  O_"+tableName2+"["+index2+"]."+pos2+");\n" ;
 		}
-		else{
+		else {
+			
 			constraint += "not (= ("+tableName1+"_"+col1.getColumnName()+pos1+" (select O_"+tableName1+" " + index1 +")"+") ("
 							+tableName2+"_"+col2.getColumnName()+pos2+" (select O_"+tableName2+" "+ index2 +")"+")) \n";						
 		}
 		return constraint;
 	}
-	
 	/**
 	 * This method returns an DISTINCT constraint statement for the passed in columns and tupleIndices based on the solver.
 	 * 
@@ -369,28 +406,7 @@ public String getAssertDistinctConstraint(String tableName1,Column col1, Integer
 					
 			return negConstraint;	
 	}
-/**
- * This method returns an assert constraint statement for the passed in columns and tupleIndices based on the solver.
- * @param cvc
- * @param c1
- * @param index1
- * @param c2
- * @param i2
- * @param operator
- * @return
- */
-public String getAssertConstraint(Column c1, Integer index1, Column c2, Node i2, String operator){
-		
-		String constraint = "";
-		if(isCVC3){
-			constraint += "(" +cvcMap(c1, index1 + "") +" "+ operator+" "+cvcMap(c2,i2 + "") +" \n" ;
-		}
-		else{
-			
-			constraint += ""+(operator.equals("/=")? "not (= ": operator)  +" "+smtMap(c1, index1+"")+" "+smtMap(c2, i2+"")+""+(operator.equals("/=")? ")":"") ;						
-		}
-		return constraint;
-	}
+
 
 /**
  * Generates positive CVC3 constraint for given nodes and columns
@@ -418,26 +434,42 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 	 * @return
 	 */
 	public String getIsNullCondition(String tableName, Column col,String offSet){
-		
+
 		String isNullConstraint = "";
+
 		if(col.getCvcDatatype().equals("INT")|| col.getCvcDatatype().equals("REAL") || col.getCvcDatatype().equals("DATE") 
-				|| col.getCvcDatatype().equals("TIME") || col.getCvcDatatype().equals("TIMESTAMP"))
-		{	
-			if(isCVC3){
-				isNullConstraint ="ISNULL_" + col.getColumnName() + "(" + cvcMap(col, offSet + "") + ")";
-			}
-			else{
-				isNullConstraint ="(ISNULL_" + col.getColumnName() + " " + smtMap(col, offSet+ "") + ")";
-			}
-		}else{
-			if(isCVC3){
-				isNullConstraint = "ISNULL_" + col.getCvcDatatype() + "(" + cvcMap(col, offSet+ "") + ")";
-			}else{
-				isNullConstraint ="(ISNULL_" + col.getCvcDatatype() + " " + smtMap(col, offSet+ "") + ")";
-			}
+				|| col.getCvcDatatype().equals("TIME") || col.getCvcDatatype().equals("TIMESTAMP")) {
+			isNullConstraint = "ISNULL_" + col.getColumnName() + "(" + cvcMap(col, offSet + "") + ")";
+		} else {
+			isNullConstraint = "ISNULL_" + col.getCvcDatatype() + "(" + cvcMap(col, offSet+ "") + ")";
 		}
 		return isNullConstraint;
 	}
+	
+	/**
+	 * This method returns an Expr with ISNULL constraint (for Z3)
+	 * 
+	 * @param cvc
+	 * @param col
+	 * @param offSet
+	 * @return
+	 */
+	public BoolExpr getIsNullConditionZ3(String tableName, Column col,String offSet) {
+		String suffix;
+		
+		if(col.getCvcDatatype().equals("INT")|| col.getCvcDatatype().equals("REAL") || col.getCvcDatatype().equals("DATE") 
+				|| col.getCvcDatatype().equals("TIME") || col.getCvcDatatype().equals("TIMESTAMP")) {
+			suffix = col.getColumnName();
+		} else {
+			suffix = col.getCvcDatatype();
+		}
+		
+		FuncDecl isNullDecl = ctxFuncDecls.get("ISNULL_"+suffix);
+		BoolExpr isNullApply = (BoolExpr) isNullDecl.apply(smtMap(col, (IntExpr) ctx.mkInt(offSet)));
+
+		return isNullApply;
+	}
+
 	
 	/**
 	 * This method returns the constraint String that holds MAX constraint for SubQuery Aggregate condition.
@@ -1442,7 +1474,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 		}else{
 			if(constraintString.contains("(and "))
 				{	
-				constraint1 += constraintString.replace("(and ", "(or ");
+				constraint1 += constraintString.replaceAll("(and ", "(or ");
 				
 				constraint += "(assert "+constraint1+") \n";
 				}
@@ -1486,11 +1518,11 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 	 * @param nullVal
 	 * @return
 	 */
-	public String getAssertNullValue(Column c,String index,String nullVal){
+	public String getAssertNullValue(Column c, String index, String nullVal){
 		if(isCVC3){
 			return "\nASSERT "+cvcMap(c, index)+" = "+nullVal+"; \n";
 		}else{
-			return "\n (assert (= "+smtMap(c, index)+" "+nullVal+"  )) \n";
+			return "\n (assert (= "+smtMap(c, (IntExpr) ctx.mkInt(index))+" "+nullVal+"  )) \n";
 		}
 	}
 	
@@ -2093,26 +2125,34 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 		else return "";
 	}
 
-
+	
 	/**
 	 * Used to get SMT LIB constraint for this column for the given tuple position
 	 * 
 	 * @param col
-	 * @param index
+	 * @param fIndex
 	 * @return
 	 */
-	public static String smtMap(Column col, String index){
-			Table table = col.getTable();
-			String tableName = col.getTableName();
-			String columnName = col.getColumnName();
-			int pos = table.getColumnIndex(columnName);
-			
-			String smtCond = "";
-			//String colName =tableName+"_"+columnName;
-			String colName = tableName+"_"+columnName+pos;
-			smtCond = "("+colName+" "+"(select O_"+tableName+" "+index +") )";
-			return smtCond;
-		}
+	public static Expr smtMap(Column col, IntExpr fIndex) {
+		Table table = col.getTable();
+		String tableName = col.getTableName();
+		String columnName = col.getColumnName();
+		int pos = table.getColumnIndex(columnName);
+		
+		// relations are represented as ArrayExpr's
+		ArrayExpr relation = (ArrayExpr) ctxConsts.get("O_"+tableName);
+		
+		// tuples are represented as DatatypeExpr's
+		DatatypeExpr tuple = (DatatypeExpr) ctx.mkSelect(relation, fIndex);
+	    
+		DatatypeSort tupSort = (DatatypeSort) tuple.getSort();
+	    FuncDecl[] tupAccessors = tupSort.getAccessors()[0];  // tuples declared will have only one constructor, hence[0].
+	    FuncDecl colAccessor = tupAccessors[pos];
+	    Expr colValue = colAccessor.apply(tuple);
+
+	    return colValue;
+	}
+
 
 	/**
 	 * Used to get SMT LIB constraint for this column
@@ -2164,7 +2204,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 		if(isCVC3){
 			return cvcMap(col, index);
 		}else{
-			return smtMap(col, index);
+			return smtMap(col, (IntExpr) ctx.mkInt(Integer.parseInt(index))).toString();
 		}
 	}
 	/**
@@ -2178,7 +2218,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			return n.getStrConst();
 		}
 		else if(n.getType().equalsIgnoreCase(Node.getColRefType())){
-			return smtMap(n.getColumn(), index);
+			return smtMap(n.getColumn(), (IntExpr) ctx.mkInt(Integer.parseInt(index))).toString();
 		}
 		else if(n.getType().toString().equalsIgnoreCase("i")){
 			return "i";
@@ -2226,9 +2266,32 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 		if(isCVC3){
 			return header;
 		}
-		else{
+		else {
+			Params p = ctx.mkParams();
+			p.add("produce-models", true); // other options invalid in z3 API
+			p.add("smt.macro_finder", true); // check whether this is the right option name
+			solver.setParameters(p); // NOTE: these should be the settings for all solvers
+
 			//header = "(set-logic ALL_SUPPORTED)";
-			header += "(set-option:produce-models true) \n (set-option :interactive-mode true) \n (set-option :produce-assertions true) \n (set-option :produce-assignments true) ";
+			header += "(set-option:produce-models true) \n (set-option :interactive-mode true) \n (set-option :produce-assertions true) \n (set-option :produce-assignments true) \n (set-option :smt.macro_finder true) \n";
+			
+			BoolExpr assertionIntNull = ctx.mkEq(ConstraintGenerator.intNull, ctx.mkInt(-99996));
+			BoolExpr assertionRealNull = ctx.mkEq(ConstraintGenerator.realNull, ctx.mkReal("-99996.0"));
+
+			Solver dummySolver = ctx.mkSolver();
+			dummySolver.add(assertionIntNull);
+			dummySolver.add(assertionRealNull);
+			
+			
+			// Setting the right order for macro detection
+			String[] tempArr = dummySolver.toString().split("\n");
+			String declaration = "\n" + tempArr[1];
+			tempArr[1] = tempArr[2];
+			tempArr[2] = declaration;
+			
+			
+			header += "\n" + String.join("\n", tempArr);
+
 		}
 		return header +"\n\n";
 	}
@@ -2245,26 +2308,20 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 	public String getIntegerDatatypes(Column col, int minVal, int maxVal){
 		
 		String constraint ="";
-		if(isCVC3){
+		if (isCVC3) {
 			constraint = "\n"+col+" : TYPE = SUBTYPE (LAMBDA (x: INT) : (x > "+(minVal-4)+" AND x < "+(maxVal+4)+") OR (x > -100000 AND x < -99995));\n";
 		}
-		else{
-			constraint = "\n(define-sort i_"+col+"() Int)";
-			constraint += "\n(define-fun get"+col+" ((i_"+col+" Int)) Bool \n\t\t(and " +
-																												"\n\t\t\t(> i_"+col+" "+((minVal-4)>0?(minVal-4):0)+") " +
-																												"\n\t\t\t(< i_"+col+" "+(maxVal+4)+")) " +")";	
-																											//"\n\t\t    (and " +
-																											//	"\n\t\t\t(> i_"+col+" (- "+100000+")) " +
-																											//	"\n\t\t\t(< i_"+col+" "+"(- "+99995+"))
-			
-			/*
-			 			constraint += "\n(define-fun get"+col+" ((i_"+col+" Int)) Bool \n\t\t(or (and " +
-																												"\n\t\t\t(> i_"+col+" "+((minVal-4)>0?(minVal-4):0)+") " +
-																												"\n\t\t\t(< i_"+col+" "+(maxVal+4)+")) " +
-																											"\n\t\t    (and " +
-																												"\n\t\t\t(> i_"+col+" (- "+100000+")) " +
-																												"\n\t\t\t(< i_"+col+" "+"(- "+99995+")))))";
-			 */
+		else {
+			String funcName = "get"+col;
+			FuncDecl getCol = ctx.mkFuncDecl(funcName, ctx.mkIntSort(), ctx.mkBoolSort());
+			ctxFuncDecls.put(funcName, getCol);
+			constraint = getCol.toString() + "\n";
+			IntExpr[] iColArray = new IntExpr[]{ctx.mkIntConst("i_"+col)};
+			Expr getColCall = getCol.apply(iColArray);
+			Expr condition = ctx.mkAnd(ctx.mkGt(iColArray[0], ctx.mkInt((minVal-4)>0?(minVal-4):0)), ctx.mkLt(iColArray[0], ctx.mkInt(maxVal+4)));
+			Expr body = ctx.mkEq(getColCall, condition);
+			Expr funcQuantifier = ctx.mkForall(iColArray, body, 1, null, null, null, null);
+			constraint += "(assert " + funcQuantifier.toString() + ")";
 		}
 		return constraint +"\n\n";
 	}
@@ -2287,12 +2344,12 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			}
 			constraint += isNullMembers;
 		}else{
-			HashMap<String, Integer> nullValuesInt = new HashMap<String, Integer>();
+			HashMap<Expr, Integer> nullValuesInt = new HashMap<Expr, Integer>();
 			/*Removing NUll enumerations*/
 			/*for(int k=-99996;k>=-99999;k--){
 				nullValuesInt.put(k+"",0);
 			}*/
-			nullValuesInt.put("-99996", 0);
+			nullValuesInt.put(ConstraintGenerator.intNull, 0);
 			constraint += defineIsNull(nullValuesInt, col);			
 		}
 		return constraint +"\n\n";
@@ -2315,24 +2372,17 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			constraint = "\n"+col+" : TYPE = SUBTYPE (LAMBDA (x: REAL) : (x >= "+(minStr)+" AND x <= "+(maxStr)+") OR (x > -100000 AND x < -99995));\n";			
 		}
 		else{
-			constraint += "\n(define-sort r_"+col+"() Real)";
-			constraint += "\n(define-fun get"+col+" ((r_"+col+" Real)) Bool \n\t\t(and " +
-																												"\n\t\t\t(>= r_"+col+" "+minVal+") " +
-																												"\n\t\t\t(<= r_"+col+" "+maxVal+")) " +")";
-																											//"\n\t\t    (and " +
-																											//	"\n\t\t\t(> r_"+col+" (- "+100000+")) " +
-																											//	"\n\t\t\t(< r_"+col+" "+"(- "+99995+")))))";
-			
-			/*
-			 constraint += "\n(define-fun get"+col+" ((r_"+col+" Real)) Bool \n\t\t(or (and " +
-																												"\n\t\t\t(>= r_"+col+" "+minVal+") " +
-																												"\n\t\t\t(<= r_"+col+" "+maxVal+")) " +
-																											"\n\t\t    (and " +
-																												"\n\t\t\t(> r_"+col+" (- "+100000+")) " +
-																												"\n\t\t\t(< r_"+col+" "+"(- "+99995+")))))";
-			 */
-			
-			
+			String funcName = "get"+col;
+			FuncDecl getCol = ctx.mkFuncDecl(funcName, ctx.mkRealSort(), ctx.mkBoolSort());
+			ctxFuncDecls.put(funcName, getCol);
+			constraint = getCol.toString() + "\n";
+			RealExpr[] rColArray = new RealExpr[]{ctx.mkRealConst("r_"+col)};
+			Expr getColCall = getCol.apply(rColArray);
+			Expr condition = ctx.mkAnd(ctx.mkGe(rColArray[0], ctx.mkReal(String.valueOf(minVal))), ctx.mkLe(rColArray[0], ctx.mkReal(String.valueOf(maxVal))));
+			Expr body = ctx.mkEq(getColCall, condition);
+			Expr funcQuantifier = ctx.mkForall(rColArray, body, 1, null, null, null, null);
+
+			constraint += "(assert " + funcQuantifier.toString() + ")";
 		}
 		return constraint +"\n\n";
 	}
@@ -2355,15 +2405,15 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 				
 			}
 			constraint += isNullMembers;			
-		}else{
-			HashMap<String, Integer> nullValuesInt = new HashMap<String, Integer>();
+		} else {
+			HashMap<Expr, Integer> nullValuesReal = new HashMap<Expr, Integer>();
 			/*Removing NUll enumerations*/
 			/*for(int k=-99996;k>=-99999;k--){
 				nullValuesInt.put(k+"",0);
 			}
 			*/
-			nullValuesInt.put("-99996",0);
-			constraint +=defineIsNull(nullValuesInt, col);			
+			nullValuesReal.put(ConstraintGenerator.realNull, 0);
+			constraint +=defineIsNull(nullValuesReal, col);			
 		}
 		return constraint+"\n\n";
 	}
@@ -2375,32 +2425,39 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 	 * @param col
 	 * @return
 	 */
-	public static String defineIsNull(HashMap<String, Integer> colValueMap, Column col){
+
+	public static String defineIsNull(HashMap<Expr, Integer> colValueMap, Column col) {
 		
 		String IsNullValueString = "";
-		if(col.getCvcDatatype() != null && col.getCvcDatatype().equalsIgnoreCase("Int")){
-			IsNullValueString +="\n(declare-const null_"+col+" i_"+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
-			IsNullValueString += "\n(define-fun ISNULL_"+col+" ((null_"+col+" i_"+col+")) Bool ";
-		}else if(col.getCvcDatatype() != null && col.getCvcDatatype().equalsIgnoreCase("Real")){
-			IsNullValueString +="\n(declare-const null_"+col+" r_"+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
-			IsNullValueString += "\n(define-fun ISNULL_"+col+" ((null_"+col+" r_"+col+")) Bool ";
-		}else{
-			IsNullValueString +="\n(declare-const null_"+col+" "+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
-			IsNullValueString += "\n(define-fun ISNULL_"+col+" ((null_"+col+" "+col+")) Bool ";
-			
+		Expr colNull = null;
+		if (col.getCvcDatatype() != null && col.getCvcDatatype().equalsIgnoreCase("Int")) {
+			colNull = ctx.mkConst(col.getColumnName().toLowerCase(), ctx.getIntSort());
+		} else if (col.getCvcDatatype() != null && col.getCvcDatatype().equalsIgnoreCase("Real")) {
+			colNull = ctx.mkConst(col.getColumnName().toLowerCase(), ctx.getRealSort());
+		} else {
+			colNull = ctx.mkConst(col.getColumnName().toLowerCase(), ctxSorts.get(col.getColumnName()));
 		}
+
+		String funcName = "ISNULL_" + col;
+		FuncDecl isNullCol = ctx.mkFuncDecl(funcName, colNull.getSort(), ctx.mkBoolSort());
+		ctxFuncDecls.put(funcName, isNullCol);
+		IsNullValueString += isNullCol.toString() + "\n";
 		
-		/* Removing NUll enumerations*/
-		/*if(!isCVC3) {
-			IsNullValueString += "(= null_"+col+" NULL_"+col+"_1";
-		}
-		else
-		 */	
-			IsNullValueString += getOrForNullDataTypes("null_"+col, colValueMap.keySet(), "");//Get OR of all null columns
-		IsNullValueString += ")";
+		Expr[] nullColArray = new Expr[]{colNull};
+		Expr isNullColCall = isNullCol.apply(nullColArray);
+		
+		BoolExpr[] nullEqualityConds = colValueMap.keySet().stream().map(
+				colValue -> ctx.mkEq(nullColArray[0], colValue)).toArray(
+						size -> new BoolExpr[size]);
+		BoolExpr nullValsOrCond = ctx.mkOr(nullEqualityConds);
+
+		Expr body = ctx.mkEq(isNullColCall, nullValsOrCond);
+		Expr funcQuantifier = ctx.mkForall(nullColArray, body, 1, null, null, null, null);
+		IsNullValueString += "(assert " + funcQuantifier.toString() + ")\n";
+
 		return IsNullValueString +"\n\n";
 	}
-	
+
 	/**
 	 * This method returns the <b>SMT Constraint</b> that holds the allowed Not-Null values for given column
 	 * @param colValueMap
@@ -2409,8 +2466,8 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 	 */
 	public static String defineNotIsNull(HashMap<String, Integer> colValueMap, Column col){
 		String NotIsNullValueString = "";
-		
-		if(col.getCvcDatatype() != null && col.getCvcDatatype().equalsIgnoreCase("Int")){
+
+		if (col.getCvcDatatype() != null && col.getCvcDatatype().equalsIgnoreCase("Int")) {
 			NotIsNullValueString +="\n(declare-const notnull_"+col+" i_"+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
 			NotIsNullValueString += "\n(define-fun NOTISNULL_"+col+" ((notnull_"+col+" i_"+col+")) Bool ";
 		}else if(col.getCvcDatatype() != null && col.getCvcDatatype().equalsIgnoreCase("Real")){
@@ -2419,15 +2476,14 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 		}else{
 			NotIsNullValueString +="\n(declare-const notnull_"+col+" "+col+")"; //declare constant of form   (declare-const null_column_name ColumnName)
 			NotIsNullValueString += "\n(define-fun NOTISNULL_"+col+" ((notnull_"+col+" "+col+")) Bool ";
-			
 		}
-		
+
 		NotIsNullValueString += getOrForNullDataTypes("notnull_"+col, colValueMap.keySet(), "");;//Get OR of all non-null columns
 		
 		NotIsNullValueString += ")";
 		return NotIsNullValueString +"\n";
 	}
-	
+
 	/**
 	 * This method returns the <b>SMT Constraint</b> that holds the allowed Null values for a column concatenated with OR
 	 * @param colconst
@@ -2435,18 +2491,19 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 	 * @param tempString
 	 * @return
 	 */
-	public static String getOrForNullDataTypes(String colconst, Set columnValues, String tempString){
-		
 	
+	public static String getOrForNullDataTypes(String colconst, Set<String> columnValues, String tempString) {
+		
+		
 		Iterator it = columnValues.iterator();
 		int index = 0;
 		while(it.hasNext()){
 			index++;
 			tempString = getIsNullOrString(colconst,((String)it.next()),tempString);
-			
 		}
 		return tempString;
 	}
+
 	/**
 	 * This method returns the <b>SMT Constraint</b> that holds the allowed Not-Null values for a column concatenated with OR
 	 * @param colconst
@@ -2528,7 +2585,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 				if(k < 4){
 					constraint += " | ";
 				}
-			}						
+			}
 			constraint = constraint+" END\n;";
 			constraint += "ISNULL_" + col +" : "+ col + " -> BOOLEAN;\n";
 			HashMap<String, Integer> nullValuesChar = new HashMap<String, Integer>();
@@ -2539,72 +2596,64 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			constraint += isNullMembers;
 			
 		}
-		else{//If SMT SOLVER
-			
-			constraint +="\n"+"(declare-datatypes () (("+col;
-			HashMap<String, Integer> nullValuesChar = new HashMap<String, Integer>();
-			HashMap<String, Integer> notnullValuesChar = new HashMap<String, Integer>();
-			
-			if(columnValue.size()>0){
-				if(!unique || !uniqueValues.contains(columnValue.get(0))){ 
-					// The "contains" condition above is redundant as the uniqueValues object is not being changed
+		else { // if another SMT SOLVER
+			HashMap<Expr, Integer> nullValuesChar = new HashMap<Expr, Integer>();
+			HashMap<Expr, Integer> notnullValuesChar = new HashMap<Expr, Integer>();
+			Vector<String> colValues = new Vector<String>();
+
+			if(columnValue.size()>0) {
+				if(!unique || !uniqueValues.contains(columnValue.get(0))){
 					colValue =  Utilities.escapeCharacters(col.getColumnName())+"__"+Utilities.escapeCharacters(columnValue.get(0));//.trim());
-					constraint += " (_"+colValue+") ";
+					colValues.add("_"+colValue);
 					uniqueValues.add(columnValue.get(0));
 				}
 				colValue = "";
-				for(int j=1; j<columnValue.size() || j < 4; j++){
-					if(j<columnValue.size())
-					{
-						if(!unique || !uniqueValues.contains(columnValue.get(j))){
-							colValue =  Utilities.escapeCharacters(col.getColumnName())+"__"+Utilities.escapeCharacters(columnValue.get(j));
+				for(int j=1; j<columnValue.size() || j < 4; j++) {
+					if (j<columnValue.size()) {
+						if (!unique || !uniqueValues.contains(columnValue.get(j))) {
+							colValue =  Utilities.escapeCharacters(col.getColumnName()) + "__" + Utilities.escapeCharacters(columnValue.get(j));
 						}
 					}
 					else {
-						if(!uniqueValues.contains(((Integer)j).toString())){
-							colValue =  Utilities.escapeCharacters(col.getColumnName())+"__"+j;
-						}else{
+						if (!uniqueValues.contains(((Integer)j).toString())) {
+							colValue =  Utilities.escapeCharacters(col.getColumnName()) + "__" + j;
+						} else {
 							continue;
 						}
 					}
-					 
-					if(!colValue.isEmpty()){
-						constraint += ""+"(_"+colValue+")";
+
+					if (!colValue.isEmpty()) {
+						colValues.add("_"+colValue);
 					}
-					notnullValuesChar.put("_"+colValue, 0);
 				}
-			}			
-		
-			//Adding support for NULL values
-			if(columnValue.size()!=0){
-				constraint += " (";
 			}
-			/*
-			for(int k=1;k<=4;k++){
-				constraint += "NULL_"+col+"_"+k;
-				if(k < 4){
-					constraint += ") (";
-				}
-			}	
-			*/					
-			constraint += "NULL_"+col+"_"+"1"+"))))"+"\n";		
+
+			String nullVal = "NULL_"+col+"_1";
+			colValues.add(nullVal);
+
+			EnumSort colSort = ctx.mkEnumSort(col.getColumnName(), colValues.toArray(new String[colValues.size()]));
 			
-			/*Removing NUll enumerations*/
-			/*
-			for(int k=1;k<=4;k++){
-				//isNullMembers += "ASSERT ISNULL_" + columnName+"(NULL_"+columnName+"_"+k+");\n";
-				nullValuesChar.put("NULL_"+col+"_"+k, 0);
-			}	*/
+			for (int i=0; i < colSort.getConsts().length-1; i++) { // all but last value, which is for null
+				notnullValuesChar.put(colSort.getConsts()[i], 0);
+			}
 			
-			nullValuesChar.put("NULL_"+col+"_"+1, 0);
+			nullValuesChar.put(colSort.getConst(colSort.getConsts().length-1), 0);  // put the null one in nullValuesChar
 			
-			//constraint += defineNotIsNull(notnullValuesChar, col)+"\n";
-			
+			ctxSorts.put(col.getColumnName(), colSort);
+			solver = ctx.mkSolver();
+			solver.push();
+
+			// as of this writing, the API doesn't serialize unused declarations, therefore dummy assertions are used
+			Expr dummyVal = ctx.mkConst("dummy", colSort);
+			BoolExpr dummyAssert = ctx.mkDistinct(dummyVal);
+			solver.add(dummyAssert);
+			String z3APIString = solver.toString();
+			solver.pop(1); // pop out dummyVal and dummyAssert
+			constraint = z3APIString.substring(0, z3APIString.indexOf("(declare-fun")) + "\n";
+
 			constraint +=defineIsNull(nullValuesChar, col)+"\n";
+		}
 
-			}
-
-		
 		return constraint;
 	}
 
@@ -2681,72 +2730,103 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 	public String getTupleTypesForSolver(GenerateCVC1 cvc){
 		
 		String tempStr = "";
-		Column c;
 		Table t;
 		String temp;
 		Vector<String> tablesAdded = new Vector<String>();
 		tempStr += addCommentLine(" Tuple Types for Relations\n ");	
+		
 		if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
-			
-				tempStr += ConstraintGenerator.addCommentLine(" Tuple Types for Relations\n ");			 
-				for(int i=0;i<cvc.getResultsetTables().size();i++){
-					t = cvc.getResultsetTables().get(i);
-					temp = t.getTableName();
-					if(!tablesAdded.contains(temp)){
-						tempStr += temp + "_TupleType: TYPE = [";
-					}
-					for(int j=0;j<cvc.getResultsetColumns().size();j++){
-						c = cvc.getResultsetColumns().get(j);
-						if(c.getTableName().equalsIgnoreCase(temp)){
-							String s=c.getCvcDatatype();
-							if(s!= null && (s.equalsIgnoreCase("INT") || s.equalsIgnoreCase("REAL") || s.equalsIgnoreCase("TIME") || s.equalsIgnoreCase("DATE") || s.equalsIgnoreCase("TIMESTAMP")))
-								tempStr += c.getColumnName() + ", ";
-							else
-								tempStr+=c.getCvcDatatype()+", ";
-						}
-					}
-					tempStr = tempStr.substring(0, tempStr.length()-2);
-					tempStr += "];\n";
-					/*
-					 * Now create the Array for this TupleType
-					 */
-					tempStr += "O_" + temp + ": ARRAY INT OF " + temp + "_TupleType;\n";
+			Column c;
+
+			tempStr += ConstraintGenerator.addCommentLine(" Tuple Types for Relations\n ");			 
+			for(int i=0;i<cvc.getResultsetTables().size();i++){
+				t = cvc.getResultsetTables().get(i);
+				temp = t.getTableName();
+				if(!tablesAdded.contains(temp)){
+					tempStr += temp + "_TupleType: TYPE = [";
 				}
-		}
-		else{			
+				for(int j=0;j<cvc.getResultsetColumns().size();j++){
+					c = cvc.getResultsetColumns().get(j);
+					if(c.getTableName().equalsIgnoreCase(temp)){
+						String s=c.getCvcDatatype();
+						if(s!= null && (s.equalsIgnoreCase("INT") || s.equalsIgnoreCase("REAL") || s.equalsIgnoreCase("TIME") || s.equalsIgnoreCase("DATE") || s.equalsIgnoreCase("TIMESTAMP")))
+							tempStr += c.getColumnName() + ", ";
+						else
+							tempStr+=c.getCvcDatatype()+", ";
+					}
+				}
+				tempStr = tempStr.substring(0, tempStr.length()-2);
+				tempStr += "];\n";
+				/*
+				 * Now create the Array for this TupleType
+				 */
+				tempStr += "O_" + temp + ": ARRAY INT OF " + temp + "_TupleType;\n";
+			}
+		} else {
+			Solver dummySol = ctx.mkSolver();  // for getting string form of z3 context declarations
+			
 			String[] tablenames = new String[cvc.getResultsetTables().size()];
 			for(int i=0;i<cvc.getResultsetTables().size();i++){
 				tablenames[i] = cvc.getResultsetTables().get(i).getTableName();
 			}
 			
-			for(int i=0;i<cvc.getResultsetTables().size();i++){
+			for (int i=0;i<cvc.getResultsetTables().size();i++) {
 				int index = 0;
 				t = cvc.getResultsetTables().get(i);
 				temp = t.getTableName();
-				if(!tablesAdded.contains(temp)){
-					tempStr += "\n (declare-datatypes () (("+temp +"_TupleType" + "("+temp +"_TupleType ";
-				}
-				for(int j=0;j<cvc.getResultsetColumns().size();j++){				
-					c = cvc.getResultsetColumns().get(j);
-					if(c.getTableName().equalsIgnoreCase(temp)){						
-						String s=c.getCvcDatatype();
-						if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
-							tempStr += "("+temp+"_"+c+index+" "+s + ") ";
-						else
-							tempStr+= "("+temp+"_"+c+index+" "+c.getCvcDatatype() + ") ";						
+
+				String[] attrNames = new String[t.getNoOfColumn()];
+				Sort[] attrTypes = new Sort[t.getNoOfColumn()];
+				
+				for(Column c : cvc.getResultsetColumns()) {
+					if(c.getTableName().equalsIgnoreCase(temp)) {						
+						String s = c.getCvcDatatype();
+						if (s!=null && (s.equalsIgnoreCase("Int") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP"))) {  // TODO: check datetime types
+							attrTypes[index] = ctx.getIntSort();
+						}
+						else if (s!=null && (s.equalsIgnoreCase("Real"))) {
+							attrTypes[index] = ctx.getRealSort();
+						}
+						else {
+							attrTypes[index] = ctxSorts.get(s);
+						}
+
+						attrNames[index] = temp+"_"+c+index;
 						index++;
 					}
 				}
-				tempStr += ") )) )\n";
-				//Now create the Array for this TupleType
-				tempStr += "(declare-fun O_" + temp + "() (Array Int " + temp + "_TupleType))\n\n";
 				
-						}
+				String tupleTypeName = temp+"_TupleType";
+				Constructor[] cons = new Constructor[] {ctx.mkConstructor(tupleTypeName, "is_"+tupleTypeName, attrNames, attrTypes, null)};
+				DatatypeSort tupleType = ctx.mkDatatypeSort(tupleTypeName, cons);
+				ctxSorts.put(tupleTypeName, tupleType);
+				ArraySort asort = ctx.mkArraySort(ctx.getIntSort(), tupleType);
+				String arrName = "O_"+temp;
+				Expr aex = ctx.mkConst(arrName, asort);
+				ctxSorts.put(arrName, asort);
+				ctxConsts.put(arrName, aex);
+				// adding dummy asserts so that solver has relevant declarations in string returned by toString() 
+				BoolExpr dummyAssert = ctx.mkDistinct(aex);
+				dummySol.add(dummyAssert);
+			}
+
+			// Temporary procedure to extract relevant declarations from the solver string
+			String[] z3Statements = dummySol.toString().split("\n");
+			Vector<String> includedStatements = new Vector<String>();
+			
+			for (String statement : z3Statements) {
+				if (statement.contains("_TupleType ") || statement.contains("declare-fun O_")) {
+					includedStatements.add(statement);
+				}
+				if (statement.contains("(assert")) {
+					break;
+				}
+			}
+			tempStr += String.join("\n\n", includedStatements);
 		}
 		return tempStr;
-		
 	}
-	
+
 	public static String getAssertNotCondition(QueryBlockDetails queryBlock, Node n, int index){
 		
 		String subQueryConstraints = "";//"ASSERT NOT ";
@@ -2847,7 +2927,7 @@ public static String getAssertNotCondition(String constr1, String operator,Strin
 			if(isCVC3){
 				return cvcMap(n.getColumn(), index+" ");
 			}else{				
-				return smtMap(n.getColumn(), (index+" "));
+				return smtMap(n.getColumn(), (IntExpr) ctx.mkInt(index)).toString();
 			}
 		}
 		else if(n.getType().equalsIgnoreCase(Node.getValType())){
@@ -2896,12 +2976,12 @@ public static String getAssertNotCondition(String constr1, String operator,Strin
 	}
 	
 	
-	public static String genPositiveCondsForPredF(QueryBlockDetails queryBlock, Node n, String index){
-		if(n.getType().equalsIgnoreCase(Node.getColRefType())){			
-			if(isCVC3){
+	public static String genPositiveCondsForPredF(QueryBlockDetails queryBlock, Node n, String index) {
+		if(n.getType().equalsIgnoreCase(Node.getColRefType())) {
+			if(isCVC3) {
 				return cvcMap(n.getColumn(), index+" ");
-			}else{				
-				return smtMap(n.getColumn(), (index+" "));
+			} else {		
+				return smtMap(n.getColumn(), ctx.mkIntConst(index)).toString();
 			}
 		}
 		else if(n.getType().equalsIgnoreCase(Node.getValType())){
@@ -2931,7 +3011,7 @@ public static String getAssertNotCondition(String constr1, String operator,Strin
 	 * @param n
 	 * @return
 	 */
-	public static String genPositiveCondsForPred(QueryBlockDetails queryBlock, Node n){
+	public static String genPositiveCondsForPred(QueryBlockDetails queryBlock, Node n) {
 		if(n.getType().equalsIgnoreCase(Node.getColRefType())){
 			if(isCVC3){
 				return cvcMap(n.getColumn(), n);
@@ -3027,7 +3107,7 @@ public static String genPositiveCondsForPredWithAssert(QueryBlockDetails queryBl
 			if(isCVC3){
 				return cvcMap(n.getColumn(), index+"");
 			}else{				
-				return smtMap(n.getColumn(), index+"");
+				return smtMap(n.getColumn(), ctx.mkIntConst(index+"")).toString();
 			}
 		}
 		else if(n.getType().equalsIgnoreCase(Node.getValType())){
@@ -3162,7 +3242,7 @@ public static String genPositiveCondsForPredWithAssert(QueryBlockDetails queryBl
 				constraint = "\nASSERT NOT ISNULL_"+col.getColumnName()+"("+cvcMap(col, index+"")+");";
 			}else{
 				//	constraint += "\n (assert NOTISNULL_"+col.getColumnName()+" "+smtMap(col,Integer.toString(index))+")";
-				constraint = "\n (assert (get"+col.getColumnName()+" "+smtMap(col,Integer.toString(index))+"))";
+				constraint = "\n (assert (get"+col.getColumnName()+" "+smtMap(col, (IntExpr) ctx.mkInt(index)).toString()+"))";
 			}
 		
 		}
@@ -3170,7 +3250,7 @@ public static String genPositiveCondsForPredWithAssert(QueryBlockDetails queryBl
 			if(isCVC3){
 				constraint = "\nASSERT NOT ISNULL_"+col.getCvcDatatype()+"("+cvcMap(col, index+"")+");";
 			}else{
-				constraint = "\n (assert (NOTISNULL_"+col.getCvcDatatype()+" " +smtMap(col,Integer.toString(index))+"))";
+				constraint = "\n (assert (NOTISNULL_"+col.getCvcDatatype()+" " + smtMap(col, (IntExpr) ctx.mkInt(index)).toString()+"))";
 			}
 		}
 		return constraint;
@@ -3499,7 +3579,7 @@ public static String generateCVCForCNTForPositiveINT(QueryBlockDetails queryBloc
 		}else{
 			
 			int min = 0,min1=0, max=0,max1=0;
-			CVCStr += "(set-option:produce-models true) \n (set-option :interactive-mode true) \n (set-option :produce-assertions true) \n (set-option :produce-assignments true) \n";
+			CVCStr += "(set-option:produce-models true) \n (set-option :interactive-mode true) \n (set-option :produce-assertions true) \n (set-option :produce-assignments true) \n (set-option :smt.macro_finder true) \n";
 			CVCStr += "(declare-const SUM Int) \n (declare-const MIN Int) \n (declare-const MAX Int) \n (declare-const AVG Real) \n (declare-const COUNT Int) \n";
 			CVCStr += "(declare-const CNT Real) \n (declare-const MIN1 Int) \n (declare-const MAX1 Int) \n\n";
 
@@ -3612,20 +3692,20 @@ public static void getCountExeFile(String filePath, String cmdString, GenerateCV
 	cmdString = "#!/bin/bash\n";
 	
 	if(isCVC3){
-		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_smt" +filePath+ "/getCount.cvc > "+Configuration.homeDir+"/temp_smt" + filePath + "/COUNTCVC \n";
-		cmdString +=Configuration.smtsolver+" "+ Configuration.homeDir+"temp_smt" + filePath + "/getCount.cvc | grep -e 'Valid' > isNotValid \n";
-		cmdString += "grep -e 'COUNT = ' "+ Configuration.homeDir+"temp_smt" + filePath + "/COUNTCVC" +" | awk -F \" \" '{print $4}' | awk -F \")\" '{print $1}' > "+Configuration.homeDir+"temp_smt" +filePath + "/COUNT\n";
+		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_smt" +filePath+ "/getCount.cvc > "+Configuration.homeDir+"/temp_smt" + filePath + "/COUNTCVC \n";
+		cmdString +=Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_smt" + filePath + "/getCount.cvc | grep -e 'Valid' > isNotValid \n";
+		cmdString += "grep -e 'COUNT = ' "+ Configuration.homeDir+"/temp_smt" + filePath + "/COUNTCVC" +" | awk -F \" \" '{print $4}' | awk -F \")\" '{print $1}' > "+Configuration.homeDir+"/temp_smt" +filePath + "/COUNT\n";
 	}else{
 		
-		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_smt" +filePath+ "/getCount.smt > "+Configuration.homeDir+"/temp_smt" + filePath + "/COUNTCVC \n";
-		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_smt" +filePath+ "/getCount.smt | grep -e 'unsat' > isNotValid \n";
+		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_smt" +filePath+ "/getCount.smt > "+Configuration.homeDir+"/temp_smt" + filePath + "/COUNTCVC \n";
+		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_smt" +filePath+ "/getCount.smt | grep -e 'unsat' > isNotValid \n";
 
-		//cmdString += Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"temp_smt" +filePath+ "/getCount.cvc > "+Configuration.homeDir+"/temp_smt" + filePath + "/COUNTCVC \n";
-		//cmdString +=Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"temp_smt" + filePath + "/getCount.cvc | grep -e 'unsat' > isNotValid \n";
-		cmdString += "grep -e '((COUNT' "+ Configuration.homeDir+"temp_smt" + filePath + "/COUNTCVC" +" | awk -F \" \" '{print $2}' | awk -F \")\" '{print $1}' > "+Configuration.homeDir+"temp_smt" +filePath + "/COUNT\n";
+		//cmdString += Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"/temp_smt" +filePath+ "/getCount.cvc > "+Configuration.homeDir+"/temp_smt" + filePath + "/COUNTCVC \n";
+		//cmdString +=Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"/temp_smt" + filePath + "/getCount.cvc | grep -e 'unsat' > isNotValid \n";
+		cmdString += "grep -e '((COUNT' "+ Configuration.homeDir+"/temp_smt" + filePath + "/COUNTCVC" +" | awk -F \" \" '{print $2}' | awk -F \")\" '{print $1}' > "+Configuration.homeDir+"/temp_smt" +filePath + "/COUNT\n";
 	}
 	
-	Utilities.writeFile(Configuration.homeDir+"temp_smt" + cvc.getFilePath() + "/execCOUNT", cmdString);
+	Utilities.writeFile(Configuration.homeDir+"/temp_smt" + cvc.getFilePath() + "/execCOUNT", cmdString);
 } 
 
 /**
@@ -3638,12 +3718,12 @@ public static void getAggConstraintExeFile(String filePath,GenerateCVC1 cvc) {
 	String cmdString = "";
 	cmdString = "#!/bin/bash\n";
 	if(isCVC3){
-		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_smt" +filePath+ "/checkAggConstraints.cvc | grep -e 'Invalid' > isValid \n";
+		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_smt" +filePath+ "/checkAggConstraints.cvc | grep -e 'Invalid' > isValid \n";
 	}else{
-		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"temp_smt" +filePath+ "/checkAggConstraints.smt | grep -e 'sat' > isValid \n";
-		//cmdString += Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"temp_smt" +filePath+ "/checkAggConstraints.cvc | grep -e 'true' > isValid \n";
+		cmdString += Configuration.smtsolver+" "+ Configuration.homeDir+"/temp_smt" +filePath+ "/checkAggConstraints.smt | grep -e 'sat' > isValid \n";
+		//cmdString += Configuration.smtsolver+" --lang smtlib "+ Configuration.homeDir+"/temp_smt" +filePath+ "/checkAggConstraints.cvc | grep -e 'true' > isValid \n";
 	}
-	Utilities.writeFile(Configuration.homeDir+"temp_smt" + cvc.getFilePath() + "/checkAggConstraints", cmdString);
+	Utilities.writeFile(Configuration.homeDir+"/temp_smt" + cvc.getFilePath() + "/checkAggConstraints", cmdString);
 }
 
 /**
@@ -3693,74 +3773,82 @@ public String generateCVCForNullCheckInHaving() {
 	if(isCVC3) {
 		return "";
 	}
+
 	String returnStr="";
-	String columnName = "Realcol";
-	String Datatype = "Real";
-	//Context ctx;
-	//String columnName = (String) ctx.mkConst(ctx.mkSymbol("Realcol"),
-	//		ctx.mkRealSort());
-	//returnStr = ctx.mkConst(columnName,Datatype);
-	returnStr = "\n(declare-const "+columnName+" "+Datatype+") \n\n";
+	String[] Datatypes = new String[] {"Real", "Int"};
 
-	returnStr += "(define-fun CHECKALL_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) Bool \n";
-	returnStr += "(= ";
-	returnStr += "-99996.0" + " " + columnName+"\t )) \n";
-	
-	
-	returnStr += "\n(define-fun MAX_REPLACE_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
-	returnStr += "(if (= "+columnName+" ";
-	returnStr += "-99996.0) \n \t -99996.0 \n";
-	returnStr += "\t "+columnName+") \n ) \n";
-	
-	returnStr += "\n(define-fun SUM_REPLACE_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
-	returnStr += "(if (= "+columnName+" ";
-	returnStr += "0.0) \n \t -99996.0 \n";
-	returnStr += "\t "+columnName+") \n ) \n";
-	
-	returnStr += "\n(define-fun MIN_REPLACE_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
-	returnStr += "(if (= "+columnName+" ";
-	returnStr += "-99996.0) \n \t 99996.0 \n";
-	returnStr += "\t "+columnName+") \n ) \n";
-	
-	
-	columnName = "Intcol";
-	Datatype = "Int";
-	
-	returnStr += "\n(declare-const "+columnName+" "+Datatype+") \n\n";
+	for (String Datatype : Datatypes) {
+		String columnName = Datatype + "col";
+		Expr[] nullArr = null;
+		ArithExpr nullVal = null;
+		ArithExpr zeroVal = null;
+		Sort type = null;
 
-	returnStr += "(define-fun CHECKALL_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) Bool \n";
-	returnStr += "(= ";
-	returnStr += "-99996" + " " + columnName+"\t )) \n";
-	
-	returnStr += "\n(define-fun MAX_REPLACE_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
-	returnStr += "(if (= "+columnName+" ";
-	returnStr += "-99996) \n \t -99996 \n";
-	returnStr += "\t "+columnName+") \n ) \n";
-	
-	returnStr += "\n(define-fun SUM_REPLACE_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
-	returnStr += "(if (= "+columnName+" ";
-	returnStr += "0) \n \t -99996 \n";
-	returnStr += "\t "+columnName+") \n ) \n";
-	
-	returnStr += "\n(define-fun MIN_REPLACE_NULL_"+Datatype+"(("+columnName+" "+Datatype+")) "+ Datatype+"\n";
-	returnStr += "(if (= "+columnName+" ";
-	returnStr += "-99996) \n \t 99996 \n";
-	returnStr += "\t "+columnName+") \n ) \n";
-	
-	
+		if (Datatype.endsWith("Real")) {
+			nullArr = new Expr[] {ctx.mkRealConst(columnName)};
+			type = ctx.getRealSort();
+			nullVal = ConstraintGenerator.realNull;
+			zeroVal = ctx.mkReal("0.0");
+		}
+		else {  // Int case
+			nullArr = new Expr[] {ctx.mkIntConst(columnName)};
+			type = ctx.getIntSort();
+			nullVal = ConstraintGenerator.intNull;
+			zeroVal = ctx.mkInt(0);
+		}
+
+		String checkAllNullName = "CHECKALL_NULL" + Datatype;
+		FuncDecl checkAllNull = ctx.mkFuncDecl(checkAllNullName, type, ctx.mkBoolSort());
+		ctxFuncDecls.put(checkAllNullName, checkAllNull);
+		
+		String maxRepNullName = "MAX_REPLACE_NULL_" + Datatype;
+		FuncDecl maxRepNull = ctx.mkFuncDecl(maxRepNullName, type, type);
+		ctxFuncDecls.put(maxRepNullName, maxRepNull);
+		
+		String sumRepNullName = "SUM_REPLACE_NULL_" + Datatype;
+		FuncDecl sumRepNull = ctx.mkFuncDecl(sumRepNullName, type, type);
+		ctxFuncDecls.put(sumRepNullName, sumRepNull);
+		
+		String minRepNullName = "MIN_REPLACE_NULL_" + Datatype;
+		FuncDecl minRepNull = ctx.mkFuncDecl(minRepNullName, type, type);
+		ctxFuncDecls.put(minRepNullName, minRepNull);
+		
+		
+		// CHECKALL_NULL_*
+		Expr checkAllNullCall = checkAllNull.apply(nullArr);
+		Expr funcBody = ctx.mkEq(nullArr[0], nullVal);
+		Expr quantBody = ctx.mkEq(checkAllNullCall, funcBody);
+		Expr funcQuantifier = ctx.mkForall(nullArr, quantBody, 1, null, null, null, null);
+		returnStr += "\n" + checkAllNull.toString() + "\n(assert " + funcQuantifier.toString() + ")\n";
+
+		// MAX_REPLACE_NULL_* - why do we need this?
+		Expr maxRepNullCall = maxRepNull.apply(nullArr);
+		funcBody = ctx.mkITE(ctx.mkEq(nullArr[0], nullVal), nullVal, nullArr[0]);
+		quantBody = ctx.mkEq(maxRepNullCall, funcBody);
+		funcQuantifier = ctx.mkForall(nullArr, quantBody, 1, null, null, null, null);
+		returnStr += "\n" + maxRepNull.toString() + "\n(assert " + funcQuantifier.toString() + ")\n";
+
+		// SUM_REPLACE_NULL_*
+		Expr sumRepNullCall = sumRepNull.apply(nullArr);
+		funcBody = ctx.mkITE(ctx.mkEq(nullArr[0], nullVal), zeroVal, nullArr[0]);
+		quantBody = ctx.mkEq(sumRepNullCall, funcBody);
+		funcQuantifier = ctx.mkForall(nullArr, quantBody, 1, null, null, null, null);
+		returnStr += "\n" + sumRepNull.toString() + "\n(assert " + funcQuantifier.toString() + ")\n";
+
+		// MIN_REPLACE_NULL_*
+		Expr minRepNullCall = minRepNull.apply(nullArr);
+		funcBody = ctx.mkITE(ctx.mkEq(nullArr[0], nullVal), ctx.mkSub(zeroVal, nullVal), nullArr[0]);
+		quantBody = ctx.mkEq(minRepNullCall, funcBody);
+		funcQuantifier = ctx.mkForall(nullArr, quantBody, 1, null, null, null, null);
+		returnStr += "\n" + minRepNull.toString() + "\n(assert " + funcQuantifier.toString() + ")\n";
+	}
+
 	return returnStr;
 }
 
-public String getDomainConstraintsforZ3(GenerateCVC1 cvc) {
+public Vector<Quantifier> getDomainConstraintsforZ3(GenerateCVC1 cvc) {
 	
-	String domainConstraints="";
-	
-	if(isCVC3) {
-		return "";
-	}
-	
-	domainConstraints += addCommentLine("DOMAIN CONSTRAINTS");
-
+	Vector<Quantifier> domainConstraints = new Vector<Quantifier>();
 
 	int turn = 0;
 	
@@ -3770,27 +3858,33 @@ public String getDomainConstraintsforZ3(GenerateCVC1 cvc) {
 		Table table = cvc.getResultsetTables().get(i);
 
 		String tableName = table.getTableName();
-		
+
 		for(String col : table.getColumns().keySet()){
 			if((table.getColumn(col).getCvcDatatype()).equalsIgnoreCase("INT") || (table.getColumn(col).getCvcDatatype()).equalsIgnoreCase("REAL")) {
-				
-				if(turn++ == 0)
-				domainConstraints += "\n (assert (forall ((i Int)) (=>(and (<= 1 i) (<= i "+cvc.getNoOfOutputTuples().get(tableName)+ ")) (and \n   ";
-				domainConstraints += " (or (get"+col+ConstraintGenerator.smtMap(table.getColumn(col),"i")+") ";
-				domainConstraints += "(ISNULL_"+col+ConstraintGenerator.smtMap(table.getColumn(col),"i")+")) \n   ";
-			}
-		
-		}
-		if(turn>0)
-			domainConstraints += ")))) \n";
 
+				if (turn++ == 0) {
+					IntExpr[] qVarArray = new IntExpr[1];
+					IntExpr qVar = ctx.mkIntConst("i");  // i should not conflict with any global i
+					BoolExpr ac1 = ctx.mkLe(ctx.mkInt("1"), qVar);
+					BoolExpr ac2 = ctx.mkLe(qVar, ctx.mkInt(Integer.toString(cvc.getNoOfOutputTuples().get(tableName))));
+					BoolExpr antecedant = ctx.mkAnd(ac1, ac2);
+
+					FuncDecl getFuncDecl = ctxFuncDecls.get("get"+col);
+					FuncDecl isNullFuncDecl = ctxFuncDecls.get("ISNULL_"+col);
+					Expr selectExpr = ConstraintGenerator.smtMap(table.getColumn(col), qVar);
+					BoolExpr con1 = ctx.mkOr((BoolExpr) getFuncDecl.apply(selectExpr), (BoolExpr) isNullFuncDecl.apply(selectExpr));
+					BoolExpr consequent = ctx.mkAnd(con1);
+
+					Expr body = ctx.mkImplies(antecedant, consequent);
+					qVarArray[0] = qVar;
+					Quantifier funcQuantifier = ctx.mkForall(qVarArray, body, 1, null, null, null, null);
+					domainConstraints.add(funcQuantifier);
+				}
+			}
+		}
 	}
 
-	
-	
-	domainConstraints += addCommentLine("END OF DOMAIN CONSTRAINTS");
-
 	return domainConstraints;
-}
+	}
 }
 
