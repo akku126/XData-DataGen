@@ -216,7 +216,7 @@ public class GenerateDataSet {
 			Connection conn=DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));;
 			
 			int queryId=1;
-			String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year = 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201' AND prereq.course_id = course.course_id)";
+			// String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year = 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201' AND prereq.course_id = course.course_id)";
 			//String query = "select * from classroom, section where classroom.building = section.building and classroom.room_number = section.room_number";
 			//String query = "select name from instructor where salary > some (select salary from instructor where dept_name = ’Biology’)";
 			//String query = "select count(distinct room_number) from classroom, department where department.dept_name = 'Comp. Sci.' and department.building = classroom.building";
@@ -300,14 +300,22 @@ public class GenerateDataSet {
 			/* XXI----
 			 * String query="select id,name from student";
 			 */
-			String query = "SELECT course_id, title FROM course "
-					+ "inner join section WHERE year = 2010 and course.course_id = 'CS-203' "
-					+ "and  EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201' "
-					//+ "AND prereq.course_id = course.course_id) ";
-					+ ")";
+		/*
+		 * String query = "SELECT course_id, title FROM course " +
+		 * "inner join section WHERE year = 2010 and course.course_id = 'CS-203' " +
+		 * "and  EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201' " +
+		 * "AND prereq.course_id = course.course_id) ";
+		 */
+					// + ")";
 			 /* ---->>>problem with this particular query
 			 */
 			//String query = "select name from instructor where salary is null";
+			// Query to test in clause in nested subqueries
+			String query = "SELECT course_id, title FROM course "
+					+ "inner join section WHERE year = 2010 and course.course_id = 'CS-203' "
+					+ "and course_id in (SELECT prereq.course_id FROM prereq WHERE prereq_id='CS-201' "
+					// + "AND prereq.course_id = course.course_id) ";
+					+ ")";
 			
 			
 			File schemaFile=new File("test/universityTest/DDL.sql");

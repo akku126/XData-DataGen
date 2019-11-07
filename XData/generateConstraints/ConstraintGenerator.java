@@ -1474,7 +1474,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 		}else{
 			if(constraintString.contains("(and "))
 				{	
-				constraint1 += constraintString.replaceAll("(and ", "(or ");
+				constraint1 += constraintString.replace("(and ", "(or ");
 				
 				constraint += "(assert "+constraint1+") \n";
 				}

@@ -7,16 +7,13 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.*;
 
-import oracle.net.aso.a;
 import parsing.Column;
 import parsing.ConjunctQueryStructure;
 import parsing.Node;
-import parsing.Table;
 import testDataGen.DataType;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
 import util.Configuration;
-import util.Utilities;
 
 /**
  * FIXME: Add GOOD DOC FOR THIS
@@ -46,11 +43,11 @@ public class GetSolverHeaderAndFooter {
 		Set<String> allConstantSet = new HashSet<>();
 		List<String> allColumnsList = new ArrayList<>(); 
 		for (Node n: equivalenceClass) {
-			String columnName = n.getColumn().getColumnName();
-			if (columnToStringsMap.containsKey(columnName)) {
-				allConstantSet.addAll(columnToStringsMap.get(columnName));
+			String keyNamString = n.getTable().getTableName() + "/" + n.getColumn().getColumnName(); 
+			if (columnToStringsMap.containsKey(keyNamString)) {
+				allConstantSet.addAll(columnToStringsMap.get(keyNamString));
 			}
-			allColumnsList.add(columnName);
+			allColumnsList.add(keyNamString);
 		}
 		for (String tempColumnName: allColumnsList) {
 			columnToStringsMap.put(tempColumnName, allConstantSet);
@@ -59,7 +56,7 @@ public class GetSolverHeaderAndFooter {
 	
 	/**
 	 * 
-	 * This function will find all the string constants that are declared in the query for each column.
+	 * This function will find all the string constants that are declared in the query for each column of a table.
 	 * For example if the query is "select * from employee where dept = 'CSE'", we will add to the map the column dept and the string 'CSE'.
 	 * 
 	 * @param cvc
@@ -107,11 +104,12 @@ public class GetSolverHeaderAndFooter {
 				if(DataType.getDataType(condition.getLeft().getColumn().getDataType()) != 3) // check if the column is of String type
 					continue;
 				Set<String> tempList;
-				if (!columnToStringsMap.containsKey(condition.getLeft().getColumn().getColumnName())) {
+				String keyNameString = condition.getLeft().getTable().getTableName() + "/" + condition.getLeft().getColumn().getColumnName();
+				if (!columnToStringsMap.containsKey(keyNameString)) {
 					tempList = new HashSet<>();
-					columnToStringsMap.put(condition.getLeft().getColumn().getColumnName(), tempList);
+					columnToStringsMap.put(keyNameString, tempList);
 				}
-				tempList = columnToStringsMap.get(condition.getLeft().getColumn().getColumnName());
+				tempList = columnToStringsMap.get(keyNameString);
 				tempList.add(condition.getRight().getStrConst());
 			}
 		}
@@ -176,14 +174,19 @@ public class GetSolverHeaderAndFooter {
 				cvc_datatype = "";
 			}
 			Column column = cvc.getResultsetColumns().get(i);
-			String columnName = column.getColumnName();		
+			String columnName = column.getColumnName();
 			int columnType = 0;
 		
 			
 			
 			Vector<String> columnValue = column.getColumnValues();
-			if (columnToStringsMap.containsKey(columnName)) {				
-				columnValue.addAll(columnToStringsMap.get(columnName));
+			// The keys stored in columnToStringMap are all prefixed with the table name to 
+			// avoid conflicts when same column name exits in different tables and they are
+			// not equivalent columns. So the keyNameString will prefix the table name and 
+			// check in the map if that particular column is present.
+			String keyNameString = column.getTableName() + "/" + columnName;
+			if (columnToStringsMap.containsKey(keyNameString)) {				
+				columnValue.addAll(columnToStringsMap.get(keyNameString));
 				columnValue = new Vector<>(new HashSet<>(columnValue));
 			}
 			columnType = dt.getDataType(column.getDataType());
