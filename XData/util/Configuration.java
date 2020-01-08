@@ -55,7 +55,9 @@ public class Configuration implements ConfigurationInterface{
         properties.load(Configuration.class.getResourceAsStream("XData.properties"));
 		
 	          
-		}catch(IOException e){
+		}catch(Exception e){
+			System.out.println("Error: XData.properties file not found. "); 
+			System.out.println("Copy the file XData.properties.example in the util subdirectory to XData.properties and set the parameters in the file");
 			logger.log(Level.SEVERE,e.getMessage(),e);
 			//e.printStackTrace();
 			System.exit(1);
