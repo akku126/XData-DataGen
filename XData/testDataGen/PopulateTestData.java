@@ -63,9 +63,9 @@ public class PopulateTestData {
 		String copystmt = "";
 		BufferedReader input =null;
 		try{
-			input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc"+filePath+"/" + outputFileName));
+			input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+filePath+"/" + outputFileName));
 			String line = null; 
-			File ACPFile = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/" + "PARAMETER_VALUES");
+			File ACPFile = new File(Configuration.homeDir+"/temp_smt"+filePath+"/" + "PARAMETER_VALUES");
 			if(!ACPFile.exists()){
 				ACPFile.createNewFile();
 			}
@@ -108,7 +108,7 @@ public class PopulateTestData {
 			String[] smtCommand = new String[2];
 
 			smtCommand[0] = Configuration.smtsolver;
-			smtCommand[1] = Configuration.homeDir+"/temp_cvc"+filePath+"/" + cvcFileName;
+			smtCommand[1] = Configuration.homeDir+"/temp_smt"+filePath+"/" + cvcFileName;
 			
 			ExecutorService service = Executors.newSingleThreadExecutor();
 			Process myProcess = r.exec(smtCommand);	
@@ -126,7 +126,7 @@ public class PopulateTestData {
 				InputStreamReader myIStreamReader = new InputStreamReader(myProcess.getInputStream());
 
 				//Writing output to .out file
-				BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+filePath+"/" + cvcFileName.substring(0,cvcFileName.lastIndexOf(".smt")) + ".out"));
+				BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_smt"+filePath+"/" + cvcFileName.substring(0,cvcFileName.lastIndexOf(".smt")) + ".out"));
 				
 				while ((ch = myIStreamReader.read()) != -1) { 
 					out.write((char)ch); 
@@ -161,10 +161,10 @@ public class PopulateTestData {
 
 	public String cutRequiredOutput(String cvcOutputFileName, String filePath){
 		try {
-			BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+filePath+"/cut_" + cvcOutputFileName));
+			BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_smt"+filePath+"/cut_" + cvcOutputFileName));
 			out.close();
-			File testFile = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/cut_" + cvcOutputFileName);
-			BufferedReader input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc"+filePath+"/" + cvcOutputFileName));
+			File testFile = new File(Configuration.homeDir+"/temp_smt"+filePath+"/cut_" + cvcOutputFileName);
+			BufferedReader input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+filePath+"/" + cvcOutputFileName));
 			try {
 				String line = null; 
 				while (( line = input.readLine()) != null){
@@ -193,10 +193,10 @@ public class PopulateTestData {
 
 	public String cutRequiredOutputForSMT(String cvcOutputFileName, String filePath){
 		try {
-			BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+filePath+"/cut_" + cvcOutputFileName));
+			BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_smt"+filePath+"/cut_" + cvcOutputFileName));
 			out.close();
-			File testFile = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/cut_" + cvcOutputFileName);
-			BufferedReader input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc"+filePath+"/" + cvcOutputFileName));
+			File testFile = new File(Configuration.homeDir+"/temp_smt"+filePath+"/cut_" + cvcOutputFileName);
+			BufferedReader input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+filePath+"/" + cvcOutputFileName));
 			try {
                 String line = null; 
                 boolean first=true; 
@@ -255,52 +255,6 @@ public class PopulateTestData {
 		}
 		return "cut_"+cvcOutputFileName;
 	}
-//	public String cutRequiredOutputForSMT(String cvcOutputFileName, String filePath){
-//		try {
-//			BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_cvc"+filePath+"/cut_" + cvcOutputFileName));
-//			out.close();
-//			File testFile = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/cut_" + cvcOutputFileName);
-//			BufferedReader input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc"+filePath+"/" + cvcOutputFileName));
-//			try {
-//                String line = null; 
-//                while ((line = input.readLine()) != null) {
-//                    if(line.contains("(define-fun ")  && line.contains("_TupleType")) {
-//                        //setContents(testFile,line, true);
-//                        while ((line = input.readLine()) != null) {
-//                            if(!line.contains("(ite") && !line.contains("!")) {
-//                                    if(line.contains("define-fun")) {
-//                                        //input.mark(1000);
-//                                        input.reset();
-//                                        break;
-//                                    } else if (line.startsWith(")")) {
-//                                        break;
-//                                    }
-//                                    setContents(testFile,line+"\n", true);
-//                            }
-//                            input.mark(100);
-//                        }
-//                        //if(!line.contains("!"))
-//                        //setContents(testFile,line+"\n", true);
-//                    }
-//                    //Application Testing - to include value of program parameters
-//                    if(line.startsWith("ASSERT (parameter")){
-//                        setContents(testFile, line+"\n", true);
-//                    }
-//                }
-//            } catch (Exception e) {
-//				logger.log(Level.SEVERE,"PopulateTestData-cutRequiredOutput :  "+e.getStackTrace(),e);
-//			}
-//			finally {
-//				input.close();
-//			}
-//		}
-//		catch (IOException ex){
-//			logger.log(Level.SEVERE,"PopulateTestData-cuteRequiredOutput :  "+ex.getMessage(),ex);
-//			//ex.printStackTrace();
-//		}
-//		return "cut_"+cvcOutputFileName;
-//	}
-
 
 	public void setContents(File aFile, String aContents, boolean append)throws FileNotFoundException, IOException {
 		if (aFile == null) {
@@ -346,14 +300,14 @@ public class PopulateTestData {
 		File testFile = null;
 		BufferedReader input = null;
 		try{
-			input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc"+filePath+"/" + cut_cvcOutputFileName));
+			input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+filePath+"/" + cut_cvcOutputFileName));
 			String line = null,copystmt=null; 
 			while (( line = input.readLine()) != null){
 				//Application Testing -- added check for the presence of parameter
 				if(line.startsWith("ASSERT (parameter") || line.startsWith("ASSERT (PARAM_")){
 
 					currentCopyFileName = line.substring(line.indexOf("(")+1,line.indexOf("=")-1);
-					testFile = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/" + currentCopyFileName + ".copy");
+					testFile = new File(Configuration.homeDir+"/temp_smt"+filePath+"/" + currentCopyFileName + ".copy");
 					if(!testFile.exists() || !listOfCopyFiles.contains(currentCopyFileName + ".copy")){
 						if(testFile.exists()){
 							testFile.delete();
@@ -400,7 +354,7 @@ public class PopulateTestData {
 						//If table name is not in existingTablename Set, it means it is a reference Table
 						currentCopyFileName = currentCopyFileName+".ref";
 					}
-					testFile = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/" + currentCopyFileName + ".copy");
+					testFile = new File(Configuration.homeDir+"/temp_smt"+filePath+"/" + currentCopyFileName + ".copy");
 					if(!testFile.exists() || !listOfCopyFiles.contains(currentCopyFileName + ".copy")){
 						if(testFile.exists()){
 							testFile.delete();
@@ -526,14 +480,14 @@ public class PopulateTestData {
 		File testFile = null;
 		BufferedReader input = null;
 		try{
-			input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc"+filePath+"/" + cut_cvcOutputFileName));
+			input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+filePath+"/" + cut_cvcOutputFileName));
 			String line = null,copystmt=null; 
 			while (( line = input.readLine()) != null){
 				//Application Testing -- added check for the presence of parameter
 				if(line.startsWith("ASSERT (parameter")){
 
 					currentCopyFileName = line.substring(line.indexOf("(")+1,line.indexOf("=")-1);
-					testFile = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/" + currentCopyFileName + ".copy");
+					testFile = new File(Configuration.homeDir+"/temp_smt"+filePath+"/" + currentCopyFileName + ".copy");
 					if(!testFile.exists() || !listOfCopyFiles.contains(currentCopyFileName + ".copy")){
 						if(testFile.exists()){
 							testFile.delete();
@@ -581,7 +535,7 @@ public class PopulateTestData {
 						//If table name is not in existingTablename Set, it means it is a reference Table
 						currentCopyFileName = currentCopyFileName+".ref";
 					}
-					testFile = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/" + currentCopyFileName + ".copy");
+					testFile = new File(Configuration.homeDir+"/temp_smt"+filePath+"/" + currentCopyFileName + ".copy");
 					if(!testFile.exists() || !listOfCopyFiles.contains(currentCopyFileName + ".copy")){
 						if(testFile.exists()){
 							testFile.delete();
@@ -773,7 +727,7 @@ public class PopulateTestData {
 		Process proc=null;
 		boolean returnVal=false;
 		String test = generateCvcOutput(cvcOutputFileName, filePath);
-		BufferedReader br =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc"+filePath+"/"+test));
+		BufferedReader br =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+filePath+"/"+test));
 		String str = br.readLine();
 		br.close();
 		if((str == null || str.equals("") || str.equalsIgnoreCase("Valid."))) {
@@ -785,15 +739,15 @@ public class PopulateTestData {
 				tableMap,columns,existingTableNames, dbAppParameters);			
 		Vector<String> listOfFiles = (Vector<String>) listOfCopyFiles.clone();
 
-		File datasetDir = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+datasetName);
+		File datasetDir = new File(Configuration.homeDir+"/temp_smt"+filePath+"/"+datasetName);
 		boolean created = datasetDir.mkdirs();
 		if(!created) {
 			logger.log(Level.WARNING, "Could not create directory for dataset: "+datasetDir.getPath());
 		}
 
 		for(String i:listOfCopyFiles){				
-			File src = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+i);
-			File dest = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+datasetName+"/"+i);
+			File src = new File(Configuration.homeDir+"/temp_smt"+filePath+"/"+i);
+			File dest = new File(Configuration.homeDir+"/temp_smt"+filePath+"/"+datasetName+"/"+i);
 			Files.copy(src.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
 		}	
@@ -802,8 +756,8 @@ public class PopulateTestData {
 		//	populateTestDataForTesting(listOfCopyFiles, filePath, tableMap,conn, assignmentId, questionId);
 
 		for(String i : listOfFiles){				
-			File src = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+i);
-			File dest = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+datasetName+"/"+i);
+			File src = new File(Configuration.homeDir+"/temp_smt"+filePath+"/"+i);
+			File dest = new File(Configuration.homeDir+"/temp_smt"+filePath+"/"+datasetName+"/"+i);
 			Files.copy(src.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
 		}
 
@@ -849,7 +803,7 @@ public class PopulateTestData {
 		Process proc=null;
 		boolean returnVal=false;
 		String test = generateCvcOutput(cvcOutputFileName, filePath);
-		BufferedReader br =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc"+filePath+"/"+test));
+		BufferedReader br =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+filePath+"/"+test));
 		String str = br.readLine();
 		br.close();
 
@@ -862,15 +816,15 @@ public class PopulateTestData {
 				tableMap,columns,existingTableNames, dbAppParameters);			
 		Vector<String> listOfFiles = (Vector<String>) listOfCopyFiles.clone();
 		if(listOfCopyFiles.size() > 0){
-			File datasetDir = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+datasetName);
+			File datasetDir = new File(Configuration.homeDir+"/temp_smt"+filePath+"/"+datasetName);
 			boolean created = datasetDir.mkdirs();
 			if(!created) {
 				logger.log(Level.WARNING, "Could not create directory for dataset: "+datasetDir.getPath());
 			}
 
 			for(String i:listOfCopyFiles){				
-				File src = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+i);
-				File dest = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+datasetName+"/"+i);
+				File src = new File(Configuration.homeDir+"/temp_smt"+filePath+"/"+i);
+				File dest = new File(Configuration.homeDir+"/temp_smt"+filePath+"/"+datasetName+"/"+i);
 				Files.copy(src.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
 			}	
@@ -879,8 +833,8 @@ public class PopulateTestData {
 			//	populateTestDataForTesting(listOfCopyFiles, filePath, tableMap,conn, assignmentId, questionId);
 
 			for(String i : listOfFiles){				
-				File src = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+i);
-				File dest = new File(Configuration.homeDir+"/temp_cvc"+filePath+"/"+datasetName+"/"+i);
+				File src = new File(Configuration.homeDir+"/temp_smt"+filePath+"/"+i);
+				File dest = new File(Configuration.homeDir+"/temp_smt"+filePath+"/"+datasetName+"/"+i);
 				Files.copy(src.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
 			}
 
@@ -934,7 +888,7 @@ public class PopulateTestData {
 
 	public static String loadCopyFileToDataBase(Connection testCon,String dataset,String filePath, TableMap tableMap) throws Exception{
 
-		String dsPath = Configuration.homeDir+"/temp_cvc"+File.separator+filePath+File.separator+dataset;
+		String dsPath = Configuration.homeDir+"/temp_smt"+File.separator+filePath+File.separator+dataset;
 		ArrayList<String> copyFileList=new ArrayList<String>();
 		ArrayList <String> copyFilesWithFk = new ArrayList<String>();
 		Pattern pattern = Pattern.compile("^DS([0-9]+)$");
