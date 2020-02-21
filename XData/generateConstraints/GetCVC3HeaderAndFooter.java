@@ -50,7 +50,7 @@ public class GetCVC3HeaderAndFooter {
 		
 		HashSet<String> uniqueValues = new HashSet<String>();
 		
-		String equivalenceColumnsFile=Configuration.homeDir+"/temp_cvc" +cvc.getFilePath() + "/equivalenceColumns";
+		String equivalenceColumnsFile=Configuration.homeDir+"/temp_smt" +cvc.getFilePath() + "/equivalenceColumns";
 		
 		File f = new File(equivalenceColumnsFile);
 		f.createNewFile(); //this will create the equivalence columns file iff it is not already present

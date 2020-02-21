@@ -135,7 +135,7 @@ public class Generatedataset_DBApps {
 		//Application Testing
 		cvc.setDBAppparams(obj);
 		//end
-		FileWriter fw=new FileWriter(Configuration.homeDir+"/temp_cvc" +cvc.getFilePath()+"/queries.txt");
+		FileWriter fw=new FileWriter(Configuration.homeDir+"/temp_smt" +cvc.getFilePath()+"/queries.txt");
 		fw.write(query);
 		fw.close();
 		

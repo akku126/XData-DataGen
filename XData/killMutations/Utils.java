@@ -20,7 +20,7 @@ public class Utils {
 		int [] list = new int[2];
 		try{	
 			cvc.setCount(cvc.getCount() - 1);
-			br =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc"+ cvc.getFilePath() +"/cvc3_"+ cvc.getCount()+".out"));
+			br =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+ cvc.getFilePath() +"/cvc3_"+ cvc.getCount()+".out"));
 			
 			String str = br.readLine();
 			if((str == null || str.equalsIgnoreCase("Valid.")) && attempt<2){

@@ -70,7 +70,7 @@ public class DataGenController{
 		BufferedReader input = null;
 		StringBuffer queryStr = new StringBuffer();
 		try {
-			input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/queries.txt"));
+			input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt" + cvc.getFilePath() + "/queries.txt"));
 			/**Read the input query */
 			while (( queryString = input.readLine()) != null){
 				queryStr.append(queryString+"\n");

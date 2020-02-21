@@ -84,7 +84,7 @@ public class GenerateDataSet {
 				appTestParams=new AppTest_Parameters();
 			cvc.setDBAppparams(appTestParams);
 			//end
-			FileWriter fw=new FileWriter(Configuration.homeDir+"/temp_cvc" +cvc.getFilePath()+"/queries.txt");
+			FileWriter fw=new FileWriter(Configuration.homeDir+"/temp_smt" +cvc.getFilePath()+"/queries.txt");
 			fw.write(query);
 			fw.close();
 			
@@ -164,14 +164,14 @@ public class GenerateDataSet {
 		private List<String> listOfDatasets(GenerateCVC1 cvc) {
 			ArrayList<String> fileListVector = new ArrayList<String>();		
 			ArrayList<String> datasets = new ArrayList<String>();
-			String fileList[]=new File(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath()).list();
+			String fileList[]=new File(Configuration.homeDir+"/temp_smt" + cvc.getFilePath()).list();
 			for(int k=0;k<fileList.length;k++){
 				fileListVector.add(fileList[k]);
 			}
 			Collections.sort(fileListVector);	        
 			for(int i=0;i<fileList.length;i++)
 			{
-				File f1=new File(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() +"/"+fileListVector.get(i));	          
+				File f1=new File(Configuration.homeDir+"/temp_smt" + cvc.getFilePath() +"/"+fileListVector.get(i));	          
 				
 				if(f1.isDirectory() && fileListVector.get(i).startsWith("DS"))
 				{
@@ -184,26 +184,26 @@ public class GenerateDataSet {
 		
 		public static void deletePreviousDatasets(GenerateCVC1 cvc) throws IOException,InterruptedException {
 			
-			File f=new File(Configuration.homeDir+"/temp_cvc"+cvc.getFilePath()+"/");
+			File f=new File(Configuration.homeDir+"/temp_smt"+cvc.getFilePath()+"/");
 			
-			if(f.exists()){		
+			if (f.exists()) {		
 				File f2[]=f.listFiles();
-				if(f2 != null)
+				if (f2 != null)
 				for(int i=0;i<f2.length;i++){
 					if(f2[i].isDirectory() && f2[i].getName().startsWith("DS")){
 						
-						Utilities.deletePath(Configuration.homeDir+"/temp_cvc"+cvc.getFilePath()+"/"+f2[i].getName());
+						Utilities.deletePath(Configuration.homeDir+"/temp_smt"+cvc.getFilePath()+"/"+f2[i].getName());
 					}
 				}
 			}
 			
-			File dir= new File(Configuration.homeDir+"/temp_cvc"+cvc.getFilePath());
-			if(dir.exists()){
-				for(File file: dir.listFiles()) {
+			File dir= new File(Configuration.homeDir+"/temp_smt"+cvc.getFilePath());
+			if (dir.exists()) {
+				for (File file: dir.listFiles()) {
 					file.delete();
 				}
 			}
-			else{
+			else {
 				dir.mkdirs();
 			}
 		}
@@ -216,6 +216,8 @@ public class GenerateDataSet {
 			Connection conn=DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));;
 			
 			int queryId=1;
+			String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year = 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201' AND prereq.course_id = course.course_id)";
+			//String query = "select * from classroom, section where classroom.building = section.building and classroom.room_number = section.room_number";
 			//String query = "select name from instructor where salary > some (select salary from instructor where dept_name = ’Biology’)";
 			//String query = "select count(distinct room_number) from classroom, department where department.dept_name = 'Comp. Sci.' and department.building = classroom.building";
 			//String query = "with max_budget (value) as (select max(budget) from department) select budget from department, max_budget where department.budget = max_budget.value";
@@ -234,7 +236,7 @@ public class GenerateDataSet {
 //					"(select course_id\n" + 
 //					"from section\n" + 
 //					"where semester = 'Spring' and year= 2010)";
-			 String query = "select id, name from student where tot_cred>30";
+			 //String query = "select id, name from student where tot_cred>30";
 			/* I----*/
 			//  String query = "select id, name from student where tot_cred>30";
 			 
@@ -313,9 +315,9 @@ public class GenerateDataSet {
 			
 			GenerateDataSet d=new GenerateDataSet();
 			//Application Testing
-			AppTest_Parameters obj = new AppTest_Parameters ();
+			AppTest_Parameters obj = new AppTest_Parameters();
 
-			
+
 			//end
 			d.generateDatasetForQuery(conn,queryId,query,  schemaFile,  sampleDataFile,  orderDependent,  tempFilePath, obj);
 			long stopTime = System.currentTimeMillis();

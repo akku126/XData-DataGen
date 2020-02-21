@@ -1,2 +1,8 @@
-*.log
 *.class
+*.properties
+*.metadata
+XData/z3
+XData/temp_smt
+*.log
+*.DS_Store
+XData/.settings

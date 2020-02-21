@@ -74,12 +74,12 @@ public class CountEstimationRelated {
 			String filePath =  cvc.getFilePath().replace(" ", "\\ ");
 			
 			/**write these constraints into a file and execute*/
-			Utilities.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/checkAggConstraints.smt", CVCText);
+			Utilities.writeFile(Configuration.homeDir+"/temp_smt" + cvc.getFilePath() + "/checkAggConstraints.smt", CVCText);
 			Runtime r = Runtime.getRuntime();
 			ConstraintGenerator.getAggConstraintExeFile(filePath,cvc);
 			
 			ProcessBuilder pb = new ProcessBuilder("/bin/bash", "checkAggConstraints");
-			pb.directory(new File(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath()));
+			pb.directory(new File(Configuration.homeDir+"/temp_smt" + cvc.getFilePath()));
 			Process myProcess = pb.start();
 			
 			
@@ -109,7 +109,7 @@ public class CountEstimationRelated {
 			writer.close();
 			myIStreamReader.close();
 			
-			File f = new File(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/isValid");
+			File f = new File(Configuration.homeDir+"/temp_smt" + cvc.getFilePath() + "/isValid");
 			if(f.length() == 0){//Means CVC failed
 				return false;
 			}
@@ -318,13 +318,13 @@ public class CountEstimationRelated {
 					CVCStr = ConstraintGenerator.generateCVCForCNTForPositiveINT( queryBlock, havingColConds, col, c);
 
 					/**write these constraints into a file and execute*/
-					Utilities.writeFile(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/getCount.smt", CVCStr);
+					Utilities.writeFile(Configuration.homeDir+"/temp_smt" + cvc.getFilePath() + "/getCount.smt", CVCStr);
 					
 					ConstraintGenerator.getCountExeFile(filePath, cmdString, cvc);
 					
 					
 					ProcessBuilder pb = new ProcessBuilder("/bin/bash", "execCOUNT");
-					pb.directory(new File(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath()));
+					pb.directory(new File(Configuration.homeDir+"/temp_smt" + cvc.getFilePath()));
 					Process myProcess = pb.start();
 					int exitVal = myProcess.waitFor();
 					
@@ -337,7 +337,7 @@ public class CountEstimationRelated {
 
 					Utilities.closeProcessStreams(myProcess);					
 					
-					File f = new File(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/isNotValid");
+					File f = new File(Configuration.homeDir+"/temp_smt" + cvc.getFilePath() + "/isNotValid");
 					if(f.length() != 0){
 						continue;
 					}
@@ -346,7 +346,7 @@ public class CountEstimationRelated {
 					BufferedReader input = null;
 					String countFromFile = "";
 					try{
-						input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_cvc" + cvc.getFilePath() + "/COUNT"));
+						input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt" + cvc.getFilePath() + "/COUNT"));
 						String str = input.readLine();
 						if(str != null && !str.isEmpty()){
 							countFromFile = str;

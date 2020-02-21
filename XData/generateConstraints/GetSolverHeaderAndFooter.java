@@ -49,7 +49,7 @@ public class GetSolverHeaderAndFooter {
 		HashMap<Vector<String>,Boolean> equivalenceColumns = new HashMap<Vector<String>, Boolean>();
 		
 		
-		String equivalenceColumnsFile=Configuration.homeDir+"/temp_cvc" +cvc.getFilePath() + "/equivalenceColumns";
+		String equivalenceColumnsFile=Configuration.homeDir+"/temp_smt" +cvc.getFilePath() + "/equivalenceColumns";
 		
 		File f = new File(equivalenceColumnsFile);
 		f.createNewFile(); //this will create the equivalence columns file iff it is not already present
@@ -108,24 +108,27 @@ public class GetSolverHeaderAndFooter {
 				min = max = 0;
 				column.setCvcDatatype("Int");
 				boolean limitsDefined = false;
-				if(columnValue.size()>0){
-					for(int j=0; j<columnValue.size(); j++){
-						int colValue = (int)Float.parseFloat(columnValue.get(j));
+				if( columnValue.size()>0 ) {
+					for (int j=0; j<columnValue.size(); j++) {
+						int colValue = (int) Float.parseFloat(columnValue.get(j));
 						//Commented out by Biplab
 						//								isNullMembers += "ASSERT NOT ISNULL_"+columnName+"("+colValue+");\n";
-						if(!limitsDefined){
+						if (!limitsDefined) {
 							min = colValue;
 							max = colValue;
 							limitsDefined = true;
 							continue;
 						}
-						if(min > colValue)
+						if (min > colValue) {
 							min = colValue;
-						if(max < colValue)
+						}
+						if(max < colValue) {
 							max = colValue;
+						}
 					}
 				}
-				cvc_datatype += constraintGen.getIntegerDatatypes(column,min,max);
+				
+				cvc_datatype += constraintGen.getIntegerDatatypes(column, min, max);
 				cvc_datatype += constraintGen.getIntegerNullDataValues(column);
 				
 				//Adding support for NULLs
