@@ -193,9 +193,9 @@ public class GenerateCommonConstraintsForQuery {
 			
 		}catch(Exception e){
 			logger.log(Level.SEVERE,e.getMessage());		
+			System.out.println(e.getMessage());
 		}
 		return false;
-	
 	}
 	
 	public static boolean generateDataSetForConstraints(GenerateCVC1 cvc) throws Exception{

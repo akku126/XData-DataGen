@@ -2270,10 +2270,11 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			Params p = ctx.mkParams();
 			p.add("produce-models", true); // other options invalid in z3 API
 			p.add("smt.macro_finder", true); // check whether this is the right option name
+			//p.add("model_compress", false); <-- Gives error for some reason, however this param is set successfully in the .smt file
 			solver.setParameters(p); // NOTE: these should be the settings for all solvers
 
 			//header = "(set-logic ALL_SUPPORTED)";
-			header += "(set-option:produce-models true) \n (set-option :interactive-mode true) \n (set-option :produce-assertions true) \n (set-option :produce-assignments true) \n (set-option :smt.macro_finder true) \n";
+			header += "(set-option :produce-models true)\n (set-option :smt.macro_finder true) \n";
 			
 			BoolExpr assertionIntNull = ctx.mkEq(ConstraintGenerator.intNull, ctx.mkInt(-99996));
 			BoolExpr assertionRealNull = ctx.mkEq(ConstraintGenerator.realNull, ctx.mkReal("-99996.0"));
@@ -2690,11 +2691,11 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 		}
 		else{
 			temp += "\n\n(check-sat)";			// need to right generalize one
-			for(Table t : cvc.getResultsetTables()){
-				temp+= "\n (get-value (O_"+t.getTableName()+"))";
-			}
+//			for(Table t : cvc.getResultsetTables()){
+//				temp+= "\n (get-value (O_"+t.getTableName()+"))";
+//			}
 			
-			temp += "\n \n(get-assertions) \n (get-assignment) \n(get-model)";
+			temp += "\n(get-model)";
 			
 		}
 		return temp;
@@ -2713,8 +2714,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			temp += "\nCOUNTERMODEL;";
 		}
 		else{
-			temp += "\n\n(check-sat)";			// need to right generalize one
-			temp += "\n \n(get-assertions) \n";
+			temp += "\n\n(check-sat)\n";			// need to right generalize one
 			
 		}
 		return temp;
@@ -3579,7 +3579,7 @@ public static String generateCVCForCNTForPositiveINT(QueryBlockDetails queryBloc
 		}else{
 			
 			int min = 0,min1=0, max=0,max1=0;
-			CVCStr += "(set-option:produce-models true) \n (set-option :interactive-mode true) \n (set-option :produce-assertions true) \n (set-option :produce-assignments true) \n (set-option :smt.macro_finder true) \n";
+			CVCStr += "(set-option:produce-models true)\n (set-option :smt.macro_finder true) \n";
 			CVCStr += "(declare-const SUM Int) \n (declare-const MIN Int) \n (declare-const MAX Int) \n (declare-const AVG Real) \n (declare-const COUNT Int) \n";
 			CVCStr += "(declare-const CNT Real) \n (declare-const MIN1 Int) \n (declare-const MAX1 Int) \n\n";
 
