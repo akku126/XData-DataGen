@@ -273,7 +273,6 @@ public class PopulateTestData {
 		Model m = s.getModel();
 
 		for (FuncDecl decl : m.getFuncDecls()) {
-			System.out.println(decl.getRange().getSExpr());
 			if (decl.getRange().getSExpr().endsWith("_TupleType")) {
 				FuncInterp interp = m.getFuncInterp(decl);
 				if (interp.getNumEntries() == 0) {

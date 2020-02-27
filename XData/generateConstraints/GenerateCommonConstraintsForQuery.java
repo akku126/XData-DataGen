@@ -193,7 +193,6 @@ public class GenerateCommonConstraintsForQuery {
 			
 		}catch(Exception e){
 			logger.log(Level.SEVERE,e.getMessage());		
-			System.out.println(e.getMessage());
 		}
 		return false;
 	}
