@@ -200,19 +200,38 @@ public class PopulateTestData {
 			BufferedReader input =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+filePath+"/" + cvcOutputFileName));
 			try {
                 String line = null; 
+                boolean first=true; 
                 while ((line = input.readLine()) != null) {
                     if(line.contains("(define-fun ")  && line.contains("_TupleType")) {
+//                    	System.out.println(line); 
                         //setContents(testFile,line, true);
+                    	
+                    	int level=0;
+                    	boolean kept=false;
+                   
                         while ((line = input.readLine()) != null) {
                             if(!line.contains("(ite") && !line.contains("!")) {
+                            		
                                     if(line.contains("define-fun")) {
                                         //input.mark(1000);
+//                                    	setContents(testFile,"\n", true);
                                         input.reset();
                                         break;
                                     } else if (line.startsWith(")")) {
                                         break;
                                     }
-                                    setContents(testFile,line+"\n", true);
+                                    if(line.contains("TupleType") && first==false ) {
+                                    		setContents(testFile,"\n", true);
+                                    }
+                                    if(line.contains("const") && line.contains("Array")) {
+                            			setContents(testFile,line, true);
+                            			first=false;
+                            			kept=true; 
+                            		} 
+                                    else {
+                                    	setContents(testFile,line+" ", true);
+                                    	first=false; 
+                                    }
                             }
                             input.mark(100);
                         }
@@ -1047,3 +1066,4 @@ public class PopulateTestData {
 
 
 }
+
