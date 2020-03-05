@@ -4,5 +4,7 @@
 XData/z3
 XData/temp_smt
 *.log
+*.log.*
 *.DS_Store
 XData/.settings
+XData/jars/com.microsoft.z3.jar
