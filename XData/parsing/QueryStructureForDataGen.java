@@ -135,9 +135,8 @@ public class QueryStructureForDataGen{
 				column = (Column)c.next();
 				
 				column.intializeColumnValuesVector();
-				
-				String qs = "select distinct " + column.getColumnName() + " from " + table.getTableName() + " limit 50";
-				
+				// String qs = "select distinct " + column.getColumnName() + " from " + table.getTableName().toLowerCase() + " limit 50";
+				String qs = "select distinct " + column.getColumnName() + " from " + table.getTableName() + " limit 50";// added by ram for my sql
 				PreparedStatement ps = cvc.getConnection().prepareStatement(qs);
 				
 				ResultSet rs = ps.executeQuery();
@@ -158,7 +157,8 @@ public class QueryStructureForDataGen{
 						count++;
 					}
 				}
-				if(rsmd.getColumnTypeName(1).equals("varchar"))
+				//if(rsmd.getColumnTypeName(1).equals("varchar"))
+				if(rsmd.getColumnTypeName(1).equalsIgnoreCase("varchar")) // added by rambabu for mysql
 				{
 					while(count < 20)
 					{
@@ -278,6 +278,7 @@ public class QueryStructureForDataGen{
 			fkClosure.add( qStructure.getTableMap().getTables().get(tableName.toUpperCase()));
 			fkClosureQueue.addLast(qStructure.getTableMap().getTables().get(tableName.toUpperCase()));
 			logger.log(Level.INFO,"fkClosureQueue.add tables: \n "+qStructure.getTableMap().getTables().get(tableName.toUpperCase()));
+			
 		}
 		
 			for(QueryStructure fromQs : qStructure.getFromClauseSubqueries()){
@@ -285,6 +286,7 @@ public class QueryStructureForDataGen{
 					fkClosure.add( qStructure.getTableMap().getTables().get(tableName.toUpperCase()));
 					fkClosureQueue.addLast(qStructure.getTableMap().getTables().get(tableName.toUpperCase()));
 					logger.log(Level.INFO,"fkClosureQueue.add tables: \n "+qStructure.getTableMap().getTables().get(tableName.toUpperCase()));
+					
 				}
 			}
 		
@@ -293,6 +295,7 @@ public class QueryStructureForDataGen{
 					fkClosure.add( qStructure.getTableMap().getTables().get(tableName.toUpperCase()));
 					fkClosureQueue.addLast(qStructure.getTableMap().getTables().get(tableName.toUpperCase()));
 					logger.log(Level.INFO,"fkClosureQueue.add tables: \n "+qStructure.getTableMap().getTables().get(tableName.toUpperCase()));
+					
 				}			
 		}
 				

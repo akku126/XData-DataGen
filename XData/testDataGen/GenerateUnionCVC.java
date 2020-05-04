@@ -241,7 +241,10 @@ public class GenerateUnionCVC implements Serializable{
 		
 		
 		genCVCleft=new GenerateCVC1();
-		RelatedToPreprocessing.uploadBranchQueriesDetails(genCVCleft);
+		genCVCleft.setFilePath(cvc.getFilePath());
+		if(Configuration.calledFromApplicationTester) {
+			RelatedToPreprocessing.uploadBranchQueriesDetails(genCVCleft);
+		}
 		genCVCleft.getBranchQueries().intitializeDetails(genCVCleft);
 		genCVCleft.setFne(false);
 		genCVCleft.setIpdb(false);
@@ -280,7 +283,10 @@ public class GenerateUnionCVC implements Serializable{
 		
 		
 		genCVCright=new GenerateCVC1();
-		RelatedToPreprocessing.uploadBranchQueriesDetails(genCVCright);
+		genCVCright.setFilePath(cvc.getFilePath());
+		if(Configuration.calledFromApplicationTester) {
+			RelatedToPreprocessing.uploadBranchQueriesDetails(genCVCright);
+		}
 		genCVCright.getBranchQueries().intitializeDetails(genCVCright);
 		genCVCright.setFne(false);
 		genCVCright.setIpdb(false);	

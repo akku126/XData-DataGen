@@ -20,7 +20,7 @@ public class AggregateFunction implements java.io.Serializable{
 	String aggAliasName;
 
 	/**
-	 * COnstructor. Added by Mahesh
+	 * Constructor. Added by Mahesh
 	 */
 	public AggregateFunction(){
 		this.aggExp = null;

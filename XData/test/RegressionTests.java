@@ -28,9 +28,15 @@ public class RegressionTests {
 	}
 
 	private Connection getTestConn() throws Exception{
-		Class.forName("org.postgresql.Driver");
-		String loginUrl = "jdbc:postgresql://" + Configuration.getProperty("databaseIP") + ":" + Configuration.getProperty("databasePort") + "/" + Configuration.getProperty("databaseName");
-		return DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));
+//		Class.forName("org.postgresql.Driver");
+//		String loginUrl = "jdbc:postgresql://" + Configuration.getProperty("databaseIP") + ":" + Configuration.getProperty("databasePort") + "/" + Configuration.getProperty("databaseName");
+//		return DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));
+		
+		// for mysql 
+		Class.forName("com.mysql.cj.jdbc.Driver");
+		String loginUrl = "jdbc:mysql://" + Configuration.getProperty("databaseIP") + ":" + Configuration.getProperty("databasePort") + "/" + Configuration.getProperty("databaseName");
+		return DriverManager.getConnection(loginUrl, Configuration.getProperty("existingDatabaseUser"), Configuration.getProperty("existingDatabaseUserPasswd"));
+
 	}
 
 	/**
@@ -247,6 +253,9 @@ public class RegressionTests {
 			
 			if(!errors.isEmpty())
 				testResult.put(queryId, errors);
+			
+			//added by rambabu for testing
+			System.out.println("query id done: "+ queryId);
 			
 		}
 		

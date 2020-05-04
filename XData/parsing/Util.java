@@ -1605,7 +1605,8 @@ public static void foreignKeyClosure(QueryStructure qParser) {
 	for (String tableName : qParser.getLstRelations()) {
 		fkClosure.add( qParser.getTableMap().getTables().get(tableName.toUpperCase()));
 		fkClosureQueue.addLast(qParser.getTableMap().getTables().get(tableName.toUpperCase()));
-		logger.log(Level.FINE,"fkClosureQueue.add tables: \n "+qParser.getTableMap().getTables().get(tableName.toUpperCase()));
+		
+		logger.log(Level.FINE,"fkClosureQueue.add tables: \n "+qParser.getTableMap().getTables().get(tableName.toUpperCase())); 
 	}
 	while(!fkClosureQueue.isEmpty())
 	{

@@ -68,7 +68,9 @@ public class GenerateUniqueKeyConstraints {
 						Column g = u.getColumn();
 						String t = g.getTableName();
 						int offset = cvc.getRepeatedRelNextTuplePos().get(tableNameNo)[1];
-						int Index = cvc.getTableMap().getTable(t).getColumnIndex(g.getColumnName());
+						//int Index = cvc.getTableMap().getTable(t).getColumnIndex(g.getColumnName());
+						int Index = cvc.getTableMap().getTable(t.toUpperCase()).getColumnIndex(g.getColumnName()); //added by rambabu
+						
 
 						constObj.setLeftConstraint(constraintGen.getDistinctConstraint(t, u.getColumn(), (k + offset -1), Index, t, u.getColumn(), (j +  offset -1), Index));
 						constrList.add(constObj);

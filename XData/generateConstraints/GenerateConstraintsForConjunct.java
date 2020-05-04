@@ -242,6 +242,7 @@ public class GenerateConstraintsForConjunct {
 			if(tableNo == null || tableNo.isEmpty()){
 				tableNo =  selectionConds.get(k).getLeft().getTableNameNo();
 			}
+			
 			int offset = cvc.getRepeatedRelNextTuplePos().get(tableNo)[1];
 
 			int count = cvc.getNoOfTuples().get(tableNo) * queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */

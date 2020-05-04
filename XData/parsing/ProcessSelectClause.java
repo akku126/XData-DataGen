@@ -1731,7 +1731,7 @@ public class ProcessSelectClause{
 			n.getLeft().getSubQueryConds().clear();
 		}
 		else  { 
-			if(n.getRight() != null &&n.getRight().getSubQueryConds() != null && n.getRight().getSubQueryConds().size() >0 && n.getSubQueryConds()!=null){
+			if(n.getRight() != null && n.getRight().getSubQueryConds() != null && n.getRight().getSubQueryConds().size() >0 && n.getSubQueryConds()!=null){
 				n.setSubQueryConds(n.getRight().getSubQueryConds());
 				n.getRight().getSubQueryConds().clear();
 			}
@@ -2369,7 +2369,8 @@ public class ProcessSelectClause{
 				//Case where column name of ancestor table is used in a subquery without any table alias.
 				else if(n.getTableNameNo().isEmpty() && n.getTableAlias().isEmpty() && n.getTable() == null){
 					logger.log(Level.FINE,"No Table/Aliasdetails exists other than Column Name. So find the table in fle and check if column name matches any parent table. ");
-					Table table=qStruct.getTableMap().getTable(fle.getTableName());
+					//Table table=qStruct.getTableMap().getTable(fle.getTableName());
+					Table table=qStruct.getTableMap().getTable(fle.getTableName().toUpperCase()); // added by rambabu
 					parsing.Column c;
 					if((c=table.getColumn(n.getColumn().getColumnName().toUpperCase()))!=null){
 						n.setTableNameNo(fle.getTableNameNo());
@@ -2549,7 +2550,8 @@ public class ProcessSelectClause{
 						 
 					}else{
 						FromItem frm = ps.getFromItem();
-						if(frm instanceof Table){
+						//if(frm instanceof Table){
+						if(frm instanceof net.sf.jsqlparser.schema.Table){ // added by rambabu 
 							 l.add(generateRelationHierarchyJSQL(frm));
 						}
 					}
@@ -2570,7 +2572,8 @@ public class ProcessSelectClause{
 						 
 					}else{
 						FromItem frm = ps.getFromItem();
-						if(frm instanceof Table){
+						//if(frm instanceof Table){
+						if(frm instanceof net.sf.jsqlparser.schema.Table){ // added by rambabu 
 							 l.add(generateRelationHierarchyJSQL(frm));
 						}
 					}
@@ -2586,7 +2589,8 @@ public class ProcessSelectClause{
 						 
 					}else{
 						FromItem frm = ps.getFromItem();
-						if(frm instanceof Table){
+						//if(frm instanceof Table){
+						if(frm instanceof net.sf.jsqlparser.schema.Table){ // added by rambabu 
 							 l.add(generateRelationHierarchyJSQL(frm));
 						}
 					}
