@@ -826,7 +826,7 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 
 	public static void printPredicateVector(Vector<Node> v){
 		for(int i=0;i< v.size();i++){
-			System.out.print(v.get(i).toString()+", ");
+			//System.out.print(v.get(i).toString()+", ");
 		}
 	}
 

@@ -45,7 +45,7 @@ public class GenerateDataForOriginalQuery {
 
 			/**set the type of mutation we are trying to kill*/
 			cvc.setTypeOfMutation(mutationType);
-
+			
 			/**Get the null and database constraints - get the number of output tuples
 			 * and generate other constraints  accordingly*/
 			GenerateCommonConstraintsForQuery.generateNullandDBConstraints(cvc,false);

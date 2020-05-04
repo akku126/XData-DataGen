@@ -1,3 +1,12 @@
-*.log
 *.class
+<<<<<<< HEAD
 /bin/
+=======
+*.properties
+*.metadata
+XData/z3
+XData/temp_smt
+*.log
+*.DS_Store
+XData/.settings
+>>>>>>> f7e6659511b2109430786a6a5eb3aea54a9fb032

@@ -44,13 +44,13 @@ public class GenerateCommonConstraintsForQuery {
 			/** Add null constraints for the query */
 			getNullConstraintsForQuery(cvc);
 
-
 			if( cvc.getCVCStr() == null)
 				cvc.setCVCStr("");
 			String CVCStr = cvc.getCVCStr();
 
 			/**Add constraints related to database */
 			CVCStr += AddDataBaseConstraints.addDBConstraints(cvc);
+
 			cvc.setCVCStr(CVCStr);
 		}catch (TimeoutException e){
 			logger.log(Level.SEVERE,e.getMessage(),e);		
@@ -69,8 +69,8 @@ public class GenerateCommonConstraintsForQuery {
 	 * @throws Exception
 	 */
 	public static boolean generateDataSetForConstraints(GenerateCVC1 cvc, Boolean unique) throws Exception{
-
 		try{
+
 			if( cvc.getCVCStr() == null)
 				cvc.setCVCStr("");
 			String CVCStr = cvc.getCVCStr();
@@ -88,7 +88,7 @@ public class GenerateCommonConstraintsForQuery {
 			if( cvc.getBranchQueries().getBranchQuery() != null)
 			{
 				cvc.getConstraints().add( ConstraintGenerator.addCommentLine("BRANCHQUERY CONSTRAINTS"));
-				cvc.getConstraints().add( GenerateConstraintsRelatedToBranchQuery.addBranchQueryConstraints( cvc ));
+				cvc.getConstraints().add( GenerateConstraintsRelatedToBranchQuery.addBranchQueryConstraints(cvc));
 				cvc.getConstraints().add( ConstraintGenerator.addCommentLine("END OF BRANCHQUERY CONSTRAINTS"));
 			}
 
@@ -150,8 +150,9 @@ public class GenerateCommonConstraintsForQuery {
 			}else{
 				/** Call CVC3 Solver with constraints */
 				logger.log(Level.INFO,"cvc count =="+cvc.getCount());
-				Utilities.writeFile(Configuration.homeDir + "temp_smt" + cvc.getFilePath() + "/z3_" + cvc.getCount() + ".smt", CVCStr);
 
+				Utilities.writeFile(Configuration.homeDir + "/temp_smt" + cvc.getFilePath() + "/z3_" + cvc.getCount() + ".smt", CVCStr);
+				
 				success= new PopulateTestData().killedMutantsForSMT("z3_" + cvc.getCount() 
 				+ ".smt", cvc.getQuery(), 
 				"DS" + cvc.getCount(), cvc.getQueryString(), cvc.getFilePath(), cvc.getNoOfOutputTuples(), cvc.getTableMap(), 
@@ -195,13 +196,13 @@ public class GenerateCommonConstraintsForQuery {
 	}
 
 	public static boolean generateDataSetForConstraints(GenerateCVC1 cvc) throws Exception{
-		try{
+		try {
 			generateNullandDBConstraints(cvc,false);
 			return generateDataSetForConstraints(cvc, false);
-		}catch (TimeoutException e){
+		} catch (TimeoutException e) {
 			logger.log(Level.SEVERE,e.getMessage(),e);		
 			throw e;
-		}catch(Exception e){
+		} catch(Exception e) {
 			logger.log(Level.SEVERE,e.getMessage(),e);		
 			throw e;
 		}

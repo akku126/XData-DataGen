@@ -217,6 +217,7 @@ public class RegressionTests {
 			List<String> errors=new ArrayList<String>();
 			
 			String query=queryMap.get(queryId);
+			System.out.println(query);
 			List<String> datasets;
 			//Generate datasets
 			datasets=generateDataSets(queryId,query);

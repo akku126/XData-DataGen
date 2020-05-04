@@ -198,9 +198,9 @@ public class GenerateDataSet {
 			
 			File f=new File(Configuration.homeDir+"/temp_smt"+cvc.getFilePath()+"/");
 			
-			if(f.exists()){		
+			if (f.exists()) {		
 				File f2[]=f.listFiles();
-				if(f2 != null)
+				if (f2 != null)
 				for(int i=0;i<f2.length;i++){
 					if(f2[i].isDirectory() && f2[i].getName().startsWith("DS")){
 						
@@ -210,12 +210,12 @@ public class GenerateDataSet {
 			}
 			
 			File dir= new File(Configuration.homeDir+"/temp_smt"+cvc.getFilePath());
-			if(dir.exists()){
-				for(File file: dir.listFiles()) {
+			if (dir.exists()) {
+				for (File file: dir.listFiles()) {
 					file.delete();
 				}
 			}
-			else{
+			else {
 				dir.mkdirs();
 			}
 		}
@@ -312,7 +312,6 @@ public class GenerateDataSet {
 			int queryId=1;
 			//String query = "select * from instructor where dept_name not in (select dept_name from department where building != 'Watson')" ;
 			String query = "select count(dept_name) from student group by name having count(id) < 10";
-
 			//String query = "select course_id from section as S where semester = 'Fall' and year = 2009 and not exists (select * from section as T where semester = 'Spring' and year = 2010 and S.course_id = T.course_id)";
 			//String query = "select name from instructor where salary > some (select salary from instructor where dept_name = ’Biology’)";
 			//String query = "select count(distinct room_number) from classroom, department where department.dept_name = 'Comp. Sci.' and department.building = classroom.building";
@@ -325,7 +324,18 @@ public class GenerateDataSet {
 			//String query ="select dept_name, avg(salary) as avg_salary from instructor group by dept_name having avg(salary) > 42000";
 			//String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year > 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201')";
 			//String query = "select name, title from (instructor natural join teaches) join course using (course_id)";
+<<<<<<< HEAD
 			//String query = "select id, name from student where tot_cred>30";
+=======
+//			String query = "(select course_id\n" + 
+//					"from section\n" + 
+//					"where semester = 'Fall' and year= 2009)\n" + 
+//					"union\n" + 
+//					"(select course_id\n" + 
+//					"from section\n" + 
+//					"where semester = 'Spring' and year= 2010)";
+			 //String query = "select id, name from student where tot_cred>30";
+>>>>>>> f7e6659511b2109430786a6a5eb3aea54a9fb032
 			/* I----*/
 			  //String query = "select id, name from student where tot_cred>30";
 			 
@@ -406,9 +416,9 @@ public class GenerateDataSet {
 			
 			GenerateDataSet d=new GenerateDataSet();
 			//Application Testing
-			AppTest_Parameters obj = new AppTest_Parameters ();
+			AppTest_Parameters obj = new AppTest_Parameters();
 
-			
+
 			//end
 			d.generateDatasetForQuery(conn,queryId,query,  schemaFile,  sampleDataFile,  orderDependent,  tempFilePath, obj);
 			long stopTime = System.currentTimeMillis();
