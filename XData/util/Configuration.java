@@ -23,6 +23,8 @@ public class Configuration implements ConfigurationInterface{
 	public static String logLevel=getProperty("logLevel");
 	public static String tempJoins=getProperty("tempJoins");
 	public static String databaseType = getProperty("databaseType");
+	public static boolean calledFromApplicationTester = false;
+
 	
 	//public static String assignmentFolder= getProperty("assignmentFolder");
 	public static ConfigurationInterface object;

@@ -268,6 +268,9 @@ public class RegressionTests {
 			if(!errors.isEmpty())
 				testResult.put(queryId, errors);
 			
+			//added by rambabu for testing
+			System.out.println("query id done: "+ queryId);
+			
 		}
 		
 		return testResult;

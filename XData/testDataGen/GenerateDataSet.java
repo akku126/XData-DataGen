@@ -92,8 +92,7 @@ public class GenerateDataSet {
 			
 			PreProcessingActivity.preProcessingActivity(cvc);
 			return listOfDatasets(cvc);
-			
-			
+				
 		}
 		
 		/**
@@ -114,7 +113,7 @@ public class GenerateDataSet {
 			dataBytes = schema.getBytes();
 			tempFile = "/tmp/dummy";
 			
-			 fos = new FileOutputStream(tempFile);
+			fos = new FileOutputStream(tempFile);
 			fos.write(dataBytes);
 			fos.close();
 			listOfQueries = Utilities.createQueries(tempFile);
@@ -224,7 +223,8 @@ public class GenerateDataSet {
 		public static void deleteAllTablesFromTestUser(Connection conn) throws Exception{
 			try{
 				DatabaseMetaData dbm = conn.getMetaData();
-				// added by ram
+
+				// added by rambabu
 				String dbType = dbm.getDatabaseProductName(); 
 				System.out.println(dbType);
 				
@@ -320,8 +320,9 @@ public class GenerateDataSet {
 			}
 			
 			int queryId=1;
-			String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year = 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201' AND prereq.course_id = course.course_id)";
-			//String query = "select * from classroom, section where classroom.building = section.building and classroom.room_number = section.room_number";
+			//String query = "select * from instructor where dept_name not in (select dept_name from department where building != 'Watson')" ;
+			String query = "select count(dept_name) from student group by name having count(id) < 10";
+			//String query = "select course_id from section as S where semester = 'Fall' and year = 2009 and not exists (select * from section as T where semester = 'Spring' and year = 2010 and S.course_id = T.course_id)";
 			//String query = "select name from instructor where salary > some (select salary from instructor where dept_name = ’Biology’)";
 			//String query = "select count(distinct room_number) from classroom, department where department.dept_name = 'Comp. Sci.' and department.building = classroom.building";
 			//String query = "with max_budget (value) as (select max(budget) from department) select budget from department, max_budget where department.budget = max_budget.value";
@@ -333,14 +334,8 @@ public class GenerateDataSet {
 			//String query ="select dept_name, avg(salary) as avg_salary from instructor group by dept_name having avg(salary) > 42000";
 			//String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year > 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201')";
 			//String query = "select name, title from (instructor natural join teaches) join course using (course_id)";
-//			String query = "(select course_id\n" + 
-//					"from section\n" + 
-//					"where semester = 'Fall' and year= 2009)\n" + 
-//					"union\n" + 
-//					"(select course_id\n" + 
-//					"from section\n" + 
-//					"where semester = 'Spring' and year= 2010)";
-			 //String query = "select id, name from student where tot_cred>30";
+			//String query = "select id, name from student where tot_cred>30";
+
 			/* I----*/
 			  //String query = "select id, name from student where tot_cred>30";
 			 
@@ -410,7 +405,7 @@ public class GenerateDataSet {
 			 //* ---->>>problem with this particular query
 			 //*/
 			//String query = "select name from instructor where salary is null";
-			
+		
 			
 			File schemaFile=new File("test/universityTest/DDL.sql");
 			File sampleDataFile=new File("test/universityTest/sampleData.sql");

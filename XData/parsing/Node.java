@@ -14,7 +14,7 @@ import parsing.QueryStructure;
 import util.*;
 
 public class Node implements Cloneable, Serializable, NodeInterface{
-	
+
 	private static final long serialVersionUID = -7192918525557389737L;
 	private static String valType = "VALUE";
 	private static String colRefType = "COLREF";
@@ -23,7 +23,7 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 	private static String notNodeType = "NOT NODE";
 	private static String inNodeType = "IN";
 	private static String notInNodeType = "NOT IN";
-//	private static String allAnyNodeType = "ALL/ANY"; commented by mathew on 29 June 2016
+	//	private static String allAnyNodeType = "ALL/ANY"; commented by mathew on 29 June 2016
 	private static String allNodeType = "ALL";
 	private static String anyNodeType = "ANY";
 	private static String existsNodeType = "EXISTS";
@@ -39,7 +39,7 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 	private static String extractFuncType ="EXTRACT NODE";
 	private static String caseNodeType ="CASE NODE";
 	private static String compositeNodeType="COMPOSITE NODE";
-	
+
 	AggregateFunction agg;
 
 	String type;
@@ -55,11 +55,11 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 	Boolean isMutant;
 	public boolean isCorrelated=false;
 	public boolean isInNode = false;
-	
+
 	Node lhsRhs; 	//has value if IN NODE
 	Vector<Node> subQueryConds; //has value if any sub query node: IN NODE, EXISTS NODE etc.
 	CaseCondition caseCondition;
-	
+
 	/**
 	 * @return the ccNode
 	 */
@@ -87,10 +87,10 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 		caseCondition=null;
 		aliasName=null;
 		caseExpression=null;
-	    subQueryParser=null;
+		subQueryParser=null;
 	}
 
- //the following lines added by mathew on 1st october 2016
+	//the following lines added by mathew on 1st october 2016
 
 	public Node(boolean composite){
 		type = null;
@@ -105,70 +105,70 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 		}
 		caseExpression=null;
 	}
-	
-		QueryStructure subQueryStructure;
-		
-		public QueryStructure getSubQueryStructure(){
-			return subQueryStructure;
-		}
+
+	QueryStructure subQueryStructure;
+
+	public QueryStructure getSubQueryStructure(){
+		return subQueryStructure;
+	}
 
 
 	QueryParser subQueryParser;
-		
-		public QueryParser getSubQueryParser(){
-			return subQueryParser;
-		}
-		
-		public void setSubQueryParser(QueryParser subQP){
-			this.subQueryParser=subQP;
-		}
-		
 
-		
-		public void setSubQueryStructure(QueryStructure subQP){
-			this.subQueryStructure=subQP;
-		}
-		
-		private String aliasName;
-		
-		public String getAliasName(){
-			return aliasName;
-		}
-		
-		public void setAliasName(String aName){
-			this.aliasName=aName;
-		}
-		
-		public boolean isComposite;
-		private List<Node> componentNodes;
-		
-		public List<Node> getComponentNodes(){
-			return componentNodes;
-		}
-		
-		public void setComponentNodes(List<Node> nodes){
-			componentNodes=nodes;
-		}
-		
-		public void addComponentNode(Node n){
-			componentNodes.add(n);
-		}
-		
-		CaseExpression caseExpression;
-		
-		/**
-		 * @return the ccNode
-		 */
-		public CaseExpression getCaseExpression() {
-			return caseExpression;
-		}
-		/**
-		 * @param ccNode the ccNode to set
-		 */
-		public void setCaseExpression(CaseExpression cExpression) {
-			this.caseExpression = cExpression;
-		}
-	
+	public QueryParser getSubQueryParser(){
+		return subQueryParser;
+	}
+
+	public void setSubQueryParser(QueryParser subQP){
+		this.subQueryParser=subQP;
+	}
+
+
+
+	public void setSubQueryStructure(QueryStructure subQP){
+		this.subQueryStructure=subQP;
+	}
+
+	private String aliasName;
+
+	public String getAliasName(){
+		return aliasName;
+	}
+
+	public void setAliasName(String aName){
+		this.aliasName=aName;
+	}
+
+	public boolean isComposite;
+	private List<Node> componentNodes;
+
+	public List<Node> getComponentNodes(){
+		return componentNodes;
+	}
+
+	public void setComponentNodes(List<Node> nodes){
+		componentNodes=nodes;
+	}
+
+	public void addComponentNode(Node n){
+		componentNodes.add(n);
+	}
+
+	CaseExpression caseExpression;
+
+	/**
+	 * @return the ccNode
+	 */
+	public CaseExpression getCaseExpression() {
+		return caseExpression;
+	}
+	/**
+	 * @param ccNode the ccNode to set
+	 */
+	public void setCaseExpression(CaseExpression cExpression) {
+		this.caseExpression = cExpression;
+	}
+
 	/**
 	 * Copy constructor. Added by Mahesh
 	 * @param functionName
@@ -218,21 +218,21 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 			this.joinType = null;
 		else
 			this.joinType = new String(n.getJoinType());
-		
+
 		this.isDistinct = n.isDistinct;
-		
+
 		if(n.getCaseExpression()==null){
 			this.caseExpression=null;
 		}
 		else{
 			this.setCaseExpression(n.getCaseExpression());
 		}
-		
+
 		if(n.getCaseCondition()==null)
 			this.caseCondition=null;
-			else{
-				
-			}
+		else{
+
+		}
 		if(n.getLhsRhs() == null)
 			this.lhsRhs = null;
 		else
@@ -245,9 +245,9 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 			for(Node n2: n.getSubQueryConds())
 				this.subQueryConds.add(new Node(n2));
 		}
-		
-		
-		
+
+
+
 		if(n.getLeft() == null)
 			this.left =null;
 		else
@@ -365,7 +365,7 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 			right=this.getRight().clone();
 		((Node)obj).setLeft(left);
 		((Node)obj).setRight(right);
-		
+
 		return (Node)obj;
 	}
 	public static String complimentOperator(String op)
@@ -431,15 +431,15 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 		return notExistsNodeType;
 	}
 
-//commented by mathew on 29th June 2016
-//	public static String getAllAnyNodeType() {
-//		return allAnyNodeType;
-//	}
-	
+	//commented by mathew on 29th June 2016
+	//	public static String getAllAnyNodeType() {
+	//		return allAnyNodeType;
+	//	}
+
 	public static String getCompositeNodeType(){
 		return compositeNodeType;
 	}
-	
+
 	public static String getAllNodeType() {
 		return allNodeType;
 	}
@@ -472,11 +472,11 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 	public boolean isDistinct(){
 		return isDistinct;
 	}
-	
+
 	public void setDistinct(boolean isDistinct){
 		this.isDistinct = isDistinct;
 	}
-	
+
 	public static String getAggrNodeType() {
 		return aggrNodeType;
 	}
@@ -611,33 +611,33 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 			}
 			return retString;
 		}
-		 else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getInNodeType())){
-			 if(this.getLeft()!=null){
-				 retString+=" "+this.getLeft();
-			 }
-				retString+=" "+Node.getInNodeType()+" ";
-			 if(this.getRight()!=null&&this.getRight().getSubQueryStructure()!=null){
-				 retString+="("+this.getRight().getSubQueryStructure().getQuery().getQueryString()+")";;
-			 }
-			 else if(this.getRight()!=null&&this.getRight().isComposite){
-				 retString+=this.getRight().toString();
-			 }
+		else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getInNodeType())){
+			if(this.getLeft()!=null){
+				retString+=" "+this.getLeft();
+			}
+			retString+=" "+Node.getInNodeType()+" ";
+			if(this.getRight()!=null&&this.getRight().getSubQueryStructure()!=null){
+				retString+="("+this.getRight().getSubQueryStructure().getQuery().getQueryString()+")";;
+			}
+			else if(this.getRight()!=null&&this.getRight().isComposite){
+				retString+=this.getRight().toString();
+			}
 			return retString;
 		}
-		 else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getNotInNodeType())){
-				if(this.getLeft()!=null){
-					retString+=" "+this.getLeft();
-				}
-				retString+=" "+Node.getNotInNodeType()+" ";
-				
-				if(this.getRight()!=null&&this.getRight().getSubQueryStructure()!=null){
-					retString+="("+this.getRight().getSubQueryStructure().getQuery().getQueryString()+")";;
-				}
-				else if(this.getRight()!=null&&this.getRight().isComposite){
-					retString+=this.getRight().toString();
-				}
-				return retString;
+		else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getNotInNodeType())){
+			if(this.getLeft()!=null){
+				retString+=" "+this.getLeft();
 			}
+			retString+=" "+Node.getNotInNodeType()+" ";
+
+			if(this.getRight()!=null&&this.getRight().getSubQueryStructure()!=null){
+				retString+="("+this.getRight().getSubQueryStructure().getQuery().getQueryString()+")";;
+			}
+			else if(this.getRight()!=null&&this.getRight().isComposite){
+				retString+=this.getRight().toString();
+			}
+			return retString;
+		}
 		else if(this.getType()!=null&& this.getType().equalsIgnoreCase(Node.getAnyNodeType())){
 			retString+=" "+Node.getAnyNodeType()+" ";
 			if(this.getSubQueryStructure()!=null){
@@ -652,7 +652,7 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 			}
 			return retString;
 		}
-		 else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getExistsNodeType())){
+		else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getExistsNodeType())){
 			retString+=" "+Node.getExistsNodeType()+" ";
 			if(this.getSubQueryStructure()!=null){
 				retString+="("+this.getSubQueryStructure().getQuery().getQueryString()+")";
@@ -660,23 +660,23 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 			return retString;
 		}
 
-		 else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getNotExistsNodeType())){
+		else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getNotExistsNodeType())){
 			retString+=" "+Node.getNotExistsNodeType()+" ";
 			if(this.getSubQueryStructure()!=null){
 				retString+="("+this.getSubQueryStructure().getQuery().getQueryString()+")";
 			}
 			return retString;
 		}
-		 else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getCaseNodeType())){
-			 return this.getCaseExpression().toString();
-		 }
-		 else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getExtractFuncType())){
-			 retString=" Extract("+this.getStrConst()+" FROM ";
-					 if(this.getLeft()!=null)
-						 retString+=this.getLeft();
-					 retString+=")";
-			 		return retString;
-		 }
+		else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getCaseNodeType())){
+			return this.getCaseExpression().toString();
+		}
+		else if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getExtractFuncType())){
+			retString=" Extract("+this.getStrConst()+" FROM ";
+			if(this.getLeft()!=null)
+				retString+=this.getLeft();
+			retString+=")";
+			return retString;
+		}
 		if(this.getType()!=null&&this.getType().equalsIgnoreCase(Node.getValType())){
 			return this.getStrConst();
 		}
@@ -764,12 +764,12 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 		}
 	}
 
-/**
- * 
- * @param base
- * @param paramMap
- * @return
- */
+	/**
+	 * 
+	 * @param base
+	 * @param paramMap
+	 * @return
+	 */
 	public String toSMTString(int base, HashMap<String, String> paramMap){
 		if(this.getType().equalsIgnoreCase(Node.getAggrNodeType())){
 			return this.getAgg().getFunc();
@@ -823,7 +823,7 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 		}
 	}
 
-	
+
 	public static void printPredicateVector(Vector<Node> v){
 		for(int i=0;i< v.size();i++){
 			//System.out.print(v.get(i).toString()+", ");
@@ -839,7 +839,7 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 	public void setType(String type) {
 		this.type = type;
 	}
-	
+
 	public Boolean getIsMutant() {
 		return isMutant;
 	}
@@ -861,26 +861,26 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 		}
 		else if(this.getType().equalsIgnoreCase(Node.getBroNodeType())){
 			//if(!this.getLeft().getType().equalsIgnoreCase(Node.aggrNodeType) &&
-				//	!this.getRight().getType().equalsIgnoreCase(Node.aggrNodeType)){
+			//	!this.getRight().getType().equalsIgnoreCase(Node.aggrNodeType)){
 
 			//following if condition added by mathew to avoid null pointer exception
 			if(this.getLeft()!=null && this.getRight()!=null)
 				return this.getLeft().containsConstant() || this.getRight().containsConstant();
-		//	}
-				/*else if(this.getLeft().getType().equalsIgnoreCase(Node.aggrNodeType) &&
+			//	}
+			/*else if(this.getLeft().getType().equalsIgnoreCase(Node.aggrNodeType) &&
 					!this.getRight().getType().equalsIgnoreCase(Node.aggrNodeType)){
-				
+
 				this.setLeft(this.getRight());
 				this.getRight().containsConstant();
-				
+
 			}else if(this.getRight().getType().equalsIgnoreCase(Node.aggrNodeType) &&
 					!this.getLeft().getType().equalsIgnoreCase(Node.aggrNodeType)){
-				
+
 				this.setRight(this.getLeft());
 				this.getLeft().containsConstant();
-				
+
 			}*/
-			
+
 		}
 		return false;
 	}
@@ -1091,7 +1091,7 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 			if(!other.strConst.equals(strConst))
 				return false;
 		}
-		
+
 		/*if (type == null) {
 			if (other.type != null)
 				return false;
@@ -1135,7 +1135,7 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 	public static void setCaseNodeType(String caseNodeType) {
 		Node.caseNodeType = caseNodeType;
 	}
-	
+
 	/**@author mathew on 2 Feb 2017 
 	 * 
 	 * For enabling sorting of a list of nodes in ascending order of their

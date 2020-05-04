@@ -112,7 +112,8 @@ public class GenerateConstraintsForPartialGroup_case2 {
 			/** Get tuple details */
 			int count = cvc.getNoOfTuples().get(tableNameNo);
 			int offset = cvc.getRepeatedRelNextTuplePos().get(tableNameNo)[1];
-			int Index = cvc.getTableMap().getTable(t).getColumnIndex(g.getColumnName());
+			//int Index = cvc.getTableMap().getTable(t).getColumnIndex(g.getColumnName());
+			int Index = cvc.getTableMap().getTable(t.toUpperCase()).getColumnIndex(g.getColumnName()); // added by rambabu
 
 
 			int group = (i-1)*count;/**get group number*/

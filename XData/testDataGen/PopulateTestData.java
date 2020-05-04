@@ -347,9 +347,10 @@ public class PopulateTestData {
 					copystmt = getCopyStmtFromCvcOutput(line);
 
 					copyFileContents.add(copystmt);
-					////Putting back string values in CVC
+					//Putting back string values in CVC
 
-					Table t=tableMap.getTable(tableName);
+					//Table t=tableMap.getTable(tableName);
+					Table t=tableMap.getTable(tableName.toUpperCase()); // added by rambabu
 
 					String[] copyTemp=copystmt.split("\\|");
 					copystmt="";
@@ -400,12 +401,12 @@ public class PopulateTestData {
 
 
 							/*&copyStr = copyStr.replace("_p", "+");
-						copyStr = copyStr.replace("_m", "-");
-						copyStr = copyStr.replace("_a", "&");
-						copyStr = copyStr.replace("_s", " ");
-						copyStr = copyStr.replace("_d", ".");
-						copyStr = copyStr.replace("_c", ",");
-						copyStr = copyStr.replace("_u", "_");*/
+							copyStr = copyStr.replace("_m", "-");
+							copyStr = copyStr.replace("_a", "&");
+							copyStr = copyStr.replace("_s", " ");
+							copyStr = copyStr.replace("_d", ".");
+							copyStr = copyStr.replace("_c", ",");
+							copyStr = copyStr.replace("_u", "_");*/
 
 							copyStr = copyStr.replace("_p", "%");
 							copyStr = copyStr.replace("_s", "+");
@@ -583,7 +584,7 @@ public class PopulateTestData {
 									copyStr = copyStr.split("__")[1];
 
 
-								/*&copyStr = copyStr.replace("_p", "+");
+						/*&copyStr = copyStr.replace("_p", "+");
 						copyStr = copyStr.replace("_m", "-");
 						copyStr = copyStr.replace("_a", "&");
 						copyStr = copyStr.replace("_s", " ");

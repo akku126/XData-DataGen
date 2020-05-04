@@ -703,7 +703,8 @@ public class StringConstraintSolver implements Serializable
 		String table= (var.split("\\["))[0];
 		String tableName=table.split("O_")[1];
 		int columnIndex=Integer.parseInt((var.split("\\."))[1]);
-		Table t=tableMap.getTable(tableName);
+		//Table t=tableMap.getTable(tableName);
+		Table t=tableMap.getTable(tableName.toUpperCase()); //added by rambabu
 		String cvcDataType=t.getColumn(columnIndex).getCvcDatatype();
 		for(Column c:columns){
 			if(c.getColumnName().equals(cvcDataType)){

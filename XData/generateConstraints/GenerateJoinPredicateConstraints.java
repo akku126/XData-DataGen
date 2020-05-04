@@ -389,8 +389,12 @@ public class GenerateJoinPredicateConstraints {
 			String t1 = getTableName(n1);
 			String t2 = getTableName(n2);
 	
-			int pos1 = cvc.getTableMap().getTable(t1).getColumnIndex(getColumn(n1).getColumnName());
-			int pos2 = cvc.getTableMap().getTable(t2).getColumnIndex(getColumn(n2).getColumnName());
+			//int pos1 = cvc.getTableMap().getTable(t1).getColumnIndex(getColumn(n1).getColumnName());
+			//int pos2 = cvc.getTableMap().getTable(t2).getColumnIndex(getColumn(n2).getColumnName());
+			
+			//below two lines added by rambabu 
+			int pos1 = cvc.getTableMap().getTable(t1.toUpperCase()).getColumnIndex(getColumn(n1).getColumnName());
+			int pos2 = cvc.getTableMap().getTable(t2.toUpperCase()).getColumnIndex(getColumn(n2).getColumnName());
 	
 			String r1 = getTableNameNo(n1);
 			String r2 = getTableNameNo(n2);
@@ -565,8 +569,11 @@ public class GenerateJoinPredicateConstraints {
 		/** get the details of each node */
 		String t1 = n1.getColumn().getTableName();
 		String t2 = n2.getColumn().getTableName();
-		int pos1 = cvc.getTableMap().getTable(t1).getColumnIndex(n1.getColumn().getColumnName());
-		int pos2 = cvc.getTableMap().getTable(t2).getColumnIndex(n2.getColumn().getColumnName());
+		//int pos1 = cvc.getTableMap().getTable(t1).getColumnIndex(n1.getColumn().getColumnName());
+		//int pos2 = cvc.getTableMap().getTable(t2).getColumnIndex(n2.getColumn().getColumnName());
+		
+		int pos1 = cvc.getTableMap().getTable(t1.toUpperCase()).getColumnIndex(n1.getColumn().getColumnName()); // added by rambabu
+		int pos2 = cvc.getTableMap().getTable(t2.toUpperCase()).getColumnIndex(n2.getColumn().getColumnName()); // added by rambabu
 
 		if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true")){
 			 isTempJoin = true;
@@ -790,8 +797,11 @@ public class GenerateJoinPredicateConstraints {
 		/**Get the details of each node */
 		String t1 = n1.getColumn().getTableName();
 		String t2 = n2.getColumn().getTableName();
-		int pos1 = cvc.getTableMap().getTable(t1).getColumnIndex(n1.getColumn().getColumnName());
-		int pos2 = cvc.getTableMap().getTable(t2).getColumnIndex(n2.getColumn().getColumnName());
+		//int pos1 = cvc.getTableMap().getTable(t1).getColumnIndex(n1.getColumn().getColumnName());
+		//int pos2 = cvc.getTableMap().getTable(t2).getColumnIndex(n2.getColumn().getColumnName());
+		
+		int pos1 = cvc.getTableMap().getTable(t1.toUpperCase()).getColumnIndex(n1.getColumn().getColumnName()); //added by rambabu
+		int pos2 = cvc.getTableMap().getTable(t2.toUpperCase()).getColumnIndex(n2.getColumn().getColumnName()); //added by rambabu
 
 		String r1 = n1.getTableNameNo();
 		String r2 = n2.getTableNameNo();

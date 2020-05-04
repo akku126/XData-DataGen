@@ -63,7 +63,8 @@ public class GenerateGroupByConstraints {
 				/** Get the table details */
 				String tableNameNo = groupByNodes.get(j).getTableNameNo();
 				int offset = cvc.getRepeatedRelNextTuplePos().get(tableNameNo)[1];
-				int Index = cvc.getTableMap().getTable(t).getColumnIndex(g.getColumnName());
+				//int Index = cvc.getTableMap().getTable(t).getColumnIndex(g.getColumnName());
+				int Index = cvc.getTableMap().getTable(t.toUpperCase()).getColumnIndex(g.getColumnName()); //added by rambabu
 
 				int count = cvc.getNoOfTuples().get(tableNameNo);
 				int group = (i-1)*count;/**get group number*/
@@ -113,7 +114,8 @@ public class GenerateGroupByConstraints {
 			/** Get the table details */
 			String tableNameNo = groupByNodes.get(j).getTableNameNo();
 			int offset = cvc.getRepeatedRelNextTuplePos().get(tableNameNo)[1];
-			int Index = cvc.getTableMap().getTable(t).getColumnIndex(g.getColumnName());
+			//int Index = cvc.getTableMap().getTable(t).getColumnIndex(g.getColumnName());
+			int Index = cvc.getTableMap().getTable(t.toUpperCase()).getColumnIndex(g.getColumnName()); //added by rambabu
 
 			int count = cvc.getNoOfTuples().get(tableNameNo) * noOfGroups;
 			int group = 0;/**get group number*/
@@ -136,7 +138,7 @@ public class GenerateGroupByConstraints {
 			/** Get the table details */
 			String tableNameNo = extraNode.getTableNameNo();
 			int offset = cvc.getRepeatedRelNextTuplePos().get(tableNameNo)[1];
-			int Index = cvc.getTableMap().getTable(t).getColumnIndex(g.getColumnName());
+			int Index = cvc.getTableMap().getTable(t.toUpperCase()).getColumnIndex(g.getColumnName()); //added by rambabu 
 
 			int count = cvc.getNoOfTuples().get(tableNameNo);
 			int group = (i-1)*count;/**get group number*/
