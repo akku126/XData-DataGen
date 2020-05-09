@@ -299,18 +299,26 @@ public class GenerateDataSet {
 		
 		public static void main(String[] args) throws Exception {
 			
-//			Class.forName("org.postgresql.Driver");
-//			
-//			String loginUrl = "jdbc:postgresql://" + Configuration.getProperty("databaseIP") + ":" + Configuration.getProperty("databasePort") + "/" + Configuration.getProperty("databaseName");
-//			Connection conn=DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));;
+			String databaseType = Configuration.getProperty("databaseType");
+			String loginUrl = "";
+			Connection conn = null;
 			
-			// for mysql 
+			//choosing connection based on database type 
+			if(databaseType.equalsIgnoreCase("postgresql"))
+			{
+				Class.forName("org.postgresql.Driver");
+				
+				loginUrl = "jdbc:postgresql://" + Configuration.getProperty("databaseIP") + ":" + Configuration.getProperty("databasePort") + "/" + Configuration.getProperty("databaseName");
+				conn = DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));;
+			}
+			else if(databaseType.equalsIgnoreCase("mysql"))
+			{
+				Class.forName("com.mysql.cj.jdbc.Driver");
+				
+				loginUrl = "jdbc:mysql://" + Configuration.getProperty("databaseIP") + ":" + Configuration.getProperty("databasePort") + "/" + Configuration.getProperty("databaseName");
+				conn=DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));;				
+			}
 			
-			Class.forName("com.mysql.cj.jdbc.Driver");
-			
-			String loginUrl = "jdbc:mysql://" + Configuration.getProperty("databaseIP") + ":" + Configuration.getProperty("databasePort") + "/" + Configuration.getProperty("databaseName");
-//			Connection conn=DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));;
-			Connection conn=DriverManager.getConnection(loginUrl, "xdata", "Xdata@123");
 			int queryId=1;
 			String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year = 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201' AND prereq.course_id = course.course_id)";
 			//String query = "select * from classroom, section where classroom.building = section.building and classroom.room_number = section.room_number";
