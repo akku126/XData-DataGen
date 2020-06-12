@@ -35,8 +35,7 @@ public class GenerateDataSet {
 		 * @throws Exception
 		 */
 		public List<String> generateDatasetForQuery(Connection conn,int queryId,String query, File schemaFile, File sampleDataFile, boolean orderDependent, String tempFilePath, AppTest_Parameters obj) throws Exception{
-			String line,schema="",sampleData="";
-			
+			String line,schema="",sampleData="";			
 			
 			schema=Utilities.readFile(schemaFile);
 			
@@ -299,19 +298,19 @@ public class GenerateDataSet {
 		
 		public static void main(String[] args) throws Exception {
 			
-			String databaseType = Configuration.getProperty("databaseType");
+			String tempDatabaseType = Configuration.getProperty("tempDatabaseType");
 			String loginUrl = "";
 			Connection conn = null;
 			
 			//choosing connection based on database type 
-			if(databaseType.equalsIgnoreCase("postgresql"))
+			if(tempDatabaseType.equalsIgnoreCase("postgresql"))
 			{
 				Class.forName("org.postgresql.Driver");
 				
 				loginUrl = "jdbc:postgresql://" + Configuration.getProperty("databaseIP") + ":" + Configuration.getProperty("databasePort") + "/" + Configuration.getProperty("databaseName");
 				conn = DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));;
 			}
-			else if(databaseType.equalsIgnoreCase("mysql"))
+			else if(tempDatabaseType.equalsIgnoreCase("mysql"))
 			{
 				Class.forName("com.mysql.cj.jdbc.Driver");
 				
@@ -320,8 +319,8 @@ public class GenerateDataSet {
 			}
 			
 			int queryId=1;
-			//String query = "select * from instructor where dept_name not in (select dept_name from department where building != 'Watson')" ;
-			String query = "select count(dept_name) from student group by name having count(id) < 10";
+			String query = "select * from instructor where dept_name not in (select dept_name from department where building != 'Watson')" ;
+			//String query = "select count(dept_name) from student group by name having count(id) < 10";
 			//String query = "select course_id from section as S where semester = 'Fall' and year = 2009 and not exists (select * from section as T where semester = 'Spring' and year = 2010 and S.course_id = T.course_id)";
 			//String query = "select name from instructor where salary > some (select salary from instructor where dept_name = ’Biology’)";
 			//String query = "select count(distinct room_number) from classroom, department where department.dept_name = 'Comp. Sci.' and department.building = classroom.building";
@@ -405,7 +404,7 @@ public class GenerateDataSet {
 			 //* ---->>>problem with this particular query
 			 //*/
 			//String query = "select name from instructor where salary is null";
-		
+			
 			
 			File schemaFile=new File("test/universityTest/DDL.sql");
 			File sampleDataFile=new File("test/universityTest/sampleData.sql");

@@ -30,19 +30,19 @@ public class RegressionTests {
 	private Connection getTestConn() throws Exception{
 		
 		//added by rambabu
-		String databaseType = Configuration.getProperty("databaseType");
+		String tempDatabaseType = Configuration.getProperty("tempDatabaseType");
 		String loginUrl = "";
 		Connection conn = null;
 		
 		//choosing connection based on database type 
-		if(databaseType.equalsIgnoreCase("postgresql"))
+		if(tempDatabaseType.equalsIgnoreCase("postgresql"))
 		{
 			Class.forName("org.postgresql.Driver");
 			
 			loginUrl = "jdbc:postgresql://" + Configuration.getProperty("databaseIP") + ":" + Configuration.getProperty("databasePort") + "/" + Configuration.getProperty("databaseName");
 			conn = DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));;
 		}
-		else if(databaseType.equalsIgnoreCase("mysql"))
+		else if(tempDatabaseType.equalsIgnoreCase("mysql"))
 		{
 			Class.forName("com.mysql.cj.jdbc.Driver");
 			
