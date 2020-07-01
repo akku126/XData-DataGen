@@ -129,7 +129,7 @@ public class TableMap implements Serializable{
 			while (rs.next()) {                          
 				//String tableName = rs.getString("TABLE_NAME").toUpperCase(); 
 				String tableName = rs.getString("TABLE_NAME"); // added by rambabu
-				System.out.println(tableName); //added by rambabu
+				//System.out.println(tableName); //added by rambabu
 				if(tables.get(tableName.toUpperCase())==null){ // modified by rambabu for mysql
 					Table table = new Table(tableName);
 					tables.put(tableName.toUpperCase(), table );
@@ -148,7 +148,7 @@ public class TableMap implements Serializable{
 				if(table==null)
 					continue;
 				String columnName = rs.getString("COLUMN_NAME").toUpperCase();
-				System.out.println(columnName+" "+rs.getInt("DATA_TYPE")); //added by rambabu
+				//System.out.println(columnName+" "+rs.getInt("DATA_TYPE")); //added by rambabu
 
 				Column col = new Column(columnName,table);
 				//  logger.log(Level.INFO,"Table Values in TableMap = "+table+" and column = "+columnName);
@@ -157,7 +157,7 @@ public class TableMap implements Serializable{
 
 					//String query = "SELECT " + columnName + " FROM " + table;
 					String query = "SELECT " + columnName + " FROM " + tableName; //added by rambabu for mysql
-					System.out.println(query); //added by rambabu
+					//System.out.println(query); //added by rambabu
 					PreparedStatement statement = this.conn.prepareStatement(query);
 
 					ResultSet resultSet = statement.executeQuery();

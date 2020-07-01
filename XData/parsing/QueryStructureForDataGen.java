@@ -115,7 +115,8 @@ public class QueryStructureForDataGen{
 			}
 		}
 		
-		Iterator t = tables.iterator();
+		//Iterator t = tables.iterator();
+		Iterator<Table> t = tables.iterator(); //added by rambabu
 		cvc.getResultsetColumns().add(new Column("dummy","dummy"));
 		
 		while(t.hasNext()){
@@ -136,7 +137,7 @@ public class QueryStructureForDataGen{
 				
 				column.intializeColumnValuesVector();
 				// String qs = "select distinct " + column.getColumnName() + " from " + table.getTableName().toLowerCase() + " limit 50";
-				String qs = "select distinct " + column.getColumnName() + " from " + table.getTableName() + " limit 50";// added by ram for my sql
+				String qs = "select distinct " + column.getColumnName() + " from " + table.getTableName() + " limit 50";// added by rambabu for my sql
 				PreparedStatement ps = cvc.getConnection().prepareStatement(qs);
 				
 				ResultSet rs = ps.executeQuery();

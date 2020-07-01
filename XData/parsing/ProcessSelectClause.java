@@ -850,17 +850,15 @@ public class ProcessSelectClause{
 	 * 
 	 */
 	public static void processFromListTable(net.sf.jsqlparser.schema.Table jsqlTable, FromClauseElement frmListElement, QueryStructure qStruct){
-		//String tableName = jsqlTable.getFullyQualifiedName().toUpperCase();// getWholeTableName();
-		String tableName = jsqlTable.getFullyQualifiedName();// getWholeTableName(); // added by ram for mysql
-//		String tableName = jsqlTable.getFullyQualifiedName();// getWholeTableName();
-		//Table table = qStruct.getTableMap().getTable(tableName.toUpperCase());
-		Table table = qStruct.getTableMap().getTable(tableName); // added by ram for mysql
+		String tableName = jsqlTable.getFullyQualifiedName().toUpperCase();// getWholeTableName();
+		//String tableName = jsqlTable.getFullyQualifiedName();// getWholeTableName(); // added by ram for mysql
+		Table table = qStruct.getTableMap().getTable(tableName.toUpperCase());
 		String aliasName = "";
 		if (jsqlTable.getAlias() == null) {
 			aliasName = tableName;
 		} else {
 			//aliasName = jsqlTable.getAlias().getName().toUpperCase();// getAlias();
-			aliasName = jsqlTable.getAlias().getName();// added by ram
+			aliasName = jsqlTable.getAlias().getName();// added by rambabu
 		}
 		if (qStruct.getQuery().getRepeatedRelationCount().get(tableName) != null) {
 			qStruct.getQuery().putRepeatedRelationCount(tableName, qStruct.getQuery()

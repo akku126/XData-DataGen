@@ -531,7 +531,8 @@ public class PopulateTestData {
 					copyFileContents.add(copystmt);
 					////Putting back string values in CVC
 
-					Table t=tableMap.getTable(tableName);
+					//Table t=tableMap.getTable(tableName);
+					Table t=tableMap.getTable(tableName.toUpperCase());//added by rambabu
 					String[] copyvalues = copystmt.split("\n");
 
 					for(int k=0; k<copyvalues.length; k++){
@@ -795,6 +796,7 @@ public class PopulateTestData {
 		}
 
 		String cutFile = cutRequiredOutputForSMT(test, filePath);
+		cutFile = modifyCutFile(cutFile,filePath); // TEMPCODE Rahul Sharma // to handle tupleTypes present in multiple lines 
 		Vector<String> listOfCopyFiles = generateCopyFileForSMT(cutFile, filePath, noOfOutputTuples, 
 				tableMap,columns,existingTableNames, dbAppParameters);			
 		Vector<String> listOfFiles = (Vector<String>) listOfCopyFiles.clone();
@@ -835,6 +837,28 @@ public class PopulateTestData {
 		}*/
 		return returnVal;			
 	}
+	
+	private String modifyCutFile(String cutFileName, String filePath) throws IOException {
+        String modifiedCutFile = "";
+        BufferedReader br =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+filePath+"/" + cutFileName));
+        String mergedLine = "",line;
+        while((line = br.readLine()) != null) {
+            line = line.replaceAll(" +", " ");
+            line = line.replaceAll("\n+", "");
+            if(line.contains(")")) {
+                mergedLine+=line;
+                modifiedCutFile+=mergedLine+"\n";
+                mergedLine = "";
+            }
+            else
+                mergedLine+=line;
+        }
+        OutputStream os = null;
+        os = new FileOutputStream(new File(Configuration.homeDir+"/temp_smt"+filePath+"/" + cutFileName));
+        os.write(modifiedCutFile.getBytes(), 0, modifiedCutFile.length());
+        os.close();
+        return cutFileName;
+    }
 	
 	public static void deleteAllTablesFromTestUser(Connection conn) throws Exception{
 		try{

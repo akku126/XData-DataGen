@@ -319,7 +319,7 @@ public class GenerateDataSet {
 			}
 			
 			int queryId=1;
-			String query = "select * from instructor where dept_name not in (select dept_name from department where building != 'Watson')" ;
+			//String query = "select * from instructor where dept_name not in (select dept_name from department where building != 'Watson')" ;
 			//String query = "select count(dept_name) from student group by name having count(id) < 10";
 			//String query = "select course_id from section as S where semester = 'Fall' and year = 2009 and not exists (select * from section as T where semester = 'Spring' and year = 2010 and S.course_id = T.course_id)";
 			//String query = "select name from instructor where salary > some (select salary from instructor where dept_name = ’Biology’)";
@@ -336,7 +336,7 @@ public class GenerateDataSet {
 			//String query = "select id, name from student where tot_cred>30";
 
 			/* I----*/
-			  //String query = "select id, name from student where tot_cred>30";
+			  String query = "select id, name from student where tot_cred>30";
 			 
 			/* II----
 			 * String query = "select * from student inner join department using (dept_name) where student.tot_cred > 40 and exists (select * from course where credits >=6 and course.dept_name = 'comp. sci.' )";
