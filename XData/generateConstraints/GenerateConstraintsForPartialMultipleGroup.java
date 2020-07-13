@@ -83,7 +83,8 @@ public class GenerateConstraintsForPartialMultipleGroup {
 				offset = 1;
 			}
 			
-			int Index = cvc.getTableMap().getTable(t).getColumnIndex(g.getColumnName());
+			//int Index = cvc.getTableMap().getTable(t).getColumnIndex(g.getColumnName());
+			int Index = cvc.getTableMap().getTable(t.toUpperCase()).getColumnIndex(g.getColumnName()); //added by rambabu
 			
 			/**Generate constraints for each group */
 			for(int i=1; i <= queryBlock.getNoOfGroups(); i++){				
@@ -126,7 +127,8 @@ public class GenerateConstraintsForPartialMultipleGroup {
 		}else{
 			offset  = 1;
 		}
-		int Index = cvc.getTableMap().getTable(t).getColumnIndex(g.getColumnName());		
+		//int Index = cvc.getTableMap().getTable(t).getColumnIndex(g.getColumnName());
+		int Index = cvc.getTableMap().getTable(t.toUpperCase()).getColumnIndex(g.getColumnName()); //added by rambabu
 		
 		/**Generate constraints for each group */
 		for(int i=1; i <= queryBlock.getNoOfGroups(); i++){	

@@ -4,24 +4,24 @@
 databaseName=xdata
 
 #database user name- 
-existingDatabaseUser=testing1
+existingDatabaseUser=xdata
 #password
-existingDatabaseUserPasswd=password
+existingDatabaseUserPasswd=xdata
 
 #test database for creating test tables (not required for parsing)
-testDatabaseUser=testing2
-testDatabaseUserPasswd=testing2
+testDatabaseUser=testing
+testDatabaseUserPasswd=testing
 
 # Address of database server
 databaseIP=127.0.0.1
 databasePort=5432
 
 #Scratch directory 
-homeDir=/tmp
+homeDir=/home/rambabu/
 
 #Smt solver used for constraint generation (its exe path can also be there)
-#smtsolver=cvc3
-smtsolver=z3
+smtsolver=cvc3
+#smtsolver=z3
 
 logFile=/tmp/temp_cvc4/XData.log
 logLevel=INFO

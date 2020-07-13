@@ -28,9 +28,28 @@ public class RegressionTests {
 	}
 
 	private Connection getTestConn() throws Exception{
-		Class.forName("org.postgresql.Driver");
-		String loginUrl = "jdbc:postgresql://" + Configuration.getProperty("databaseIP") + ":" + Configuration.getProperty("databasePort") + "/" + Configuration.getProperty("databaseName");
-		return DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));
+		
+		//added by rambabu
+		String tempDatabaseType = Configuration.getProperty("tempDatabaseType");
+		String loginUrl = "";
+		Connection conn = null;
+		
+		//choosing connection based on database type 
+		if(tempDatabaseType.equalsIgnoreCase("postgresql"))
+		{
+			Class.forName("org.postgresql.Driver");
+			
+			loginUrl = "jdbc:postgresql://" + Configuration.getProperty("databaseIP") + ":" + Configuration.getProperty("databasePort") + "/" + Configuration.getProperty("databaseName");
+			conn = DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));;
+		}
+		else if(tempDatabaseType.equalsIgnoreCase("mysql"))
+		{
+			Class.forName("com.mysql.cj.jdbc.Driver");
+			
+			loginUrl = "jdbc:mysql://" + Configuration.getProperty("databaseIP") + ":" + Configuration.getProperty("databasePort") + "/" + Configuration.getProperty("databaseName");
+			conn=DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));;				
+		}		
+		return conn;
 	}
 
 	/**
@@ -248,6 +267,9 @@ public class RegressionTests {
 			
 			if(!errors.isEmpty())
 				testResult.put(queryId, errors);
+			
+			//added by rambabu for testing
+			System.out.println("query id done: "+ queryId);
 			
 		}
 		

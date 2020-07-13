@@ -2778,6 +2778,8 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 				String[] attrNames = new String[t.getNoOfColumn()];
 				Sort[] attrTypes = new Sort[t.getNoOfColumn()];
 				
+				checkResultSetColumns(cvc,cvc.getResultsetColumns()); // TEMPCODE Rahul Sharma // added to check if the resultsetcolumns contains duplicate columns
+				
 				for(Column c : cvc.getResultsetColumns()) {
 					if(c.getTableName().equalsIgnoreCase(temp)) {						
 						String s = c.getCvcDatatype();
@@ -2826,6 +2828,37 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 		}
 		return tempStr;
 	}
+	
+	/**
+	* TEMPCODE Rahul Sharma : to check if there is any duplicate columns in resultsetcolumns
+	* @param cvc
+	* @param resultsetColumns
+	*/
+     private void checkResultSetColumns(GenerateCVC1 cvc,Vector<Column> resultsetColumns) {
+         int size = resultsetColumns.size();
+         int start = 0;
+         int mid = size/2;
+         while(mid<size) {
+             if(resultsetColumns.get(start).getColumnName().equals(resultsetColumns.get(mid).getColumnName())) {
+                 start++;
+                 mid++;
+             }
+             else {
+                 break;
+             }
+         }
+         if(mid==size) { // duplicates are there in the resultsetcolumns, and this need to be fixed 
+             start=0;
+             mid = size/2;
+             Vector<Column> temp = new Vector<Column>();
+             while(start<mid) {
+                 Column col = resultsetColumns.get(start);
+                 temp.add(col);
+                 start++;
+             }
+             cvc.setResultsetColumns(temp);
+         }
+     }
 
 	public static String getAssertNotCondition(QueryBlockDetails queryBlock, Node n, int index){
 		
@@ -3866,7 +3899,17 @@ public Vector<Quantifier> getDomainConstraintsforZ3(GenerateCVC1 cvc) {
 					IntExpr[] qVarArray = new IntExpr[1];
 					IntExpr qVar = ctx.mkIntConst("i");  // i should not conflict with any global i
 					BoolExpr ac1 = ctx.mkLe(ctx.mkInt("1"), qVar);
-					BoolExpr ac2 = ctx.mkLe(qVar, ctx.mkInt(Integer.toString(cvc.getNoOfOutputTuples().get(tableName))));
+					//BoolExpr ac2 = ctx.mkLe(qVar, ctx.mkInt(Integer.toString(cvc.getNoOfOutputTuples().get(tableName))));
+					// added by rambabu for temporary fix
+ 					BoolExpr ac2;
+ 					try {
+ 					    ac2 = ctx.mkLe(qVar, ctx.mkInt(Integer.toString(cvc.getNoOfOutputTuples().get(tableName))));
+ 					}
+ 					catch(Exception e){
+ 					    ac2 = ctx.mkLe(qVar, ctx.mkInt(Integer.toString(cvc.getNoOfOutputTuples().get(tableName.toUpperCase()))));
+ 					}
+ 					// added by rambabu ended here
+					
 					BoolExpr antecedant = ctx.mkAnd(ac1, ac2);
 
 					FuncDecl getFuncDecl = ctxFuncDecls.get("get"+col);

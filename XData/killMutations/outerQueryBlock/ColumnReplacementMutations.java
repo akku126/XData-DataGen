@@ -113,7 +113,8 @@ public class ColumnReplacementMutations {
 					
 					Table requiredTable = null;				
 					for(Table t: cvc.getTablesOfOriginalQuery()){
-						if(table.startsWith(t.getTableName())){
+						//if(table.startsWith(t.getTableName())){
+						if(table.startsWith(t.getTableName().toUpperCase())){ //added by rambabu
 							requiredTable =t;
 							
 							break;

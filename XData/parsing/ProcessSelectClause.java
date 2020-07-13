@@ -851,12 +851,14 @@ public class ProcessSelectClause{
 	 */
 	public static void processFromListTable(net.sf.jsqlparser.schema.Table jsqlTable, FromClauseElement frmListElement, QueryStructure qStruct){
 		String tableName = jsqlTable.getFullyQualifiedName().toUpperCase();// getWholeTableName();
+		//String tableName = jsqlTable.getFullyQualifiedName();// getWholeTableName(); // added by ram for mysql
 		Table table = qStruct.getTableMap().getTable(tableName.toUpperCase());
 		String aliasName = "";
 		if (jsqlTable.getAlias() == null) {
 			aliasName = tableName;
 		} else {
-			aliasName = jsqlTable.getAlias().getName().toUpperCase();// getAlias();
+			//aliasName = jsqlTable.getAlias().getName().toUpperCase();// getAlias();
+			aliasName = jsqlTable.getAlias().getName();// added by rambabu
 		}
 		if (qStruct.getQuery().getRepeatedRelationCount().get(tableName) != null) {
 			qStruct.getQuery().putRepeatedRelationCount(tableName, qStruct.getQuery()
@@ -1731,7 +1733,7 @@ public class ProcessSelectClause{
 			n.getLeft().getSubQueryConds().clear();
 		}
 		else  { 
-			if(n.getRight() != null &&n.getRight().getSubQueryConds() != null && n.getRight().getSubQueryConds().size() >0 && n.getSubQueryConds()!=null){
+			if(n.getRight() != null && n.getRight().getSubQueryConds() != null && n.getRight().getSubQueryConds().size() >0 && n.getSubQueryConds()!=null){
 				n.setSubQueryConds(n.getRight().getSubQueryConds());
 				n.getRight().getSubQueryConds().clear();
 			}
@@ -2369,7 +2371,8 @@ public class ProcessSelectClause{
 				//Case where column name of ancestor table is used in a subquery without any table alias.
 				else if(n.getTableNameNo().isEmpty() && n.getTableAlias().isEmpty() && n.getTable() == null){
 					logger.log(Level.FINE,"No Table/Aliasdetails exists other than Column Name. So find the table in fle and check if column name matches any parent table. ");
-					Table table=qStruct.getTableMap().getTable(fle.getTableName());
+					//Table table=qStruct.getTableMap().getTable(fle.getTableName());
+					Table table=qStruct.getTableMap().getTable(fle.getTableName().toUpperCase()); // added by rambabu
 					parsing.Column c;
 					if((c=table.getColumn(n.getColumn().getColumnName().toUpperCase()))!=null){
 						n.setTableNameNo(fle.getTableNameNo());
@@ -2549,7 +2552,8 @@ public class ProcessSelectClause{
 						 
 					}else{
 						FromItem frm = ps.getFromItem();
-						if(frm instanceof Table){
+						//if(frm instanceof Table){
+						if(frm instanceof net.sf.jsqlparser.schema.Table){ // added by rambabu 
 							 l.add(generateRelationHierarchyJSQL(frm));
 						}
 					}
@@ -2570,7 +2574,8 @@ public class ProcessSelectClause{
 						 
 					}else{
 						FromItem frm = ps.getFromItem();
-						if(frm instanceof Table){
+						//if(frm instanceof Table){
+						if(frm instanceof net.sf.jsqlparser.schema.Table){ // added by rambabu 
 							 l.add(generateRelationHierarchyJSQL(frm));
 						}
 					}
@@ -2586,7 +2591,8 @@ public class ProcessSelectClause{
 						 
 					}else{
 						FromItem frm = ps.getFromItem();
-						if(frm instanceof Table){
+						//if(frm instanceof Table){
+						if(frm instanceof net.sf.jsqlparser.schema.Table){ // added by rambabu 
 							 l.add(generateRelationHierarchyJSQL(frm));
 						}
 					}

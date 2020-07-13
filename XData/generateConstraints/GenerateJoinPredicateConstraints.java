@@ -1,6 +1,8 @@
 package generateConstraints;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -389,8 +391,12 @@ public class GenerateJoinPredicateConstraints {
 			String t1 = getTableName(n1);
 			String t2 = getTableName(n2);
 	
-			int pos1 = cvc.getTableMap().getTable(t1).getColumnIndex(getColumn(n1).getColumnName());
-			int pos2 = cvc.getTableMap().getTable(t2).getColumnIndex(getColumn(n2).getColumnName());
+			//int pos1 = cvc.getTableMap().getTable(t1).getColumnIndex(getColumn(n1).getColumnName());
+			//int pos2 = cvc.getTableMap().getTable(t2).getColumnIndex(getColumn(n2).getColumnName());
+			
+			//below two lines added by rambabu 
+			int pos1 = cvc.getTableMap().getTable(t1.toUpperCase()).getColumnIndex(getColumn(n1).getColumnName());
+			int pos2 = cvc.getTableMap().getTable(t2.toUpperCase()).getColumnIndex(getColumn(n2).getColumnName());
 	
 			String r1 = getTableNameNo(n1);
 			String r2 = getTableNameNo(n2);
@@ -565,8 +571,11 @@ public class GenerateJoinPredicateConstraints {
 		/** get the details of each node */
 		String t1 = n1.getColumn().getTableName();
 		String t2 = n2.getColumn().getTableName();
-		int pos1 = cvc.getTableMap().getTable(t1).getColumnIndex(n1.getColumn().getColumnName());
-		int pos2 = cvc.getTableMap().getTable(t2).getColumnIndex(n2.getColumn().getColumnName());
+		//int pos1 = cvc.getTableMap().getTable(t1).getColumnIndex(n1.getColumn().getColumnName());
+		//int pos2 = cvc.getTableMap().getTable(t2).getColumnIndex(n2.getColumn().getColumnName());
+		
+		int pos1 = cvc.getTableMap().getTable(t1.toUpperCase()).getColumnIndex(n1.getColumn().getColumnName()); // added by rambabu
+		int pos2 = cvc.getTableMap().getTable(t2.toUpperCase()).getColumnIndex(n2.getColumn().getColumnName()); // added by rambabu
 
 		if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true")){
 			 isTempJoin = true;
@@ -790,8 +799,11 @@ public class GenerateJoinPredicateConstraints {
 		/**Get the details of each node */
 		String t1 = n1.getColumn().getTableName();
 		String t2 = n2.getColumn().getTableName();
-		int pos1 = cvc.getTableMap().getTable(t1).getColumnIndex(n1.getColumn().getColumnName());
-		int pos2 = cvc.getTableMap().getTable(t2).getColumnIndex(n2.getColumn().getColumnName());
+		//int pos1 = cvc.getTableMap().getTable(t1).getColumnIndex(n1.getColumn().getColumnName());
+		//int pos2 = cvc.getTableMap().getTable(t2).getColumnIndex(n2.getColumn().getColumnName());
+		
+		int pos1 = cvc.getTableMap().getTable(t1.toUpperCase()).getColumnIndex(n1.getColumn().getColumnName()); //added by rambabu
+		int pos2 = cvc.getTableMap().getTable(t2.toUpperCase()).getColumnIndex(n2.getColumn().getColumnName()); //added by rambabu
 
 		String r1 = n1.getTableNameNo();
 		String r2 = n2.getTableNameNo();
@@ -929,6 +941,7 @@ public class GenerateJoinPredicateConstraints {
 			/** Open up FORALL and NOT EXISTS*/
 
 			//constraintString += "ASSERT ";
+			checkRepeatedRelations(cvc,cvc.getNoOfOutputTuples()); // TEMPCODE Rahul Sharma  to handle repeated relations
 			for(int i = 1; i <= cvc.getNoOfOutputTuples().get(nulled.getTableName()) ; i++){/**FIXME: Handle repeated relations*/
 				//constraintString += "(O_" + GenerateCVCConstraintForNode.cvcMap(nulled, i + "") + " /= O_" + GenerateCVCConstraintForNode.cvcMap(P0.getColumn(), P0) + ") AND ";
 				ConstraintObject constr = new ConstraintObject();
@@ -942,6 +955,20 @@ public class GenerateJoinPredicateConstraints {
 		}
 		return constraintString;
 	}
+	
+	/**
+     * TEMPCODE Rahul Sharma : to check if there is repeated relations, and remove them 
+     * @param cvc
+     * @param noOfOutputTuples
+     */
+    private static void checkRepeatedRelations(GenerateCVC1 cvc, HashMap<String, Integer> noOfOutputTuples) {
+        // TODO Auto-generated method stub
+        HashMap<String, Integer> tempMap = new HashMap<>(noOfOutputTuples.size());
+        for (Map.Entry<String, Integer> entry : noOfOutputTuples.entrySet()) {
+           tempMap.put(entry.getKey().toLowerCase(), entry.getValue());
+        }
+        cvc.setNoOfOutputTuples(tempMap);       
+    }
 	
 	public static String genNegativeCondsEqClass(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Node c1, Node c2, int tuple){
 		String constraintString = new String();

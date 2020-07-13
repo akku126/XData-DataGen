@@ -40,7 +40,8 @@ public class GenerateConstraintsToKillExtraGroupByMutations {
 			/**Get column and table details */
 			String t1 = col.getTableName();
 			String tableNameNo = tableOccurrence.get(t1);
-			int Index = cvc.getTableMap().getTable(t1).getColumnIndex(col.getColumnName());
+			//int Index = cvc.getTableMap().getTable(t1).getColumnIndex(col.getColumnName());
+			int Index = cvc.getTableMap().getTable(t1.toUpperCase()).getColumnIndex(col.getColumnName()); //added by rambabu
 			
 			int offset = 0; 
 			/*if(cvc.getRepeatedRelNextTuplePos().containsKey(tableNameNo) ){*/

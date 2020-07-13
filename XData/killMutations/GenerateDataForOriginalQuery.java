@@ -31,28 +31,28 @@ public class GenerateDataForOriginalQuery {
 		try{
 			/** Initialize the data structures for generating the data to kill this mutation */
 			cvc.inititalizeForDatasetQs();
-		 
-			
-	
+
+
+
 			/** get the tuple assignment for this query
 			 * If no possible assignment then not possible to kill this mutation*/
 			if(GenerateCVC1.tupleAssignmentForQuery(cvc) == false)
 				return false;
-			
-			
-			//initializing once again after params are set up--- FIX once params are set properly
-		//	cvc.inititalizeForDataset();
-			
+
+
+			// initializing once again after params are set up--- FIX once params are set properly
+			// cvc.inititalizeForDataset();
+
 			/**set the type of mutation we are trying to kill*/
 			cvc.setTypeOfMutation(mutationType);
-			
+
 			/**Get the null and database constraints - get the number of output tuples
 			 * and generate other constraints  accordingly*/
-			 GenerateCommonConstraintsForQuery.generateNullandDBConstraints(cvc,false);
-			 
+			GenerateCommonConstraintsForQuery.generateNullandDBConstraints(cvc,false);
+
 			/**Get the constraints for all the blocks of the query  */
 			cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlock(cvc) );
-			
+
 			/** Call the method for the data generation*/
 			return GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc,false);
 		}catch (TimeoutException e){
@@ -63,6 +63,6 @@ public class GenerateDataForOriginalQuery {
 			throw e;
 		}
 	}
-	
-	
+
+
 }
