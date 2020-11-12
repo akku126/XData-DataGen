@@ -324,11 +324,16 @@ public class GenerateDataSet {
 //			Connection conn=DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));
 
 			int queryId=1;
+
 			//String query = "select * from instructor where dept_name not in (select dept_name from department where building != 'Watson')" ;
 
 			//String query = "select count(dept_name) from student group by name having count(id) < 10";
 
 			//String query = "select course_id from section as S where semester = 'Fall' and year = 2009 and not exists (select * from section as T where semester = 'Spring' and year = 2010 and S.course_id = T.course_id)";
+
+			//String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year = 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201' AND prereq.course_id = course.course_id)";
+			//String query = "select * from classroom, section where classroom.building = section.building and classroom.room_number = section.room_number";
+
 			//String query = "select name from instructor where salary > some (select salary from instructor where dept_name = ’Biology’)";
 			//String query = "select count(distinct room_number) from classroom, department where department.dept_name = 'Comp. Sci.' and department.building = classroom.building";
 			//String query = "with max_budget (value) as (select max(budget) from department) select budget from department, max_budget where department.budget = max_budget.value";
@@ -410,11 +415,19 @@ public class GenerateDataSet {
 			  String query = "SELECT dept_name, SUM(credits) FROM course INNER JOIN department USING (dept_name) WHERE credits <= 4 GROUP BY dept_name HAVING SUM(credits) < 13";	
 			 //*/
 			/* XVIII----
+<<<<<<< HEAD
 			  String query = "Select min(budget) from department";			
 			 //*/
 			/* XIX----
 			  String query="select name,count(*) from student group by name";
 			 //*/
+=======
+			 * String query = "Select min(budget) from department";			
+			 */
+			 //XIX----
+			 String query="select name, count(*) from student group by name";
+
+>>>>>>> origin/model-parsing
 			/* XX----
 			  String query = "select id, name from student where tot_cred>30";
 			 //*/

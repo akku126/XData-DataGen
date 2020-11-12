@@ -22,6 +22,7 @@ import java.nio.file.StandardCopyOption;
 
 
 import com.microsoft.z3.*;
+import com.microsoft.z3.FuncInterp.Entry;
 
 import parsing.*;
 import util.*;
@@ -109,7 +110,7 @@ public class PopulateTestData {
 
 			smtCommand[0] = Configuration.smtsolver;
 			smtCommand[1] = Configuration.homeDir+"/temp_smt"+filePath+"/" + cvcFileName;
-			
+
 			ExecutorService service = Executors.newSingleThreadExecutor();
 			Process myProcess = r.exec(smtCommand);	
 			try {
@@ -127,7 +128,7 @@ public class PopulateTestData {
 
 				//Writing output to .out file
 				BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_smt"+filePath+"/" + cvcFileName.substring(0,cvcFileName.lastIndexOf(".smt")) + ".out"));
-				
+
 				while ((ch = myIStreamReader.read()) != -1) { 
 					out.write((char)ch); 
 				} 	
@@ -256,6 +257,56 @@ public class PopulateTestData {
 		return "cut_"+cvcOutputFileName;
 	}
 
+	public String cutRequiredOutputForSMTWithAPI(String SMTFileName, String filePath) throws Exception {
+		String cutFileName = "api_cut_" + SMTFileName.substring(0, SMTFileName.lastIndexOf(".smt")) + ".out";
+		String cutFileFullPath = Configuration.homeDir+"/temp_smt"+filePath+"/" + cutFileName;
+		//Writing output to cut_*.out file
+		BufferedWriter out = new BufferedWriter(new FileWriter(cutFileFullPath));
+		out.close();
+		File cutFile = new File(cutFileFullPath);
+
+		Context ctx = ConstraintGenerator.ctx;
+		Params p = ctx.mkParams();
+		p.add("smt.macro_finder", true);
+
+		Solver s = ctx.mkSolver();
+		s.setParameters(p);
+
+		// Read the entire SMT file as string and add model_compress param (adding it in file causes errors)
+		File smtFile = new File(Configuration.homeDir+"/temp_smt"+filePath+"/" + SMTFileName);
+		FileInputStream fis = new FileInputStream(smtFile);
+		byte[] data = new byte[(int) smtFile.length()];
+		fis.read(data);
+		fis.close();
+
+		String smtStr = new String(data, "UTF-8");
+
+		BoolExpr[] exprs = ctx.parseSMTLIB2String("(set-option :model_compress false)\n"+smtStr, null, null, null, null);
+		s.add(exprs);
+
+		if (s.check() != Status.SATISFIABLE) {
+			//throw Exception() TODO
+			return cutFileName;
+		}
+
+		Model m = s.getModel();
+
+		for (FuncDecl decl : m.getFuncDecls()) {
+			if (decl.getRange().getSExpr().endsWith("_TupleType")) {
+				FuncInterp interp = m.getFuncInterp(decl);
+				if (interp.getNumEntries() == 0) {
+					continue;
+				}
+
+				for (Entry ent : interp.getEntries()) {
+					setContents(cutFile, ent.getValue().getSExpr()+"\n", true);
+				}
+			}
+		}
+
+		return cutFileName;
+	}
+
 	public void setContents(File aFile, String aContents, boolean append)throws FileNotFoundException, IOException {
 		if (aFile == null) {
 			logger.log(Level.WARNING,"PopulateTesData.setContents : File is null");
@@ -295,7 +346,7 @@ public class PopulateTestData {
 			HashMap<String, Integer> noOfOutputTuples, TableMap tableMap,Vector<Column> columns,
 			Set existingTableNames, AppTest_Parameters dbAppParameters) throws Exception {
 		Vector<String> listOfCopyFiles = new Vector();
-		List <String> copyFileContents = new ArrayList<String>(); 
+		List <String> copyFileContents = new ArrayList<String>();
 		String currentCopyFileName = "";
 		File testFile = null;
 		BufferedReader input = null;
@@ -814,7 +865,11 @@ public class PopulateTestData {
 		}
 
 		String cutFile = cutRequiredOutputForSMT(test, filePath);
+
 		cutFile = modifyCutFile(cutFile,filePath); // TEMPCODE Rahul Sharma // to handle tupleTypes present in multiple lines 
+
+		String apiCutFile = cutRequiredOutputForSMTWithAPI(cvcOutputFileName, filePath);
+
 		Vector<String> listOfCopyFiles = generateCopyFileForSMT(cutFile, filePath, noOfOutputTuples, 
 				tableMap,columns,existingTableNames, dbAppParameters);			
 		Vector<String> listOfFiles = (Vector<String>) listOfCopyFiles.clone();

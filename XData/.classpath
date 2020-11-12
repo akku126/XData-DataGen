@@ -21,9 +21,10 @@
 	<classpathentry exported="true" kind="lib" path="jars/gson-2.2.4.jar"/>
 	<classpathentry exported="true" kind="lib" path="jars/jsqlparser-0.9.7-SNAPSHOT.jar"/>
 
-	<classpathentry kind="lib" path="/Users/binaryboy/Dropbox/Kode/XData-DataGen/XData/jars/com.microsoft.z3.jar">
+	<classpathentry kind="lib" path="XData/jars/com.microsoft.z3.jar">
+
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="XData/z3-nightly/bin"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="XData/z3/bin"/>
 		</attributes>
 	</classpathentry>
 

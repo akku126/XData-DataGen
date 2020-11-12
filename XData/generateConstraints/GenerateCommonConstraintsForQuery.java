@@ -192,7 +192,6 @@ public class GenerateCommonConstraintsForQuery {
 			logger.log(Level.SEVERE,e.getMessage());		
 		}
 		return false;
-
 	}
 
 	public static boolean generateDataSetForConstraints(GenerateCVC1 cvc) throws Exception{
