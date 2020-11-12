@@ -415,19 +415,17 @@ public class GenerateDataSet {
 			  String query = "SELECT dept_name, SUM(credits) FROM course INNER JOIN department USING (dept_name) WHERE credits <= 4 GROUP BY dept_name HAVING SUM(credits) < 13";	
 			 //*/
 			/* XVIII----
-<<<<<<< HEAD
+
 			  String query = "Select min(budget) from department";			
 			 //*/
 			/* XIX----
 			  String query="select name,count(*) from student group by name";
 			 //*/
-=======
-			 * String query = "Select min(budget) from department";			
-			 */
+			 //String query = "Select min(budget) from department";			
+			 
 			 //XIX----
-			 String query="select name, count(*) from student group by name";
+			 //String query="select name, count(*) from student group by name";
 
->>>>>>> origin/model-parsing
 			/* XX----
 			  String query = "select id, name from student where tot_cred>30";
 			 //*/
