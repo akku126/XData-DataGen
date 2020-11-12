@@ -1608,6 +1608,7 @@ public static void foreignKeyClosure(QueryStructure qParser) {
 		
 		logger.log(Level.FINE,"fkClosureQueue.add tables: \n "+qParser.getTableMap().getTables().get(tableName.toUpperCase())); 
 	}
+	
 	while(!fkClosureQueue.isEmpty())
 	{
 		Table table = fkClosureQueue.removeFirst();

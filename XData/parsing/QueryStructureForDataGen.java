@@ -115,7 +115,8 @@ public class QueryStructureForDataGen{
 			}
 		}
 		
-		Iterator t = tables.iterator();
+		//Iterator t = tables.iterator();
+		Iterator<Table> t = tables.iterator(); //added by rambabu
 		cvc.getResultsetColumns().add(new Column("dummy","dummy"));
 		
 		while(t.hasNext()){
@@ -136,7 +137,9 @@ public class QueryStructureForDataGen{
 				
 				column.intializeColumnValuesVector();
 				// String qs = "select distinct " + column.getColumnName() + " from " + table.getTableName().toLowerCase() + " limit 50";
-				String qs = "select distinct " + column.getColumnName() + " from " + table.getTableName() + " limit 50";// added by ram for my sql
+
+				String qs = "select distinct " + column.getColumnName() + " from " + table.getTableName() + " limit 50";// added by rambabu for my sql
+				
 				PreparedStatement ps = cvc.getConnection().prepareStatement(qs);
 				
 				ResultSet rs = ps.executeQuery();
@@ -275,6 +278,7 @@ public class QueryStructureForDataGen{
 		LinkedList<Table> fkClosureQueue = new LinkedList<Table>();
 		logger.log(Level.INFO,"FOREIGN KEY GRAPH : \n"+qStructure.getTableMap().foreignKeyGraph);
 		for (String tableName : qStructure.getQuery().getFromTables().keySet()) {
+			
 			fkClosure.add( qStructure.getTableMap().getTables().get(tableName.toUpperCase()));
 			fkClosureQueue.addLast(qStructure.getTableMap().getTables().get(tableName.toUpperCase()));
 			logger.log(Level.INFO,"fkClosureQueue.add tables: \n "+qStructure.getTableMap().getTables().get(tableName.toUpperCase()));
@@ -283,6 +287,7 @@ public class QueryStructureForDataGen{
 		
 			for(QueryStructure fromQs : qStructure.getFromClauseSubqueries()){
 				for (String tableName : fromQs.getQuery().getFromTables().keySet()) {
+					
 					fkClosure.add( qStructure.getTableMap().getTables().get(tableName.toUpperCase()));
 					fkClosureQueue.addLast(qStructure.getTableMap().getTables().get(tableName.toUpperCase()));
 					logger.log(Level.INFO,"fkClosureQueue.add tables: \n "+qStructure.getTableMap().getTables().get(tableName.toUpperCase()));
@@ -292,10 +297,11 @@ public class QueryStructureForDataGen{
 		
 		for(QueryStructure whereQs : qStructure.getWhereClauseSubqueries()){
 				for (String tableName : whereQs.getQuery().getFromTables().keySet()) {
+
 					fkClosure.add( qStructure.getTableMap().getTables().get(tableName.toUpperCase()));
 					fkClosureQueue.addLast(qStructure.getTableMap().getTables().get(tableName.toUpperCase()));
 					logger.log(Level.INFO,"fkClosureQueue.add tables: \n "+qStructure.getTableMap().getTables().get(tableName.toUpperCase()));
-					
+
 				}			
 		}
 				

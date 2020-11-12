@@ -35,8 +35,7 @@ public class GenerateDataSet {
 		 * @throws Exception
 		 */
 		public List<String> generateDatasetForQuery(Connection conn,int queryId,String query, File schemaFile, File sampleDataFile, boolean orderDependent, String tempFilePath, AppTest_Parameters obj) throws Exception{
-			String line,schema="",sampleData="";
-			
+			String line,schema="",sampleData="";			
 			
 			schema=Utilities.readFile(schemaFile);
 			
@@ -298,10 +297,25 @@ public class GenerateDataSet {
 		
 		public static void main(String[] args) throws Exception {
 			
-			Class.forName("org.postgresql.Driver");
+			String tempDatabaseType = Configuration.getProperty("tempDatabaseType");
+			String loginUrl = "";
+			Connection conn = null;
 			
-			String loginUrl = "jdbc:postgresql://" + Configuration.getProperty("databaseIP") + ":" + Configuration.getProperty("databasePort") + "/" + Configuration.getProperty("databaseName");
-			Connection conn=DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));;
+			//choosing connection based on database type 
+			if(tempDatabaseType.equalsIgnoreCase("postgresql"))
+			{
+				Class.forName("org.postgresql.Driver");
+				
+				loginUrl = "jdbc:postgresql://" + Configuration.getProperty("databaseIP") + ":" + Configuration.getProperty("databasePort") + "/" + Configuration.getProperty("databaseName");
+				conn = DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));;
+			}
+			else if(tempDatabaseType.equalsIgnoreCase("mysql"))
+			{
+				Class.forName("com.mysql.cj.jdbc.Driver");
+				
+				loginUrl = "jdbc:mysql://" + Configuration.getProperty("databaseIP") + ":" + Configuration.getProperty("databasePort") + "/" + Configuration.getProperty("databaseName");
+				conn=DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));;				
+			}
 			
 			// for mysql 
 //		
@@ -311,7 +325,9 @@ public class GenerateDataSet {
 
 			int queryId=1;
 			//String query = "select * from instructor where dept_name not in (select dept_name from department where building != 'Watson')" ;
-			String query = "select count(dept_name) from student group by name having count(id) < 10";
+
+			//String query = "select count(dept_name) from student group by name having count(id) < 10";
+
 			//String query = "select course_id from section as S where semester = 'Fall' and year = 2009 and not exists (select * from section as T where semester = 'Spring' and year = 2010 and S.course_id = T.course_id)";
 			//String query = "select name from instructor where salary > some (select salary from instructor where dept_name = ’Biology’)";
 			//String query = "select count(distinct room_number) from classroom, department where department.dept_name = 'Comp. Sci.' and department.building = classroom.building";
@@ -324,9 +340,7 @@ public class GenerateDataSet {
 			//String query ="select dept_name, avg(salary) as avg_salary from instructor group by dept_name having avg(salary) > 42000";
 			//String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year > 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201')";
 			//String query = "select name, title from (instructor natural join teaches) join course using (course_id)";
-<<<<<<< HEAD
-			//String query = "select id, name from student where tot_cred>30";
-=======
+
 //			String query = "(select course_id\n" + 
 //					"from section\n" + 
 //					"where semester = 'Fall' and year= 2009)\n" + 
@@ -335,9 +349,15 @@ public class GenerateDataSet {
 //					"from section\n" + 
 //					"where semester = 'Spring' and year= 2010)";
 			 //String query = "select id, name from student where tot_cred>30";
->>>>>>> f7e6659511b2109430786a6a5eb3aea54a9fb032
+
 			/* I----*/
 			  //String query = "select id, name from student where tot_cred>30";
+
+			//String query = "select id, name from student where tot_cred>30";
+
+			/* I----*/
+			  String query = "select id, name from student where tot_cred>30";
+
 			 
 			/* II----
 			 * String query = "select * from student inner join department using (dept_name) where student.tot_cred > 40 and exists (select * from course where credits >=6 and course.dept_name = 'comp. sci.' )";

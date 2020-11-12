@@ -60,7 +60,9 @@ public class DataGenController{
 		/** check if there are branch queries and upload the details */
 		//TODO: This is for application testing, a flag should be set
 		//for calling this function
-		RelatedToPreprocessing.uploadBranchQueriesDetails(cvc);
+		if(Configuration.calledFromApplicationTester) {
+			RelatedToPreprocessing.uploadBranchQueriesDetails(cvc);
+		}
 		
 		
 		/** To store input query string */

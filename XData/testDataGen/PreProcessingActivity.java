@@ -304,7 +304,7 @@ public class PreProcessingActivity {
 
 					/**Populate the values from the data base 
 					 * Needed so that the generated values looks realistic */	
-					RelatedToPreprocessing.populateData(cvc);
+					//RelatedToPreprocessing.populateData(cvc); //commented by rambabu for regression test to eliminate duplicate resultset columns error
 
 					/**Initialize cvc3 headers etc>,*/				
 					cvc.initializeOtherDetails();

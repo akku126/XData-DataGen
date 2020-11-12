@@ -1,6 +1,8 @@
 package generateConstraints;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -939,6 +941,7 @@ public class GenerateJoinPredicateConstraints {
 			/** Open up FORALL and NOT EXISTS*/
 
 			//constraintString += "ASSERT ";
+			checkRepeatedRelations(cvc,cvc.getNoOfOutputTuples()); // TEMPCODE Rahul Sharma  to handle repeated relations
 			for(int i = 1; i <= cvc.getNoOfOutputTuples().get(nulled.getTableName()) ; i++){/**FIXME: Handle repeated relations*/
 				//constraintString += "(O_" + GenerateCVCConstraintForNode.cvcMap(nulled, i + "") + " /= O_" + GenerateCVCConstraintForNode.cvcMap(P0.getColumn(), P0) + ") AND ";
 				ConstraintObject constr = new ConstraintObject();
@@ -952,6 +955,20 @@ public class GenerateJoinPredicateConstraints {
 		}
 		return constraintString;
 	}
+	
+	/**
+     * TEMPCODE Rahul Sharma : to check if there is repeated relations, and remove them 
+     * @param cvc
+     * @param noOfOutputTuples
+     */
+    private static void checkRepeatedRelations(GenerateCVC1 cvc, HashMap<String, Integer> noOfOutputTuples) {
+        // TODO Auto-generated method stub
+        HashMap<String, Integer> tempMap = new HashMap<>(noOfOutputTuples.size());
+        for (Map.Entry<String, Integer> entry : noOfOutputTuples.entrySet()) {
+           tempMap.put(entry.getKey().toLowerCase(), entry.getValue());
+        }
+        cvc.setNoOfOutputTuples(tempMap);       
+    }
 	
 	public static String genNegativeCondsEqClass(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Node c1, Node c2, int tuple){
 		String constraintString = new String();
