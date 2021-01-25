@@ -821,6 +821,7 @@ public class GenerateCVC1 implements Serializable{
 			throw e;
 		}catch(Exception e){
 			logger.log(Level.SEVERE,e.getMessage(),e);
+			e.printStackTrace(); // TEMPCODE Rahul Sharma : for debugging
 			this.closeConn();
 			throw new Exception("Internal Error", e);
 		}

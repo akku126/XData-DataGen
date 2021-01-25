@@ -464,69 +464,109 @@ public class GenerateJoinPredicateConstraints {
 			f2 = n2.getTable();
 			temp1 = f1.getTableName();
 			temp2 = f2.getTableName();
-			joinTable = temp1 + "join" + temp2;
-				if(!tablesAdded.contains(joinTable)){
-					constraintString += "\n (declare-datatypes () (("+joinTable +"_TupleType" + "("+joinTable +"_TupleType ";
-				}
+			if(temp1==temp2) { // correlation is present in the outer and inner queries // TEMPCODE Rahul Sharma
+//				System.out.println("Correlation");
+				String innerQueryTable = String.join("join",queryBlock.getBaseRelations()).toLowerCase().replaceAll("\\d", "");
+				String outerQueryTable = queryBlock.getTopLevelRelation().getTableName().toString().toLowerCase();
+				String correlationAttribute = n1.getColumn().toString();
+				String innerTableAttibuteIndex = getInnerTableAttributeIndex(innerQueryTable);
+				String outerTableAttibuteIndex = getOuterTableAttributeIndex(outerQueryTable);
+				String correlation_operator = operator.toString();
+				constraintString = "(assert (forall ((i1 Int)) ";
+				constraintString+= "(exists ((j1 Int)) ";
+				constraintString+= "( "+correlation_operator+" ( "+innerQueryTable+"_"+correlationAttribute+innerTableAttibuteIndex
+									+ "( select O_"+innerQueryTable +" i1 )) ("+outerQueryTable+"_"+correlationAttribute+outerTableAttibuteIndex
+									+ " (select O_"+outerQueryTable+" j1 )) )"
+									+ ") ) )";
+				System.out.println(constraintString);
 				
-				for(String key : f1.getColumns().keySet()) {
-					ColName = f1.getColumns().get(key).getColumnName();
-					String s = f1.getColumns().get(key).getCvcDatatype();
-						if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
-							constraintString += "("+joinTable+"_"+f1.getColumns().get(key)+findex+" "+s + ") ";
-						else
-							constraintString += "("+joinTable+"_"+f1.getColumns().get(key)+findex+" "+ColName + ") ";						
-						findex++;
-				}
-				int delimit = findex;
-				for(String key : f2.getColumns().keySet()) {
-					ColName = f2.getColumns().get(key).getColumnName();
-					String s = f2.getColumns().get(key).getCvcDatatype();
-						if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
-							constraintString += "("+joinTable+"_"+f2.getColumns().get(key)+findex+" "+s + ") ";
-						else
-							constraintString += "("+joinTable+"_"+f2.getColumns().get(key)+findex+" "+ColName + ") ";						
-						findex++;
-				}
-				constraintString += ") )) )\n";
-				//Now create the Array for this TupleType
-				constraintString += "(declare-fun O_" + joinTable + "() (Array Int " + joinTable + "_TupleType))\n\n";
+			}
+			else {
+				joinTable = temp1 + "join" + temp2;
+					if(!tablesAdded.contains(joinTable)){
+						constraintString += "\n (declare-datatypes (("+joinTable +"_TupleType 0))" + "((("+joinTable +"_TupleType "; // TEMPCODE Rahul Sharma : fixed syntax error
+					}
+					
+					for(String key : f1.getColumns().keySet()) {
+						ColName = f1.getColumns().get(key).getColumnName();
+						String s = f1.getColumns().get(key).getCvcDatatype();
+							if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
+								constraintString += "("+joinTable+"_"+f1.getColumns().get(key)+findex+" "+s + ") ";
+							else
+								constraintString += "("+joinTable+"_"+f1.getColumns().get(key)+findex+" "+ColName + ") ";						
+							findex++;
+					}
+					int delimit = findex;
+					for(String key : f2.getColumns().keySet()) {
+						ColName = f2.getColumns().get(key).getColumnName();
+						String s = f2.getColumns().get(key).getCvcDatatype();
+							if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
+								constraintString += "("+joinTable+"_"+f2.getColumns().get(key)+findex+" "+s + ") ";
+							else
+								constraintString += "("+joinTable+"_"+f2.getColumns().get(key)+findex+" "+ColName + ") ";						
+							findex++;
+					}
+					constraintString += ") )) )\n";
+					//Now create the Array for this TupleType
+					constraintString += "(declare-fun O_" + joinTable + "() (Array Int " + joinTable + "_TupleType))\n\n";
+					
 				
-			
-			t1Columnindex	= n1.getColumn().getTable().getColumnIndex(n1.getColumn().getColumnName());
-			t2Columnindex	= n2.getColumn().getTable().getColumnIndex(n2.getColumn().getColumnName());
-			ConstraintGenerator constrGen = new ConstraintGenerator();
-				
-			String constraint1 = constrGen.genPositiveCondsForPredF(queryBlock, n1, "i1");
-			String constraint2 = constrGen.genPositiveCondsForPredF(queryBlock, n2, "j1");
-	
-	
-			
-			constraintString += "(assert (forall ((i1 Int)(j1 Int))(=> ("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " )":" "+ ") \n");
-			//constraintString += "(forall ((i1 Int)(j1 Int))(=> ("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " )":" "+ ") \n");
-			
-			
-			String constraint3 = "("+joinTable+"_"+n1.getColumn().getColumnName()+t1Columnindex;
-			constraint3 += "("+" select O_"+joinTable+" "+" k1 ) )";
-			
-			constraintString += "(exists ((k1 Int)) (and (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" "+ ")) \n");
-			
-			t2Columnindex += delimit;
-			String constraint4 = "("+joinTable+"_"+n2.getColumn().getColumnName()+t2Columnindex;
-			constraint4 += "("+" select O_"+joinTable+" "+" k1 ) )";
-			
-			constraintString += "(" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" "+ "))))) \n\n");
+				t1Columnindex	= n1.getColumn().getTable().getColumnIndex(n1.getColumn().getColumnName());
+				t2Columnindex	= n2.getColumn().getTable().getColumnIndex(n2.getColumn().getColumnName());
+				ConstraintGenerator constrGen = new ConstraintGenerator();
+					
+				String constraint1 = constrGen.genPositiveCondsForPredF(queryBlock, n1, "i1");
+				String constraint2 = constrGen.genPositiveCondsForPredF(queryBlock, n2, "j1");
 		
-			//constraintString += "(assert (forall ((k1 Int)) (exists ((i1 Int)(j1 Int)) (and (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" " + " )\n");
+		
+				
+				constraintString += "(assert (forall ((i1 Int)(j1 Int))(=> ("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " )":" "+ ") \n");
+				//constraintString += "(forall ((i1 Int)(j1 Int))(=> ("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " )":" "+ ") \n");
+				
+				
+//				String constraint3 = "("+joinTable+"_"+n1.getColumn().getColumnName()+t1Columnindex;
+//				constraint3 += "("+" select O_"+joinTable+" "+" k1 ) )";
+				
+//				constraintString += "(exists ((k1 Int)) (and (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" "+ ") \n"); // TEMPCODE : Rahul Sharma : Removed one extra ")" from the end
+				constraintString += "(exists ((k1 Int)) "; // TEMPCODE : Rahul Sharma : added all other attributes
+				
+//				t2Columnindex += delimit;
+//				String constraint4 = "("+joinTable+"_"+n2.getColumn().getColumnName()+t2Columnindex;
+//				constraint4 += "("+" select O_"+joinTable+" "+" k1 ) )";
+				
+//				constraintString += "(" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" "+ "))))) )\n\n");
 			
-			//constraintString +=  "("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" " +  ")))))\n");
-			
+				//constraintString += "(assert (forall ((k1 Int)) (exists ((i1 Int)(j1 Int)) (and (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" " + " )\n");
+				
+				//constraintString +=  "("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" " +  ")))))\n");
+				//TEMPCODE START : Rahul Sharma
+				ArrayList<String> jt = new ArrayList<String>();
+				jt = createTempTableColumns(joinTable,f1,f2);
+				constraintString+= generateConstraintsForAllAttributes(f1,f2,jt,joinTable) + ") ) ) )";
+				System.out.println(constraintString);
+				//TEMPCODE END : Rahul Sharma
+				
+			}
 		}
 	// Join Temp table implementation end
 		
 	//	constraintString =constrGen.generateANDConstraintsWithAssert(constrObjList);
 		return constraintString;
 	}
+
+	private static String getOuterTableAttributeIndex(String outerQueryTable) {
+		// TODO Auto-generated method stub
+		// FIXME : 
+		return "4"; // returning 4 for now
+	}
+
+
+	private static String getInnerTableAttributeIndex(String innerQueryTable) {
+		// TODO Auto-generated method stub
+		// FIXME : 
+		return "4"; // returning 4 for now
+	}
+
 
 	public static String getTableName(Node n1){
 		if(n1.getColumn() != null )
@@ -645,7 +685,11 @@ public class GenerateJoinPredicateConstraints {
 					temp2 = f2.getTableName();
 					joinTable = temp1 + "join" + temp2;
 						if(!tablesAdded.contains(joinTable)){
-							constraintString += "\n (declare-datatypes () (("+joinTable +"_TupleType" + "("+joinTable +"_TupleType ";
+//							constraintString += "\n (declare-datatypes () (("+joinTable +"_TupleType" + "("+joinTable +"_TupleType ";
+							// TEMPCODE START : Rahul Sharma
+							// handled incorrect paranthesis
+							constraintString += "\n (declare-datatypes (("+joinTable +"_TupleType 0))" + "((("+joinTable +"_TupleType ";
+							// TEMPCODE END : Rahul Sharma
 						}
 						
 						for(String key : f1.getColumns().keySet()) {
@@ -669,40 +713,194 @@ public class GenerateJoinPredicateConstraints {
 						}
 						constraintString += ") )) )\n";
 						//Now create the Array for this TupleType
-						constraintString += "(declare-fun O_" + joinTable + "() (Array Int " + joinTable + "_TupleType))\n\n";
+						constraintString += "(declare-fun O_" + joinTable + " () (Array Int " + joinTable + "_TupleType))\n\n";
 						
 					
-					t1Columnindex	= n1.getColumn().getTable().getColumnIndex(n1.getColumn().getColumnName());
-					t2Columnindex	= n2.getColumn().getTable().getColumnIndex(n2.getColumn().getColumnName());
+					t1Columnindex = n1.getColumn().getTable().getColumnIndex(n1.getColumn().getColumnName());
+					t2Columnindex = n2.getColumn().getTable().getColumnIndex(n2.getColumn().getColumnName());
+					
 					ConstraintGenerator constrGen = new ConstraintGenerator();
 						
 					String constraint1 = constrGen.genPositiveCondsForPredF(queryBlock, n1, "i1");
 					String constraint2 = constrGen.genPositiveCondsForPredF(queryBlock, n2, "j1");
-			
-			
-					
+											
 					constraintString += "(assert (forall ((i1 Int)(j1 Int))(=> ("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " )":" "+ ") \n");
 					//constraintString += "(forall ((i1 Int)(j1 Int))(=> ("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " )":" "+ ") \n");
 					
 					
-					String constraint3 = "("+joinTable+"_"+n1.getColumn().getColumnName()+t1Columnindex;
-					constraint3 += "("+" select O_"+joinTable+" "+" k1 ) )";
+//					String constraint3 = "("+joinTable+"_"+n1.getColumn().getColumnName()+t1Columnindex;
+//					constraint3 += "("+" select O_"+joinTable+" "+" k1 ) )";
 					
-					constraintString += "(exists ((k1 Int)) (and (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" "+ ") \n");
+//					constraintString += "(exists ((k1 Int)) (and (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" "+ ") \n"); // TEMPCODE Rahul Sharma : Commented
+					constraintString += "(exists ((k1 Int)) ";
 					
 					t2Columnindex += delimit;
-					String constraint4 = "("+joinTable+"_"+n2.getColumn().getColumnName()+t2Columnindex;
-					constraint4 += "("+" select O_"+joinTable+" "+" k1 ) )";
+//					String constraint4 = "("+joinTable+"_"+n2.getColumn().getColumnName()+t2Columnindex;
+//					constraint4 += "("+" select O_"+joinTable+" "+" k1 ) )";
+//					
+//					constraintString += " (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" "+ "))))) )\n");
 					
-					constraintString += " (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" "+ "))))) \n");
-				
-					constraintString += "(assert (forall ((k1 Int)) (exists ((i1 Int)(j1 Int)) (and (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" " + " )\n");
+					//TEMPCODE START : Rahul Sharma
+					ArrayList<String> jt = new ArrayList<String>();
+					jt = createTempTableColumns(joinTable,f1,f2);
+					constraintString+= generateConstraintsForAllAttributes(f1,f2,jt,joinTable) + ") ) ) )";
+//					System.out.println(constraintString);
+					//TEMPCODE END : Rahul Sharma
 					
-					constraintString +=  "("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" " +  ")))))\n");
+					// TEMPCODE START : Rahul Sharma
+					// commented these lines, [FIXME: this constraints leads to infinite loops]
+//					constraintString += "(assert (forall ((k1 Int)) (exists ((i1 Int)(j1 Int)) (and (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" " + " )\n");
+					 
+//					constraintString += "(assert (forall ((k1 Int)) (=> (and (<= 0 k1) (<= k1 10))" 
+//							+ "(exists ((i1 Int)(j1 Int)) (and (and (<= 0 i1) (<= i1 10)) (and (<= 0 j1) (<= j1 10)) " 
+//							+ " (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" " + " ))\n");
+					
+//					constraintString +=  "("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" " +  ")))))\n");
+					constraintString += generateConstraintsForAllAndExistsAttributes(f1,f2,jt,joinTable);
+					// TEMPCODE END : Rahul Sharma
 					
 		}
 			// Join Temp table implementation end
 		return constraintString;
+	}
+
+	/**
+	 * TEMPCODE Rahul Sharma
+	 * @param joinTable
+	 * @param t1
+	 * @param t2
+	 * @return
+	 */
+	private static ArrayList<String> createTempTableColumns(String joinTable, Table t1, Table t2) {
+		// TODO Auto-generated method stub
+		ArrayList<String> columns = new ArrayList<String>();
+		int count = 0;
+		String columnName;
+		HashMap<String,Column> t1_columns = t1.getColumns();
+		for (Column c : t1_columns.values()) {
+			columnName = joinTable+"_"+c.getColumnName()+count;
+			columns.add(columnName);
+			count++;
+		}
+		
+		HashMap<String,Column> t2_columns = t2.getColumns();
+		for (Column c : t2_columns.values()) {
+			columnName = joinTable+"_"+c.getColumnName()+count;
+			columns.add(columnName);
+			count++;
+		}
+		return columns;
+	}
+
+
+	/**
+	 * TEMPCODE Rahul Sharma
+	 * @param f1 : Table 1
+	 * @param f2 : Table 2
+	 * @return : constraints with all attributes present for quantifiers [forall / exists]
+	 */
+	private static String generateConstraintsForAllAttributes(Table t1, Table t2,ArrayList<String> jtColumns,String jtName) {
+		// TODO Auto-generated method stub
+		String constraintString = "";
+		int numberOfConstraints = jtColumns.size();
+		String constraints[] = new String[numberOfConstraints];
+		
+		String t1_name = t1.getTableName().toLowerCase();
+		String t2_name = t2.getTableName().toLowerCase();
+		String jt_name = jtName.toLowerCase();
+		
+		int count = 0,count1=0;
+		for(String key : t1.getColumns().keySet()) {
+			constraints[count] = "(= ("+t1_name+"_"+key+count1+" (select O_"+t1_name+" i1)) ("+jtColumns.get(count)+ " (select O_"+jt_name+" k1)))";
+//			System.out.println(constraints[count]);
+			constraintString+=constraints[count];
+			count++;
+			count1++;
+		}
+		
+		int count2 = 0;
+		for(String key : t2.getColumns().keySet()) {
+			constraints[count] = "(= ("+t2_name+"_"+key+count2+" (select O_"+t2_name+" j1)) ("+jtColumns.get(count)+ " (select O_"+jt_name+" k1)))";
+//			System.out.println(constraints[count]);
+			constraintString+=constraints[count];
+			count++;
+			count2++;
+		}
+		
+//		System.out.println(jt.getTableName());
+//		for(String key : jt.getColumns().keySet()) {
+//			ColName = jt.getColumns().get(key).getColumnName();
+//			System.out.println(ColName);
+//		}
+		
+		int index = 0;
+		String finalConstraints = constraints[index++];
+		while(index < numberOfConstraints) {
+			finalConstraints = "(and "+finalConstraints+" "+constraints[index++]+")";
+		}
+//		System.out.println(finalConstraints);
+		return finalConstraints;
+	}
+
+	
+	/**
+	 * TEMPCODE Rahul Sharma
+	 * @param f1 : Table 1
+	 * @param f2 : Table 2
+	 * @return : constraints with all attributes present for quantifiers [forall / exists]
+	 */
+	private static String generateConstraintsForAllAndExistsAttributes(Table t1, Table t2,ArrayList<String> jtColumns,String jtName) {
+		// TODO Auto-generated method stub
+		String constraintString = "";
+		int numberOfConstraints = jtColumns.size();
+		String constraints[] = new String[numberOfConstraints];
+		
+		String t1_name = t1.getTableName().toLowerCase();
+		String t2_name = t2.getTableName().toLowerCase();
+		String jt_name = jtName.toLowerCase();
+		String table1pk = "";
+		String table2pk = "";
+		int count = 0,count1=0;
+		for(String key : t1.getColumns().keySet()) {
+			constraints[count] = "(= ("+t1_name+"_"+key+count1+" (select O_"+t1_name+" j1)) ("+jtColumns.get(count)+ " (select O_"+jt_name+" i1)))";
+//			System.out.println(constraints[count]);
+			constraintString+=constraints[count];
+			if(key.equalsIgnoreCase(t1.getPrimaryKey().elementAt(0).toString())) {
+				table1pk = constraints[count];
+			}
+			count++;
+			count1++;
+		}
+		
+		int count2 = 0;
+		for(String key : t2.getColumns().keySet()) {
+			constraints[count] = "(= ("+t2_name+"_"+key+count2+" (select O_"+t2_name+" k1)) ("+jtColumns.get(count)+ " (select O_"+jt_name+" i1)))";
+//			System.out.println(constraints[count]);
+			constraintString+=constraints[count];
+			if(key.equalsIgnoreCase(t2.getPrimaryKey().elementAt(0).toString())) {
+				table2pk = constraints[count];
+			}
+			count++;
+			count2++;
+		}
+		
+//		System.out.println(jt.getTableName());
+//		for(String key : jt.getColumns().keySet()) {
+//			ColName = jt.getColumns().get(key).getColumnName();
+//			System.out.println(ColName);
+//		}
+		String finalConstraints = "(assert (forall ((i1 Int)) (exists ((j1 Int)(k1 Int)) (=>";
+		
+		finalConstraints += "(and "+ table1pk + " " + table2pk +")";
+		
+		int index = 0;
+		finalConstraints += constraints[index++];
+		while(index < numberOfConstraints) {
+			finalConstraints += "(and "+finalConstraints+" "+constraints[index++]+")";
+		}
+		finalConstraints += ") ) ) )";
+		System.out.println(finalConstraints);
+		return finalConstraints;
 	}
 
 	/**

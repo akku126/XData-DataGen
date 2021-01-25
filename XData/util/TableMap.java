@@ -203,7 +203,12 @@ public class TableMap implements Serializable{
 
 					String columnName = rs1.getString("COLUMN_NAME").toUpperCase();
 					Column col = table.getColumn(columnName);
-					table.addColumnInPrimaryKey(col);
+					// TEMPCODE START : Rahul Sharma
+					// To handle duplicate primary keys getting added
+					if(!checkColumnAlreadyAddedInPrimaryKeys(table,col)){
+						table.addColumnInPrimaryKey(col);
+					}
+					// TEMPCODE END : Rahul Sharma
 					if(size == 1)
 						col.setIsUnique(true);
 				}            
@@ -297,6 +302,22 @@ public class TableMap implements Serializable{
 
 			//e.printStackTrace();
 		}
+	}
+
+	/**
+	 * To check if the "col" is already a part of the primary key of the "table"
+	 * @param table : Table 
+	 * @param col : Primary Key Column
+	 * @return : true if primary key column is already added as primaryKey in the table, otherwise false
+	 */
+	private boolean checkColumnAlreadyAddedInPrimaryKeys(Table table, Column col) {
+		Vector<Column> columns = new Vector<Column>();
+		columns = table.getPrimaryKey();
+		boolean alreadyPresent = false;
+		for(Column c : columns){
+			if(c==col)alreadyPresent=true;
+		}
+		return alreadyPresent;
 	}
 
 	public Vector<Table> getAllTablesInTopSorted(){                

@@ -2,6 +2,10 @@ package generateConstraints;
 
 import generateConstraints.TupleRange;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -154,6 +158,8 @@ public class GenerateCommonConstraintsForQuery {
 				
 				Utilities.writeFile(Configuration.homeDir + "/temp_smt" + cvc.getFilePath() + "/z3_" + cvc.getCount() + ".smt", CVCStr);
 				
+				modifyZ3SMTFile(Configuration.homeDir + "/temp_smt" + cvc.getFilePath() + "/z3_" + cvc.getCount() + ".smt");
+				
 				success= new PopulateTestData().killedMutantsForSMT("z3_" + cvc.getCount() 
 				+ ".smt", cvc.getQuery(), 
 				"DS" + cvc.getCount(), cvc.getQueryString(), cvc.getFilePath(), cvc.getNoOfOutputTuples(), cvc.getTableMap(), 
@@ -182,14 +188,7 @@ public class GenerateCommonConstraintsForQuery {
 				logger.log(Level.INFO,"DATA SETS FOR QUERY ARE GENERATED");
 			}
 			logger.log(Level.INFO,"\n\n***********************************************************************\n");
-// <<<<<<< HEAD
-			
-			
-// =======
-			GenerateDataset_new fp = new GenerateDataset_new( cvc.getFilePath());
-
-
-// >>>>>>> refs/heads/rambabu
+//			GenerateDataset_new fp = new GenerateDataset_new( cvc.getFilePath()); // TEMOCODE : Rahul Sharma : Commented out this line, was not doing anything
 			return success;
 		}catch (TimeoutException e){
 			logger.log(Level.SEVERE,"Timeout in generating dataset "+cvc.getCount()+" : "+e.getMessage());		
@@ -201,6 +200,39 @@ public class GenerateCommonConstraintsForQuery {
 
 	}
 
+	/**
+	 * TEMPCODE Rahul Sharma : To handle multiple datatypes present in the declare-datatypes and remove them from the z3 smt file
+	 * @param smtFileName : z3 smt file name, with full path
+	 * @throws IOException
+	 */
+	private static void modifyZ3SMTFile(String smtFileName) throws IOException {
+		// TODO Auto-generated method stub
+		String modifiedConstraints = "";
+		File file = new File(smtFileName); 
+		@SuppressWarnings("resource")
+		BufferedReader br = new BufferedReader(new FileReader(file)); 
+		  String line; 
+		  while ((line = br.readLine()) != null) {
+			if(line.contains("declare-datatypes") && !line.contains("TupleType")) {
+				Set<String> set = new HashSet<String>();
+				String tempLine = line.substring(line.indexOf("((("));
+				tempLine = tempLine.substring(2, tempLine.length()-3);
+				StringTokenizer tok = new StringTokenizer(tempLine, " ");
+				while(tok.hasMoreTokens()) {
+					set.add(tok.nextToken());
+				}
+				tempLine = line.substring(0, line.indexOf("((("));
+				tempLine += "((";
+				for(String s : set)
+					tempLine += s + " ";
+				tempLine += ")))";
+				line = tempLine;
+			}
+			modifiedConstraints += line+"\n";
+		  }
+		  Utilities.writeFile(smtFileName, modifiedConstraints);
+	}
+	
 	public static boolean generateDataSetForConstraints(GenerateCVC1 cvc) throws Exception{
 		try {
 			generateNullandDBConstraints(cvc,false);

@@ -211,8 +211,10 @@ public class PopulateTestData {
                                     } else if (line.startsWith(")")) {
                                         break;
                                     }
-                                    setContents(testFile,line+"\n", true);
+                                    // setContents(testFile,line+"\n", true);
+                                    setContents(testFile,line, true); // TEMPCODE : Rahul Sharma : Removed "\n" from previous statement
                             }
+                            setContents(testFile,"\n",true); // TEMPCODE : Rahul Sharma
                             input.mark(100);
                         }
                         //if(!line.contains("!"))
@@ -838,6 +840,13 @@ public class PopulateTestData {
 		return returnVal;			
 	}
 	
+	/**
+	 * This method handles the constraints splitted into multiple lines in the cut file 
+	 * @param cutFileName : Z3 cut file name 
+	 * @param filePath : file path of the cut file 
+	 * @return : cutFileName
+	 * @throws IOException
+	 */
 	private String modifyCutFile(String cutFileName, String filePath) throws IOException {
         String modifiedCutFile = "";
         BufferedReader br =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+filePath+"/" + cutFileName));

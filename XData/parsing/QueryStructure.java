@@ -591,27 +591,25 @@ public class QueryStructure implements Serializable, QueryStructureInterface{
 				retString+=fromListElementsToString(fle.getBag());				
 			}	
 		}
-		
-// <<<<<<< HEAD
-		
-// 		private static String fromListElementsToString(Vector<FromClauseElement> visitedFromListElements) {
-// 			String retString="";
-// 			for(FromClauseElement fle:visitedFromListElements){
-// 				if(fle!=null && (fle.getTableName()!=null||fle.getTableNameNo()!=null)) // check if the from list is just a table
-// 					retString+="\n "+fle.toString();
-// 				else if(fle!=null && fle.getSubQueryStructure()!=null){ // check if the from list is a subquery
-// 					retString+="\n "+fle.toString();
-// 					retString+=fromListElementsToString(fle.getSubQueryStructure().getFromListElements());
-// 				}
-// 				else if(fle!=null && fle.getBag()!=null && !fle.getBag().isEmpty()){ //WTH is this?
-// 					retString+="\n "+fle.toString();
-// 					retString+=fromListElementsToString(fle.getBag());				
-// 				}	
-// 			}
-// 				return retString;
-			return retString;
+		return retString;
 	}
 		
+//	private static String fromListElementsToString(Vector<FromClauseElement> visitedFromListElements) {
+//			String retString="";
+//			for(FromClauseElement fle:visitedFromListElements){
+//				if(fle!=null && (fle.getTableName()!=null||fle.getTableNameNo()!=null)) // check if the from list is just a table
+//					retString+="\n "+fle.toString();
+//				else if(fle!=null && fle.getSubQueryStructure()!=null){ // check if the from list is a subquery
+//					retString+="\n "+fle.toString();
+//					retString+=fromListElementsToString(fle.getSubQueryStructure().getFromListElements());
+//				}
+//				else if(fle!=null && fle.getBag()!=null && !fle.getBag().isEmpty()){ //WTH is this?
+//					retString+="\n "+fle.toString();
+//					retString+=fromListElementsToString(fle.getBag());				
+//				}	
+//			}
+//				return retString;
+//	}
 
 	public Query getQuery() {
 		return query;
@@ -899,10 +897,10 @@ public class QueryStructure implements Serializable, QueryStructureInterface{
 		while(m.find(index)){
 			index=m.start()+1;
 			input=m.replaceAll(" ROW "+m.group(1)+"<> ROW "+m.group(2));
-// >>>>>>> refs/heads/rambabu
 		}
 
 		//4th pattern (a1,b1,...) in or (a1,b1,...) IN
+		// TEMPCODE Rahul Sharma : FIXME : this is currently giving error 
 		p=Pattern.compile("(\\([^\\(&&[^\\)]]+,[^\\(&&[^\\)]]+\\))\\s*[Ii][Nn] ");
 		m=p.matcher(input);
 		index=0;
@@ -1557,8 +1555,7 @@ public class QueryStructure implements Serializable, QueryStructureInterface{
 			}
 		}
 	}
-
-// <<<<<<< HEAD
+	
 		/** @author mathew  
 		 * 	 deals with normalization of columns items in PlainSelect Queries. eg: With A(a) as (select name from ...)			
 		 *  is normalized to With A(a) as (select name as a from ...)
@@ -1577,30 +1574,10 @@ public class QueryStructure implements Serializable, QueryStructureInterface{
 							a.setUseAs(true);
 							selExpItem.setAlias(a);
 						}
-// =======
-// 	/** @author mathew  
-// 	 * 	 deals with normalization of columns items in PlainSelect Queries. eg: With A(a) as (select name from ...)			
-// 	 *  is normalized to With A(a) as (select name as a from ...)
-// 	 *  
-// 	 */
-// 	private void normalizeSelectedColumnsForWithItem(WithItem withItem, PlainSelect selectClause) {
-// 		// TODO Auto-generated method stub
-// 		if(withItem.getWithItemList()!=null &&!withItem.getWithItemList().isEmpty() ){
-// 			for(int i=0;i<withItem.getWithItemList().size();i++){
-// 				SelectItem withSelItem=withItem.getWithItemList().get(i);
-// 				if(selectClause.getSelectItems()!=null &&  !selectClause.getSelectItems().isEmpty() && selectClause.getSelectItems().size()>i){
-// 					SelectItem sItem=selectClause.getSelectItems().get(i);
-// 					if(sItem instanceof SelectExpressionItem){
-// 						SelectExpressionItem selExpItem=(SelectExpressionItem)sItem;
-// 						Alias a = new Alias(withSelItem.toString());
-// 						a.setUseAs(true);
-// 						selExpItem.setAlias(a);
-// >>>>>>> refs/heads/rambabu
 					}
 				}
 			}
 		}
-	}
 
 
 
