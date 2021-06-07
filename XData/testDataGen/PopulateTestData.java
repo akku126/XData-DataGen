@@ -115,7 +115,7 @@ public class PopulateTestData {
 			try {
 				Callable<Integer> call = new CallableProcess(myProcess);
 				Future<Integer> future = service.submit(call);
-				int exitValue = future.get(180, TimeUnit.SECONDS);
+				int exitValue = future.get(5, TimeUnit.SECONDS); // reduced timeout to 5secs from 180secs
 
 				if (myProcess.exitValue() != 0) {
 					logger.log(Level.SEVERE," GenerateCvcOutput function :  Generating CVC Output failed.");
@@ -506,116 +506,118 @@ public class PopulateTestData {
 				}
 				else{
 					//String tableName = line.substring(line.indexOf("O_")+2,line.indexOf(" (store ("));
-					String tableName = line.substring(line.indexOf("(")+1,line.indexOf("_"));
-					if(!noOfOutputTuples.containsKey(tableName)){
-						continue;
-					}
-					//int index = Integer.parseInt(line.substring(line.indexOf('[')+1, line.indexOf(']')));
-					//if((index > noOfOutputTuples.get(tableName)) || (index <= 0)){
-					//	continue;
-					//}
-					currentCopyFileName = tableName;//line.substring(line.indexOf("_")+1,line.indexOf("["));
-					//Shree added to show 'tables in query' and 'reference tables' separately
-					if( !(existingTableNames.contains(currentCopyFileName.toUpperCase()))){
-						//If table name is not in existingTablename Set, it means it is a reference Table
-						currentCopyFileName = currentCopyFileName+".ref";
-					}
-					testFile = new File(Configuration.homeDir+"/temp_smt"+filePath+"/" + currentCopyFileName + ".copy");
-					if(!testFile.exists() || !listOfCopyFiles.contains(currentCopyFileName + ".copy")){
-						if(testFile.exists()){
-							testFile.delete();
+					if(line.contains("(") && line.contains("_TupleType")) {
+						String tableName = line.substring(line.indexOf("(")+1,line.indexOf("_TupleType"));
+						if(!noOfOutputTuples.containsKey(tableName)){
+							continue;
 						}
-						testFile.createNewFile();
-						listOfCopyFiles.add(currentCopyFileName + ".copy");
-					}
-					copystmt = getCopyStmtFromCvcOutputForSMT(line);
-
-					copyFileContents.add(copystmt);
-					////Putting back string values in CVC
-
-					//Table t=tableMap.getTable(tableName);
-					Table t=tableMap.getTable(tableName.toUpperCase());//added by rambabu
-					String[] copyvalues = copystmt.split("\n");
-
-					for(int k=0; k<copyvalues.length; k++){
-
-						String[] copyTemp=copyvalues[k].split("\\ ");
-						copystmt="";
-						String out="";
-
-						for(int i=0;i<copyTemp.length;i++){
-
-							String cvcDataType=t.getColumn(i).getCvcDatatype();
-							if(cvcDataType.equalsIgnoreCase("INT") )
-								continue;
-							else if(cvcDataType.equalsIgnoreCase("REAL")){
-								String str[]=copyTemp[i].trim().split("/");
-								if(str.length==1)
+						//int index = Integer.parseInt(line.substring(line.indexOf('[')+1, line.indexOf(']')));
+						//if((index > noOfOutputTuples.get(tableName)) || (index <= 0)){
+						//	continue;
+						//}
+						currentCopyFileName = tableName;//line.substring(line.indexOf("_")+1,line.indexOf("["));
+						//Shree added to show 'tables in query' and 'reference tables' separately
+						if( !(existingTableNames.contains(currentCopyFileName.toUpperCase()))){
+							//If table name is not in existingTablename Set, it means it is a reference Table
+							currentCopyFileName = currentCopyFileName+".ref";
+						}
+						testFile = new File(Configuration.homeDir+"/temp_smt"+filePath+"/" + currentCopyFileName + ".copy");
+						if(!testFile.exists() || !listOfCopyFiles.contains(currentCopyFileName + ".copy")){
+							if(testFile.exists()){
+								testFile.delete();
+							}
+							testFile.createNewFile();
+							listOfCopyFiles.add(currentCopyFileName + ".copy");
+						}
+						copystmt = getCopyStmtFromCvcOutputForSMT(line);
+	
+						copyFileContents.add(copystmt);
+						////Putting back string values in CVC
+	
+						//Table t=tableMap.getTable(tableName);
+						Table t=tableMap.getTable(tableName.toUpperCase());//added by rambabu
+						String[] copyvalues = copystmt.split("\n");
+	
+						for(int k=0; k<copyvalues.length; k++){
+	
+							String[] copyTemp=copyvalues[k].split("\\ ");
+							copystmt="";
+							String out="";
+	
+							for(int i=0;i<copyTemp.length;i++){
+	
+								String cvcDataType=t.getColumn(i).getCvcDatatype();
+								if(cvcDataType.equalsIgnoreCase("INT") )
 									continue;
-								double num=Integer.parseInt(str[0]);
-								double den=Integer.parseInt(str[1]);
-								copyTemp[i]=(num/den)+"";
+								else if(cvcDataType.equalsIgnoreCase("REAL")){
+									String str[]=copyTemp[i].trim().split("/");
+									if(str.length==1)
+										continue;
+									double num=Integer.parseInt(str[0]);
+									double den=Integer.parseInt(str[1]);
+									copyTemp[i]=(num/den)+"";
+								}
+								else if(cvcDataType.equalsIgnoreCase("TIMESTAMP")){
+									long l=Long.parseLong(copyTemp[i].trim())*1000;
+									java.sql.Timestamp timeStamp=new java.sql.Timestamp(l);
+									copyTemp[i]=timeStamp.toString();
+								}
+								else if(cvcDataType.equalsIgnoreCase("TIME")){
+	
+									int time=Integer.parseInt(copyTemp[i].trim());
+									int sec=time%60;
+									int min=((time-sec)/60)%60;
+									int hr=(time-sec+min*60)/3600;
+									copyTemp[i]=hr+":"+min+":"+sec;
+								}
+								else if(cvcDataType.equalsIgnoreCase("DATE")){
+									long l=Long.parseLong(copyTemp[i].trim())*86400000;
+	
+									java.sql.Date date=new java.sql.Date(l);
+									copyTemp[i]=date.toString();
+	
+								}
+								else {
+	
+									String copyStr=copyTemp[i].trim();
+	
+	
+									if(copyStr.endsWith("__"))
+										copyStr = "";
+									else if(copyStr.contains("__"))
+										copyStr = copyStr.split("__")[1];
+	
+	
+							/*&copyStr = copyStr.replace("_p", "+");
+							copyStr = copyStr.replace("_m", "-");
+							copyStr = copyStr.replace("_a", "&");
+							copyStr = copyStr.replace("_s", " ");
+							copyStr = copyStr.replace("_d", ".");
+							copyStr = copyStr.replace("_c", ",");
+							copyStr = copyStr.replace("_u", "_");*/
+	
+									copyStr = copyStr.replace("_p", "%");
+									copyStr = copyStr.replace("_s", "+");
+									copyStr = copyStr.replace("_d", ".");
+									copyStr = copyStr.replace("_m", "-");
+									copyStr = copyStr.replace("_s", "*");
+									copyStr = copyStr.replace("_u", "_");
+									copyStr = URLDecoder.decode(copyStr,"UTF-8");
+									copyTemp[i]=copyStr.replace("_b", " ");
+	
+								}
+	
+	
 							}
-							else if(cvcDataType.equalsIgnoreCase("TIMESTAMP")){
-								long l=Long.parseLong(copyTemp[i].trim())*1000;
-								java.sql.Timestamp timeStamp=new java.sql.Timestamp(l);
-								copyTemp[i]=timeStamp.toString();
+							for(String s:copyTemp){
+								copystmt+=s+"|";
 							}
-							else if(cvcDataType.equalsIgnoreCase("TIME")){
-
-								int time=Integer.parseInt(copyTemp[i].trim());
-								int sec=time%60;
-								int min=((time-sec)/60)%60;
-								int hr=(time-sec+min*60)/3600;
-								copyTemp[i]=hr+":"+min+":"+sec;
-							}
-							else if(cvcDataType.equalsIgnoreCase("DATE")){
-								long l=Long.parseLong(copyTemp[i].trim())*86400000;
-
-								java.sql.Date date=new java.sql.Date(l);
-								copyTemp[i]=date.toString();
-
-							}
-							else {
-
-								String copyStr=copyTemp[i].trim();
-
-
-								if(copyStr.endsWith("__"))
-									copyStr = "";
-								else if(copyStr.contains("__"))
-									copyStr = copyStr.split("__")[1];
-
-
-						/*&copyStr = copyStr.replace("_p", "+");
-						copyStr = copyStr.replace("_m", "-");
-						copyStr = copyStr.replace("_a", "&");
-						copyStr = copyStr.replace("_s", " ");
-						copyStr = copyStr.replace("_d", ".");
-						copyStr = copyStr.replace("_c", ",");
-						copyStr = copyStr.replace("_u", "_");*/
-
-								copyStr = copyStr.replace("_p", "%");
-								copyStr = copyStr.replace("_s", "+");
-								copyStr = copyStr.replace("_d", ".");
-								copyStr = copyStr.replace("_m", "-");
-								copyStr = copyStr.replace("_s", "*");
-								copyStr = copyStr.replace("_u", "_");
-								copyStr = URLDecoder.decode(copyStr,"UTF-8");
-								copyTemp[i]=copyStr.replace("_b", " ");
-
-							}
-
-
+							copystmt=copystmt.substring(0, copystmt.length()-1);
+							setContents(testFile, copystmt+"\n", true);
 						}
-						for(String s:copyTemp){
-							copystmt+=s+"|";
-						}
-						copystmt=copystmt.substring(0, copystmt.length()-1);
-						setContents(testFile, copystmt+"\n", true);
+	
+	
 					}
-
-
 				}
 			}
 		}catch(Exception e){

@@ -40,7 +40,7 @@ public class GenerateConstraintForUnintendedJoins {
 				
 				Node n1 = extraCol.get(i);
 				Node n2 = extraCol.get(i+1);
-				
+				//
 				String constraintString = GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, qbt, n1, n2, "/=");
 				
 				String constraint1 = "";

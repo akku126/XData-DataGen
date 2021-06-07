@@ -156,6 +156,13 @@ public class GenerateCommonConstraintsForQuery {
 				/** Call CVC3 Solver with constraints */
 				logger.log(Level.INFO,"cvc count =="+cvc.getCount());
 				
+				// TEMPCODE : Rahul Sharma : for debugging
+//				System.out.println("**** Final Constraints ****");
+//				System.out.println(CVCStr);
+				
+				// TEMPCODE : Rahul Sharma : for removing duplicate constraints
+				CVCStr = removeDuplicateConstraints(CVCStr);
+		
 				Utilities.writeFile(Configuration.homeDir + "/temp_smt" + cvc.getFilePath() + "/z3_" + cvc.getCount() + ".smt", CVCStr);
 				
 				modifyZ3SMTFile(Configuration.homeDir + "/temp_smt" + cvc.getFilePath() + "/z3_" + cvc.getCount() + ".smt");
@@ -200,6 +207,38 @@ public class GenerateCommonConstraintsForQuery {
 
 	}
 
+	
+	/**
+	 * TEMPCODE Rahul Sharma : To handle duplicate constraints
+	 * @param CVCStr : Constraints
+	 * @return : Constraints after removing duplicate ones
+	 */
+	private static String removeDuplicateConstraints(String CVCStr) {
+		// TODO Auto-generated method stub
+		String modifiedConstraints = "";
+		String lines[] = CVCStr.split("((?<=\\n)|(?=\\n))");
+		Set<String> s = new HashSet<String>();
+		for(String line : lines) {
+			if(line.equals("\n"))
+				modifiedConstraints+=line;
+			else if(line.startsWith(";"))
+				modifiedConstraints+=line;
+			else if(!line.startsWith("(declare-datatypes") && !line.startsWith(" (declare-datatypes") && !line.startsWith("(declare-fun") && !line.startsWith(" (declare-fun"))
+				modifiedConstraints+=line;
+//			else if(line.contentEquals("(assert \n") || line.contentEquals("(assert \r\n") || line.contentEquals("(assert \r"))
+//				modifiedConstraints+="\n";
+			else {
+				if(!s.contains(line)) {
+					s.add(line);
+					modifiedConstraints+=line;
+				}
+			}
+		}
+//		System.out.println(modifiedConstraints);
+		return modifiedConstraints;
+	}
+	
+	
 	/**
 	 * TEMPCODE Rahul Sharma : To handle multiple datatypes present in the declare-datatypes and remove them from the z3 smt file
 	 * @param smtFileName : z3 smt file name, with full path

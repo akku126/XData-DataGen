@@ -1479,7 +1479,9 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 				constraint1 += constraintString.replace("(and ", "(or ");
 //				constraint1 += constraintString.replaceAll("(and ", "(or ");
 				
-				constraint += "(assert "+constraint1+") \n";
+//				constraint += "(assert "+constraint1+") \n";
+				constraint = constraint1;
+
 				}
 			else
 				constraint = constraintString;
@@ -2680,6 +2682,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 	}
 
 	/**
+	 * TEMPCODE Rahul Sharma
 	 * TO check and remove duplicate entries from the column values
 	 * @param col : A column of a table
 	 */
@@ -2692,7 +2695,6 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 //		columnValues.addAll(uniqueColumnValues);
 		col.getColumnValues().clear();
 		for(String s : uniqueColumnValues) {
-//			System.out.println(s);
 			col.addColumnValues(s);
 		}
 	}
