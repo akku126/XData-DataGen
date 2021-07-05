@@ -378,7 +378,7 @@ public class GenerateDataSet {
 					conn=DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));;				
 				}
 				
-				int queryId=500;
+				int queryId=1;
 				
 				// String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year = 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201' AND prereq.course_id = course.course_id)";
 				//String query = "select * from classroom, section where classroom.building = section.building and classroom.room_number = section.room_number";
@@ -401,17 +401,17 @@ public class GenerateDataSet {
 				/* I----*/
 //				 String query = "select name from student where tot_cred>50";
 				 
-				/* II----
-				 * String query = "select * from student inner join department using (dept_name) where student.tot_cred > 40 and exists (select * from course where credits >=6 and course.dept_name = 'comp. sci.' )";
-				 */
+//				 II----
+//				  String query = "select * from student inner join department using (dept_name) where student.tot_cred > 40 and exists (select * from course where credits >=6 and course.dept_name = 'comp. sci.' )";
+				 
 				
-				/* III----
+				/* III----*/
 				  String query = "select dept_name, avg(salary) from instructor group by dept_name having avg(salary) > 100000";
-				 */
+				 
 				
-				/* IV----
-				  String query="select * from instructor natural join teaches where dept_name=? and year=?";
-				 */
+				// IV----
+//				  String query="select * from instructor natural join teaches where dept_name='Biology' and year=2009";
+				 
 				/* V-----
 				  String query = "select course_id from section as S where semester = 'Fall' and year = 2009 and not exists (select * from section as T where semester = 'Spring' and year = 2010 and S.course_id = T.course_id)";
 				 */
@@ -506,10 +506,13 @@ public class GenerateDataSet {
 				
 				// queries TEMPCODE : Rahul Sharma
 				
-	//			String query = "SELECT * FROM instructor "
-	//						 + "WHERE dept_name in (SELECT dept_name FROM department "
-	//						 + 						"WHERE building = 'Watson')";
-	//			
+				//String query = "Select ID, name from instructor where dept_name = 'CSE' and salary>40000";
+				
+				
+//				String query = "SELECT * FROM instructor "
+//							 + "WHERE dept_name in (SELECT dept_name FROM department "
+//							 + 						"WHERE building = 'Watson')";
+//	//			
 	//			String query = "SELECT course_id, title "
 	//						 + "FROM course INNER JOIN section USING(course_id) "
 	//						 + "WHERE year = 2010 AND "
@@ -578,12 +581,12 @@ public class GenerateDataSet {
 //						     + "EXISTS ( SELECT s1.course_id, min(t2.year) from takes t2 inner join section s1"
 //						     + 			" ON t2.course_id=s1.course_id WHERE t2.ID=s2.ID group by s1.course_id )";
 				
-				queryId=501;
-				String query = "SELECT * FROM takes t1 ,student s2 " 
-						 +" WHERE t1.ID=s2.ID and "
-						 +" t1.year = (SELECT min(t2.year) FROM takes t2 INNER JOIN section s1 "
-						 +"            ON t2.course_id=s1.course_id "
-						 +"            WHERE t2.ID=s2.ID)";
+////				queryId=501;
+//				String query = "SELECT * FROM takes t1 ,student s2 " 
+//					 +" WHERE t1.ID=s2.ID and "
+//					 +" t1.year = (SELECT min(t2.year) FROM takes t2 INNER JOIN section s1 "
+//						 +"            ON t2.course_id=s1.course_id "
+//						 +"            WHERE t2.ID=s2.ID)";
 				
 				
 //				

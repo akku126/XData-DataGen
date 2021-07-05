@@ -681,7 +681,7 @@ public class PopulateTestData {
 
 
 		copyStr = copyStr.replaceAll("\\b_", "");
-		copyStr = copyStr.replaceAll("\\bNULL_\\w+", "");
+		copyStr = copyStr.replaceAll("\\bNULL_\\w+", "null");
 		copyStr = copyStr.replaceAll("\\-9999[6789]", "");
 		copyStr = copyStr.replace(",", "|");
 		if(copyStr.contains("(- ")){
