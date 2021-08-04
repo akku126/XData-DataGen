@@ -1,5 +1,9 @@
 *.class
 /bin/
+<<<<<<< HEAD
+=======
+# <<<<<<< HEAD
+>>>>>>> divya
 *.properties
 *.metadata
 XData/z3
@@ -8,4 +12,13 @@ XData/temp_smt
 *.log.*
 *.DS_Store
 XData/.settings
+<<<<<<< HEAD
 XData/jars/com.microsoft.z3.jar
+=======
+# <<<<<<< HEAD
+XData/.classpath
+# =======
+# =======
+# >>>>>>> 8e2438a... merging recent work
+# >>>>>>> refs/heads/rambabu
+>>>>>>> divya

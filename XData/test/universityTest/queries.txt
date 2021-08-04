@@ -12,6 +12,7 @@
 12|SELECT COUNT(*) FROM instructor GROUP BY id, name
 13|select distinct s.id, s.name from student s, takes t where s.id = t.id and  t.grade != 'F' 
 14|SELECT takes.course_id FROM student INNER JOIN takes ON(student.id=takes.id) INNER JOIN course ON(course.course_id=takes.course_id) WHERE student.id = '12345'
+15|SELECT name FROM instructor WHERE EXISTS (SELECT * FROM teaches WHERE instructor.ID = teaches.ID)
 16|SELECT instructor.dept_name FROM  instructor INNER JOIN department ON instructor.dept_name=department.dept_name
 17|SELECT id FROM takes WHERE grade < (SELECT MIN(grade) FROM takes WHERE year = 2010)
 18|SELECT course.course_id, d.dept_name  FROM course LEFT OUTER JOIN (SELECT * from department WHERE department.budget > 70000) d using (dept_name)
@@ -31,8 +32,10 @@
 32|(select course_id from section where semester = 'Fall' and year = 2009) except all (select course_id from section where semester = 'Spring' and year = 2010)
 33|select name from instructor where salary is null
 34|select name from instructor where salary is not null
+35|SELECT name FROM instructor WHERE NOT EXISTS (SELECT * FROM teaches WHERE instructor.ID = teaches.ID)
+36|SELECT name FROM instructor WHERE EXISTS (SELECT * FROM teaches WHERE instructor.ID = teaches.ID and teaches.semester='spring')
 37|select count(distinct ID) from takes where (course_id , sec_id , semester , year) in (select course_id , sec_id , semester , year from teaches where teaches.ID = '10101')
-38|select count(distinct ID) from takes where (course_id , sec_id , semester , year)not in (select course_id , sec_id , semester , year from teaches where teaches.ID = '10101')
+38|select count(distinct ID) from takes where (course_id , sec_id , semester , year) not in (select course_id , sec_id , semester , year from teaches where teaches.ID = '10101')
 39|select name from instructor where dept_name = 'Physics' order by name
 40|select * from instructor order by salary desc , name asc
 41|select dept_name from department where building like '%Watson%'
@@ -47,4 +50,5 @@
 50|select dept_name from department where budget = (select min(budget) from department)
 51|select takes.ID, name from takes, student where takes.ID = student.ID and course_id = 'CS-101' and semester='Fall' and year = 2009 order by name
 52|select ID, count(s_id) from instructor left outer join advisor on (instructor.ID = advisor.i_id) group by ID
-
+53|SELECT name FROM instructor WHERE EXISTS (SELECT * FROM teaches t1 WHERE instructor.ID = t1.ID and EXISTS (select * from teaches t2 where t2.ID=t1.ID and t2.year=2010))
+54|SELECT name FROM instructor WHERE EXISTS (SELECT * FROM teaches t1 WHERE instructor.ID = t1.ID and NOT EXISTS (SELECT * FROM teaches t2 WHERE t2.ID=t1.ID and t2.year=2010))

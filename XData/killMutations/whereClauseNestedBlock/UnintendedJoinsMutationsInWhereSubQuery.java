@@ -91,7 +91,7 @@ public class UnintendedJoinsMutationsInWhereSubQuery {
 
 					cvc.getConstraints().add(ConstraintGenerator.addCommentLine("CONSTRAINTS TO KILL UNINTENDE JOINS IN WHERE CLAUSE SUBQ EURY BLOCK "));
 					cvc.getConstraints().add( constraintString );
-					cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF CONSTRAINTS TO KILL UNINTENDE JOINS IN WHERE CLAUSE SUBQ EURY BLOCK "));
+ 					cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF CONSTRAINTS TO KILL UNINTENDE JOINS IN WHERE CLAUSE SUBQ EURY BLOCK "));
 					
 					
 					/** get the constraints for each from clause nested sub query block except this from clause nested sub query block*/

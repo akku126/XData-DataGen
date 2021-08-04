@@ -296,9 +296,9 @@ public class RegressionTests {
 		else if(errorsMap.isEmpty()) {
 			errors="All Test Cases Passed";
 		} else {
-			errors+="Following Test Cases Failed";
+			errors+="Following Test Cases Failed\n";
 			for(Integer key:errorsMap.keySet()) {
-				errors=key+"|";
+				errors+=key+"|";
 				for(String err:errorsMap.get(key)) {
 					errors+=err+"|";
 				}

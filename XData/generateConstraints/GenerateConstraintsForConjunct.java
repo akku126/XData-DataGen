@@ -185,6 +185,7 @@ public class GenerateConstraintsForConjunct {
 			//constraintString += constraintGen.generateANDConstraintsWithAssert(cvc, constrList); // "ASSERT " + constraintGen.genPositiveCondsForPred(cvc,queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n";
 		if(constrList != null && constrList.size()>0){
 			constraintString +=constraintGen.generateANDConstraints(constrList);
+			//System.out.println(constraintString+""); // TEMPCODE : Rahul Sharma : For Debugging
 		}
 		
 		constraintString +=  ConstraintGenerator.addCommentLine(" WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS");
@@ -330,7 +331,7 @@ public class GenerateConstraintsForConjunct {
 			}
 			
 			String declaration = "";
-			declaration += "\n (declare-datatypes () (("+joinTable +"_TupleType" + "("+joinTable +"_TupleType ";
+			declaration += "\n (declare-datatypes (("+joinTable +"_TupleType 0 ))"  + "((("+joinTable +"_TupleType "; // TEMPCODE Rahul Sharma : fixed syntax error
 			
 			int findex=0;
 			Vector<String> tablesAdded = new Vector<String>();
@@ -377,8 +378,8 @@ public class GenerateConstraintsForConjunct {
 					}
 			declaration += ") )) )\n";
 			declaration += "(declare-fun O_" + joinTable + "() (Array Int " + joinTable + "_TupleType))\n\n";
-			//String forall= "(assert (forall ((i1 Int)(j1 Int))(=> (and";
-			String forall = "(assert (and (forall (";
+			String forall= "(assert (forall ((i1 Int)(j1 Int))(=> (and";
+//			String forall = "(assert (and (forall ("; // TEMPCODE : Rahul Sharma : Commented out this line and uncommented the above line, because this was generating blank/incorrect constraints
 			String ex = " (forall ((k1 Int)) (exists (";
 			for(int i=1; i <= tablesAdded.size();i++) {
 				forall += "(i"+i+" Int)";
@@ -427,11 +428,18 @@ public class GenerateConstraintsForConjunct {
 
 				
 			}	
-			forall += ")";
+			forall += ") )"; // TEMPCODE : Rahul Sharma : added the missing ")"
 			exists += "))))";
 			ex += ") )))";
 			String nonEquiJoinConstraint=declaration + "\n"+forall + "\n" + exists + "\n" + ex;
 			ConstraintObject constrnObj = new ConstraintObject();
+			// TEMPCODE START : Rahul Sharma 
+			// To handle join table constraints if there is a single table, 
+			// [it was creating join table constraints even if there is single table in the query].
+			//System.out.println(nonEquiJoinConstraint);
+			if(tablesAdded.size()==0)
+				nonEquiJoinConstraint = "";
+            // TEMPCODE END : Rahul Sharma
 			constrnObj.setLeftConstraint(nonEquiJoinConstraint);
 			constrObjList.add(constrnObj);
 		}
