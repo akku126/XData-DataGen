@@ -189,6 +189,7 @@ public class GetSolverHeaderAndFooter {
 				columnValue.addAll(columnToStringsMap.get(keyNameString));
 				columnValue = new Vector<>(new HashSet<>(columnValue));
 			}
+			
 			columnType = dt.getDataType(column.getDataType());
 			cvc_tuple += columnName+", ";
 			boolean columnEquivalentAlreadyAdded = false;
@@ -301,6 +302,7 @@ public class GetSolverHeaderAndFooter {
 				isNullMembers = "";
 				
 				cvc_datatype += constraintGen.getStringDataTypes(columnValue,column,unique);
+		
 				
 				HashMap<String, Integer> nullValuesChar = new HashMap<String, Integer>();
 				for(int k=1;k<=4;k++){
@@ -481,7 +483,7 @@ public class GetSolverHeaderAndFooter {
 				//cvc_datatype += isNullMembers;
 			}
 		}
-
+		
 		//Adjust datatypes for strings : In case of foreign keys or equivalence classes the colums may hav different names 
 		//Still they must take same values when there is an equality implied
 		Vector<Node> tempForeignKeys=new Vector<Node>();

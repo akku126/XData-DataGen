@@ -618,8 +618,12 @@ private static String generateConstraintsForCorrelationAttributes(GenerateCVC1 c
 	// TODO Auto-generated method stub
 		String constraints = "";
 		String sC = selectionCondition.toString();
-		innerTable = innerTable.replaceAll("\\d", "").toLowerCase();
-		outerTable = outerTable.replaceAll("\\d", "").toLowerCase();
+//		innerTable = innerTable.replaceAll("\\d", "").toLowerCase();
+//		outerTable = outerTable.replaceAll("\\d", "").toLowerCase();
+		
+		innerTable = innerTable.replaceAll("\\d", "");
+		outerTable = outerTable.replaceAll("\\d", "");
+		
 		String correlationAttribute = sC.substring(sC.indexOf(".")+1,sC.indexOf(operator));
 		String innerTableIndex = getTableAttributeIndex(cvc, innerTable, correlationAttribute);
 		String outerTableIndex = getTableAttributeIndex(cvc, outerTable, correlationAttribute);
@@ -871,7 +875,8 @@ private static String generateConstraintsForCorrelationAttributes(GenerateCVC1 c
 			ArrayList<String> baseRelations = subqueries.get(i).getLstRelations();
 			ArrayList<String> relations = new ArrayList<String>();
 			for(int j=0;j<baseRelations.size();j++) {
-				relations.add(baseRelations.get(j).replaceAll("\\d", "").toLowerCase());
+				//relations.add(baseRelations.get(j).replaceAll("\\d", "").toLowerCase());
+				relations.add(baseRelations.get(j).replaceAll("\\d", ""));
 			}
 			if(relations.contains(table1) && relations.contains(table2))
 				return true;
@@ -921,9 +926,13 @@ private static String generateConstraintsForCorrelationAttributes(GenerateCVC1 c
 		int numberOfConstraints = jtColumns.size();
 		String constraints[] = new String[numberOfConstraints];
 		
-		String t1_name = t1.getTableName().toLowerCase();
-		String t2_name = t2.getTableName().toLowerCase();
-		String jt_name = jtName.toLowerCase();
+//		String t1_name = t1.getTableName().toLowerCase();
+//		String t2_name = t2.getTableName().toLowerCase();
+//		String jt_name = jtName.toLowerCase();
+		
+		String t1_name = t1.getTableName();
+		String t2_name = t2.getTableName();
+		String jt_name = jtName;
 		
 		int count = 0,count1=0;
 		for(String key : t1.getColumns().keySet()) {
@@ -976,9 +985,14 @@ private static String generateConstraintsForCorrelationAttributes(GenerateCVC1 c
 		int numberOfConstraints = jtColumns.size();
 		String constraints[] = new String[numberOfConstraints];
 		
-		String t1_name = t1.getTableName().toLowerCase();
-		String t2_name = t2.getTableName().toLowerCase();
-		String jt_name = jtName.toLowerCase();
+//		String t1_name = t1.getTableName().toLowerCase();
+//		String t2_name = t2.getTableName().toLowerCase();
+//		String jt_name = jtName.toLowerCase();
+		
+		String t1_name = t1.getTableName();
+		String t2_name = t2.getTableName();
+		String jt_name = jtName;
+		
 		String table1pk = "";
 		String table2pk = "";
 		int count = 0,count1=0;
@@ -1297,7 +1311,8 @@ private static String generateConstraintsForCorrelationAttributes(GenerateCVC1 c
         // TODO Auto-generated method stub
         HashMap<String, Integer> tempMap = new HashMap<>(noOfOutputTuples.size());
         for (Map.Entry<String, Integer> entry : noOfOutputTuples.entrySet()) {
-           tempMap.put(entry.getKey().toLowerCase(), entry.getValue());
+//           tempMap.put(entry.getKey().toLowerCase(), entry.getValue());
+           tempMap.put(entry.getKey(), entry.getValue());
         }
         cvc.setNoOfOutputTuples(tempMap);       
     }

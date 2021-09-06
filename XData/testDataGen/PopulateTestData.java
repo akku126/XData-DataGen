@@ -22,6 +22,7 @@ import java.nio.file.StandardCopyOption;
 
 
 import com.microsoft.z3.*;
+import com.microsoft.z3.FuncInterp.Entry;
 
 import parsing.*;
 import util.*;
@@ -107,6 +108,7 @@ public class PopulateTestData {
 			Runtime r = Runtime.getRuntime();
 			String[] smtCommand = new String[2];
 
+			//String options = " timeout=30000 memory_max_alloc_count=4364000";
 			smtCommand[0] = Configuration.smtsolver;
 			smtCommand[1] = Configuration.homeDir+"/temp_smt"+filePath+"/" + cvcFileName;
 			
@@ -116,22 +118,22 @@ public class PopulateTestData {
 				Callable<Integer> call = new CallableProcess(myProcess);
 				Future<Integer> future = service.submit(call);
 				int exitValue = future.get(5, TimeUnit.SECONDS); // reduced timeout to 5secs from 180secs
-
+				
 				if (myProcess.exitValue() != 0) {
 					logger.log(Level.SEVERE," GenerateCvcOutput function :  Generating CVC Output failed.");
 					myProcess.destroy();	
 					service.shutdown();
 				}
-
-				InputStreamReader myIStreamReader = new InputStreamReader(myProcess.getInputStream());
-
-				//Writing output to .out file
-				BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_smt"+filePath+"/" + cvcFileName.substring(0,cvcFileName.lastIndexOf(".smt")) + ".out"));
 				
+				InputStreamReader myIStreamReader = new InputStreamReader(myProcess.getInputStream());
+								//Writing output to .out file
+				BufferedWriter out = new BufferedWriter(new FileWriter(Configuration.homeDir+"/temp_smt"+filePath+"/" + cvcFileName.substring(0,cvcFileName.lastIndexOf(".smt")) + ".out"));
+                				
 				while ((ch = myIStreamReader.read()) != -1) { 
 					out.write((char)ch); 
+					
 				} 	
-
+                
 				Utilities.closeProcessStreams(myProcess);
 
 				out.close();
@@ -200,6 +202,7 @@ public class PopulateTestData {
 			try {
                 String line = null; 
                 while ((line = input.readLine()) != null) {
+                	
                     if(line.contains("(define-fun ")  && line.contains("_TupleType")) {
                         //setContents(testFile,line, true);
                         while ((line = input.readLine()) != null) {
@@ -213,6 +216,7 @@ public class PopulateTestData {
                                     }
                                     // setContents(testFile,line+"\n", true);
                                     setContents(testFile,line, true); // TEMPCODE : Rahul Sharma : Removed "\n" from previous statement
+                                    
                             }
                             setContents(testFile,"\n",true); // TEMPCODE : Rahul Sharma
                             input.mark(100);
@@ -238,7 +242,58 @@ public class PopulateTestData {
 		}
 		return "cut_"+cvcOutputFileName;
 	}
+/************** ABHISHEK's CODE ******************/
 
+	public String cutRequiredOutputForSMTWithAPI(String SMTFileName, String filePath) throws Exception {
+		String cutFileName = "api_cut_" + SMTFileName.substring(0, SMTFileName.lastIndexOf(".smt")) + ".out";
+		String cutFileFullPath = Configuration.homeDir+"/temp_smt"+filePath+"/" + cutFileName;
+		//Writing output to cut_*.out file
+		BufferedWriter out = new BufferedWriter(new FileWriter(cutFileFullPath));
+		out.close();
+		File cutFile = new File(cutFileFullPath);
+
+		Context ctx = ConstraintGenerator.ctx;
+		Params p = ctx.mkParams();
+		p.add("smt.macro_finder", true);
+
+		Solver s = ctx.mkSolver();
+		s.setParameters(p);
+
+		// Read the entire SMT file as string and add model_compress param (adding it in file causes errors)
+		File smtFile = new File(Configuration.homeDir+"/temp_smt"+filePath+"/" + SMTFileName);
+		FileInputStream fis = new FileInputStream(smtFile);
+		byte[] data = new byte[(int) smtFile.length()];
+		fis.read(data);
+		fis.close();
+
+		String smtStr = new String(data, "UTF-8");
+
+		BoolExpr[] exprs = ctx.parseSMTLIB2String("(set-option :model_compress false)\n"+smtStr, null, null, null, null);
+		s.add(exprs);
+
+		if (s.check() != Status.SATISFIABLE) {
+			//throw Exception() TODO
+			return cutFileName;
+		}
+
+		Model m = s.getModel();
+
+		for (FuncDecl decl : m.getFuncDecls()) {
+			if (decl.getRange().getSExpr().endsWith("_TupleType")) {
+				FuncInterp interp = m.getFuncInterp(decl);
+				if (interp.getNumEntries() == 0) {
+					continue;
+				}
+
+				for (Entry ent : interp.getEntries()) {
+					setContents(cutFile, ent.getValue().getSExpr()+"\n", true);
+				}
+			}
+		}
+
+		return cutFileName;
+	}
+/*****************************************************************/
 
 	public void setContents(File aFile, String aContents, boolean append)throws FileNotFoundException, IOException {
 		if (aFile == null) {
@@ -530,7 +585,7 @@ public class PopulateTestData {
 							listOfCopyFiles.add(currentCopyFileName + ".copy");
 						}
 						copystmt = getCopyStmtFromCvcOutputForSMT(line);
-	
+						
 						copyFileContents.add(copystmt);
 						////Putting back string values in CVC
 	
@@ -542,8 +597,7 @@ public class PopulateTestData {
 	
 							String[] copyTemp=copyvalues[k].split("\\ ");
 							copystmt="";
-							String out="";
-	
+								
 							for(int i=0;i<copyTemp.length;i++){
 	
 								String cvcDataType=t.getColumn(i).getCvcDatatype();
@@ -580,13 +634,12 @@ public class PopulateTestData {
 								else {
 	
 									String copyStr=copyTemp[i].trim();
-	
-	
+									
 									if(copyStr.endsWith("__"))
 										copyStr = "";
 									else if(copyStr.contains("__"))
 										copyStr = copyStr.split("__")[1];
-	
+										
 	
 							/*&copyStr = copyStr.replace("_p", "+");
 							copyStr = copyStr.replace("_m", "-");
@@ -613,6 +666,7 @@ public class PopulateTestData {
 								copystmt+=s+"|";
 							}
 							copystmt=copystmt.substring(0, copystmt.length()-1);
+							
 							setContents(testFile, copystmt+"\n", true);
 						}
 	
@@ -620,6 +674,7 @@ public class PopulateTestData {
 					}
 				}
 			}
+			
 		}catch(Exception e){
 			logger.log(Level.SEVERE,"PopulateTestData.generateCopyFile() : "+e.getStackTrace(),e);
 		}
@@ -649,6 +704,7 @@ public class PopulateTestData {
 		String insertTupleValues = temp.substring(temp.indexOf("_"),temp.indexOf(")"));
 		insertTupleValues = cleanseCopyString(insertTupleValues);
 		insertTupleValues = insertTupleValues.trim().replaceAll(" +", " ");
+		
 		/*
 		String temp1 = cvcOutputLine.substring((cvcOutputLine.indexOf(" 1 (")+2), 
 				cvcOutputLine.lastIndexOf("))))"));
@@ -681,7 +737,7 @@ public class PopulateTestData {
 
 
 		copyStr = copyStr.replaceAll("\\b_", "");
-		copyStr = copyStr.replaceAll("\\bNULL_\\w+", "");
+		copyStr = copyStr.replaceAll("\\bNULL_\\w+", "null");
 		copyStr = copyStr.replaceAll("\\-9999[6789]", "");
 		copyStr = copyStr.replace(",", "|");
 		if(copyStr.contains("(- ")){
@@ -721,8 +777,8 @@ public class PopulateTestData {
 		if((str == null || str.equals("") || str.equalsIgnoreCase("Valid."))) {
 			return false;
 		}
-
 		String cutFile = cutRequiredOutput(test, filePath);
+		
 		Vector<String> listOfCopyFiles = generateCopyFile(cutFile, filePath, noOfOutputTuples, 
 				tableMap,columns,existingTableNames, dbAppParameters);			
 		Vector<String> listOfFiles = (Vector<String>) listOfCopyFiles.clone();
@@ -791,6 +847,7 @@ public class PopulateTestData {
 		Process proc=null;
 		boolean returnVal=false;
 		String test = generateCvcOutput(cvcOutputFileName, filePath);
+
 		BufferedReader br =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+filePath+"/"+test));
 		String str = br.readLine();
 		br.close();
@@ -800,6 +857,12 @@ public class PopulateTestData {
 		}
 
 		String cutFile = cutRequiredOutputForSMT(test, filePath);
+		
+		/************ TESTING ABHISHEK's CODE *************/
+//		String apiCutFile = cutRequiredOutputForSMTWithAPI(cvcOutputFileName, filePath);
+//		System.out.println(apiCutFile);
+		/**************************************************/
+		
 		cutFile = modifyCutFile(cutFile,filePath); // TEMPCODE Rahul Sharma // to handle tupleTypes present in multiple lines 
 		Vector<String> listOfCopyFiles = generateCopyFileForSMT(cutFile, filePath, noOfOutputTuples, 
 				tableMap,columns,existingTableNames, dbAppParameters);			
@@ -841,7 +904,7 @@ public class PopulateTestData {
 		}*/
 		return returnVal;			
 	}
-	
+
 	/**
 	 * This method handles the constraints splitted into multiple lines in the cut file 
 	 * @param cutFileName : Z3 cut file name 

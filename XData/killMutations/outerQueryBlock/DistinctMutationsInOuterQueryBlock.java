@@ -50,7 +50,7 @@ public class DistinctMutationsInOuterQueryBlock {
 		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
 		HashMap<String, Integer> noOfTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfTuples().clone();
 		HashMap<String, Integer[]> repeatedRelNextTuplePosOrig = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
-
+		
 		logger.log(Level.INFO,"\n----------------------------------");
 		logger.log(Level.INFO,"GENERATE DATA FOR KILLING DISTINCT CLAUSE MUTATIONS IN OUTER QUERY BLOCK");
 		logger.log(Level.INFO,"----------------------------------\n");
@@ -71,6 +71,7 @@ public class DistinctMutationsInOuterQueryBlock {
 					return;*/
 			/** Initialize the data structures for generating the data to kill this mutation */
 			cvc.inititalizeForDatasetQs();
+			
 
 			/**set the type of mutation we are trying to kill*/
 			cvc.setTypeOfMutation( TagDatasets.MutationType.DISTINCT, TagDatasets.QueryBlock.OUTER_BLOCK );
@@ -78,7 +79,6 @@ public class DistinctMutationsInOuterQueryBlock {
 			/**The projected columns become single valued attributes because the two tuples will have same value for this projected columns 
 			 * FIXME: What if finalCount>2 */
 			qbt.setSingleValuedAttributesAdd( new HashSet<Node>(qbt.getProjectedCols()) );
-
 
 			/** Initialize aggregation constraints data structure*/
 			qbt.setAggConstraints( new ArrayList<Node>());
@@ -90,11 +90,12 @@ public class DistinctMutationsInOuterQueryBlock {
 
 			/**Update query block aggregation list*/
 			qbt.setAggConstraints( new ArrayList<Node>(aggConstraints));
-
+			
 			/**get the count needed*/
 			if(CountEstimationRelated.getCountNeededToKillDistinctMutation(cvc, qbt) == false)
 				return ;
-
+			
+			
 			/** get table name */
 			String tableNameNo = null;
 
@@ -113,33 +114,35 @@ public class DistinctMutationsInOuterQueryBlock {
 					for(Node n2: ec)
 						if(n2.getTableNameNo().equalsIgnoreCase(tableNameNo))
 							tableNameNo = null;
-
-
+			
 			/**assign the number of tuples for the this query block*/
 			if( QueryBlockDetails.getTupleAssignment( cvc, qbt, tableNameNo) == false)
 				return ;
-
+			
 			/**get the tuple assignment for all other query blocks*/
 			if(CountEstimationRelated.getTupleAssignmentExceptQueryBlock(cvc, qbt) == false)
 				return ;
-
+			
 			/** Add constraints for all the blocks of the query */
 			cvc.getConstraints().add(QueryBlockDetails.getConstraintsForQueryBlock(cvc));
 
 			cvc.getConstraints().add(ConstraintGenerator.addCommentLine(" DISTINCT CONSTRAINTS FOR OUTER BLOCK OF QUERY"));
 			cvc.getConstraints().add( (GenerateConstraintsToKillDistinctMutations.getDistinctConstraints(cvc, qbt)) );
 			cvc.getConstraints().add(ConstraintGenerator.addCommentLine(" END OF DISTINCT CONSTRAINTS FOR OUTER BLOCK OF QUERY"));
-
+			
 			/** Call the method for the data generation*/
 			GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc);
-
+			
 			/**Reset the variable*/
 			qbt.setConstrainedAggregation(false);
-
+			
 			/** Revert back to the old assignment */
 			cvc.setNoOfTuples( (HashMap<String, Integer>) noOfTuplesOrig.clone() );
+			
 			cvc.setNoOfOutputTuples( (HashMap<String, Integer>) noOfOutputTuplesOrig.clone() );
+			
 			cvc.setRepeatedRelNextTuplePos( (HashMap<String, Integer[]>)repeatedRelNextTuplePosOrig.clone() );
+			
 		}catch (TimeoutException e){
 			logger.log(Level.SEVERE,e.getMessage(),e);		
 			throw e;

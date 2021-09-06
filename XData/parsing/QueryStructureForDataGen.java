@@ -151,23 +151,46 @@ public class QueryStructureForDataGen{
 				while(rs != null && rs.next()){
 					
 					String temp = rs.getString(column.getColumnName().toUpperCase());
-					
 					if(temp != null)
 					{
 						column.addColumnValues(temp);
 						count++;
 					}
 				}
-				//if(rsmd.getColumnTypeName(1).equals("varchar"))
+		
 				if(rsmd.getColumnTypeName(1).equalsIgnoreCase("varchar")) // added by rambabu for mysql
 				{
+					// Below Code is commented because string length is greater than the limit of varchar specified in DDL.sql 
+					/*
 					while(count < 20)
 					{
 						count++;
 						column.addColumnValues(column.getColumnName() + "_" + count);
 					}
+					*/
+					int fieldSize = rsmd.getPrecision(1);
+					
+					if(fieldSize < 3) {
+						// If VARCHAR size less than 3 then assign one character
+						//char val = 'A';
+						while(count < 20)
+						{
+							count++;
+							column.addColumnValues(Character.toString((char)65+count));
+							//column.addColumnValues(Character.toString(val)); 
+							//val++;	
+						}
+					}
+					else {
+						// Assign values like V1, V2 ...
+						while(count < 20)
+						{
+							count++;
+							column.addColumnValues("V"+count);
+						}
+					}
+					
 				}
-				
 				cvc.getResultsetColumns().add(column);
 				rs.close();
 				ps.close();

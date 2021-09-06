@@ -236,6 +236,7 @@ public class RegressionTests {
 			datasets=generateDataSets(queryId,query);
 			
 			if(datasets==null || datasets.isEmpty()) {
+				System.out.println("************************8Empty dataset");
 				errors.add("Exception in generating datasets");
 				testResult.put(queryId, errors);
 				continue;

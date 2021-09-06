@@ -273,11 +273,20 @@ public class SelectionMutationsInOuterQueryBlock {
 					}
 				}
 				else {
+					/*
+					for(int k=0; k<allConds.size(); k++) {
+						//constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, qbt, allConds) +" AND ";
+						ConstraintObject constrObj = new ConstraintObject();
+						constrObj.setLeftConstraint(GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, qbt, allConds));
+						constrList.add(constrObj);
+					}
+					*/
 					for(Node n: allConds) {
 						ConstraintObject constrObj = new ConstraintObject();
 						constrObj.setLeftConstraint(GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoinsTJ(cvc, qbt, n));
 						constrList.add(constrObj);
 					}
+					
 				}
 				
 				

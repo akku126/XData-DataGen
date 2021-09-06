@@ -35,7 +35,7 @@ public class OperateOnJoin {
 		FromListElement jtan = new FromListElement();
 		jtan.setAliasName(null);
 		jtan.setTableName(null);
-
+   
 		FromListElement rightF = new FromListElement();
 		FromListElement leftF = new FromListElement();
 

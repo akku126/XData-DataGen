@@ -378,7 +378,7 @@ public class GenerateDataSet {
 					conn=DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));;				
 				}
 				
-				int queryId=500;
+				int queryId=1;
 				
 				// String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year = 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201' AND prereq.course_id = course.course_id)";
 				//String query = "select * from classroom, section where classroom.building = section.building and classroom.room_number = section.room_number";
@@ -398,18 +398,20 @@ public class GenerateDataSet {
 				//String query = "select name, title from (instructor natural join teaches) join course using (course_id)";
 				//String query = "select id, name from student where tot_cred>30";
 	
-				/* I----*/
-//				 String query = "select name from student where tot_cred>50";
+				/* I---- */
+			 //String query = "select name from student where tot_cred > 50";
+			
+				String query = "select name,course_id from instructor,teaches where instructor.ID = teaches.ID";
+				// String query = "select name from instructor where salary is null";
+				/* II---- */
+				 //String query = "select * from student inner join department using (dept_name) where student.tot_cred > 40 and exists (select * from course where credits >=6 and course.dept_name = 'comp. sci.' )";
 				 
-				/* II----
-				 * String query = "select * from student inner join department using (dept_name) where student.tot_cred > 40 and exists (select * from course where credits >=6 and course.dept_name = 'comp. sci.' )";
-				 */
 				
-				/* III----
-				  String query = "select dept_name, avg(salary) from instructor group by dept_name having avg(salary) > 100000";
-				 */
+				/* III---- */
+				 // String query = "select dept_name, avg(salary) from instructor group by dept_name having avg(salary) > 10000";
+				 
 				
-				/* IV----
+				/* IV---- 
 				  String query="select * from instructor natural join teaches where dept_name=? and year=?";
 				 */
 				/* V-----
@@ -418,7 +420,7 @@ public class GenerateDataSet {
 				 /* VI----
 				  String query = "SELECT dept_name, SUM(credits) FROM course INNER JOIN department USING (dept_name) WHERE credits <= 4 GROUP BY dept_name HAVING SUM(credits) < 13";
 				 */
-				/* VII-----
+				/* VII----- 
 				  String query = "select * from instructor where dept_name in (select dept_name from department where building = 'Watson')";
 				 */
 				/* VIII----
@@ -427,9 +429,9 @@ public class GenerateDataSet {
 				/* IX-----
 				  String query = "select name, title from (instructor natural join teaches) join course using (course_id)";
 				 //*/
-				 /* X----
+				 /* X---- 
 				  String query = "SELECT dept_name, COUNT(DISTINCT course_id) FROM course LEFT OUTER JOIN takes USING(course_id) GROUP BY dept_name";
-				 //*/
+				 */
 				/* XI-----
 				  String query = "SELECT takes.course_id FROM student INNER JOIN takes ON(student.id=takes.id) INNER JOIN course ON(course.course_id=takes.course_id) WHERE student.id = '12345'";
 				 //*/
@@ -577,7 +579,7 @@ public class GenerateDataSet {
 //						     + "WHERE t1.ID=s2.ID and "
 //						     + "EXISTS ( SELECT s1.course_id, min(t2.year) from takes t2 inner join section s1"
 //						     + 			" ON t2.course_id=s1.course_id WHERE t2.ID=s2.ID group by s1.course_id )";
-				
+				/*
 				queryId=501;
 				String query = "SELECT * FROM takes t1 ,student s2 " 
 						 +" WHERE t1.ID=s2.ID and "
@@ -585,7 +587,7 @@ public class GenerateDataSet {
 						 +"            ON t2.course_id=s1.course_id "
 						 +"            WHERE t2.ID=s2.ID)";
 				
-				
+				*/
 //				
 //				queryId=502;
 //				String query = "SELECT course_id, title FROM course "
@@ -649,7 +651,12 @@ public class GenerateDataSet {
 	
 	
 				//end
-				d.generateDatasetForQuery(conn,queryId,query,  schemaFile,  sampleDataFile,  orderDependent,  tempFilePath, obj);
+				List<String> dataset = d.generateDatasetForQuery(conn,queryId,query,  schemaFile,  sampleDataFile,  orderDependent,  tempFilePath, obj);
+				//if(dataset == null || dataset.isEmpty())
+				//	System.out.println("Empty dataset");
+				for(String s:dataset) {
+					System.out.println(s);
+				}
 				long stopTime = System.currentTimeMillis();
 				long elapsedTime = stopTime - startTime;
 		        System.out.println("Total time taken for data generation of the query is : ");

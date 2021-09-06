@@ -92,6 +92,7 @@ public class OperateOnBaseTable {
 			boolean isJoinTable, String subqueryAlias, JoinTreeNode jtn, QueryParser qParser, boolean isFromSubQuery, boolean isWhereSubQuery) throws Exception {
 
 		String tableName = node.getBaseTableName();
+	
 		Table table = qParser.getTableMap().getTable(tableName);
 		
 		
@@ -138,8 +139,12 @@ public class OperateOnBaseTable {
 			temp.setAliasName(node.getBaseTableName());
 		}
 		temp.setTableName(node.getBaseTableName());
+		
 		String tableNameNo = tableName
 				+ qParser.getQuery().getRepeatedRelationCount().get(tableName.toUpperCase());
+//		String tableNameNo = tableName
+//				+ qParser.getQuery().getRepeatedRelationCount().get(tableName);
+//		
 		temp.setTableNameNo(tableNameNo);
 		temp.setTabs(null);
 		jtn.setTableNameNo(tableNameNo);

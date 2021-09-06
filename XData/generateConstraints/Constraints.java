@@ -86,9 +86,25 @@ public class Constraints {
 	public static Constraints orConstraints(Constraints constraints,Constraints constraints2){
 		Constraints updatedConstraints=new Constraints();
 		updatedConstraints.constraints.addAll(constraints.constraints);
+		/*System.out.println("Constraints of constraints.constraints");
+		for(String x:constraints.constraints)
+			System.out.println(x);
+		*/
 		updatedConstraints.constraints.addAll(constraints2.constraints);
+		/*System.out.println("Constraints of constraints2.constraints");
+		for(String x:constraints2.constraints)
+			System.out.println(x);
+		*/
 		updatedConstraints.stringConstraints.addAll(constraints.stringConstraints);
+		/*System.out.println("Constraints of constraints.stringConstraints");
+		for(String x:constraints.stringConstraints)
+			System.out.println(x);
+		*/
 		updatedConstraints.stringConstraints.addAll(constraints2.stringConstraints);
+		/*System.out.println("Constraints of constraints2.stringConstraints");
+		for(String x:constraints2.stringConstraints)
+			System.out.println(x);
+		*/
 		return updatedConstraints;
 	}
 	
@@ -97,6 +113,7 @@ public class Constraints {
 		ConstraintGenerator constraintGen = new ConstraintGenerator();
 		ArrayList<ConstraintObject> constrList = new ArrayList<ConstraintObject>();
 		if(constraints != null && constraints.constraints != null && !constraints.constraints.isEmpty()){
+						
 		for(String constrint:constraints.constraints){
 			if(constrint!= null &&!constrint.isEmpty() &&!constrint.equalsIgnoreCase("")){
 				ConstraintObject conObj = new ConstraintObject();
@@ -106,6 +123,7 @@ public class Constraints {
 				//constraintString+= "(" + constrint + ")" + " OR ";
 		}
 		constraintString+=constraintGen.generateOrConstraintsWithAssert(constrList);
+		
 		}
 		/*if(!constraints.constraints.isEmpty() && constraintString.length() > 7){
 			constraintString=constraintString.substring(0, constraintString.length()-4);

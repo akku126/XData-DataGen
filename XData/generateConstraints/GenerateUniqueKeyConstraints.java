@@ -51,8 +51,7 @@ public class GenerateUniqueKeyConstraints {
 			Node n = it.next();
 			noOfGroups = UtilsRelatedToNode.getNoOfGroupsForThisNode(cvc, queryBlock, n);
 			String tableNameNo = n.getTableNameNo();
-
-			
+            
 			int count = cvc.getNoOfTuples().get(tableNameNo);
 			if( count*noOfGroups == 1)
 				continue;
@@ -80,6 +79,7 @@ public class GenerateUniqueKeyConstraints {
 
 					//int lastIndex = distinct.lastIndexOf("OR");
 					//distinct = distinct.substring(0, lastIndex-1) + " ;\n ";
+					
 					distinct = constraintGen.generateOrConstraintsWithAssert(constrList);
 				}
 			}

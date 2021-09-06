@@ -145,7 +145,6 @@ public class QueryStructureDatagen extends QueryStructure{
 						column.addColumnValues(column.getColumnName() + "_" + count);
 					}
 				}
-				
 				cvc.getResultsetColumns().add(column);
 				rs.close();
 				ps.close();

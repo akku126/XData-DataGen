@@ -46,16 +46,16 @@ public class GenerateCommonConstraintsForQuery {
 
 		try{
 			/** Add null constraints for the query */
+			
 			getNullConstraintsForQuery(cvc);
-
-
+			
 			if( cvc.getCVCStr() == null)
 				cvc.setCVCStr("");
 			String CVCStr = cvc.getCVCStr();
 
 			/**Add constraints related to database */
 			CVCStr += AddDataBaseConstraints.addDBConstraints(cvc);
-
+			
 			cvc.setCVCStr(CVCStr);
 		}catch (TimeoutException e){
 			logger.log(Level.SEVERE,e.getMessage(),e);		
@@ -74,12 +74,13 @@ public class GenerateCommonConstraintsForQuery {
 	 * @throws Exception
 	 */
 	public static boolean generateDataSetForConstraints(GenerateCVC1 cvc, Boolean unique) throws Exception{
-
+		String CVCStr = "";
 		try{
 			if( cvc.getCVCStr() == null)
 				cvc.setCVCStr("");
-			String CVCStr = cvc.getCVCStr();
-
+			//String CVCStr = cvc.getCVCStr();
+			CVCStr = cvc.getCVCStr();
+			
 			/** Solve the string constraints for the query */
 			if(!cvc.getStringConstraints().isEmpty()) {
 				cvc.getConstraints().add( ConstraintGenerator.addCommentLine("TEMP VECTOR CONSTRAINTS"));
@@ -115,15 +116,18 @@ public class GenerateCommonConstraintsForQuery {
 			}
 			else
 				CVCStr += GenerateCVCConstraintForNode.primaryKeysSetNotNull(cvc);
+				
 			cvc.setDatatypeColumns( new ArrayList<String>() );
+			
 			String CVC3_HEADER = GetSolverHeaderAndFooter.generateSolver_Header(cvc, unique);
-
+			
 			/** add mutation type and CVC3 header*/
 			CVCStr =  ConstraintGenerator.addCommentLine("MUTATION TYPE: " +cvc.getTypeOfMutation()) + CVC3_HEADER + CVCStr;
 
 			CVCStr += GetSolverHeaderAndFooter.generateSolver_Footer(cvc);
+			
 			cvc.setCVCStr(CVCStr);
-
+			
 			/** Add extra tuples to satisfy branch queries constraints*/
 			for(int i = 0; i < cvc.getBranchQueries().getNoOfBranchQueries(); i++){
 
@@ -133,6 +137,7 @@ public class GenerateCommonConstraintsForQuery {
 
 					cvc.getNoOfOutputTuples().put(tempTab.getTableName(), cvc.getNoOfOutputTuples().get(tempTab.getTableName()) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempTab));
 			}
+			
 			Boolean success = false;
 			if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
 
@@ -156,23 +161,26 @@ public class GenerateCommonConstraintsForQuery {
 				/** Call CVC3 Solver with constraints */
 				logger.log(Level.INFO,"cvc count =="+cvc.getCount());
 				
-				// TEMPCODE : Rahul Sharma : for debugging
-//				System.out.println("**** Final Constraints ****");
-//				System.out.println(CVCStr);
-				
 				// TEMPCODE : Rahul Sharma : for removing duplicate constraints
+
 				CVCStr = removeDuplicateConstraints(CVCStr);
-		
+				
+				/************** TEST CODE *******************/
+				//System.out.println(cvc.getTypeOfMutation());
+				/*********************************************/
+				
 				Utilities.writeFile(Configuration.homeDir + "/temp_smt" + cvc.getFilePath() + "/z3_" + cvc.getCount() + ".smt", CVCStr);
 				
-				modifyZ3SMTFile(Configuration.homeDir + "/temp_smt" + cvc.getFilePath() + "/z3_" + cvc.getCount() + ".smt");
+				//modifyZ3SMTFile(Configuration.homeDir + "/temp_smt" + cvc.getFilePath() + "/z3_" + cvc.getCount() + ".smt");
 				
 				success= new PopulateTestData().killedMutantsForSMT("z3_" + cvc.getCount() 
 				+ ".smt", cvc.getQuery(), 
 				"DS" + cvc.getCount(), cvc.getQueryString(), cvc.getFilePath(), cvc.getNoOfOutputTuples(), cvc.getTableMap(), 
 				cvc.getResultsetColumns(), cvc.getRepeatedRelationCount().keySet(),cvc.getDBAppparams()) ;
+				
 				cvc.setOutput( cvc.getOutput() + success);
 				cvc.setCount(cvc.getCount() + 1);
+				
 			}
 			/** remove extra tuples for Branch query */		
 			for(int i = 0; i < cvc.getBranchQueries().getNoOfBranchQueries(); i++){
@@ -201,6 +209,10 @@ public class GenerateCommonConstraintsForQuery {
 			logger.log(Level.SEVERE,"Timeout in generating dataset "+cvc.getCount()+" : "+e.getMessage());		
 
 		}catch(Exception e){
+			/************* TEST CODE *************
+			 * To save z3_i.smt file even if Dataset generation fails;
+			 */
+			cvc.setCount(cvc.getCount()+1);
 			logger.log(Level.SEVERE,e.getMessage());		
 		}
 		return false;
@@ -244,37 +256,38 @@ public class GenerateCommonConstraintsForQuery {
 	 * @param smtFileName : z3 smt file name, with full path
 	 * @throws IOException
 	 */
-	private static void modifyZ3SMTFile(String smtFileName) throws IOException {
-		// TODO Auto-generated method stub
-		String modifiedConstraints = "";
-		File file = new File(smtFileName); 
-		@SuppressWarnings("resource")
-		BufferedReader br = new BufferedReader(new FileReader(file)); 
-		  String line; 
-		  while ((line = br.readLine()) != null) {
-			if(line.contains("declare-datatypes") && !line.contains("TupleType")) {
-				Set<String> set = new HashSet<String>();
-				String tempLine = line.substring(line.indexOf("((("));
-				tempLine = tempLine.substring(2, tempLine.length()-3);
-				StringTokenizer tok = new StringTokenizer(tempLine, " ");
-				while(tok.hasMoreTokens()) {
-					set.add(tok.nextToken());
-				}
-				tempLine = line.substring(0, line.indexOf("((("));
-				tempLine += "((";
-				for(String s : set)
-					tempLine += s + " ";
-				tempLine += ")))";
-				line = tempLine;
-			}
-			modifiedConstraints += line+"\n";
-		  }
-		  Utilities.writeFile(smtFileName, modifiedConstraints);
-	}
+//	private static void modifyZ3SMTFile(String smtFileName) throws IOException {
+//		// TODO Auto-generated method stub
+//		String modifiedConstraints = "";
+//		File file = new File(smtFileName); 
+//		@SuppressWarnings("resource")
+//		BufferedReader br = new BufferedReader(new FileReader(file)); 
+//		  String line; 
+//		  while ((line = br.readLine()) != null) {
+//			if(line.contains("declare-datatypes") && !line.contains("TupleType")) {
+//				Set<String> set = new HashSet<String>();
+//				String tempLine = line.substring(line.indexOf("((("));
+//				tempLine = tempLine.substring(2, tempLine.length()-3);
+//				StringTokenizer tok = new StringTokenizer(tempLine, " ");
+//				while(tok.hasMoreTokens()) {
+//					set.add(tok.nextToken());
+//				}
+//				tempLine = line.substring(0, line.indexOf("((("));
+//				tempLine += "((";
+//				for(String s : set)
+//					tempLine += s + " ";
+//				tempLine += ")))";
+//				line = tempLine;
+//			}
+//			modifiedConstraints += line+"\n";
+//		  }
+//		  Utilities.writeFile(smtFileName, modifiedConstraints);
+//	}
 	
 	public static boolean generateDataSetForConstraints(GenerateCVC1 cvc) throws Exception{
 		try {
 			generateNullandDBConstraints(cvc,false);
+			
 			return generateDataSetForConstraints(cvc, false);
 		} catch (TimeoutException e) {
 			logger.log(Level.SEVERE,e.getMessage(),e);		
