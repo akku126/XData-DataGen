@@ -19,11 +19,9 @@ public class Configuration implements ConfigurationInterface{
 	public static String databasePort = getProperty("databasePort");
 	public static String homeDir= getProperty("homeDir");
 	public static String smtsolver = getProperty("smtsolver");
-	public static String smtcommand = getProperty("smtcommand"); 
 	public static String logFile=getProperty("logFile");
 	public static String logLevel=getProperty("logLevel");
 	public static String tempJoins=getProperty("tempJoins");
-
 	public static String tempDatabaseType = getProperty("tempDatabaseType");
 	public static boolean calledFromApplicationTester = false;
 
@@ -60,9 +58,7 @@ public class Configuration implements ConfigurationInterface{
         properties.load(Configuration.class.getResourceAsStream("XData.properties"));
 		
 	          
-		}catch(Exception e){
-			System.out.println("Error: XData.properties file not found. "); 
-			System.out.println("Copy the file XData.properties.example in the util subdirectory to XData.properties and set the parameters in the file");
+		}catch(IOException e){
 			logger.log(Level.SEVERE,e.getMessage(),e);
 			//e.printStackTrace();
 			System.exit(1);

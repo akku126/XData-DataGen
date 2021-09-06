@@ -531,7 +531,7 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 			
 		}
 		returnString="\n"; //returnString.substring(0, returnString.length()-4)+");\n";
-
+			
 		return returnString;
 
 	}

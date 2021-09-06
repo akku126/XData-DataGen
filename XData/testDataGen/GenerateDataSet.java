@@ -223,6 +223,7 @@ public class GenerateDataSet {
 		public static void deleteAllTablesFromTestUser(Connection conn) throws Exception{
 			try{
 				DatabaseMetaData dbm = conn.getMetaData();
+
 				// added by rambabu
 				String dbType = dbm.getDatabaseProductName(); 
 				System.out.println(dbType);
@@ -340,59 +341,8 @@ public class GenerateDataSet {
 						AppTest_Parameters obj = new AppTest_Parameters();
 			
 			
-			// for mysql 
-//		
-//			Class.forName("com.mysql.cj.jdbc.Driver");
-//			String loginUrl = "jdbc:mysql://" + Configuration.getProperty("databaseIP") + ":" + Configuration.getProperty("databasePort") + "/" + Configuration.getProperty("databaseName");
-//			Connection conn=DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));
-
-			int queryId=1;
-
-			//String query = "select * from instructor where dept_name not in (select dept_name from department where building != 'Watson')" ;
-
-			//String query = "select count(dept_name) from student group by name having count(id) < 10";
-
-			//String query = "select course_id from section as S where semester = 'Fall' and year = 2009 and not exists (select * from section as T where semester = 'Spring' and year = 2010 and S.course_id = T.course_id)";
-
-			//String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year = 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201' AND prereq.course_id = course.course_id)";
-			//String query = "select * from classroom, section where classroom.building = section.building and classroom.room_number = section.room_number";
-
-			//String query = "select name from instructor where salary > some (select salary from instructor where dept_name = ’Biology’)";
-			//String query = "select count(distinct room_number) from classroom, department where department.dept_name = 'Comp. Sci.' and department.building = classroom.building";
-			//String query = "with max_budget (value) as (select max(budget) from department) select budget from department, max_budget where department.budget = max_budget.value";
-			//String query = "select dept_name, avg_salary from (select dept_name, avg (salary) from instructor group by dept name) as dept avg (dept_name, avg_salary) where avg_salary > 42000";
-			//String query = "select dept_name from department where building = 'T%'";
-			//String query = "select dept_name from department where building like '%Watson%'";
-			//String query = "SELECT takes.course_id FROM student INNER JOIN takes ON(student.id=takes.id) INNER JOIN course ON(course.course_id=takes.course_id) WHERE student.id = '12345'";
-			//String query="select * from student where tot_cred >5";	
-			//String query ="select dept_name, avg(salary) as avg_salary from instructor group by dept_name having avg(salary) > 42000";
-			//String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year > 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201')";
-			//String query = "select name, title from (instructor natural join teaches) join course using (course_id)";
-
-//			String query = "(select course_id\n" + 
-//					"from section\n" + 
-//					"where semester = 'Fall' and year= 2009)\n" + 
-//					"union\n" + 
-//					"(select course_id\n" + 
-//					"from section\n" + 
-//					"where semester = 'Spring' and year= 2010)";
-			 //String query = "select id, name from student where tot_cred>30";
-
-			/* I----*/
-			  //String query = "select id, name from student where tot_cred>30";
-
-			//String query = "select id, name from student where tot_cred>30";
-
-			/* I----*/
-			  String query = "select id, name from student where tot_cred>30";
-
-			 
-			/* II----
-			 * String query = "select * from student inner join department using (dept_name) where student.tot_cred > 40 and exists (select * from course where credits >=6 and course.dept_name = 'comp. sci.' )";
-			 */
-
 						//end
-				/*		d.generateDatasetForQuery(conn,queryId,query,  schemaFile,  sampleDataFile,  orderDependent,  tempFilePath, obj);
+						d.generateDatasetForQuery(conn,queryId,query,  schemaFile,  sampleDataFile,  orderDependent,  tempFilePath, obj);
 						long stopTime = System.currentTimeMillis();
 						long elapsedTime = stopTime - startTime;
 				        System.out.println("Total time taken for data generation of the query is : ");
@@ -402,7 +352,7 @@ public class GenerateDataSet {
 						e.printStackTrace();
 						System.out.println("Query : "+query);
 					}
-				} */
+				}
 				//TEMPCODE END : Rahul Sharma
 			}
 			else {
@@ -448,27 +398,29 @@ public class GenerateDataSet {
 				//String query = "select name, title from (instructor natural join teaches) join course using (course_id)";
 				//String query = "select id, name from student where tot_cred>30";
 	
-				/* I----*/
-//				 String query = "select name from student where tot_cred>50";
-				 
-//				 II----
-//				  String query = "select * from student inner join department using (dept_name) where student.tot_cred > 40 and exists (select * from course where credits >=6 and course.dept_name = 'comp. sci.' )";
-				 
-				
-				/* III----*/
-				  String query = "select dept_name, avg(salary) from instructor group by dept_name having avg(salary) > 100000";
+				/* I---- */
+			 //String query = "select name from student where tot_cred > 50";
+			
+				String query = "select name,course_id from instructor,teaches where instructor.ID = teaches.ID";
+				// String query = "select name from instructor where salary is null";
+				/* II---- */
+				 //String query = "select * from student inner join department using (dept_name) where student.tot_cred > 40 and exists (select * from course where credits >=6 and course.dept_name = 'comp. sci.' )";
 				 
 				
-				// IV----
-//				  String query="select * from instructor natural join teaches where dept_name='Biology' and year=2009";
+				/* III---- */
+				 // String query = "select dept_name, avg(salary) from instructor group by dept_name having avg(salary) > 10000";
 				 
+				
+				/* IV---- 
+				  String query="select * from instructor natural join teaches where dept_name=? and year=?";
+				 */
 				/* V-----
 				  String query = "select course_id from section as S where semester = 'Fall' and year = 2009 and not exists (select * from section as T where semester = 'Spring' and year = 2010 and S.course_id = T.course_id)";
 				 */
 				 /* VI----
 				  String query = "SELECT dept_name, SUM(credits) FROM course INNER JOIN department USING (dept_name) WHERE credits <= 4 GROUP BY dept_name HAVING SUM(credits) < 13";
 				 */
-				/* VII-----
+				/* VII----- 
 				  String query = "select * from instructor where dept_name in (select dept_name from department where building = 'Watson')";
 				 */
 				/* VIII----
@@ -477,9 +429,9 @@ public class GenerateDataSet {
 				/* IX-----
 				  String query = "select name, title from (instructor natural join teaches) join course using (course_id)";
 				 //*/
-				 /* X----
+				 /* X---- 
 				  String query = "SELECT dept_name, COUNT(DISTINCT course_id) FROM course LEFT OUTER JOIN takes USING(course_id) GROUP BY dept_name";
-				 //*/
+				 */
 				/* XI-----
 				  String query = "SELECT takes.course_id FROM student INNER JOIN takes ON(student.id=takes.id) INNER JOIN course ON(course.course_id=takes.course_id) WHERE student.id = '12345'";
 				 //*/
@@ -518,6 +470,8 @@ public class GenerateDataSet {
 			 * "inner join section WHERE year = 2010 and course.course_id = 'CS-203' " +
 			 * "and  EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201' " +
 			 * "AND prereq.course_id = course.course_id) ";
+			 */
+						// + ")";
 				 /* ---->>>problem with this particular query
 				 */
 	
@@ -554,13 +508,10 @@ public class GenerateDataSet {
 				
 				// queries TEMPCODE : Rahul Sharma
 				
-				//String query = "Select ID, name from instructor where dept_name = 'CSE' and salary>40000";
-				
-				
-//				String query = "SELECT * FROM instructor "
-//							 + "WHERE dept_name in (SELECT dept_name FROM department "
-//							 + 						"WHERE building = 'Watson')";
-//	//			
+	//			String query = "SELECT * FROM instructor "
+	//						 + "WHERE dept_name in (SELECT dept_name FROM department "
+	//						 + 						"WHERE building = 'Watson')";
+	//			
 	//			String query = "SELECT course_id, title "
 	//						 + "FROM course INNER JOIN section USING(course_id) "
 	//						 + "WHERE year = 2010 AND "
@@ -628,15 +579,15 @@ public class GenerateDataSet {
 //						     + "WHERE t1.ID=s2.ID and "
 //						     + "EXISTS ( SELECT s1.course_id, min(t2.year) from takes t2 inner join section s1"
 //						     + 			" ON t2.course_id=s1.course_id WHERE t2.ID=s2.ID group by s1.course_id )";
+				/*
+				queryId=501;
+				String query = "SELECT * FROM takes t1 ,student s2 " 
+						 +" WHERE t1.ID=s2.ID and "
+						 +" t1.year = (SELECT min(t2.year) FROM takes t2 INNER JOIN section s1 "
+						 +"            ON t2.course_id=s1.course_id "
+						 +"            WHERE t2.ID=s2.ID)";
 				
-////				queryId=501;
-//				String query = "SELECT * FROM takes t1 ,student s2 " 
-//					 +" WHERE t1.ID=s2.ID and "
-//					 +" t1.year = (SELECT min(t2.year) FROM takes t2 INNER JOIN section s1 "
-//						 +"            ON t2.course_id=s1.course_id "
-//						 +"            WHERE t2.ID=s2.ID)";
-				
-				
+				*/
 //				
 //				queryId=502;
 //				String query = "SELECT course_id, title FROM course "
@@ -700,14 +651,18 @@ public class GenerateDataSet {
 	
 	
 				//end
-				d.generateDatasetForQuery(conn,queryId,query,  schemaFile,  sampleDataFile,  orderDependent,  tempFilePath, obj);
+				List<String> dataset = d.generateDatasetForQuery(conn,queryId,query,  schemaFile,  sampleDataFile,  orderDependent,  tempFilePath, obj);
+				//if(dataset == null || dataset.isEmpty())
+				//	System.out.println("Empty dataset");
+				for(String s:dataset) {
+					System.out.println(s);
+				}
 				long stopTime = System.currentTimeMillis();
 				long elapsedTime = stopTime - startTime;
 		        System.out.println("Total time taken for data generation of the query is : ");
 		        System.out.print(elapsedTime);
 			}
 		}
-
 
 		//TEMPCODE Rahul Sharma
 		public static String readQueryFromFile(String fileName,String queryId) throws IOException {

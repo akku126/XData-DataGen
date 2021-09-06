@@ -81,7 +81,7 @@ public class GenerateCVC1 implements Serializable{
 	 * then the currentIndexCount of R is 0, R1 is 1 and that of R2 is 2.  */
 	private  HashMap<String,Integer> currentIndexCount; 
 
-	/**  For each relation maintains a count of how many times it repeats. Incides of a relation should be incremented by this number */
+	/**  For each relation maintains a count of how many times it repeats. Indies of a relation should be incremented by this number */
 	private HashMap<String,Integer> repeatedRelationCount;
 
 	/** Stores the positions at which the indexes for each repeated relations start */
@@ -677,7 +677,6 @@ public class GenerateCVC1 implements Serializable{
 	
 					/**get table name*/
 					String table=(String) pairs.getKey();
-	
 					/**get the number of tuples*/
 					int noOfTuples = (Integer) pairs.getValue();
 	
@@ -1320,7 +1319,7 @@ public class GenerateCVC1 implements Serializable{
 
 				/**get table name */
 				String tableName = tableNameNo.substring(0, tableNameNo.length()-1);
-
+				
 				/**update the total number of output tuples data structre*/
 				if( noOfOutputTuples.get(tableName) == null)
 					noOfOutputTuples.put(tableNameNo, totCount );

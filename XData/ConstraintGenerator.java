@@ -59,6 +59,7 @@ public class ConstraintGenerator {
 	/**
 	 * Constructor
 	 */
+	@SuppressWarnings({ "static-access" })
 	public ConstraintGenerator() {
 		setConstraintSolver(Configuration.getProperty("smtsolver"));
 
@@ -124,6 +125,7 @@ public class ConstraintGenerator {
 			con.setRightConstraint(tableName2+"_"+col2.getColumnName()+pos2+" (select O_"+tableName2+" "+ offset2 +")");
 			con.setOperator(operator.toLowerCase());
 		}
+		
 		return con;
 	}	
     
@@ -1429,6 +1431,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 		}else{
 			constraint = generateSMTAndConstraints(constraintList,null);
 		}
+		
 		return constraint;
 	}
 	
@@ -1446,7 +1449,8 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 	if(isCVC3){
 		constraint = "\n ASSERT " + generateCVCAndConstraints(constraintList)+"; \n";
 	}else{
-		constraint = "\n (assert "+generateSMTAndConstraints(constraintList,null)+") \n";
+//		constraint = "\n (assert "+generateSMTAndConstraints(constraintList,null)+") \n";
+		constraint = "\n "+generateSMTAndConstraints(constraintList,null)+" \n"; // TEMPCODE Rahul Sharma : handle multiple assert in the constraints
 	}
 	
 	return constraint;
@@ -1458,7 +1462,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 		String constraint1 = "";
 		
 		if(isCVC3){
-		/*	for(String str: constraintString.split(" AND ") )	
+		/*	for(String str: constraintString.split(" AND ") )
 				if( str.length() >= 7)
 					constraint1 += str.substring(7, str.length()) + " OR ";
 			
@@ -1474,9 +1478,12 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 		}else{
 			if(constraintString.contains("(and "))
 				{	
-				constraint1 += constraintString.replaceAll("(and ", "(or ");
+				constraint1 += constraintString.replace("(and ", "(or ");
+//				constraint1 += constraintString.replaceAll("(and ", "(or ");
 				
-				constraint += "(assert "+constraint1+") \n";
+//				constraint += "(assert "+constraint1+") \n";
+				constraint = constraint1;
+
 				}
 			else
 				constraint = constraintString;
@@ -1609,22 +1616,40 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 				if(isTempJoin) {
 					String constr,declare="";
 					int st_index=0,end_index=0;
+					boolean inside = false;
 					constr = generateSMTOrConstraints(constraintList,null);
-					while(constr.indexOf("(declare-datatypes ()") != -1) {
-					st_index = constr.indexOf("(declare-datatypes ()");
-					end_index = constr.indexOf("_TupleType))")+12;
-					if(!declare.contains(constr.substring(st_index, end_index)))
-						declare += constr.substring(st_index, end_index) + " \n";
-					constr = constr.substring(0, st_index)+constr.substring(end_index);
+					if(constr.isEmpty())
+						System.out.println("Empty String"+ st_index +" "+ end_index);
+					while(constr.indexOf("(declare-datatypes ()") != -1) 
+					{
+						inside = true;
+						st_index = constr.indexOf("(declare-datatypes ()");
+						end_index = constr.indexOf("_TupleType))")+12;
+						
+						if(!declare.contains(constr.substring(st_index, end_index)))
+							declare += constr.substring(st_index, end_index) + " \n";
+						
+						constr = constr.substring(0, st_index)+constr.substring(end_index);
+						
 					}
 					
 					constraint =  declare + "\n (assert "+constr+") \n";
+					//int s_id = constraint.indexOf("()");
+					//String s_temp = constraint.substring(0,s_id) + constraint.substring(s_id+2);
+					//System.out.println(s_temp);
+					//constraint = s_temp;
+					// TEMPCODE START : Rahul Sharma
+					// to handle blank or constraints
+					//System.out.println(constraint);					
+					//if(st_index==0 && end_index==0)
+					//	constraint = "";
+										
+					// TEMPCODE END : Rahul Sharma
 				}
-				else 
-					constraint =  "\n (assert "+generateSMTOrConstraints(constraintList,null)+") \n"; 
+				else
+					constraint =  "\n (assert "+generateSMTOrConstraints(constraintList,null)+") \n";
 			}
 		}
-		
 		return constraint;
 	}
 	
@@ -1691,15 +1716,26 @@ public String generateSMTAndConstraints(ArrayList<ConstraintObject> constraintLi
 	String constr1 ="";
 	for(ConstraintObject con : constraintList){
 		constr1 =  getSMTAndConstraint(con,constr1,constraintList);
-		constraintStr = constr1+"\n\t\t";
+		//System.out.println(constr1);
+		
+		if(!constr1.isEmpty())
+			{constraintStr = constr1 + "\n\t\t";
+			}
 	
 	}
-	if(constraintStr == null || constraintStr == ""){
+	
+
+	if(constraintStr == "null" || constraintStr == null || constraintStr == ""){
 		return "";
 	}
+	
 	else if(constraintList!= null && constraintList.size() > 1) {
 		constraintStr = " (and " + constraintStr + ")";
 	}
+	
+	if(!constraintStr.contains("assert"))
+		constraintStr = "(assert"+constraintStr+")"; // TEMPCODE : Rahul Sharma : added missing assert in the constraints
+	
 	return constraintStr;
 }
 
@@ -1723,10 +1759,12 @@ public String generateSMTOrConstraints(ArrayList<ConstraintObject> constraintLis
 
 	String constr1 ="";
 	for(ConstraintObject con : constraintList){
+		
 		//constraintStr += getSMTOrConstraint(con,constraintStr);
 		constr1 = getSMTOrConstraint(con, constr1,constraintList);
 		if(!constr1.isEmpty())
 			constraintStr = constr1+"\n\t\t";
+		
 	}
 	
 	
@@ -1736,6 +1774,7 @@ public String generateSMTOrConstraints(ArrayList<ConstraintObject> constraintLis
 	else if(constraintList!= null && constraintList.size() > 1) {
 		constraintStr = " (or " + constraintStr + ")";
 	}
+	
 	return constraintStr;
 }
 /**
@@ -1788,6 +1827,7 @@ public String getSMTAndConstraint(ConstraintObject con, String s1,ArrayList<Cons
 		
 		if((con.getLeftConstraint() != null && !con.getLeftConstraint().isEmpty())) {
 			Leftconstr = con.getLeftConstraint().trim();
+			
 			int st_index = Leftconstr.indexOf("(assert");
 			while(st_index != -1) {
 				Leftconstr = Leftconstr.substring(0, st_index)+Leftconstr.substring(st_index+7);
@@ -1830,11 +1870,13 @@ public String getSMTAndConstraint(ConstraintObject con, String s1,ArrayList<Cons
 			
 			
 			if(con.getLeftConstraint() != null && !con.getLeftConstraint().isEmpty()){
+				
 				if(Leftconstr.trim().startsWith("(")){
 					cvcStr+= Leftconstr+" " ;
 				}else{
 					cvcStr+= " ("+Leftconstr+") ";
 				}
+				
 			}else{
 				cvcStr += " ";
 			}
@@ -1845,6 +1887,7 @@ public String getSMTAndConstraint(ConstraintObject con, String s1,ArrayList<Cons
 				}else{
 					cvcStr +="("+Rightconstr+")";
 				}
+				
 			}else{
 				cvcStr += " ";
 			}
@@ -1858,7 +1901,6 @@ public String getSMTAndConstraint(ConstraintObject con, String s1,ArrayList<Cons
 			}else{
 				cvcStr += " ";
 			}
-			
 			//cvcStr += ((con.getOperator() != null && ! (con.getOperator().isEmpty())) 
 			//? "("+(con.getOperator().equals("/=")? "not (= ": con.getOperator()+" ") : " ")
 			
@@ -1874,13 +1916,18 @@ public String getSMTAndConstraint(ConstraintObject con, String s1,ArrayList<Cons
 			
 		}
 		else{
-			if(!Leftconstr.isEmpty())
-			    cvcStr += Leftconstr.trim().startsWith("(")? " "+Leftconstr+" " : " ("+Leftconstr+") ";
+			if(!Leftconstr.isEmpty()) {
+				cvcStr += Leftconstr.trim().startsWith("(")? " "+Leftconstr+" " : " ("+Leftconstr+") ";
+			}
+			
 		}
+		
 	}
+	
 	if(s1 != null && !s1.isEmpty() || (s1 != null && !s1.isEmpty() && conList!= null && conList.size() > 1)){
 		//cvcStr +=")  ";
 	}
+	//System.out.println(cvcStr);
 	return cvcStr;
 }
 
@@ -1893,7 +1940,7 @@ public String getSMTAndConstraint(ConstraintObject con, String s1,ArrayList<Cons
  * @return
  */
 public String getSMTOrConstraint(ConstraintObject con, String s1,ArrayList<ConstraintObject> conList){
-	 
+	 //System.out.println("Inside generateConstraints/constraintGenerator.java getSMTOrConstraint()");
 	String cvcStr ="";
 	
 	if(s1 != null && !s1.isEmpty() || (s1 != null && !s1.isEmpty() && conList!= null && conList.size() > 1)){
@@ -1902,7 +1949,7 @@ public String getSMTOrConstraint(ConstraintObject con, String s1,ArrayList<Const
 	}
 	
 	if(con != null){
-		
+		//System.out.println("inside if");
 		String Rightconstr = "";
 		String Leftconstr = "";
 		/// Code to remove nested assert string 
@@ -1935,6 +1982,7 @@ public String getSMTOrConstraint(ConstraintObject con, String s1,ArrayList<Const
 		
 		if((con.getLeftConstraint() != null && !con.getLeftConstraint().isEmpty())) {
 			Leftconstr = con.getLeftConstraint().trim();
+			
 			int st_index = Leftconstr.indexOf("(assert");
 			while(st_index != -1) {
 				Leftconstr = Leftconstr.substring(0, st_index)+Leftconstr.substring(st_index+7);
@@ -1979,17 +2027,21 @@ public String getSMTOrConstraint(ConstraintObject con, String s1,ArrayList<Const
 			}
 			
 			if(con.getLeftConstraint() != null && !con.getLeftConstraint().isEmpty()){
+				
 				if(Leftconstr.trim().startsWith("(")){
 					cvcStr += Leftconstr+" ";
+					
 				}
 				else{
 					cvcStr += " ("+Leftconstr+") ";
+					
 				}
 			}else{
 				cvcStr += " ";
 			}
 			
 			if(con.getRightConstraint() !=null && ! con.getRightConstraint().isEmpty()){
+				
 				if((isIntOrReal(con.getRightConstraint()) || Rightconstr.trim().startsWith("("))){
 					cvcStr += Rightconstr ;
 				}else{
@@ -2025,15 +2077,14 @@ public String getSMTOrConstraint(ConstraintObject con, String s1,ArrayList<Const
 			
 		}
 		else{
-			if(!Leftconstr.isEmpty())
-				cvcStr += Leftconstr.trim().startsWith("(")? (" "+Leftconstr+" ") : " ("+con.getLeftConstraint()+") ";
+			cvcStr += Leftconstr.trim().startsWith("(")? (" "+Leftconstr+" ") : " ("+con.getLeftConstraint()+") ";
+			//System.out.println("Check (): "+ Leftconstr);
 		}
 	}
 	if(s1 != null && !s1.isEmpty() || (s1 != null && !s1.isEmpty() && conList!= null && conList.size() > 1)){
 	//	cvcStr +=")  ";
 	}
-
-	//cvcStr = "(or "+cvcStr+")";
+	cvcStr = "(or "+cvcStr+")";
 	return cvcStr;
 }
 
@@ -2273,11 +2324,10 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			Params p = ctx.mkParams();
 			p.add("produce-models", true); // other options invalid in z3 API
 			p.add("smt.macro_finder", true); // check whether this is the right option name
-			//p.add("model_compress", false); <-- Gives error for some reason, however this param is set successfully in the .smt file
 			solver.setParameters(p); // NOTE: these should be the settings for all solvers
 
 			//header = "(set-logic ALL_SUPPORTED)";
-			header += "(set-option :produce-models true)\n (set-option :smt.macro_finder true) \n";
+			header += "(set-option:produce-models true) \n(set-option :interactive-mode true) \n(set-option :produce-assertions true) \n(set-option :produce-assignments true) \n(set-option :smt.macro_finder true) \n";
 			
 			BoolExpr assertionIntNull = ctx.mkEq(ConstraintGenerator.intNull, ctx.mkInt(-99996));
 			BoolExpr assertionRealNull = ctx.mkEq(ConstraintGenerator.realNull, ctx.mkReal("-99996.0"));
@@ -2297,6 +2347,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			header += "\n" + String.join("\n", tempArr);
 
 		}
+		
 		return header +"\n\n";
 	}
 	
@@ -2549,6 +2600,11 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 		HashSet<String> uniqueValues = new HashSet<String>();
 		String isNullMembers = "";
 		
+		// TEMPCODE START : Rahul Sharma
+		// Handle duplicate entries in col-> columnValues
+		checkAndRemoveDuplicateColumns(col);
+		// TEMPCODE END : Rahul Sharma
+		
 		if(isCVC3){
 			//If CVC Solver
 			constraint = "\nDATATYPE \n"+col+" = ";
@@ -2600,13 +2656,17 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			constraint += isNullMembers;
 			
 		}
-		else { // if another SMT SOLVER
+		else { // if another SMT (Z3) SOLVER 
+			try {
 			HashMap<Expr, Integer> nullValuesChar = new HashMap<Expr, Integer>();
 			HashMap<Expr, Integer> notnullValuesChar = new HashMap<Expr, Integer>();
 			Vector<String> colValues = new Vector<String>();
-
+			
 			if(columnValue.size()>0) {
 				if(!unique || !uniqueValues.contains(columnValue.get(0))){
+					if(columnValue.get(0)==null) {
+						columnValue.remove(0); // TEMPCODE Rahul Sharma : removed null from column value
+					}
 					colValue =  Utilities.escapeCharacters(col.getColumnName())+"__"+Utilities.escapeCharacters(columnValue.get(0));//.trim());
 					colValues.add("_"+colValue);
 					uniqueValues.add(columnValue.get(0));
@@ -2657,8 +2717,30 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 
 			constraint +=defineIsNull(nullValuesChar, col)+"\n";
 		}
-
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		}
 		return constraint;
+	}
+
+	/**
+	 * TEMPCODE Rahul Sharma
+	 * TO check and remove duplicate entries from the column values
+	 * @param col : A column of a table
+	 */
+	@SuppressWarnings("unused")
+	private void checkAndRemoveDuplicateColumns(Column col) {
+		Vector<String> columnValues = col.getColumnValues();
+		Vector<String> uniqueColumnValues = new Vector<String>();
+		for(String x: columnValues) 
+			if(!uniqueColumnValues.contains(x))
+				uniqueColumnValues.add(x);
+		
+		col.getColumnValues().clear();
+		for(String s : uniqueColumnValues) {
+			col.addColumnValues(s);
+		}
 	}
 
 	/**
@@ -2694,11 +2776,11 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 		}
 		else{
 			temp += "\n\n(check-sat)";			// need to right generalize one
-//			for(Table t : cvc.getResultsetTables()){
-//				temp+= "\n (get-value (O_"+t.getTableName()+"))";
-//			}
+			for(Table t : cvc.getResultsetTables()){
+				temp+= "\n (get-value (O_"+t.getTableName()+"))";
+			}
 			
-			temp += "\n(get-model)";
+			temp += "\n \n(get-assertions) \n (get-assignment) \n(get-model)";
 			
 		}
 		return temp;
@@ -2717,7 +2799,8 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			temp += "\nCOUNTERMODEL;";
 		}
 		else{
-			temp += "\n\n(check-sat)\n";			// need to right generalize one
+			temp += "\n\n(check-sat)";			// need to right generalize one
+			temp += "\n \n(get-assertions) \n";
 			
 		}
 		return temp;
@@ -2826,6 +2909,12 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 				if (statement.contains("(assert")) {
 					break;
 				}
+				// TEMPCODE START : Rahul Sharma
+				// Used for Debugging
+//				if (!statement.contains("(assert") && !statement.contains("(declare")) {
+//					System.out.println(statement);
+//				}
+				// TEMPCODE END : Rahul Sharma
 			}
 			tempStr += String.join("\n\n", includedStatements);
 		}
@@ -2833,7 +2922,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 	}
 	
 	/**
-	* TEMPCODE Rahul Sharma : to check if there is any duplicate columns in resultsetcolumns
+	* TEMPCODE Rahul Sharma : to check if there is any duplicate columns in resultsetColumns
 	* @param cvc
 	* @param resultsetColumns
 	*/
@@ -2850,7 +2939,7 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
                  break;
              }
          }
-         if(mid==size) { // duplicates are there in the resultsetcolumns, and this need to be fixed 
+         if(mid==size) { // duplicates are there in the resultsetColumns, and this need to be fixed 
              start=0;
              mid = size/2;
              Vector<Column> temp = new Vector<Column>();
@@ -3615,7 +3704,7 @@ public static String generateCVCForCNTForPositiveINT(QueryBlockDetails queryBloc
 		}else{
 			
 			int min = 0,min1=0, max=0,max1=0;
-			CVCStr += "(set-option:produce-models true)\n (set-option :smt.macro_finder true) \n";
+			CVCStr += "(set-option:produce-models true) \n (set-option :interactive-mode true) \n (set-option :produce-assertions true) \n (set-option :produce-assignments true) \n (set-option :smt.macro_finder true) \n";
 			CVCStr += "(declare-const SUM Int) \n (declare-const MIN Int) \n (declare-const MAX Int) \n (declare-const AVG Real) \n (declare-const COUNT Int) \n";
 			CVCStr += "(declare-const CNT Real) \n (declare-const MIN1 Int) \n (declare-const MAX1 Int) \n\n";
 
@@ -3899,32 +3988,37 @@ public Vector<Quantifier> getDomainConstraintsforZ3(GenerateCVC1 cvc) {
 			if((table.getColumn(col).getCvcDatatype()).equalsIgnoreCase("INT") || (table.getColumn(col).getCvcDatatype()).equalsIgnoreCase("REAL")) {
 
 				if (turn++ == 0) {
-					IntExpr[] qVarArray = new IntExpr[1];
-					IntExpr qVar = ctx.mkIntConst("i");  // i should not conflict with any global i
-					BoolExpr ac1 = ctx.mkLe(ctx.mkInt("1"), qVar);
-					//BoolExpr ac2 = ctx.mkLe(qVar, ctx.mkInt(Integer.toString(cvc.getNoOfOutputTuples().get(tableName))));
-					// added by rambabu for temporary fix
- 					BoolExpr ac2;
- 					try {
- 					    ac2 = ctx.mkLe(qVar, ctx.mkInt(Integer.toString(cvc.getNoOfOutputTuples().get(tableName))));
- 					}
- 					catch(Exception e){
- 					    ac2 = ctx.mkLe(qVar, ctx.mkInt(Integer.toString(cvc.getNoOfOutputTuples().get(tableName.toUpperCase()))));
- 					}
- 					// added by rambabu ended here
-					
-					BoolExpr antecedant = ctx.mkAnd(ac1, ac2);
-
-					FuncDecl getFuncDecl = ctxFuncDecls.get("get"+col);
-					FuncDecl isNullFuncDecl = ctxFuncDecls.get("ISNULL_"+col);
-					Expr selectExpr = ConstraintGenerator.smtMap(table.getColumn(col), qVar);
-					BoolExpr con1 = ctx.mkOr((BoolExpr) getFuncDecl.apply(selectExpr), (BoolExpr) isNullFuncDecl.apply(selectExpr));
-					BoolExpr consequent = ctx.mkAnd(con1);
-
-					Expr body = ctx.mkImplies(antecedant, consequent);
-					qVarArray[0] = qVar;
-					Quantifier funcQuantifier = ctx.mkForall(qVarArray, body, 1, null, null, null, null);
-					domainConstraints.add(funcQuantifier);
+					try {
+						IntExpr[] qVarArray = new IntExpr[1];
+						IntExpr qVar = ctx.mkIntConst("i");  // i should not conflict with any global i
+						BoolExpr ac1 = ctx.mkLe(ctx.mkInt("1"), qVar);
+						//BoolExpr ac2 = ctx.mkLe(qVar, ctx.mkInt(Integer.toString(cvc.getNoOfOutputTuples().get(tableName))));
+						// added by rambabu for temporary fix
+	 					BoolExpr ac2;
+	 					try {
+	 					    ac2 = ctx.mkLe(qVar, ctx.mkInt(Integer.toString(cvc.getNoOfOutputTuples().get(tableName))));
+	 					}
+	 					catch(Exception e){
+	 					    ac2 = ctx.mkLe(qVar, ctx.mkInt(Integer.toString(cvc.getNoOfOutputTuples().get(tableName.toUpperCase()))));
+	 					}
+	 					// added by rambabu ended here
+						
+						BoolExpr antecedant = ctx.mkAnd(ac1, ac2);
+	
+						FuncDecl getFuncDecl = ctxFuncDecls.get("get"+col);
+						FuncDecl isNullFuncDecl = ctxFuncDecls.get("ISNULL_"+col);
+						Expr selectExpr = ConstraintGenerator.smtMap(table.getColumn(col), qVar);
+						BoolExpr con1 = ctx.mkOr((BoolExpr) getFuncDecl.apply(selectExpr), (BoolExpr) isNullFuncDecl.apply(selectExpr));
+						BoolExpr consequent = ctx.mkAnd(con1);
+	
+						Expr body = ctx.mkImplies(antecedant, consequent);
+						qVarArray[0] = qVar;
+						Quantifier funcQuantifier = ctx.mkForall(qVarArray, body, 1, null, null, null, null);
+						domainConstraints.add(funcQuantifier);
+					}
+					catch(Exception e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		}

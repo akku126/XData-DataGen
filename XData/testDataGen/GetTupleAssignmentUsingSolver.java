@@ -1400,7 +1400,6 @@ public class GetTupleAssignmentUsingSolver {
 		GetTupleAssignmentUsingSolver gtas = new GetTupleAssignmentUsingSolver( new GetTupleAssignment(null, "4"), "4");
 
 		gtas.setMaxAttributes(2);
-
 		gtas.getTupleAssignment();
 
 	}

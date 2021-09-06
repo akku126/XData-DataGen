@@ -160,6 +160,7 @@ public class EquivalenceMutationInOuterQueryBlock {
 						
 						/** Call the method for the data generation*/
 						GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc);
+						
 					}
 				}
 				/** revert back the equivalence classes of this conjunct */

@@ -250,11 +250,11 @@ public class QueryBlockDetails implements Serializable{
 			for(ConjunctQueryStructure con: queryBlock.getConjunctsQs())
 				for(Node n: con.getJoinCondsForEquivalenceClasses())
 					joinConds.add(new Node(n));
-
+			
 			/** If there are no join conditions or the final count is 1 , then we can directly assign the count to base relation*/
 			if(joinConds == null || joinConds.size() == 0 || queryBlock.getFinalCount() == 1)			
 				return GetTupleAssignmentForQueryBlock.getTupleAssignmentWithoutJoins(cvc, queryBlock);		
-
+			
 			return GetTupleAssignmentForQueryBlock.getTupleAsgnmentForQueryBlock(cvc, queryBlock, rootTableName);
 		}catch(Exception e){
 			logger.log(Level.SEVERE, e.getMessage(), e);
@@ -296,8 +296,7 @@ public class QueryBlockDetails implements Serializable{
 			constraintString += ConstraintGenerator.addCommentLine(" CONSTRAINTS OF THIS BLOCK ");
 			constraintString +=  getConstraintsForQueryBlockExceptSubQuries(cvc, qb);
 			constraintString += ConstraintGenerator.addCommentLine(" END OF CONSTRAINTS OF THIS BLOCK ");
-
-
+			
 			/** Add constraints related to From clause subqueries block */
 			for(QueryBlockDetails qbt: qb.getFromClauseSubQueries()){
 
@@ -425,7 +424,8 @@ public class QueryBlockDetails implements Serializable{
 				constraintString += ConstraintGenerator.addCommentLine(" CONSTRAINTS FOR THIS CONJUNCT ");
 				//constraintString += GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, qb, conjunct);
 				constraints=Constraints.orConstraints(constraints, GenerateConstraintsForConjunct.getConstraintsInConjuct(cvc, qb, conjunct));
-
+				
+				
 				/**FIXME: Handle OR + Where clause Sub query Correctly
 				 * Right Now we assume that if there is Where sub query then no ORing of conds
 				 * Use Amol generalized approach*/

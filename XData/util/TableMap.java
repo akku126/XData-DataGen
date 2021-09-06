@@ -129,9 +129,7 @@ public class TableMap implements Serializable{
 			while (rs.next()) {                          
 				//String tableName = rs.getString("TABLE_NAME").toUpperCase(); 
 				String tableName = rs.getString("TABLE_NAME"); // added by rambabu
-
-				System.out.println(tableName); //added by rambabu
-
+				//System.out.println(tableName); //added by rambabu
 				if(tables.get(tableName.toUpperCase())==null){ // modified by rambabu for mysql
 					Table table = new Table(tableName);
 					tables.put(tableName.toUpperCase(), table );
@@ -150,9 +148,7 @@ public class TableMap implements Serializable{
 				if(table==null)
 					continue;
 				String columnName = rs.getString("COLUMN_NAME").toUpperCase();
-
 				//System.out.println(columnName+" "+rs.getInt("DATA_TYPE")); //added by rambabu
-
 
 				Column col = new Column(columnName,table);
 				//  logger.log(Level.INFO,"Table Values in TableMap = "+table+" and column = "+columnName);
@@ -161,7 +157,6 @@ public class TableMap implements Serializable{
 
 					//String query = "SELECT " + columnName + " FROM " + table;
 					String query = "SELECT " + columnName + " FROM " + tableName; //added by rambabu for mysql
-
 					//System.out.println(query); //added by rambabu
 					PreparedStatement statement = this.conn.prepareStatement(query);
 
@@ -208,12 +203,7 @@ public class TableMap implements Serializable{
 
 					String columnName = rs1.getString("COLUMN_NAME").toUpperCase();
 					Column col = table.getColumn(columnName);
-					// TEMPCODE START : Rahul Sharma
-					// To handle duplicate primary keys getting added
-					if(!checkColumnAlreadyAddedInPrimaryKeys(table,col)){
-						table.addColumnInPrimaryKey(col);
-					}
-					// TEMPCODE END : Rahul Sharma
+					table.addColumnInPrimaryKey(col);
 					if(size == 1)
 						col.setIsUnique(true);
 				}            
@@ -307,22 +297,6 @@ public class TableMap implements Serializable{
 
 			//e.printStackTrace();
 		}
-	}
-
-	/**
-	 * To check if the "col" is already a part of the primary key of the "table"
-	 * @param table : Table 
-	 * @param col : Primary Key Column
-	 * @return : true if primary key column is already added as primaryKey in the table, otherwise false
-	 */
-	private boolean checkColumnAlreadyAddedInPrimaryKeys(Table table, Column col) {
-		Vector<Column> columns = new Vector<Column>();
-		columns = table.getPrimaryKey();
-		boolean alreadyPresent = false;
-		for(Column c : columns){
-			if(c==col)alreadyPresent=true;
-		}
-		return alreadyPresent;
 	}
 
 	public Vector<Table> getAllTablesInTopSorted(){                

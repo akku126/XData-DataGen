@@ -28,6 +28,7 @@ public class RegressionTests {
 	}
 
 	private Connection getTestConn() throws Exception{
+		
 		//added by rambabu
 		String tempDatabaseType = Configuration.getProperty("tempDatabaseType");
 		String loginUrl = "";
@@ -49,7 +50,6 @@ public class RegressionTests {
 			conn=DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));;				
 		}		
 		return conn;
-
 	}
 
 	/**
@@ -236,6 +236,7 @@ public class RegressionTests {
 			datasets=generateDataSets(queryId,query);
 			
 			if(datasets==null || datasets.isEmpty()) {
+				System.out.println("************************8Empty dataset");
 				errors.add("Exception in generating datasets");
 				testResult.put(queryId, errors);
 				continue;

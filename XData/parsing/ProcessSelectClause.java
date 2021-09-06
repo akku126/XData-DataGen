@@ -851,6 +851,7 @@ public class ProcessSelectClause{
 	 */
 	public static void processFromListTable(net.sf.jsqlparser.schema.Table jsqlTable, FromClauseElement frmListElement, QueryStructure qStruct){
 		String tableName = jsqlTable.getFullyQualifiedName().toUpperCase();// getWholeTableName();
+		
 		//String tableName = jsqlTable.getFullyQualifiedName();// getWholeTableName(); // added by ram for mysql
 		Table table = qStruct.getTableMap().getTable(tableName.toUpperCase());
 		String aliasName = "";

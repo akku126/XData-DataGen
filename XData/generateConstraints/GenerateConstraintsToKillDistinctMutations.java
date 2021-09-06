@@ -58,7 +58,7 @@ public class GenerateConstraintsToKillDistinctMutations {
 
 				/**GEt the number of tuples of this relation */		
 				int count = cvc.getNoOfTuples().get(tableNameNo);
-
+				
 				int nextPos;/** To indicate the next position of the second tuple of this relation, if any */
 
 				if(noofGroups > -1)
@@ -69,6 +69,7 @@ public class GenerateConstraintsToKillDistinctMutations {
 
 				if(count>1){/** If more than one tuple in this relation*/						
 					constraintString += constrGen.getAssertConstraint(c, offset, c, (offset+nextPos), " = ");
+					
 					//"\nASSERT O_"+ GenerateCVCConstraintForNode.cvcMap(c,(offset)+"") + " = O_" + GenerateCVCConstraintForNode.cvcMap(c,(offset+nextPos)+"") + ";";
 				}
 				else{/** If there is a single tuple in this relation, this means that this node is involved in 

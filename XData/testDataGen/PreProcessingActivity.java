@@ -318,10 +318,12 @@ public class PreProcessingActivity {
 
 					/** Segregate selection conditions in each query block */
 					RelatedToPreprocessing.segregateSelectionConditions(cvc);
-
+					
+					
 					/** Call the method for generating the data sets */
 					//if(Configuration.getProperty("smtsolver").equalsIgnoreCase("cvc3")){
 					cvc.generateDatasetsToKillMutations();
+					
 					//}else{
 					//cvc.generateDatasetsToKillMutationsUsingSMT();
 					//}

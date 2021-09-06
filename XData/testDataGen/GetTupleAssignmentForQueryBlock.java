@@ -59,10 +59,10 @@ public class GetTupleAssignmentForQueryBlock {
 				eqClas.addAll(ec);
 			}
 			gta.setEquivalenceClasses((ArrayList<ArrayList<Node>>) eqClas.clone());
-
+			
 			/**Update the final count*/
 			gta.setFinalCount(queryBlock.getFinalCount());
-
+			
 			/** Update selection conditions*/
 			ArrayList< Node > selectionConds = new ArrayList<Node>();
 			ArrayList< Node > stringSelectionConds = new ArrayList<Node>();
@@ -95,16 +95,16 @@ public class GetTupleAssignmentForQueryBlock {
 				 */
 				gta.createRelationNodeForSubquery(qb, subq);
 			}
-
-
+			
 			boolean assignmentPossible = gta.getTupleAssignmentForQuery();
-
+			
 			if(assignmentPossible == false){
 				logger.log(Level.WARNING," NO POSSIBLE ASSIGNMENT ");
 				return false;
 			}
 
 			assignmentFromJoinGraphVericesToRelationsInQuery(cvc, queryBlock, gta);
+			
 		}
 		return true;
 	}
@@ -129,12 +129,12 @@ public class GetTupleAssignmentForQueryBlock {
 			JoinGraphNode relation = it.next();
 			/** If this relation node correspond to a from clause subquery block , then we should update number of groups of that subquery block */
 			if(gta.getTableMapping().containsValue(relation.getTableNameNo())){
-
+               
 				int index = relation.getQueryIndex();
 				cvc.getOuterBlock().getFromClauseSubQueries().get(relation.getQueryIndex()).setNoOfGroups(relation.getCardinality());
 
 				logger.log(Level.INFO,"\nAssigning number of groups: = "+relation.getCardinality());
-
+				
 				/** update noofoutputtuples */
 				for( String key: gta.getTableMapping().keySet()){
 					/** If this table is involved in this from clause sub query block */
@@ -171,10 +171,9 @@ public class GetTupleAssignmentForQueryBlock {
 			}
 			/** update the number of tuples of this base relation occurrence*/
 			else{
-
-				/** get the table name*/
+								/** get the table name*/
 				String tableNameNo = relation.getTableNameNo();
-
+				
 				int count = relation.getCardinality();
 
 				int prevCount ;/**To denote the number of tuples of this relation occurrence previously*/
@@ -259,7 +258,7 @@ public class GetTupleAssignmentForQueryBlock {
 		/**check if there is From clause nested block in outer block
 		 * If there is, we should assign the count to number of groups of From clause nested block*/
 		if(queryBlock.getFromClauseSubQueries() != null && queryBlock.getFromClauseSubQueries().size() > 0 && (queryBlock.getBaseRelations() == null || queryBlock.getBaseRelations().size() == 0)){
-
+		
 			queryBlock.getFromClauseSubQueries().get(0).setNoOfGroups( queryBlock.getFinalCount());
 
 			for(String key: queryBlock.getFromClauseSubQueries().get(0).getBaseRelations()){
@@ -274,13 +273,13 @@ public class GetTupleAssignmentForQueryBlock {
 					totalCount = cvc.getNoOfOutputTuples().get(key.substring(0, key.length()-1));
 
 				String tableName = key.substring(0, key.length()-1);
-
+				
 				/** update noofoutput tuples */
 				if(count != 0)
 					cvc.getNoOfOutputTuples().put(key.substring(0, key.length()-1), totalCount - count + (count*queryBlock.getFinalCount()) );
 				else
 					cvc.getNoOfOutputTuples().put(key.substring(0, key.length()-1), totalCount - count + queryBlock.getFinalCount() );
-
+				
 				/** Update repeated next tuple position*/
 				int thisTablePos=Integer.parseInt(key.substring(key.length()-1));
 				for(int i=thisTablePos+1;i <= cvc.getRepeatedRelationCount().get(tableName);i++){
@@ -322,19 +321,18 @@ public class GetTupleAssignmentForQueryBlock {
 				tableNameNo = queryBlock.getProjectedCols().get(0).getTableNameNo();
 			
 		}
-
-
+		
 		logger.log(Level.INFO,"Table Name No: " + tableNameNo);
 
 		/**Get the base table name*/
 		String tableName = tableNameNo.substring(0, tableNameNo.length()-1);
-
+		
 		/**stores the number of tuples for this relation occurrence before this assignment*/
 		int prevCount;
 
 		/**store the present count*/
 		int count = queryBlock.getFinalCount();
-
+		
 		/**Update the count of this relation in the respected data structures*/ 
 		if(cvc.getNoOfTuples().get(tableNameNo) == null){/**If the count was not updated previously for this relation occurrence*/
 			cvc.getNoOfTuples().put(tableNameNo, queryBlock.getFinalCount());
@@ -344,7 +342,7 @@ public class GetTupleAssignmentForQueryBlock {
 			prevCount = cvc.getNoOfTuples().get(tableNameNo);
 			cvc.getNoOfTuples().put(tableNameNo, prevCount + count - 1);
 		}
-
+		
 		/** update the repeated relation position*/
 		int thisTablePos=Integer.parseInt(tableNameNo.substring(tableNameNo.length()-1));
 		for(int i=thisTablePos+1;i<=cvc.getRepeatedRelationCount().get(tableName);i++){
@@ -366,7 +364,7 @@ public class GetTupleAssignmentForQueryBlock {
 		logger.log(Level.INFO,"\nFinal count = "+ queryBlock.getFinalCount() +" \n No of output Tuples for each relation occurrence assigned:\n"+ cvc.getNoOfTuples().toString() + "\n");
 
 		logger.log(Level.INFO," \n Total No of output Tuples for each relation  assigned:\n"+ cvc.getNoOfOutputTuples().toString());
-
+		
 		return true;
 	}
 	

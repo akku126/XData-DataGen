@@ -356,7 +356,10 @@ public class GenerateConstraintsForConjunct {
 									if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
 										declaration += "("+joinTable+"_"+f1.getColumns().get(key)+findex+" "+s + ") ";
 									else
-										declaration += "("+joinTable+"_"+f1.getColumns().get(key)+findex+" "+ColName + ") ";						
+										{ declaration += "("+joinTable+"_"+f1.getColumns().get(key)+findex+" "+ColName + ") ";	
+										
+										}
+									
 									findex++;
 							}
 							tablesAdded.add(temp1);
@@ -406,6 +409,7 @@ public class GenerateConstraintsForConjunct {
 				String constraint2 = constrGen1.genPositiveCondsForPredF(queryBlock, n2, tablevar.get(n2.getColumn().getTableName()));
 
 				forall += " ("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " )":" "+ ") \n");
+				
 				//constraintString += "(forall ((i1 Int)(j1 Int))(=> ("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " )":" "+ ") \n");
 				
 				t1Columnindex += tableIndex.get(n1.getColumn().getTableName());
@@ -462,7 +466,7 @@ public class GenerateConstraintsForConjunct {
 		
 		Vector<Node> stringSelectionConds = conjunct.getStringSelectionConds();
 		for(int k=0; k<stringSelectionConds.size(); k++){
-
+			
 			String tableNo = "";
 			if(stringSelectionConds != null && stringSelectionConds.size() > 0 
 					&& stringSelectionConds.get(k).getType().equalsIgnoreCase(Node.getBaoNodeType())){
@@ -521,10 +525,13 @@ public class GenerateConstraintsForConjunct {
 		*/
 		
 		constraintString =constrGen.generateANDConstraints(constrObjList);
+		
 		constraints.constraints.add(constraintString);
+		
 		
 		for(DisjunctQueryStructure disjunct:conjunct.disjuncts){
 			constraints = Constraints.mergeConstraints(cvc,constraints,GenerateConstraintsForDisjunct.getConstraintsForDisjuct(cvc, queryBlock, disjunct));
+		    
 		}
 
 		return constraints;
@@ -1556,8 +1563,9 @@ public class GenerateConstraintsForConjunct {
 		Constraints constraints=new Constraints();
 		
 		String constraintString = "";
-
-		//constraintString += ConstraintGenerator.addCommentLine("NEGATIVE CONSTRAINTS FOR THIS CONJUNCT ");
+		
+        //Comment this line later
+		constraintString += ConstraintGenerator.addCommentLine("NEGATIVE CONSTRAINTS FOR THIS CONJUNCT ");
 		
 		Vector<String> OrConstraints=new Vector<String>();
 		Vector<String> OrStringConstraints = new Vector<String>();

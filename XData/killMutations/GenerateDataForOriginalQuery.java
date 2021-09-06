@@ -5,7 +5,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
+import generateConstraints.AddDataBaseConstraints;
 import generateConstraints.GenerateCommonConstraintsForQuery;
 import generateConstraints.GetSolverHeaderAndFooter;
 import testDataGen.GenerateCVC1;
@@ -48,11 +48,12 @@ public class GenerateDataForOriginalQuery {
 
 			/**Get the null and database constraints - get the number of output tuples
 			 * and generate other constraints  accordingly*/
+			//AddDataBaseConstraints.addDBConstraints(cvc);
 			GenerateCommonConstraintsForQuery.generateNullandDBConstraints(cvc,false);
 
 			/**Get the constraints for all the blocks of the query  */
 			cvc.getConstraints().add( QueryBlockDetails.getConstraintsForQueryBlock(cvc) );
-
+			
 			/** Call the method for the data generation*/
 			return GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc,false);
 		}catch (TimeoutException e){
