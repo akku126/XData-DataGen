@@ -172,13 +172,15 @@ public class QueryStructureForDataGen{
 					
 					if(fieldSize < 3) {
 						// If VARCHAR size less than 3 then assign one character
-						//char val = 'A';
+						char val = 'A';
 						while(count < 20)
 						{
+							
+							while(column.getColumnName().contains(Character.toString(val)))
+								val++;
+							column.addColumnValues(Character.toString(val)); 
 							count++;
-							column.addColumnValues(Character.toString((char)65+count));
-							//column.addColumnValues(Character.toString(val)); 
-							//val++;	
+							val++;	
 						}
 					}
 					else {

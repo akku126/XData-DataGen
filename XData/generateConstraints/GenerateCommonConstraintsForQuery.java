@@ -162,11 +162,12 @@ public class GenerateCommonConstraintsForQuery {
 				logger.log(Level.INFO,"cvc count =="+cvc.getCount());
 				
 				// TEMPCODE : Rahul Sharma : for removing duplicate constraints
-
 				CVCStr = removeDuplicateConstraints(CVCStr);
 				
 				/************** TEST CODE *******************/
-				//System.out.println(cvc.getTypeOfMutation());
+//				System.out.println("Dataset: "+cvc.getCount()+"\t"+cvc.getTypeOfMutation());
+//				System.out.println(cvc.getNoOfOutputTuples());
+//				System.out.println("***************************");
 				/*********************************************/
 				
 				Utilities.writeFile(Configuration.homeDir + "/temp_smt" + cvc.getFilePath() + "/z3_" + cvc.getCount() + ".smt", CVCStr);
@@ -246,7 +247,7 @@ public class GenerateCommonConstraintsForQuery {
 				}
 			}
 		}
-//		System.out.println(modifiedConstraints);
+		//System.out.println(modifiedConstraints);
 		return modifiedConstraints;
 	}
 	

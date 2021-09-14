@@ -19,6 +19,7 @@ public class Configuration implements ConfigurationInterface{
 	public static String databasePort = getProperty("databasePort");
 	public static String homeDir= getProperty("homeDir");
 	public static String smtsolver = getProperty("smtsolver");
+	public static String smtargs = getProperty("smtargs");
 	public static String logFile=getProperty("logFile");
 	public static String logLevel=getProperty("logLevel");
 	public static String tempJoins=getProperty("tempJoins");

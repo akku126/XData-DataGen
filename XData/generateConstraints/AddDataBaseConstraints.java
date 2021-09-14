@@ -193,13 +193,7 @@ public class AddDataBaseConstraints {
 				
 				/**Get the number of tuples for this relation  */
 				int noOfTuples = cvc.getNoOfOutputTuples().get(tableName);
-//				if(cvc.getNoOfOutputTuples().containsKey(tableName.toUpperCase()))
-//					noOfTuples = cvc.getNoOfOutputTuples().get(tableName.toUpperCase());
-				
-//				System.out.println("************************");
-//				System.out.println(cvc.getNoOfOutputTuples());
-//				System.out.println("************************");
-//				
+
 				/**If there is a single tuple then nothing need to be done */
 				if(noOfTuples == 1)
 					continue ;
@@ -291,8 +285,6 @@ public class AddDataBaseConstraints {
 							if(primaryKeys.size() > 1)
 								pkConstraint += " ) ";
 
-							//pkConstraint = pkConstraint.substring(0,pkConstraint.length()-4);
-							
 							//pkConstraint += "(and ";
                             String temp = "";
 							boolean x = false;
@@ -303,8 +295,9 @@ public class AddDataBaseConstraints {
 									IntExpr smtK = (IntExpr) ConstraintGenerator.ctx.mkInt(k);
 									IntExpr smtJ = (IntExpr) ConstraintGenerator.ctx.mkInt(j);
 
-									/**This attribute has to be equal */
 									//pkConstraint += "(O_"+tableName+"["+k+"]."+pos+" = O_"+tableName+"["+ j +"]."+pos+") AND ";
+									
+									/**This attribute has to be equal */
 //									pkConstraint += "(= ";
 //									pkConstraint += ConstraintGenerator.smtMap(table.getColumn(col),smtK).toString();
 //									pkConstraint += ConstraintGenerator.smtMap(table.getColumn(col), smtJ).toString() + " )";
@@ -315,24 +308,18 @@ public class AddDataBaseConstraints {
 									
 								}
 							}
-							/*if(x == false){
-								pkConstraint += "TRUE;\n";	//TODO: Should it imply FALSE???
-							}
-							else
-								pkConstraint = pkConstraint.substring(0,pkConstraint.length()-4)+";\n";
-								*/
+							/* 
+							 * 'temp' is empty means all the columns of the table are there in the primary key;
+							 */
 							if(!temp.isEmpty())
 								pkConstraint += "(and " + temp + ")";
 							else
-								pkConstraint += "(= 1 2)";
+								pkConstraint += "true"; // can never cause a violation; we remove duplicate entries before adding to the dataset.
 							
 							//pkConstraint += ") )) \n\n";
 							pkConstraint += " )) \n\n";
 						}
-
-
-					}
-				
+					}				
 						/*
 						int p = 0;
 						String temp1 = "";
@@ -364,8 +351,6 @@ public class AddDataBaseConstraints {
 					//}
 						*/
 				}
-
-
 			}
 		}catch(Exception e){
 			logger.log(Level.SEVERE,"\n Exception in AddDatabaseConstraints.java: Function generateConstraintsForPrimaryKeys : ",e);

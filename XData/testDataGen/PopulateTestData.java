@@ -106,14 +106,11 @@ public class PopulateTestData {
 		try{
 			//Executing the CVC file generated for given query
 			Runtime r = Runtime.getRuntime();
-			String[] smtCommand = new String[2];
 
-			//String options = " timeout=30000 memory_max_alloc_count=4364000";
-			smtCommand[0] = Configuration.smtsolver;
-			smtCommand[1] = Configuration.homeDir+"/temp_smt"+filePath+"/" + cvcFileName;
+			String command = Configuration.smtsolver + " " + Configuration.homeDir+"/temp_smt"+filePath+"/" + cvcFileName+ " " + Configuration.smtargs;
 			
 			ExecutorService service = Executors.newSingleThreadExecutor();
-			Process myProcess = r.exec(smtCommand);	
+			Process myProcess = r.exec(command);	
 			try {
 				Callable<Integer> call = new CallableProcess(myProcess);
 				Future<Integer> future = service.submit(call);

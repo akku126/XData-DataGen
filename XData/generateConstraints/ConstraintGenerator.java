@@ -1609,16 +1609,20 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 				if(isTempJoin) {
 					String constr,declare="";
 					int st_index=0,end_index=0;
+					boolean inside = false;
 					constr = generateSMTOrConstraints(constraintList,null);
 					while(constr.indexOf("(declare-datatypes ()") != -1) {
+						inside = true;
 					st_index = constr.indexOf("(declare-datatypes ()");
 					end_index = constr.indexOf("_TupleType))")+12;
 					if(!declare.contains(constr.substring(st_index, end_index)))
 						declare += constr.substring(st_index, end_index) + " \n";
 					constr = constr.substring(0, st_index)+constr.substring(end_index);
 					}
-					
-					constraint =  declare + "\n (assert "+constr+") \n";
+					if(constr.isEmpty())
+						constraint = "";
+					else
+						constraint =  declare + "\n (assert "+constr+") \n";
 				}
 				else 
 					constraint =  "\n (assert "+generateSMTOrConstraints(constraintList,null)+") \n"; 
@@ -2548,7 +2552,8 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 		String colValue = "";
 		HashSet<String> uniqueValues = new HashSet<String>();
 		String isNullMembers = "";
-		
+		checkAndRemoveDuplicateColumns(col);
+
 		if(isCVC3){
 			//If CVC Solver
 			constraint = "\nDATATYPE \n"+col+" = ";
@@ -2660,6 +2665,25 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 
 		return constraint;
 	}
+	/**
+	 * TEMPCODE Rahul Sharma
+	 * TO check and remove duplicate entries from the column values
+	 * @param col : A column of a table
+	 */
+
+	private void checkAndRemoveDuplicateColumns(Column col) {
+		Vector<String> columnValues = col.getColumnValues();
+		Vector<String> uniqueColumnValues = new Vector<String>();
+		uniqueColumnValues.addAll(columnValues);
+//		columnValues.clear();
+//		columnValues.addAll(uniqueColumnValues);
+		col.getColumnValues().clear();
+		for(String s : uniqueColumnValues) {
+			if(!col.getColumnValues().contains(s))
+				col.addColumnValues(s);
+		}
+			
+		}
 
 	/**
 	 * This method returns the null integer values for CVC data type.
