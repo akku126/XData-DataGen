@@ -93,10 +93,14 @@ public class GenerateConstraintsForDisjunct {
 				//ConstraintObject constObj = new ConstraintObject();
 				//constObj.setLeftConstraint(stringConstraints);
 				//constrObjList.add(constObj);
+				
 				cvc.getStringConstraints().add(constrGen.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1));
+				//constraints.stringConstraints.add(constrGen.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1));
+				
 				//cvc.getStringConstraints().add( "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1)+";" +"\n" );
 				//stringConstraints += GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1) + " AND ";
 			}
+			//System.out.println(cvc.getStringConstraints());
 			//if(stringConstraints.endsWith(" AND ")){
 			//	stringConstraints = stringConstraints.substring(0, stringConstraints.length()-5);
 			//}
@@ -123,7 +127,8 @@ public class GenerateConstraintsForDisjunct {
 			//stringConstraints = "";	
 		}
 		if(constrObjList != null && constrObjList.size()>0){
-			constraintString +=constrGen.generateANDConstraints(constrObjList);
+			//constraintString +=constrGen.generateANDConstraints(constrObjList);
+			constraintString +=constrGen.generateOrConstraints(constrObjList);
 		}
 	
 		

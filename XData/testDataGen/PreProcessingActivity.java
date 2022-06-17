@@ -42,7 +42,7 @@ public class PreProcessingActivity {
 		Iterator<Node> rightIter=projectedRight.iterator();
 		Iterator<Node> leftIter=projectLeft.iterator();
 
-		//Setting projected attributes as corelation conditions
+		//Setting projected attributes as correlation conditions
 		//TODO correlation conditions are treated as joins now - need to change this
 		while(leftIter.hasNext() && rightIter.hasNext()) {
 			Vector<Node> v=new Vector<Node>();
@@ -131,7 +131,7 @@ public class PreProcessingActivity {
 
 		//Also works for other set operator queries, only not null required
 		cvcSetop.getqStructure().setOperator = "UNION";
-
+		//cvcSetop.getqStructure().setOperator = null;
 		return cvcSetop;
 	}
 
@@ -395,7 +395,7 @@ public class PreProcessingActivity {
 			cvcUnion.setRepeatedRelNextTuplePos(unionCVC.getGenCVC().getRepeatedRelNextTuplePos());
 			cvcUnion.setResultsetTables(unionCVC.getGenCVC().getResultsetTables());
 			cvcUnion.setResultsetColumns(unionCVC.getGenCVC().getResultsetColumns());
-			cvcUnion.setNoOfOutputTuples(unionCVC.getGenCVC().getNoOfOutputTuples());
+			cvcUnion.setNoOfOutputTuples(unionCVC.getGenCVC().cloneNoOfOutputTuples());
 			cvcUnion.setForeignKeys(unionCVC.getGenCVC().getForeignKeys());
 			cvcUnion.setForeignKeysModified(unionCVC.getGenCVC().getForeignKeysModified());
 			cvcUnion.setUnionCVC(unionCVC);
@@ -414,7 +414,7 @@ public class PreProcessingActivity {
 			cvcUnion.setRepeatedRelNextTuplePos(unionCVC.getGenCVC().getRepeatedRelNextTuplePos());
 			cvcUnion.setResultsetTables(unionCVC.getGenCVC().getResultsetTables());
 			cvcUnion.setResultsetColumns(unionCVC.getGenCVC().getResultsetColumns());
-			cvcUnion.setNoOfOutputTuples(unionCVC.getGenCVC().getNoOfOutputTuples());
+			cvcUnion.setNoOfOutputTuples(unionCVC.getGenCVC().cloneNoOfOutputTuples());
 			cvcUnion.setForeignKeys(unionCVC.getGenCVC().getForeignKeys());
 			cvcUnion.setForeignKeysModified(unionCVC.getGenCVC().getForeignKeysModified());
 			cvcUnion.setUnionCVC(unionCVC);
@@ -437,7 +437,7 @@ public class PreProcessingActivity {
 			cvcIntersect.setRepeatedRelNextTuplePos(unionCVC.getGenCVC().getRepeatedRelNextTuplePos());
 			cvcIntersect.setResultsetTables(unionCVC.getGenCVC().getResultsetTables());
 			cvcIntersect.setResultsetColumns(unionCVC.getGenCVC().getResultsetColumns());
-			cvcIntersect.setNoOfOutputTuples(unionCVC.getGenCVC().getNoOfOutputTuples());
+			cvcIntersect.setNoOfOutputTuples(unionCVC.getGenCVC().cloneNoOfOutputTuples());
 			cvcIntersect.setForeignKeys(unionCVC.getGenCVC().getForeignKeys());
 			cvcIntersect.setForeignKeysModified(unionCVC.getGenCVC().getForeignKeysModified());
 			cvcIntersect.setUnionCVC(unionCVC);
@@ -453,7 +453,7 @@ public class PreProcessingActivity {
 			cvcExcept.setRepeatedRelNextTuplePos(unionCVC.getGenCVC().getRepeatedRelNextTuplePos());
 			cvcExcept.setResultsetTables(unionCVC.getGenCVC().getResultsetTables());
 			cvcExcept.setResultsetColumns(unionCVC.getGenCVC().getResultsetColumns());
-			cvcExcept.setNoOfOutputTuples(unionCVC.getGenCVC().getNoOfOutputTuples());
+			cvcExcept.setNoOfOutputTuples(unionCVC.getGenCVC().cloneNoOfOutputTuples());
 			cvcExcept.setForeignKeys(unionCVC.getGenCVC().getForeignKeys());
 			cvcExcept.setForeignKeysModified(unionCVC.getGenCVC().getForeignKeysModified());
 			cvcExcept.setUnionCVC(unionCVC);

@@ -43,7 +43,7 @@ public class StringSelectionMutationsInOuterQueryBlock {
 	public static void generateDataForkillingStringSelectionMutationsInOuterQueryBlock(	GenerateCVC1 cvc) throws Exception{
 
 		/** keep a copy of this tuple assignment values */
-		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
+		//HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
 		HashMap<String, Integer> noOfTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfTuples().clone();
 		HashMap<String, Integer[]> repeatedRelNextTuplePosOrig = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
 
@@ -109,11 +109,20 @@ public class StringSelectionMutationsInOuterQueryBlock {
 								cvc.getConstraints().add(ConstraintGenerator.addCommentLine("END OF FROM CLAUSE SUBQUERY "));
 							}
 	
-	
+							
 							/** Generate positive constraints for all the conditions of this  conjunct */
 							cvc.getConstraints().add( GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, qbt, conjunct) );
-	
-	
+							/***** TEST CODE : Pooja**********************************/
+							Vector<String> strConstraints=new Vector<String>();
+							strConstraints.addAll(cvc.getStringConstraints());
+							
+							Vector<String> solvedStringConstraint=cvc.getStringSolver().solveConstraints(strConstraints, cvc.getResultsetColumns(), cvc.getTableMap(), true);
+							if(solvedStringConstraint != null)
+								for(String str:solvedStringConstraint)	{
+									cvc.getConstraints().add(str+"\n");
+								}
+							/*******************************************************/
+							
 							/** Add negative conditions for all other conjuncts of this query block*/
 							for(ConjunctQueryStructure inner: qbt.getConjunctsQs())
 								if(inner != conjunct)

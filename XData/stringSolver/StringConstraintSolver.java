@@ -41,7 +41,7 @@ public class StringConstraintSolver implements Serializable
 	public Vector<String> solveConstraints(String assertConstraints,Vector<Column> columns,TableMap tableMap) throws Exception{
 		Vector<String> constraints=new Vector<String>();
 		constraints.add(assertConstraints);
-		return solveConstraints(constraints,columns,tableMap);
+		return solveConstraints(constraints,columns,tableMap,true);
 	}
 	
 	public String removeBraces(String str){
@@ -76,7 +76,7 @@ public class StringConstraintSolver implements Serializable
 					stringConstraints.add(And);
 				}
 				Vector<String> ret1;
-				ret1=solveConstraints(stringConstraints, columns,tableMap);
+				ret1=solveConstraints(stringConstraints, columns,tableMap,true);
 				if(ret1!=null){
 					Final.addAll(ret1);
 					break;
@@ -91,6 +91,7 @@ public class StringConstraintSolver implements Serializable
 	public Vector<String> solveOrConstraintsForSMT(Vector<String> assertConstraints,Vector<Column> columns,TableMap tableMap) throws Exception {
 		Vector<String> stringConstraints = new Vector<String>();
 		Vector<String> Final=new Vector<String>();
+		String finalStr ="";
 		for(String str:assertConstraints){
 			if(str.startsWith("ASSERT")){
 				str=str.substring(7, str.length());
@@ -100,6 +101,7 @@ public class StringConstraintSolver implements Serializable
 			String Ors[]=str.split(" OR ");
 			for(String EachOr : Ors){
 				//EachOr=removeBraces(EachOr);
+				stringConstraints.clear();
 				String AndConstraint[] = EachOr.trim().split(" AND ");
 				for(String And: AndConstraint){
 					//And=removeBraces(And);
@@ -107,13 +109,27 @@ public class StringConstraintSolver implements Serializable
 					stringConstraints.add(And);
 				}
 				Vector<String> ret1;
-				ret1= null;//solveConstraints(stringConstraints, columns,tableMap);
+				ret1= solveConstraints(stringConstraints, columns,tableMap,true);
+				
 				if(ret1!=null){
-					Final.addAll(ret1);
-					break;
+					//NEW CODE: POOJA
+					for(String conStr: ret1) {
+						String temp = conStr;
+						if(conStr.contains("assert")) {
+							temp = conStr.split("assert")[1].trim();
+							temp = temp.substring(0,temp.lastIndexOf(")")).trim();
+						}
+						finalStr += temp+" ";
+					}
+					
+					//Final.addAll(ret1);
+					//break;
 				}
 			}
 		}
+		finalStr = "(assert (or "+finalStr+" ))";
+		Final.add(finalStr);
+		//System.out.println(finalStr);
 		return Final;
 		
 	}
@@ -123,10 +139,11 @@ public class StringConstraintSolver implements Serializable
 	 * @param dataConstraints String constraints for generation of datasets
 	 * @return CVC constraints corresponding to the given string constraints
 	 */
-	public Vector<String> solveConstraints(Vector<String> assertConstraints,Vector<Column> columns,TableMap tableMap) throws Exception {
+	public Vector<String> solveConstraints(Vector<String> assertConstraints,Vector<Column> columns,TableMap tableMap, boolean withAssert) throws Exception {
 		Vector<StringConstraint> resultingConstraints = new Vector<StringConstraint>();
 		Vector<StringConstraint> stringConstraints = new Vector<StringConstraint>();
 		//Vector<String> assertOrNot=new Vector<String>();
+		//System.out.println("INPUT Constraints:\n "+assertConstraints);
 		int l = assertConstraints.size();
 		if(l==0)
 			return(new Vector<String>());
@@ -137,12 +154,22 @@ public class StringConstraintSolver implements Serializable
 			for(String EachOr : Ors){
 				String AndConstraint[] = EachOr.trim().split(" AND ");
 				for(String And: AndConstraint){
-					StringConstraint s=new StringConstraint(And.substring(str.indexOf("(")+1, str.lastIndexOf(")"))); //removing brackets
-					stringConstraints.add(s);
+					//FIXME: Temporary fix
+					if(And.contains("assert")) {
+						And = And.split("assert")[1].trim();
+						And = And.substring(0,And.lastIndexOf(")")).trim();
+						StringConstraint s=new StringConstraint(And.substring(And.indexOf("(")+1, And.lastIndexOf(")"))); //removing brackets
+						stringConstraints.add(s);
+					}
+					else {
+						StringConstraint s=new StringConstraint(And.substring(And.indexOf("(")+1, And.lastIndexOf(")"))); //removing brackets
+						stringConstraints.add(s);
+					}
+					
 				}
 			}
 		}
-		
+		//System.out.println(stringConstraints);
 		
 		//TODO:correct this
 		//Collections.sort(stringConstraints, new StringConstraint());
@@ -239,8 +266,12 @@ public class StringConstraintSolver implements Serializable
 		for(StringConstraint c:resultingConstraints){
 			String str=addValueToColumn(c.var1,c.constant,columns,tableMap);
 			//c.constant=i+"";
-			//vStr.add("ASSERT  ("+c.var1+"="+i+");\n");
-			vStr.add("ASSERT  ("+c.var1+"="+str+");\n");
+			//vStr.add("ASSERT  ("+c.var1+"="+i+");\n"); // Old code, constraint string is in cvc3 format
+			
+			String finalstr = "(assert (= " + c.var1 +" "+ str + "  ))\n"; // added by POOJA
+			vStr.add(finalstr);
+			//System.out.println("FINAL Constraints:  "+finalstr);
+			//vStr.add("ASSERT  ("+c.var1+"="+str+");\n");
 			//vStr.add(c.toString());
 			
 		}
@@ -701,8 +732,25 @@ public class StringConstraintSolver implements Serializable
 		int pos=-1;
 		//String tableName= (var.split("\\["))[0].substring(2);
 		String table= (var.split("\\["))[0];
-		String tableName=table.split("O_")[1];
-		int columnIndex=Integer.parseInt((var.split("\\."))[1]);
+		//String tableName=table.split("O_")[1];
+		//int columnIndex=Integer.parseInt((var.split("\\."))[1]);
+		
+		/*
+		 * TEST CODE: Pooja
+		 */
+		String temp = var.split(" ")[0];
+		String tokens[] = temp.split("_");
+		String tableName = tokens[0].substring(1);
+		// This for loop is required when relation name contains underscore("_") 
+		// In variable 'var', table name is in lower case and column name in upper case; eg: player_match_ROLE_DESC3
+		for(int i=1; i<tokens.length; i++) {
+			if(!Character.isUpperCase(tokens[i].charAt(0)))
+				tableName += "_"+tokens[i];
+			else
+				break;
+		}
+		
+		int columnIndex=Integer.parseInt(""+(temp.charAt(temp.length()-1)));
 		//Table t=tableMap.getTable(tableName);
 		Table t=tableMap.getTable(tableName.toUpperCase()); //added by rambabu
 		String cvcDataType=t.getColumn(columnIndex).getCvcDatatype();
@@ -711,7 +759,10 @@ public class StringConstraintSolver implements Serializable
 				
 				int len=c.getColumnValues().size();
 				for(int i=0;i<len;i++){
-					if(c.getColumnValues().get(i).equals(value)){
+					if(c.getColumnValues().get(i) == null && value != null) 
+						continue;
+						
+					if((value==null && c.getColumnValues().get(i) == null) || c.getColumnValues().get(i).equals(value)){
 						pos=i;
 						break;
 					}
@@ -757,7 +808,7 @@ public class StringConstraintSolver implements Serializable
 //		vec.add("ASSERT (C <> D);");
 		//vec.add("ASSERT (C <= D);");
 		long t=System.currentTimeMillis();
-		Vector ret=s.solveConstraints(vec,null,null);
+		Vector ret=s.solveConstraints(vec,null,null,true);
 		if(ret==null) //System.out.println("UNSAT");
 		//System.out.println(ret.size());
 		for(int i=0;i<ret.size();i++){

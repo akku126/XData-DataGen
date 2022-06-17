@@ -15,7 +15,7 @@
 8|select count(name) from student
 9|select avg(salary) from instructor
 10|SELECT dept_name FROM instructor 
-11|select building from classroom where capacity > 10
+11|select building from classroom where capacity < 10
 12|SELECT name, COUNT(*) FROM instructor GROUP BY id, name
 13|select distinct s.id, s.name from student s, takes t where s.id = t.id 
 14|SELECT takes.course_id FROM student INNER JOIN takes ON(student.id=takes.id) INNER JOIN course ON(course.course_id=takes.course_id)

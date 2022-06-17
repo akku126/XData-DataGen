@@ -46,7 +46,8 @@ public class Constraints {
 				if(cvc.getConstraintSolver().equalsIgnoreCase("cvc3")){
 					temp += "(" + eachConstraint + ") AND (" + eachConstraint2 +")";
 				}else{
-					temp += "(and ("+eachConstraint +") ("+eachConstraint2+"))";
+					//temp += "(and ("+eachConstraint +") ("+eachConstraint2+") )";
+					temp += "(and "+eachConstraint +" "+eachConstraint2+")";
 				}
 				
 				if(eachConstraint.equalsIgnoreCase("")){

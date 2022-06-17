@@ -15,6 +15,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -226,10 +227,11 @@ public class GenerateUnionCVC implements Serializable{
 		genCVC.setForeignKeysModified(tempFKey);
 	}*/
 	
-	private Vector<ForeignKey> getForeignKeyModifiedForApp(){
-		Vector<ForeignKey> fk=new Vector<ForeignKey>();
+	private LinkedHashSet<ForeignKey> getForeignKeyModifiedForApp(){
+		LinkedHashSet<ForeignKey> fk=new LinkedHashSet<ForeignKey>();
 		fk.addAll(genCVCleft.getForeignKeysModified());
 		fk.addAll(genCVCright.getForeignKeysModified());
+		
 		return fk;
 	}
 	
@@ -242,9 +244,9 @@ public class GenerateUnionCVC implements Serializable{
 		
 		genCVCleft=new GenerateCVC1();
 		genCVCleft.setFilePath(cvc.getFilePath());
-		if(Configuration.calledFromApplicationTester) {
-			RelatedToPreprocessing.uploadBranchQueriesDetails(genCVCleft);
-		}
+//		if(Configuration.calledFromApplicationTester) {
+//			RelatedToPreprocessing.uploadBranchQueriesDetails(genCVCleft);
+//		}
 		genCVCleft.getBranchQueries().intitializeDetails(genCVCleft);
 		genCVCleft.setFne(false);
 		genCVCleft.setIpdb(false);
@@ -284,9 +286,9 @@ public class GenerateUnionCVC implements Serializable{
 		
 		genCVCright=new GenerateCVC1();
 		genCVCright.setFilePath(cvc.getFilePath());
-		if(Configuration.calledFromApplicationTester) {
-			RelatedToPreprocessing.uploadBranchQueriesDetails(genCVCright);
-		}
+//		if(Configuration.calledFromApplicationTester) {
+//			RelatedToPreprocessing.uploadBranchQueriesDetails(genCVCright);
+//		}
 		genCVCright.getBranchQueries().intitializeDetails(genCVCright);
 		genCVCright.setFne(false);
 		genCVCright.setIpdb(false);	
@@ -334,7 +336,7 @@ public class GenerateUnionCVC implements Serializable{
 		ArrayList<Node> tempNode = new ArrayList<Node>();
 		tempNode.addAll(tmpNode);
 		genCVC.setForeignKeys(tempNode);
-		Vector<ForeignKey> tmpFKey = getForeignKeyModifiedForApp();
+		LinkedHashSet<ForeignKey> tmpFKey = getForeignKeyModifiedForApp();
 		ArrayList<ForeignKey> tempFKey = new ArrayList<ForeignKey>();
 		tempFKey.addAll(tmpFKey);
 		genCVC.setForeignKeysModified(tempFKey);
@@ -590,7 +592,7 @@ public class GenerateUnionCVC implements Serializable{
 		ArrayList<Node>left=genCVCleft.outerBlock.getProjectedCols();
 		ArrayList<Node>right=genCVCright.outerBlock.getProjectedCols();
 		String str="ASSERT NOT (";
-		for(int j=0;j<genCVCright.getNoOfOutputTuples().size();j++){
+		for(int j=0;j<genCVCright.cloneNoOfOutputTuples().size();j++){
 			//str+="( ";
 			for(int i=0;i<left.size();i++){
 				Node n1=left.get(i);
@@ -908,9 +910,9 @@ public class GenerateUnionCVC implements Serializable{
 		String LeftTable=genCVCleft.outerBlock.getProjectedCols().get(0).getTable().getTableName();
 		ArrayList<Node>right=genCVCright.outerBlock.getProjectedCols();
 		String RightTable=genCVCright.outerBlock.getProjectedCols().get(0).getTable().getTableName();
-		for(int l=0;l<genCVCleft.getNoOfOutputTuples().get(LeftTable);l++){
+		for(int l=0;l<genCVCleft.getNoOfOutputTuples(LeftTable);l++){
 			String str="ASSERT (";
-			for(int j=0;j<genCVCright.getNoOfOutputTuples().get(RightTable);j++){
+			for(int j=0;j<genCVCright.getNoOfOutputTuples(RightTable);j++){
 				//str+="(";
 				for(int i=0;i<left.size();i++){
 					Node n1=left.get(i);
@@ -951,9 +953,9 @@ public class GenerateUnionCVC implements Serializable{
 		Vector<String> NonEmptyConstraints=new Vector<String>();
 		ArrayList<Node>left=genCVCleft.outerBlock.getProjectedCols();
 		ArrayList<Node>right=genCVCright.outerBlock.getProjectedCols();
-		for(int l=0;l<genCVCleft.getNoOfOutputTuples().size();l++){
+		for(int l=0;l<genCVCleft.cloneNoOfOutputTuples().size();l++){
 			String str="ASSERT NOT (";
-			for(int j=0;j<genCVCright.getNoOfOutputTuples().size();j++){
+			for(int j=0;j<genCVCright.cloneNoOfOutputTuples().size();j++){
 				for(int i=0;i<left.size();i++){
 					Node n1=left.get(i);
 					Node n2=right.get(i);
@@ -998,7 +1000,7 @@ public class GenerateUnionCVC implements Serializable{
 		genCVCleft.setForeignKeysModified(genCVC.getForeignKeysModified());
 		genCVCleft.setResultsetColumns(genCVC.getResultsetColumns());
 		genCVCleft.setResultsetTables(genCVC.getResultsetTables());
-		genCVCleft.setNoOfOutputTuples(genCVC.getNoOfOutputTuples());
+		genCVCleft.setNoOfOutputTuples(genCVC.cloneNoOfOutputTuples());
 		genCVCleft.setCount(genCVC.getCount());
 		SelectionMutationsInOuterQueryBlock.generateDataForkillingSelectionMutationsInOuterQueryBlock(genCVCleft);
 		//genCVCleft.generateDataForKillingSelectionMutantsWithoutAgg();
@@ -1008,7 +1010,7 @@ public class GenerateUnionCVC implements Serializable{
 		genCVCright.setForeignKeysModified(genCVC.getForeignKeysModified());
 		genCVCright.setResultsetColumns(genCVC.getResultsetColumns());
 		genCVCright.setResultsetTables(genCVC.getResultsetTables());
-		genCVCright.setNoOfOutputTuples(genCVC.getNoOfOutputTuples());
+		genCVCright.setNoOfOutputTuples(genCVC.cloneNoOfOutputTuples());
 		genCVCright.setCount(genCVCleft.getCount());
 		SelectionMutationsInOuterQueryBlock.generateDataForkillingSelectionMutationsInOuterQueryBlock(genCVCright);
 		//genCVCright.generateDataForKillingSelectionMutantsWithoutAgg();

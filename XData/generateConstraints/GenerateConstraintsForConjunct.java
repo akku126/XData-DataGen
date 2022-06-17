@@ -17,7 +17,7 @@ import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
 import util.Configuration;
 import util.ConstraintObject;
-
+import generateConstraints.GenerateJoinPredicateConstraints;
 /**
  * This method is used to get positive constraints for the given conjunct of the query block
  * This class contains different methods to generate constraints by considering only specific conditions of the given conjunct
@@ -36,9 +36,7 @@ public class GenerateConstraintsForConjunct {
 	 * @throws Exception
 	 */
 	public static String getConstraintsForConjuct(GenerateCVC1 cvc, QueryBlockDetails queryBlock, ConjunctQueryStructure conjunct) throws Exception {
-
 		String constraintString = "";
-
 		/** If the given conjunct is null then no constraints need to be generated */
 		if(conjunct == null)
 			return constraintString;
@@ -125,6 +123,7 @@ public class GenerateConstraintsForConjunct {
 
 		/**get the constraints for the conditions of the form A.x=cons where cons is a string constant */
 		Vector<Node> stringSelectionConds = conjunct.getStringSelectionConds();
+		Vector<String> stringConstraints = new Vector<String>();
 		for(int k=0; k<stringSelectionConds.size(); k++){
 			ConstraintObject conObj = new ConstraintObject();			
 			//String tableNo = stringSelectionConds.get(k).getLeft().getTableNameNo();
@@ -155,14 +154,23 @@ public class GenerateConstraintsForConjunct {
 		//}			
 				/*conObj.setLeftConstraint(constraintGen.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1));
 				constrList.add(conObj);*/
-				cvc.getStringConstraints().add(constraintGen.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1));
+				
+				/************* TEST CODE: POOJA **********/
+				//cvc.getStringConstraints().add(constraintGen.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1));
+				stringConstraints.add(constraintGen.genPositiveCondsForPred(queryBlock, stringSelectionConds.get(k),l+offset-1));
+				/****************************************/
 			}
 			}
 		/*if(constrList != null && constrList.size()>0){
 				constraintString += constraintGen.generateANDConstraintsWithAssert(constrList); // "ASSERT " + constraintGen.genPositiveCondsForPred(cvc,queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n";
 		}*/
-
-
+		
+		/*********** TEST CODE: POOJA *******/
+		Vector<String> solvedStringConstraint=cvc.getStringSolver().solveConstraints(stringConstraints, cvc.getResultsetColumns(), cvc.getTableMap(),true);
+		for(String str:solvedStringConstraint)	{
+			constraintString+=str+"\n";
+		}
+		/************************************/
 		constraintString +=  ConstraintGenerator.addCommentLine(" LIKE CLAUSE CONSTRAINTS");
 
 		/** Generate constraints for the like conditions of this conjunct*/
@@ -184,7 +192,7 @@ public class GenerateConstraintsForConjunct {
 			
 			//constraintString += constraintGen.generateANDConstraintsWithAssert(cvc, constrList); // "ASSERT " + constraintGen.genPositiveCondsForPred(cvc,queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n";
 		if(constrList != null && constrList.size()>0){
-			constraintString +=constraintGen.generateANDConstraints(constrList);
+			constraintString +="(assert " + constraintGen.generateANDConstraints(constrList)+ " )\n";
 			//System.out.println(constraintString+""); // TEMPCODE : Rahul Sharma : For Debugging
 		}
 		
@@ -214,10 +222,8 @@ public class GenerateConstraintsForConjunct {
 	public static Constraints getConstraintsInConjuct(GenerateCVC1 cvc, QueryBlockDetails queryBlock, ConjunctQueryStructure conjunct) throws Exception {
 		Constraints constraints= new Constraints();
 		String constraintString="";
-		
 		ConstraintGenerator constrGen = new ConstraintGenerator();
 		ArrayList<ConstraintObject> constrObjList = new ArrayList<ConstraintObject>();
-		
 		Vector<Node> selectionConds = conjunct.getSelectionConds();
 		for(int k=0; k< selectionConds.size(); k++){
 
@@ -319,133 +325,154 @@ public class GenerateConstraintsForConjunct {
 				constrObjList.add(constrnObj);
 			}
 		else {
-			/////////////////////////////////////////////////////////////////////////////////////***//***
-			//QueryStructure qs;
-			//Vector<FromClauseElement> fromListElements = qs.fromListElements;
-			HashMap<String, Integer> tableIndex = new HashMap<String, Integer>();
-			HashMap<String, String> tablevar = new HashMap<String, String>();
-			String joinTable="";
-			for ( String key : cvc.getBaseRelation().keySet() ) {
-				joinTable += key+"join";
-			    tableIndex.put(key,0);
+			for(int k=0; k<allConds.size(); k++){
+				String nonEquiJoinConstraint = GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, queryBlock, allConds);
+			//	constraints.constraints.add(constraintString);
+				//constraintString = "";
+				ConstraintObject constrnObj = new ConstraintObject();
+				constrnObj.setLeftConstraint(nonEquiJoinConstraint);
+				constrObjList.add(constrnObj);
 			}
-			
-			String declaration = "";
-			declaration += "\n (declare-datatypes (("+joinTable +"_TupleType 0 ))"  + "((("+joinTable +"_TupleType "; // TEMPCODE Rahul Sharma : fixed syntax error
-			
-			int findex=0;
-			Vector<String> tablesAdded = new Vector<String>();
-			for(Node n: allConds) {
-					Node n1 = n.getLeft();
-					Node n2 = n.getRight();
-					String operator = n.getOperator();
-			// Join Temp table implementation	
-					
-					Table f1,f2;
-					String temp1,temp2,ColName;
-					int t1Columnindex, t2Columnindex;
-					f1 = n1.getTable();
-					f2 = n2.getTable();
-					temp1 = f1.getTableName();
-					temp2 = f2.getTableName();
-						if(!tablesAdded.contains(temp1)){
-							tableIndex.put(temp1,findex);
-							for(String key : f1.getColumns().keySet()) {
-								ColName = f1.getColumns().get(key).getColumnName();
-								String s = f1.getColumns().get(key).getCvcDatatype();
-									if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
-										declaration += "("+joinTable+"_"+f1.getColumns().get(key)+findex+" "+s + ") ";
-									else
-										{ declaration += "("+joinTable+"_"+f1.getColumns().get(key)+findex+" "+ColName + ") ";	
-										
-										}
-									
-									findex++;
-							}
-							tablesAdded.add(temp1);
-						}	
-						
-						if(!tablesAdded.contains(temp2)){
-							tableIndex.put(temp2,findex);
-							for(String key : f2.getColumns().keySet()) {
-								ColName = f2.getColumns().get(key).getColumnName();
-								String s = f2.getColumns().get(key).getCvcDatatype();
-									if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
-										declaration += "("+joinTable+"_"+f2.getColumns().get(key)+findex+" "+s + ") ";
-									else
-										declaration += "("+joinTable+"_"+f2.getColumns().get(key)+findex+" "+ColName + ") ";						
-									findex++;
-							}
-							tablesAdded.add(temp2);
-						}	
-					}
-			declaration += ") )) )\n";
-			declaration += "(declare-fun O_" + joinTable + "() (Array Int " + joinTable + "_TupleType))\n\n";
-			String forall= "(assert (forall ((i1 Int)(j1 Int))(=> (and";
-//			String forall = "(assert (and (forall ("; // TEMPCODE : Rahul Sharma : Commented out this line and uncommented the above line, because this was generating blank/incorrect constraints
-			String ex = " (forall ((k1 Int)) (exists (";
-			for(int i=1; i <= tablesAdded.size();i++) {
-				forall += "(i"+i+" Int)";
-				ex += "(i"+i+" Int)";
-				tablevar.put(tablesAdded.get(i-1),"i"+i);
-			}
-			forall += ")(=> (and";
-			ex += ") (and ";
-			String exists= "(exists ((k1 Int)) (and";
-			/////////////////////////////////////////////////////////////////////////////////////////***//***			
-			for(Node n: allConds) {
-				String nonEquiJoinConstraint = GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoinsTJ(cvc, queryBlock, n);
-				
-				//////////////////////
-				
-				Node n1 = n.getLeft();
-				Node n2 = n.getRight();
-				String operator = n.getOperator();
-				int t1Columnindex	= n1.getColumn().getTable().getColumnIndex(n1.getColumn().getColumnName());
-				int t2Columnindex	= n2.getColumn().getTable().getColumnIndex(n2.getColumn().getColumnName());
-				ConstraintGenerator constrGen1 = new ConstraintGenerator();
-
-				String constraint1 = constrGen1.genPositiveCondsForPredF(queryBlock, n1, tablevar.get(n1.getColumn().getTableName()));
-				String constraint2 = constrGen1.genPositiveCondsForPredF(queryBlock, n2, tablevar.get(n2.getColumn().getTableName()));
-
-				forall += " ("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " )":" "+ ") \n");
-				
-				//constraintString += "(forall ((i1 Int)(j1 Int))(=> ("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " )":" "+ ") \n");
-				
-				t1Columnindex += tableIndex.get(n1.getColumn().getTableName());
-				String constraint3 = "("+joinTable+"_"+n1.getColumn().getColumnName()+t1Columnindex;
-				constraint3 += "("+" select O_"+joinTable+" "+" k1 ) )";
-				
-				exists += " (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" "+ ") \n");
-				
-				t2Columnindex += tableIndex.get(n2.getColumn().getTableName());
-				String constraint4 = "("+joinTable+"_"+n2.getColumn().getColumnName()+t2Columnindex;
-				constraint4 += "("+" select O_"+joinTable+" "+" k1 ) )";
-				
-				exists += " (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" "+ ") \n\n");
-			
-				//////////////////////
-				
-				ex += " (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" " + " )\n");
-				
-				ex +=  "("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" " +  ")\n");
-
-				
-			}	
-			forall += ") )"; // TEMPCODE : Rahul Sharma : added the missing ")"
-			exists += "))))";
-			ex += ") )))";
-			String nonEquiJoinConstraint=declaration + "\n"+forall + "\n" + exists + "\n" + ex;
-			ConstraintObject constrnObj = new ConstraintObject();
-			// TEMPCODE START : Rahul Sharma 
-			// To handle join table constraints if there is a single table, 
-			// [it was creating join table constraints even if there is single table in the query].
-			//System.out.println(nonEquiJoinConstraint);
-			if(tablesAdded.size()==0)
-				nonEquiJoinConstraint = "";
-            // TEMPCODE END : Rahul Sharma
-			constrnObj.setLeftConstraint(nonEquiJoinConstraint);
-			constrObjList.add(constrnObj);
+//			/////////////////////////////////COMMENTED: Pooja////////////////////////////////////////////////***//***
+//			//QueryStructure qs;
+//			//Vector<FromClauseElement> fromListElements = qs.fromListElements;
+//			HashMap<String, Integer> tableIndex = new HashMap<String, Integer>();
+//			HashMap<String, String> tablevar = new HashMap<String, String>();
+//			String joinTable="";
+//			for ( String key : cvc.getBaseRelation().keySet() ) {
+//				joinTable += key+"join"; 
+//			    tableIndex.put(key,0);
+//			}
+//			if(allConds.size() >0) { // TEST CODE : pooja
+//				for(Node n: allConds) {
+//					String t1 = n.getLeft().getTable().getTableName();
+//					String t2 = n.getRight().getTable().getTableName();
+//					if(!tableIndex.containsKey(t1))
+//						joinTable += t1+"join";
+//					if(!tableIndex.containsKey(t2))
+//						joinTable += t2+"join";
+//				}
+//			}
+//			
+//			String declaration = "";
+//			declaration += "\n (declare-datatypes (("+joinTable +"_TupleType 0 ))"  + "((("+joinTable +"_TupleType "; // TEMPCODE Rahul Sharma : fixed syntax error
+//			
+//			int findex=0;
+//			Vector<String> tablesAdded = new Vector<String>();
+//			for(Node n: allConds) {
+//					Node n1 = n.getLeft();
+//					Node n2 = n.getRight();
+//					String operator = n.getOperator();
+//			// Join Temp table implementation	
+//					
+//					Table f1,f2;
+//					String temp1,temp2,ColName;
+//					int t1Columnindex, t2Columnindex;
+//					f1 = n1.getTable();
+//					f2 = n2.getTable();
+//					temp1 = f1.getTableName();
+//					temp2 = f2.getTableName();
+//						if(!tablesAdded.contains(temp1)){
+//							tableIndex.put(temp1,findex);
+//							for(String key : f1.getColumns().keySet()) {
+//								ColName = f1.getColumns().get(key).getColumnName();
+//								String s = f1.getColumns().get(key).getCvcDatatype();
+//									if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
+//										declaration += "("+joinTable+"_"+f1.getColumns().get(key)+findex+" "+s + ") ";
+//									else
+//										{ declaration += "("+joinTable+"_"+f1.getColumns().get(key)+findex+" "+ColName + ") ";	
+//										
+//										}
+//									
+//									findex++;
+//							}
+//							tablesAdded.add(temp1);
+//						}	
+//						
+//						if(!tablesAdded.contains(temp2)){
+//							tableIndex.put(temp2,findex);
+//							for(String key : f2.getColumns().keySet()) {
+//								ColName = f2.getColumns().get(key).getColumnName();
+//								String s = f2.getColumns().get(key).getCvcDatatype();
+//									if(s!= null && (s.equalsIgnoreCase("Int") || s.equalsIgnoreCase("Real") || s.equals("TIME") || s.equals("DATE") || s.equals("TIMESTAMP")))
+//										declaration += "("+joinTable+"_"+f2.getColumns().get(key)+findex+" "+s + ") ";
+//									else
+//										declaration += "("+joinTable+"_"+f2.getColumns().get(key)+findex+" "+ColName + ") ";						
+//									findex++;
+//							}
+//							tablesAdded.add(temp2);
+//						}	
+//					}
+//			declaration += ") )) )\n";
+//			declaration += "(declare-fun O_" + joinTable + "() (Array Int " + joinTable + "_TupleType))\n\n";
+//			String forall= "(assert (forall ((i1 Int)(i2 Int))(=> (and";
+////			String forall = "(assert (and (forall ("; // TEMPCODE : Rahul Sharma : Commented out this line and uncommented the above line, because this was generating blank/incorrect constraints
+//			String ex = " (forall ((k1 Int)) (exists (";
+//			for(int i=1; i <= tablesAdded.size();i++) {
+//				forall += "(i"+i+" Int)";
+//				ex += "(i"+i+" Int)";
+//				tablevar.put(tablesAdded.get(i-1),"i"+i);
+//			}
+//			forall += ")(=> (and";
+//			ex += ") (and ";
+//			String exists= "(exists ((k1 Int)) (and";
+//			/////////////////////////////////////////////////////////////////////////////////////////***//***			
+//			for(Node n: allConds) {
+//				String nonEquiJoinConstraint = GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoinsTJ(cvc, queryBlock, n);
+//				
+//				//////////////////////
+//				
+//				Node n1 = n.getLeft();
+//				Node n2 = n.getRight();
+//				String operator = n.getOperator();
+//				int t1Columnindex	= n1.getColumn().getTable().getColumnIndex(n1.getColumn().getColumnName());
+//				int t2Columnindex	= n2.getColumn().getTable().getColumnIndex(n2.getColumn().getColumnName());
+//				ConstraintGenerator constrGen1 = new ConstraintGenerator();
+//
+//				String constraint1 = constrGen1.genPositiveCondsForPredF(queryBlock, n1, tablevar.get(n1.getColumn().getTableName()));
+//				String constraint2 = constrGen1.genPositiveCondsForPredF(queryBlock, n2, tablevar.get(n2.getColumn().getTableName()));
+//
+//				forall += " ("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " )":" "+ ") \n");
+//				
+//				//constraintString += "(forall ((i1 Int)(j1 Int))(=> ("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " )":" "+ ") \n");
+//				
+//				t1Columnindex += tableIndex.get(n1.getColumn().getTableName());
+//				String constraint3 = "("+joinTable+"_"+n1.getColumn().getColumnName()+t1Columnindex;
+//				constraint3 += "("+" select O_"+joinTable+" "+" k1 ) )";
+//				
+//				exists += " (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" "+ ") \n");
+//				
+//				t2Columnindex += tableIndex.get(n2.getColumn().getTableName());
+//				String constraint4 = "("+joinTable+"_"+n2.getColumn().getColumnName()+t2Columnindex;
+//				constraint4 += "("+" select O_"+joinTable+" "+" k1 ) )";
+//				
+//				exists += " (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" "+ ") \n\n");
+//			
+//				//////////////////////
+//				
+//				ex += " (" + (operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint3+ (operator.equals("/=")? " )":" " + " )\n");
+//				
+//				ex +=  "("+ (operator.equals("/=")? "not (= ": operator) +"  "+constraint2+ "  "+constraint4+ (operator.equals("/=")? " )":" " +  ")\n");
+//
+//				
+//			}	
+//			forall += ") )"; // TEMPCODE : Rahul Sharma : added the missing ")"
+//			exists += "))))";
+//			ex += ") )))";
+//			String nonEquiJoinConstraint=declaration + "\n"+forall + "\n" + exists + "\n" + ex;
+//			ConstraintObject constrnObj = new ConstraintObject();
+//			// TEMPCODE START : Rahul Sharma 
+//			// To handle join table constraints if there is a single table, 
+//			// [it was creating join table constraints even if there is single table in the query].
+//			//System.out.println(nonEquiJoinConstraint);
+//			if(tablesAdded.size()==0)
+//				nonEquiJoinConstraint = "";
+//            // TEMPCODE END : Rahul Sharma
+//			else {
+//				constrnObj.setLeftConstraint(nonEquiJoinConstraint);
+//				constrObjList.add(constrnObj);
+//			}
+//			
 		}
 		
 			/*if(nonEquiJoinConstraint.startsWith("ASSERT")) {
@@ -595,7 +622,6 @@ public class GenerateConstraintsForConjunct {
 			for(int l=1;l<=count;l++){
 				
 				constraintString +=  ConstraintGenerator.genPositiveCondsForPred(queryBlock, selectionConds.get(k),l+offset-1)+"\n" ;
-				
 				//constraintString += "ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n";
 				
 			}
@@ -1051,7 +1077,7 @@ public class GenerateConstraintsForConjunct {
 
 			int count = cvc.getNoOfTuples().get(tableNo)* queryBlock.getNoOfGroups();/** We should generate the constraints across all groups */;;
 			for(int l=1;l<=count;l++)
-				constraintString +=ConstraintGenerator.genPositiveCondsForPred(queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n"; 
+				constraintString +="(assert "+ ConstraintGenerator.genPositiveCondsForPred(queryBlock, selectionConds.get(k),l+offset-1)+" )\n"; 
 				//"ASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(queryBlock, selectionConds.get(k),l+offset-1)+";" +"\n";
 		}
 
@@ -1140,8 +1166,8 @@ public class GenerateConstraintsForConjunct {
 			Node left = n.getLeft();
 			Node right = n.getRight();
 			
-			int leftTuples = cvc.getNoOfOutputTuples().get(left.getTable().getTableName());
-			int rightTuples = cvc.getNoOfOutputTuples().get(right.getTable().getTableName());
+			int leftTuples = cvc.getNoOfOutputTuples(left.getTable().getTableName());
+			int rightTuples = cvc.getNoOfOutputTuples(right.getTable().getTableName());
 			OrConstrList = GenerateJoinPredicateConstraints.genNegativeCondsEqClassForAllTuplePairs(cvc, queryBlock, right, left, rightTuples, leftTuples);
 		}
 		constraintString += constrGen.generateOrConstraints(OrConstrList);
@@ -1162,7 +1188,7 @@ public class GenerateConstraintsForConjunct {
 		Vector<String> OrConstraints=new Vector<String>();
 		Vector<String> OrStringConstraints = new Vector<String>();
 		
-		for(int k = 1; k <= cvc.getNoOfOutputTuples().get(relation); k++){
+		for(int k = 1; k <= cvc.getNoOfOutputTuples(relation); k++){
 			
 			/** Generate negative constraint for correlation condition.*/
 			if(!conjunct.joinCondsAllOther.isEmpty()){
@@ -1301,15 +1327,14 @@ public class GenerateConstraintsForConjunct {
 	 */
 	public static String generateNegativeConstraintsConjunct(GenerateCVC1 cvc, QueryBlockDetails queryBlock, ConjunctQueryStructure conjunct) throws Exception {
 
-		
 		String constraintString = "";
 
 		constraintString += ConstraintGenerator.addCommentLine(" NEGATIVE CONSTRAINTS FOR THIS CONJUNCT ");
-		
+
 		Vector<String> OrConstraints=new Vector<String>();
 		Vector<String> OrStringConstraints = new Vector<String>();
 
-	
+
 		/** Generate negative constraint for equivalence class.*/
 		/**FIXME: Mahesh..Ask Amol why the below code and why cant't we use getconstraintsforequijoins()*/
 		if(!conjunct.getEquivalenceClasses().isEmpty()){
@@ -1360,8 +1385,8 @@ public class GenerateConstraintsForConjunct {
 							if( (fk.getLeft().getTable() == tableEce && fk.getLeft().getColumn() == colEce) 
 									&& (fk.getRight().getTable() == tableNulled && fk.getRight().getColumn() == colNulled)){
 								/**Shree changed it for : 
-								*If FK is not nullable, check whether the other 
-								*column in the relation is nullable - if either is nullable, add it**/
+								 *If FK is not nullable, check whether the other 
+								 *column in the relation is nullable - if either is nullable, add it**/
 								if(!colEce.isNullable() && colNulled.isNullable())
 									S.add(ece);/**To be taken along with nulled Column*/
 								if(colEce.isNullable())
@@ -1409,17 +1434,17 @@ public class GenerateConstraintsForConjunct {
 
 						/** Generate positiveConds for members in P*/ 
 						GenerateJoinPredicateConstraints.genPositiveConds(cvc,P);
-				 	} 
+					} 
 
 					/**Now generate negative conditions for Nulled relation
 					 *i.e. NOT EXISTS (i: Nulled Rel): NulledRel[i].col = P[1].col*/
-					
+
 					/**Shree changed it for the following reason:
 					//If Not Exists holds any one primary key relation as a condition
 					//Ex:Not Exists(takes.year=section.year and section.year='2009')
 					//In this example, P will hold 2 values and reverse constraint is to be added for
 					//(O_SECTION[1].3 /= O_TAKES[1].4)  OR  (O_TAKES[1].4 /= O_SECTION[1].3) */
-					
+
 					if(P!= null && P.size() == 1){
 						OrConstraints.add( GenerateJoinPredicateConstraints.genNegativeConds( cvc, queryBlock, colNulled, P.get(0)));
 					}
@@ -1504,64 +1529,79 @@ public class GenerateConstraintsForConjunct {
 		/**get the where clause sub query conditions in this conjunct*/
 		if(conjunct.getAllSubQueryConds() != null){
 			for(int i=0; i < conjunct.getAllSubQueryConds().size(); i++){
-				
+
 				Node subQ = conjunct.getAllSubQueryConds().get(i);
-				
+
 				/**FIXME: Add negative constraints for this where clause sub query block
 				 * We could use methods of class: GenerateConstraintsForWhereClauseSubQueryBlock*/
 				/**FIXME:If the given conjunct has NOT EXISTS conditions, then negative of that becomes positive*/
-				
+
 				if(queryBlock.getWhereClauseSubQueries() != null
 						&& ! queryBlock.getWhereClauseSubQueries().isEmpty()){
-				int index = UtilsRelatedToNode.getQueryIndexOfSubQNode(subQ);
+					int index = UtilsRelatedToNode.getQueryIndexOfSubQNode(subQ);
 
-				/**get sub query block*/
-				QueryBlockDetails subQuery = queryBlock.getWhereClauseSubQueries().get(index);
-				
-				String negativeConstraint = "";
-				
-				/**if this sub query is of EXISTS Type*/
-				if(subQ.getType().equals(Node.getExistsNodeType()) ){
-					
-					for (ConjunctQueryStructure con: subQuery.getConjunctsQs())
-						negativeConstraint += generateNegativeConstraintsConjunct(cvc, subQuery, con);
+					/**get sub query block*/
+					QueryBlockDetails subQuery = queryBlock.getWhereClauseSubQueries().get(index);
+
+					String negativeConstraint = "";
+
+					/**if this sub query is of EXISTS Type*/
+					if(subQ.getType().equals(Node.getExistsNodeType()) ){
+
+						for (ConjunctQueryStructure con: subQuery.getConjunctsQs())
+							negativeConstraint += generateNegativeConstraintsConjunct(cvc, subQuery, con);
+					}
+
+					/**if sub query is of type NOT Exists*/
+					/**We need to get positive constraints for this sub query*/
+					else if (  subQ.getType().equals(Node.getNotExistsNodeType() ) ){
+
+						for (ConjunctQueryStructure con: subQuery.getConjunctsQs())
+							negativeConstraint += getConstraintsForConjuct(cvc, queryBlock, con);
+					}
+					else{
+
+						/**get negative condition for this sub query node*/
+						Node subQNegative = GenerateCVCConstraintForNode.getNegativeCondition(subQ);
+
+						/**get negative constraints for where clause connective*/					
+						negativeConstraint = GenerateConstraintsForWhereClauseSubQueryBlock.getConstraintsForWhereSubQueryConnective(cvc, queryBlock, subQNegative);
+					}
+
+					constraintString += negativeConstraint;
 				}
-				
-				/**if sub query is of type NOT Exists*/
-				/**We need to get positive constraints for this sub query*/
-				else if (  subQ.getType().equals(Node.getNotExistsNodeType() ) ){
-					
-					for (ConjunctQueryStructure con: subQuery.getConjunctsQs())
-						negativeConstraint += getConstraintsForConjuct(cvc, queryBlock, con);
-				}
-				else{
-					
-					/**get negative condition for this sub query node*/
-					Node subQNegative = GenerateCVCConstraintForNode.getNegativeCondition(subQ);
-					
-					/**get negative constraints for where clause connective*/					
-					negativeConstraint = GenerateConstraintsForWhereClauseSubQueryBlock.getConstraintsForWhereSubQueryConnective(cvc, queryBlock, subQNegative);
-				}
-				
-				constraintString += negativeConstraint;
 			}
-		}
-		
+
 		}
 
 		if(!OrConstraints.isEmpty() && OrConstraints.size() != 0)
 			constraintString += processOrConstraints(OrConstraints);
+
+
+		if(!OrStringConstraints.isEmpty() && OrStringConstraints.size() != 0 ) {
+			//cvc.getStringConstraints().add(processOrConstraints(OrStringConstraints));
+			for(String s: OrStringConstraints)
+				cvc.getStringConstraints().add(s);
+			/***** TEST CODE : Pooja**********************************/
+			Vector<String> strConstraints=new Vector<String>();
+			strConstraints.addAll(cvc.getStringConstraints());
+
+			Vector<String> solvedStringConstraint=cvc.getStringSolver().solveConstraints(strConstraints, cvc.getResultsetColumns(), cvc.getTableMap(), true);
+			if(solvedStringConstraint != null)
+				for(String str:solvedStringConstraint)	{
+					//cvc.getConstraints().add(str+"\n");
+					constraintString += str+"\n";
+				}
+			/*******************************************************/
+		}
 		constraintString += ConstraintGenerator.addCommentLine(" END OF NEGATIVE CONSTRAINTS FOR THIS CONJUNCT ");
 
-		if(!OrStringConstraints.isEmpty() && OrStringConstraints.size() != 0 )
-			cvc.getStringConstraints().add(processOrConstraints(OrStringConstraints));
-
 		return constraintString;
-	}
 
+	}
+	
 	public static Constraints generateNegativeConstraintsForConjunct(GenerateCVC1 cvc, QueryBlockDetails queryBlock, ConjunctQueryStructure conjunct) throws Exception{
 		Constraints constraints=new Constraints();
-		
 		String constraintString = "";
 		
         //Comment this line later
@@ -1608,7 +1648,7 @@ public class GenerateConstraintsForConjunct {
 				constrList.add(constrObj);
 				
 			}
-			constraint += constrGen.generateANDConstraints(constrList);
+			constraint += "(assert " + constrGen.generateANDConstraints(constrList) + " )\n";
 			
 			
 			if(!constraint.equalsIgnoreCase("")){
@@ -1748,7 +1788,7 @@ public class GenerateConstraintsForConjunct {
 
 		//str = str.substring(0,str.length() - 4);
 		if(constraintList != null && !constraintList.isEmpty()){
-			str += constrGen.generateANDConstraints(constraintList);
+			str += "(assert " + constrGen.generateANDConstraints(constraintList) + " )\n";
 		}
 
 

@@ -30,7 +30,7 @@ public class GenerateConstraintsToKillAggregationMutations {
 
 		/** The constraints look like 
 		 *  The aggregated attribute should be same in two tuples but this value should be different from the third tuple*/
-		
+		System.out.println("GENRErate constraints to kill aggregation mutations\n");
 		/**Get the column involved in the aggregate function*/
 		if(af==null) {
 			return "";

@@ -1,6 +1,7 @@
 package generateConstraints;
 
 import generateConstraints.TupleRange;
+import generateConstraints.GenerateJoinPredicateConstraints;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -24,7 +25,6 @@ import testDataGen.QueryBlockDetails;
 import util.Configuration;
 import util.ConstraintObject;
 import util.Utilities;
-
 /**
  * Generates constraints related to null conditions and database constraints
  * @author mahesh
@@ -85,8 +85,15 @@ public class GenerateCommonConstraintsForQuery {
 			if(!cvc.getStringConstraints().isEmpty()) {
 				cvc.getConstraints().add( ConstraintGenerator.addCommentLine("TEMP VECTOR CONSTRAINTS"));
 				//To be added after String constraints issues for SMTLIB are sorted out
-				//Vector<String> tempVector = cvc.getStringSolver().solveOrConstraints( new Vector<String>(cvc.getStringConstraints()), cvc.getResultsetColumns(), cvc.getTableMap());		
-				//cvc.getConstraints().addAll(tempVector);				
+				
+				// TEST CODE: POOJA
+				// Uncommented below code. Disjunct conditions involving string constraints were not getting added in the SMT file
+				
+//				//Vector<String> tempVector = cvc.getStringSolver().solveOrConstraints( new Vector<String>(cvc.getStringConstraints()), cvc.getResultsetColumns(), cvc.getTableMap());		
+				
+				Vector<String> tempVector = cvc.getStringSolver().solveOrConstraintsForSMT( new Vector<String>(cvc.getStringConstraints()), cvc.getResultsetColumns(), cvc.getTableMap());
+				cvc.getConstraints().addAll(tempVector);
+				
 			}
 
 			cvc.setCVCStr(CVCStr);
@@ -104,7 +111,24 @@ public class GenerateCommonConstraintsForQuery {
 			for(int k=0; k < cvc.getConstraints().size(); k++){
 				CVCStr += "\n" + cvc.getConstraints().get(k);
 			}
-
+			
+			//************* TEST CODE FOR TEMP JOIN: Pooja *********//
+			if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true")) {
+				if(!cvc.tempJoinDefine.isEmpty()){
+					String constr= "";
+					for(String key : cvc.tempJoinDefine.keySet()) {
+						String joinTable = key;
+						ArrayList<String> jtColumns = cvc.tempJoinColumns.get(joinTable);
+						Vector<Node> correlationConds = cvc.tempJoinCorrelationConds.get(joinTable);
+						constr += cvc.tempJoinDefine.get(joinTable);
+						//System.out.println(constr);
+						constr += GenerateJoinPredicateConstraints.generateConstraintsForAllAndExistsAttributesNew(cvc, jtColumns, joinTable)+"\n";
+						constr += GenerateJoinPredicateConstraints.generateConstraintsForCorrelationAttributes(cvc, joinTable,correlationConds)+"\n";
+					}
+					CVCStr += constr;	
+				}
+			}
+			//************** TEST CODE END ******************//
 
 			/** Add not null constraints */
 			cvc.getConstraints().add( ConstraintGenerator.addCommentLine(" NOT NULL CONSTRAINTS"));
@@ -135,7 +159,7 @@ public class GenerateCommonConstraintsForQuery {
 
 				for(Table tempTab : noOfTuplesAddedToTablesForBranchQueries[i].keySet())
 
-					cvc.getNoOfOutputTuples().put(tempTab.getTableName(), cvc.getNoOfOutputTuples().get(tempTab.getTableName()) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempTab));
+					cvc.putNoOfOutputTuples(tempTab.getTableName(), cvc.getNoOfOutputTuples(tempTab.getTableName()) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempTab));
 			}
 			
 			Boolean success = false;
@@ -147,7 +171,7 @@ public class GenerateCommonConstraintsForQuery {
 
 				success= new PopulateTestData().killedMutants("cvc3_" + cvc.getCount() 
 				+ ".smt", cvc.getQuery(), 
-				"DS" + cvc.getCount(), cvc.getQueryString(), cvc.getFilePath(), cvc.getNoOfOutputTuples(), cvc.getTableMap(), 
+				"DS" + cvc.getCount(), cvc.getQueryString(), cvc.getFilePath(), (HashMap<String, Integer>) cvc.cloneNoOfOutputTuples(), cvc.getTableMap(), 
 				cvc.getResultsetColumns(), cvc.getRepeatedRelationCount().keySet(),cvc.getDBAppparams()) ;
 
 				/*	Boolean success= new PopulateTestData().killedMutants("cvc3_" + cvc.getCount() 
@@ -164,10 +188,10 @@ public class GenerateCommonConstraintsForQuery {
 				// TEMPCODE : Rahul Sharma : for removing duplicate constraints
 				CVCStr = removeDuplicateConstraints(CVCStr);
 				
-				/************** TEST CODE *******************/
-//				System.out.println("Dataset: "+cvc.getCount()+"\t"+cvc.getTypeOfMutation());
-//				System.out.println(cvc.getNoOfOutputTuples());
-//				System.out.println("***************************");
+				/************** TEMP CODE *******************/
+				System.out.println("Dataset: "+cvc.getCount()+"\t"+cvc.getTypeOfMutation());
+				System.out.println(cvc.cloneNoOfOutputTuples());
+				System.out.println("***************************");
 				/*********************************************/
 				
 				Utilities.writeFile(Configuration.homeDir + "/temp_smt" + cvc.getFilePath() + "/z3_" + cvc.getCount() + ".smt", CVCStr);
@@ -176,9 +200,8 @@ public class GenerateCommonConstraintsForQuery {
 				
 				success= new PopulateTestData().killedMutantsForSMT("z3_" + cvc.getCount() 
 				+ ".smt", cvc.getQuery(), 
-				"DS" + cvc.getCount(), cvc.getQueryString(), cvc.getFilePath(), cvc.getNoOfOutputTuples(), cvc.getTableMap(), 
+				"DS" + cvc.getCount(), cvc.getQueryString(), cvc.getFilePath(), (HashMap<String, Integer>) cvc.cloneNoOfOutputTuples(), cvc.getTableMap(), 
 				cvc.getResultsetColumns(), cvc.getRepeatedRelationCount().keySet(),cvc.getDBAppparams()) ;
-				
 				cvc.setOutput( cvc.getOutput() + success);
 				cvc.setCount(cvc.getCount() + 1);
 				
@@ -190,7 +213,7 @@ public class GenerateCommonConstraintsForQuery {
 
 				for(Table tempTab : noOfTuplesAddedToTablesForBranchQueries[i].keySet())
 
-					cvc.getNoOfOutputTuples().put(tempTab.getTableName(), cvc.getNoOfOutputTuples().get(tempTab.getTableName()) - noOfTuplesAddedToTablesForBranchQueries[i].get(tempTab));
+					cvc.putNoOfOutputTuples(tempTab.getTableName(), cvc.getNoOfOutputTuples(tempTab.getTableName()) - noOfTuplesAddedToTablesForBranchQueries[i].get(tempTab));
 			}
 
 
@@ -375,7 +398,6 @@ public class GenerateCommonConstraintsForQuery {
 	// Generates Constraints for ensuring that no extra tuples are generated
 	public static String generateConstraintsForNoExtraTuples(GenerateCVC1 cvc, QueryBlockDetails queryBlock, ArrayList<Node> additionalSelConds, Map<String, TupleRange> allowedTuples) {
 		String constraintString = "";
-
 		ArrayList<ConstraintObject> orConstraints=new ArrayList<ConstraintObject>();
 		Vector<ArrayList<ConstraintObject>> orConstraintsVector = new Vector<ArrayList<ConstraintObject>>();
 
@@ -474,7 +496,7 @@ public class GenerateCommonConstraintsForQuery {
 				relationToPrimaryKeys.put(tableName, primaryKeys);
 			}
 
-			Map<String, Integer> totalTup = cvc.getNoOfOutputTuples();
+			Map<String, Integer> totalTup = (HashMap<String, Integer>) cvc.cloneNoOfOutputTuples();
 
 			ArrayList<Integer> tupleCount = new ArrayList<Integer>();				
 

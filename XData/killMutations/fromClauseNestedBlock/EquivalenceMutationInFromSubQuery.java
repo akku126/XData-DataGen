@@ -36,7 +36,7 @@ public class EquivalenceMutationInFromSubQuery {
 
 		
 		/** keep a copy of this tuple assignment values */
-		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
+		//HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
 		HashMap<String, Integer> noOfTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfTuples().clone();
 		HashMap<String, Integer[]> repeatedRelNextTuplePosOrig = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
 		
@@ -87,7 +87,7 @@ public class EquivalenceMutationInFromSubQuery {
 						continue;
 
 					/** keep a copy of this tuple assignment values */
-					HashMap<String, Integer> noOfOutputTuplesOrig1 = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
+					HashMap<String, Integer> noOfOutputTuplesOrig1 = (HashMap<String, Integer>) cvc.cloneNoOfOutputTuples();
 					HashMap<String, Integer> noOfTuplesOrig1 = (HashMap<String, Integer>) cvc.getNoOfTuples().clone();
 					HashMap<String, Integer[]> repeatedRelNextTuplePosOrig1 = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
 

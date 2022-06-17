@@ -69,7 +69,6 @@ public class GetTupleAssignmentForQueryBlock {
 			for(ConjunctQueryStructure conjunct: queryBlock.getConjunctsQs()){
 				/** get selection conditions*/
 				selectionConds.addAll(conjunct.getSelectionConds());
-
 				/** get string selection conds*/
 				stringSelectionConds.addAll(conjunct.getStringSelectionConds());
 			}
@@ -147,16 +146,16 @@ public class GetTupleAssignmentForQueryBlock {
 
 						/**decrease this count from noofoutputtuples */
 						int totalCount = 0;
-						if(cvc.getNoOfOutputTuples().get(key.substring(0, key.length()-1)) != null)
-							totalCount = cvc.getNoOfOutputTuples().get(key.substring(0, key.length()-1));
+						if(cvc.getNoOfOutputTuples(key.substring(0, key.length()-1)) != -1)
+							totalCount = cvc.getNoOfOutputTuples(key.substring(0, key.length()-1));
 
 						String tableName = key.substring(0, key.length()-1);
 
 						/** update noofoutput tuples */
 						if(count != 0)
-							cvc.getNoOfOutputTuples().put(key.substring(0, key.length()-1), totalCount - count + (count*relation.getCardinality()) );
+							cvc.putNoOfOutputTuples(key.substring(0, key.length()-1), totalCount - count + (count*relation.getCardinality()) );
 						else
-							cvc.getNoOfOutputTuples().put(key.substring(0, key.length()-1), totalCount - count + relation.getCardinality() );
+							cvc.putNoOfOutputTuples(key.substring(0, key.length()-1), totalCount - count + relation.getCardinality() );
 
 						/** Update repeated next tuple position*/
 						int thisTablePos=Integer.parseInt(key.substring(key.length()-1));
@@ -206,16 +205,16 @@ public class GetTupleAssignmentForQueryBlock {
 				int totPrevCount = prevCount * queryBlock.getNoOfGroups();/**get the total number of tuples contributed by this relation occurrence previously*/
 
 				/**update the total number of tuples*/
-				if( cvc.getNoOfOutputTuples().get(tableName) == null)
-					cvc.getNoOfOutputTuples().put(tableName, totalCount );
+				if( cvc.getNoOfOutputTuples(tableName) == -1)
+					cvc.putNoOfOutputTuples(tableName, totalCount );
 				else
-					cvc.getNoOfOutputTuples().put(tableName, cvc.getNoOfOutputTuples().get(tableName)+ totalCount - totPrevCount );
+					cvc.putNoOfOutputTuples(tableName, cvc.getNoOfOutputTuples(tableName)+ totalCount - totPrevCount );
 			}
 		}
 
 		logger.log(Level.INFO,"\nFinal count = "+ queryBlock.getFinalCount() +" \n No of output Tuples for each relation occurrence assigned:\n"+ cvc.getNoOfTuples().toString() + "\n");
 
-		logger.log(Level.INFO," \n Total No of output Tuples for each relation  assigned:\n"+ cvc.getNoOfOutputTuples().toString());
+		logger.log(Level.INFO," \n Total No of output Tuples for each relation  assigned:\n"+ cvc.cloneNoOfOutputTuples().toString());
 
 		gta.getOriginalColumnNames(cvc.getqStructure().getTableMap());
 
@@ -269,16 +268,16 @@ public class GetTupleAssignmentForQueryBlock {
 
 				/**decrease this count from noofoutputtuples */
 				int totalCount = 0;
-				if(cvc.getNoOfOutputTuples().get(key.substring(0, key.length()-1)) != null)
-					totalCount = cvc.getNoOfOutputTuples().get(key.substring(0, key.length()-1));
+				if(cvc.getNoOfOutputTuples(key.substring(0, key.length()-1)) != -1)
+					totalCount = cvc.getNoOfOutputTuples(key.substring(0, key.length()-1));
 
 				String tableName = key.substring(0, key.length()-1);
 				
 				/** update noofoutput tuples */
 				if(count != 0)
-					cvc.getNoOfOutputTuples().put(key.substring(0, key.length()-1), totalCount - count + (count*queryBlock.getFinalCount()) );
+					cvc.putNoOfOutputTuples(key.substring(0, key.length()-1), totalCount - count + (count*queryBlock.getFinalCount()) );
 				else
-					cvc.getNoOfOutputTuples().put(key.substring(0, key.length()-1), totalCount - count + queryBlock.getFinalCount() );
+					cvc.putNoOfOutputTuples(key.substring(0, key.length()-1), totalCount - count + queryBlock.getFinalCount() );
 				
 				/** Update repeated next tuple position*/
 				int thisTablePos=Integer.parseInt(key.substring(key.length()-1));
@@ -356,14 +355,14 @@ public class GetTupleAssignmentForQueryBlock {
 		int totPrevCount = prevCount * queryBlock.getNoOfGroups();/**get the total number of tuples contributed by this relation occurrence previously*/
 
 		/**update the total number of tuples*/
-		if( cvc.getNoOfOutputTuples().get(tableName) == null)
-			cvc.getNoOfOutputTuples().put(tableName, totalCount );
+		if( cvc.getNoOfOutputTuples(tableName) == -1)
+			cvc.putNoOfOutputTuples(tableName, totalCount );
 		else
-			cvc.getNoOfOutputTuples().put(tableName, cvc.getNoOfOutputTuples().get(tableName)+ totalCount - totPrevCount );
+			cvc.putNoOfOutputTuples(tableName, cvc.getNoOfOutputTuples(tableName)+ totalCount - totPrevCount );
 
 		logger.log(Level.INFO,"\nFinal count = "+ queryBlock.getFinalCount() +" \n No of output Tuples for each relation occurrence assigned:\n"+ cvc.getNoOfTuples().toString() + "\n");
 
-		logger.log(Level.INFO," \n Total No of output Tuples for each relation  assigned:\n"+ cvc.getNoOfOutputTuples().toString());
+		logger.log(Level.INFO," \n Total No of output Tuples for each relation  assigned:\n"+ cvc.cloneNoOfOutputTuples().toString());
 		
 		return true;
 	}

@@ -69,7 +69,7 @@ public class Table implements Serializable{
 	}
 
 	public Table(String tableName){
-		tableName = tableName.toUpperCase();
+		//tableName = tableName.toUpperCase();
 		this.tableName = tableName;
 		//columns = new Vector<Column>();
 		columns = new LinkedHashMap<String, Column>();

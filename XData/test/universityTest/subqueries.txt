@@ -1,0 +1,3 @@
+SELECT name FROM instructor WHERE EXISTS ( SELECT * FROM teaches WHERE instructor.ID = teaches.ID and teaches.semester='Spring');
+SELECT course_id FROM section as S WHERE semester = 'fall' and year = 2009 and NOT EXISTS (SELECT * FROM section as T WHERE semester = 'Spring' and year = 2010 and S.course_id = T.course_id);
+select name from instructor where EXISTS (select * from teaches t1 where instructor.ID = t1.ID and EXISTS (select

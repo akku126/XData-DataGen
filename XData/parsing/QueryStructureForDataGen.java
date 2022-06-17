@@ -131,7 +131,6 @@ public class QueryStructureForDataGen{
 			Collection columns = table.getColumns().values();
 			
 			Iterator c = columns.iterator();
-			
 			while(c.hasNext()){
 				column = (Column)c.next();
 				
@@ -157,19 +156,18 @@ public class QueryStructureForDataGen{
 						count++;
 					}
 				}
-		
-				if(rsmd.getColumnTypeName(1).equalsIgnoreCase("varchar")) // added by rambabu for mysql
+				if(rsmd.getColumnTypeName(1).equalsIgnoreCase("varchar") || rsmd.getColumnTypeName(1).equalsIgnoreCase("text") 
+						|| rsmd.getColumnTypeName(1).equalsIgnoreCase("char") ||rsmd.getColumnTypeName(1).equalsIgnoreCase("longvarchar")) // added by rambabu for mysql
 				{
 					// Below Code is commented because string length is greater than the limit of varchar specified in DDL.sql 
-					/*
-					while(count < 20)
-					{
-						count++;
-						column.addColumnValues(column.getColumnName() + "_" + count);
-					}
-					*/
-					int fieldSize = rsmd.getPrecision(1);
 					
+//					while(count < 20)
+//					{
+//						count++;
+//						column.addColumnValues(column.getColumnName() + "_" + count);
+//					}
+					
+					int fieldSize = rsmd.getPrecision(1);
 					if(fieldSize < 3) {
 						// If VARCHAR size less than 3 then assign one character
 						char val = 'A';

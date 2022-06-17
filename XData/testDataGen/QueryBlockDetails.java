@@ -439,13 +439,11 @@ public class QueryBlockDetails implements Serializable{
 
 			Vector<String> strConstraints=new Vector<String>();
 			strConstraints.addAll(constraints.stringConstraints);
-
-
-			Vector<String> solvedStringConstraint=cvc.getStringSolver().solveConstraints(strConstraints, cvc.getResultsetColumns(), cvc.getTableMap());
+			//System.out.println(constraints.constraints);
+			Vector<String> solvedStringConstraint=cvc.getStringSolver().solveConstraints(strConstraints, cvc.getResultsetColumns(), cvc.getTableMap(), true);
 			for(String str:solvedStringConstraint)	{
 				constraintString+=str+"\n";
 			}
-
 			//constraintString += getCaseConditionConstraints(cvc);
 			constraintString += getGroupByAndHavingClauseConstraints(cvc, qb);
 

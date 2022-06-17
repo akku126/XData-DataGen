@@ -214,7 +214,7 @@ public class GenerateConstraintsForCaseConditions {
 									//sc.getWhenNode().getLeft()+")";
 						}
 						
-						constraintString =constrGen.generateANDConstraints(constrANDObjList);
+						constraintString = "(assert "+ constrGen.generateANDConstraints(constrANDObjList)+ " )\n";
 						
 						ConstraintObject conOR = new ConstraintObject();
 						conOR.setLeftConstraint(constraintString);

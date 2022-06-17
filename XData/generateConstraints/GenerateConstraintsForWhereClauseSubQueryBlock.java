@@ -1,13 +1,20 @@
 package generateConstraints;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.Map.Entry;
 
 import parsing.AggregateFunction;
 import parsing.Column;
 import parsing.ConjunctQueryStructure;
 import parsing.Node;
+import parsing.QueryStructure;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
+import util.Configuration;
 
 /**
  * This class contains methods to generate constraints for the where clause subquery blocks
@@ -39,20 +46,49 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 				Node subQ = conjunct.getAllSubQueryConds().get(i);
 				constraintString +=ConstraintGenerator.addCommentLine("CONSTRAINTS FOR WHERE CLAUSE SUBQUERY CONNECTIVE ");
 				constraintString += getConstraintsForWhereSubQueryConnective(cvc, queryBlock, subQ);
-
+				
 				constraintString +=ConstraintGenerator.addCommentLine("CONSTRAINTS FOR CONDITIONS INSIDE WHERE CLAUSE SUBQUERY CONNECTIVE ");
 
 				constraintString += getCVCForCondsInSubQ(cvc, queryBlock, subQ);
 
 				constraintString += getConstraintsForGroupByAndHavingInSubQ(cvc, queryBlock, subQ);
-
+				
+				/***************** TEST CODE: POOJA **************************************/
+//				if( subQ.getSubQueryStructure() != null) {
+//					//constraintString += getConstraintsForNestedSubqueries(cvc,
+//					constraintString += getConstraintsForNestedSubqueryBlock(cvc,queryBlock.getWhereClauseSubQueries().get(0),subQ.getSubQueryStructure(),subQ,1);
+//				}
+//					 
+//				//for subquery conditions of type: attr relop (subquery)
+//				else if( subQ.getRight() != null && subQ.getRight().getSubQueryStructure() != null) 
+//					constraintString += getConstraintsForNestedSubqueryBlock(cvc,queryBlock,subQ.getRight().getSubQueryStructure(),subQ,1);
+//				
+//				else if(subQ.getLeft() != null && subQ.getLeft().getSubQueryStructure() != null)					
+//					constraintString += getConstraintsForNestedSubqueryBlock(cvc,queryBlock,subQ.getLeft().getSubQueryStructure(),subQ,1);
+				/********************** TEST CODE: END ***********************************/
+				
 				constraintString += ConstraintGenerator.addCommentLine("END OF CONSTRAINTS FOR CONDITIONS INSIDE WHERE CLAUSE SUBQUERY CONNECTIVE ");
 			}
 		}
-
 		return constraintString;
 	}
+	public static String getConstraintsForNestedSubqueryBlock(GenerateCVC1 cvc,QueryBlockDetails queryBlock,QueryStructure subqueryQS, Node subquery,int level) throws Exception {
+		String constraintString="";
+		if(subqueryQS.getAllSubQueryConds() != null) {
+		for(Node subQ: subqueryQS.getAllSubQueryConds()) {
+			System.out.println(subQ);
+			constraintString +=ConstraintGenerator.addCommentLine("CONSTRAINTS FOR NESTED WHERE CLAUSE SUBQUERY BLOCK ");
+			constraintString += getConstraintsForWhereSubQueryConnective(cvc, queryBlock, subQ);
+			constraintString +=ConstraintGenerator.addCommentLine("CONSTRAINTS FOR CONDITIONS INSIDE NESTED WHERE CLAUSE SUBQUERY BLOCK");
 
+			constraintString += getCVCForCondsInSubQ(cvc, queryBlock, subQ);
+			constraintString += getConstraintsForGroupByAndHavingInSubQ(cvc, queryBlock, subQ);
+			constraintString += ConstraintGenerator.addCommentLine("END OF CONSTRAINTS FOR CONDITIONS INSIDE NESTED WHERE CLAUSE SUBQUERY BLOCK ");
+
+		}
+	}	
+		return constraintString;
+	}
 
 	/**
 	 * Getting constraints for the group by attributes and having clause constraints for this where clause subquery
@@ -138,28 +174,28 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 		}*/
 
 		if(subQuery != null){
-		/**Get the conditions of the subquery*/
-		/**FIXME: What should be done if inside is ORing of conditions*/
-		for(ConjunctQueryStructure con: subQuery.getConjunctsQs()){
-			condsInSubQ.addAll(con.getStringSelectionConds());
-			condsInSubQ.addAll(con.getSelectionConds());
-			/** add equi joins*/
-			for(Vector<Node> ecn: con.getEquivalenceClasses()){
-				Node n1 = ecn.get(0);
-				for(int l = 1; l<ecn.size(); l++){
-					Node jn = new Node();
-					jn.setLeft(n1);
-					jn.setRight(ecn.get(l));
-					jn.setOperator("=");
-					//jn.setQueryIndex();
-					condsInSubQ.add(jn);
+			/**Get the conditions of the subquery*/
+			/**FIXME: What should be done if inside is ORing of conditions*/
+			for(ConjunctQueryStructure con: subQuery.getConjunctsQs()){
+				condsInSubQ.addAll(con.getStringSelectionConds());
+				condsInSubQ.addAll(con.getSelectionConds());
+				/** add equi joins*/
+				for(Vector<Node> ecn: con.getEquivalenceClasses()){
+					Node n1 = ecn.get(0);
+					for(int l = 1; l<ecn.size(); l++){
+						Node jn = new Node();
+						jn.setLeft(n1);
+						jn.setRight(ecn.get(l));
+						jn.setOperator("=");
+						//jn.setQueryIndex();
+						condsInSubQ.add(jn);
+					}
 				}
+				//condsInSubQ.addAll(con.getJoinConds());
+				condsInSubQ.addAll(con.getAllConds());
 			}
-			//condsInSubQ.addAll(con.getJoinConds());
-			condsInSubQ.addAll(con.getAllConds());
-		}
-		
-		return generateConstraintsForConditionsInWhereSubquery(cvc, subQ, condsInSubQ, subQuery);
+
+			return generateConstraintsForConditionsInWhereSubquery(cvc, subQ, condsInSubQ, subQuery);
 		}
 		return null;
 
@@ -184,10 +220,31 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 		if(subQ.getType().equals(Node.getNotExistsNodeType())){
 
 			for (ConjunctQueryStructure conjuct: subQuery.getConjunctsQs()){
-				constraintString += GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, subQuery, conjuct);
+				
+				if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true") && subQuery.getConjunctsQs().get(0).getJoinCondsForEquivalenceClasses() != null
+						&& subQuery.getConjunctsQs().get(0).getJoinCondsForEquivalenceClasses().size() != 0) {
+					
+					for(int i=0;i<condsInSubQ.size();i++) {
+						Node n = condsInSubQ.get(i);
+						if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true") && isCorrelated(n,cvc))
+							continue;
+
+						if(n.getLeft().getType().equals(Node.getColRefType()) && n.getRight().getType().equals(Node.getColRefType()) && n.getOperator().equals("="))
+							constraintString += GenerateJoinPredicateConstraints.getConstraintsForJoinsForNotExists(cvc, subQuery,n.getLeft(), n.getRight(),n.getOperator());
+
+						else if(n.getLeft().getType().equalsIgnoreCase(Node.getColRefType()) && n.getRight().getType().equalsIgnoreCase(Node.getColRefType())    
+								&& !n.getOperator().equalsIgnoreCase("")) /**if non equi join constraint*/
+							constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, subQuery, n.getLeft(), n.getRight(), n.getOperator()); //FIXME
+
+						else //skip for selection and string selection conditions, as these conditions will be enforced on the subquery table.
+							continue;
+					}
+				}
+				else {
+					constraintString += GenerateConstraintsForConjunct.generateNegativeConstraintsConjunct(cvc, subQuery, conjuct);
+				}
+				
 			}
-
-
 			return constraintString;
 		}
 
@@ -196,9 +253,31 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 			constraintString = getConstraintsForConditionsInSubquery(cvc, condsInSubQ, subQuery);
 
 		}
+		else if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true") && subQuery.getConjunctsQs().get(0).getJoinCondsForEquivalenceClasses() != null
+				&& subQuery.getConjunctsQs().get(0).getJoinCondsForEquivalenceClasses().size() != 0) {
+
+			/** if subQuery contains a JOIN then all the selection and correlations conditions from the subquery are enforced on the tempJoin table **/
+
+			for(int i=0;i<condsInSubQ.size();i++){
+				Node n = condsInSubQ.get(i);
+				if(Configuration.getProperty("tempJoins").equalsIgnoreCase("true") && isCorrelated(n,cvc))
+					continue;
+
+				if(n.getLeft().getType().equals(Node.getColRefType()) && n.getRight().getType().equals(Node.getColRefType()) && n.getOperator().equals("="))
+					constraintString += GenerateJoinPredicateConstraints.getConstraintsForEquiJoins(cvc, subQuery,n.getLeft(), n.getRight());	/** If it is equi join condition */
+				
+				else if(n.getLeft().getType().equalsIgnoreCase(Node.getColRefType()) && n.getRight().getType().equalsIgnoreCase(Node.getColRefType())    
+						&& !n.getOperator().equalsIgnoreCase("")) /**if non equi join constraint*/
+					constraintString += GenerateJoinPredicateConstraints.getConstraintsForNonEquiJoins(cvc, subQuery, n.getLeft(), n.getRight(), n.getOperator()); //TODO
+
+				else //skip for selection and string selection conditions, as these conditions will be enforced on the subquery table.
+					continue;
+			}
+		}
 		else {
 
 			for(int i=0;i<condsInSubQ.size();i++){
+
 				Node n = condsInSubQ.get(i);
 				if(n.getLeft().getType().equals(Node.getColRefType()) && n.getRight().getType().equals(Node.getColRefType()) && n.getOperator().equals("="))
 					constraintString += GenerateJoinPredicateConstraints.getConstraintsForEquiJoins(cvc, subQuery,n.getLeft(), n.getRight());	/** If it is equi join condition */
@@ -218,8 +297,8 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 						if( UtilsRelatedToNode.isStringSelection(n,0)){/** If it is a string selection condition*/
 
 							String subQueryConstraints = constrGen.genPositiveCondsForPred(subQuery, n, j+offset);
-							//String result = cvc.getStringSolver().solveConstraints(subQueryConstraints,cvc.getResultsetColumns(), cvc.getTableMap()).get(0);
-							//constraintString += result;							
+							String result = cvc.getStringSolver().solveConstraints(subQueryConstraints,cvc.getResultsetColumns(), cvc.getTableMap()).get(0);
+							constraintString += result;							
 						}
 						else{
 							String res = ConstraintGenerator.genPositiveCondsForPred(subQuery, n, offset+j);
@@ -232,6 +311,32 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 
 		return constraintString;
 	}
+	
+	 public static boolean isCorrelated(Node selectionCondition, GenerateCVC1 cvc) {
+	    	if(selectionCondition.getRight().getColumn()!=null) {
+	    		String operator = selectionCondition.getOperator();
+	    		ArrayList<String> tablesInSelectionConditions = new ArrayList<String>();
+	    		String table1 = selectionCondition.getLeft().getTableNameNo();
+	    		String table2 = selectionCondition.getRight().getTableNameNo();
+	    		tablesInSelectionConditions.add(table1);
+	    		tablesInSelectionConditions.add(table2);
+
+	    		ArrayList<String> innerTables = cvc.getqStructure().getWhereClauseSubqueries().get(0).getLstRelationInstances();
+	    		ArrayList<String> outerTables = new ArrayList<String>();
+	    		Iterator<Entry<String, String>> it = cvc.getBaseRelation().entrySet().iterator();
+	    		while(it.hasNext()) {
+	    			Map.Entry<String, String> temp = (Map.Entry<String, String>) it.next();
+	    			outerTables.add(temp.getValue());
+	    		}
+	    		if(innerTables.contains(tablesInSelectionConditions.get(0)) && outerTables.contains(tablesInSelectionConditions.get(1))) {
+	    			return true;
+	    		}
+	    		else if(innerTables.contains(tablesInSelectionConditions.get(1)) && outerTables.contains(tablesInSelectionConditions.get(0))){
+	    			return true;
+	    		}
+	    	}
+	    	return false;
+	    }
 
 /**
  * 
@@ -269,9 +374,9 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 					for(int j=0; j < cvc.getNoOfTuples().get(tableNameNo) * subQuery.getNoOfGroups(); j++){
 
 						String subQueryConstraints = constrGen.genPositiveCondsForPred(subQuery, subQcond, j+offset);
-
-						//String result = cvc.getStringSolver().solveConstraints(subQueryConstraints,cvc.getResultsetColumns(), cvc.getTableMap()).get(0);
-						//constraintString += result;
+						//uncommented these lines.. POOJA
+						String result = cvc.getStringSolver().solveConstraints(subQueryConstraints,cvc.getResultsetColumns(), cvc.getTableMap()).get(0);
+						constraintString += result;
 					}
 				}
 				else /**Generate the constraints for each tuple across all the groups*/
@@ -886,7 +991,6 @@ public class GenerateConstraintsForWhereClauseSubQueryBlock {
 		/** Also Generates positive constraints for all the conditions of this sub query block conjunct*/
 		/** And we need to add the positive conditions for all other where clause sub query blocks in this conjunct*/
 		String constraintString = "";
-
 		/**for each where clause sub query in this conjunct*/
 		for(Node subQConds: con.getAllSubQueryConds()){
 

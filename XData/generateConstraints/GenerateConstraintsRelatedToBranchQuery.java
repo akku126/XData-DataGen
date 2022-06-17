@@ -100,12 +100,12 @@ public class GenerateConstraintsRelatedToBranchQuery {
 
 							for(int k = 1; k <= noOfTuplesAddedToTablesForBranchQueries[i].get(tempTable); k++){
 															
-							//	temp += "\nASSERT (O_" + tempTable + "[" + ( cvc.getNoOfOutputTuples().get(tempTable.getTableName()) + k + tempTuplesAdded.get(tempTable)) + 
+							//	temp += "\nASSERT (O_" + tempTable + "[" + ( cvc.getNoOfOutputTuples(tempTable.getTableName()) + k + tempTuplesAdded.get(tempTable)) + 
 								//		"]." + tempTable.getColumnIndex(projectedColBranchQuery[i].get(j).getColumn().getColumnName()) + " " + branchOperators[i].get(j) +
 								//		" " + branchResultString[i].get(j) + ");";
 								
 								temp +=  constraintGen.getStringConstraints(tempTable,  
-										(cvc.getNoOfOutputTuples().get(tempTable.getTableName()) + k + tempTuplesAdded.get(tempTable)), 
+										(cvc.getNoOfOutputTuples(tempTable.getTableName()) + k + tempTuplesAdded.get(tempTable)), 
 										(tempTable.getColumnIndex(projectedColBranchQuery[i].get(j).getColumn().getColumnName())), 
 										branchOperators[i].get(j), branchResultString[i].get(j), projectedColBranchQuery[i].get(j).getColumn());
 							}
@@ -132,7 +132,7 @@ public class GenerateConstraintsRelatedToBranchQuery {
 				for(int j = 1; j <= noOfTuplesAddedToTablesForBranchQueries[i].get(tempTab); j++){
 
 					/**FIXME: MAhesh: Should specify query block here*/
-					//temp += "\nASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(cvc, selConds, cvc.getNoOfOutputTuples().get(tempTab.getTableName()) + j + tempTuplesAdded.get(tempTab))+";\n";
+					//temp += "\nASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(cvc, selConds, cvc.getNoOfOutputTuples(tempTab.getTableName()) + j + tempTuplesAdded.get(tempTab))+";\n";
 				}
 			}
 
@@ -143,7 +143,7 @@ public class GenerateConstraintsRelatedToBranchQuery {
 				for(int j = 1; j <= noOfTuplesAddedToTablesForBranchQueries[i].get(tempTab); j++){
 
 					/**FIXME: MAhesh: Should specify query block here*/
-					//temp += "\nASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(cvc, allConds, cvc.getNoOfOutputTuples().get(tempTab.getTableName()) + j + tempTuplesAdded.get(tempTab))+";\n";
+					//temp += "\nASSERT " + GenerateCVCConstraintForNode.genPositiveCondsForPred(cvc, allConds, cvc.getNoOfOutputTuples(tempTab.getTableName()) + j + tempTuplesAdded.get(tempTab))+";\n";
 				}
 			}
 
@@ -160,7 +160,7 @@ public class GenerateConstraintsRelatedToBranchQuery {
 					Column prevCol = projectedColBranchQuery[i - 1].get(projColNo - 1).getColumn();
 					Table prevTable = prevCol.getTable();
 
-					int prevTableStartIndex = cvc.getNoOfOutputTuples().get(prevTable.getTableName()) + tempTuplesAdded.get(prevTable) - noOfTuplesAddedToTablesForBranchQueries[i - 1].get(prevTable) + 1;
+					int prevTableStartIndex = cvc.getNoOfOutputTuples(prevTable.getTableName()) + tempTuplesAdded.get(prevTable) - noOfTuplesAddedToTablesForBranchQueries[i - 1].get(prevTable) + 1;
 
 					for(int j = prevTableStartIndex + 1; j < prevTableStartIndex + noOfTuplesAddedToTablesForBranchQueries[i - 1].get(prevTable); j++){
 
@@ -172,7 +172,7 @@ public class GenerateConstraintsRelatedToBranchQuery {
 					Column currCol = colDepn.getLeft().getColumn();
 					Table currTable = colDepn.getLeft().getTable();
 					String operand = "";
-					int currTableStartIndex = cvc.getNoOfOutputTuples().get(currTable.getTableName()) + tempTuplesAdded.get(currTable) + 1;
+					int currTableStartIndex = cvc.getNoOfOutputTuples(currTable.getTableName()) + tempTuplesAdded.get(currTable) + 1;
 
 					for(int j = currTableStartIndex; j < currTableStartIndex + noOfTuplesAddedToTablesForBranchQueries[i].get(currTable); j++){
 
@@ -209,7 +209,7 @@ public class GenerateConstraintsRelatedToBranchQuery {
 
 				Table table = stringSelectionCondsForBranchQuery[i].get(k).getLeft().getTable();
 
-				int count = cvc.getNoOfOutputTuples().get(table.getTableName());
+				int count = cvc.getNoOfOutputTuples(table.getTableName());
 
 				for(int j = 1; j <= noOfTuplesAddedToTablesForBranchQueries[i].get(table); j++){
 
@@ -221,7 +221,7 @@ public class GenerateConstraintsRelatedToBranchQuery {
 			for(int k=1; k<=likeCondsForBranchQuery[i].size(); k++){
 
 				Table table = likeCondsForBranchQuery[i].get(k).getLeft().getTable();
-				int count = cvc.getNoOfOutputTuples().get(table.getTableName());
+				int count = cvc.getNoOfOutputTuples(table.getTableName());
 
 				for(int j = 1; j <= noOfTuplesAddedToTablesForBranchQueries[i].get(table); j++){
 
@@ -233,7 +233,7 @@ public class GenerateConstraintsRelatedToBranchQuery {
 			Vector<String> tempVector;
 
 			try {
-				tempVector = cvc.getStringSolver().solveConstraints( new Vector<String>( stringConstraintsForBranchQuery ), cvc.getResultsetColumns(), cvc.getTableMap());
+				tempVector = cvc.getStringSolver().solveConstraints( new Vector<String>( stringConstraintsForBranchQuery ), cvc.getResultsetColumns(), cvc.getTableMap(), true);
 
 				for(String str : tempVector)
 					temp += "\n" + str;
@@ -280,9 +280,9 @@ public class GenerateConstraintsRelatedToBranchQuery {
 
 				if(tempTuplesAddedForBranchQueries.containsKey(tempGroupByTable)){
 				
-					for(int j = 1; j <= cvc.getNoOfOutputTuples().get(tempGroupByTable.getTableName()); j++){
+					for(int j = 1; j <= cvc.getNoOfOutputTuples(tempGroupByTable.getTableName()); j++){
 
-						for(int k = cvc.getNoOfOutputTuples().get(tempGroupByTable.getTableName()) + 1; k <= cvc.getNoOfOutputTuples().get(tempGroupByTable.getTableName()) + tempTuplesAddedForBranchQueries.get(tempGroupByTable); k++){
+						for(int k = cvc.getNoOfOutputTuples(tempGroupByTable.getTableName()) + 1; k <= cvc.getNoOfOutputTuples(tempGroupByTable.getTableName()) + tempTuplesAddedForBranchQueries.get(tempGroupByTable); k++){
 
 							temp += constraintGen.getStringConstraints(tempGroupByTable, j, tempGroupByTable.getColumnIndex(tempGroupByCol.getColumnName()), "!=",
 									tempGroupByTable, k,  tempGroupByTable.getColumnIndex(tempGroupByCol.getColumnName()),tempGroupByCol,tempGroupByCol);
@@ -316,27 +316,27 @@ public class GenerateConstraintsRelatedToBranchQuery {
 					Column tempGroupByCol = tempNode.getColumn();
 					Table tempGroupByTable = tempGroupByCol.getTable();
 
-					for(int j = 1; j <= cvc.getNoOfOutputTuples().get(tempGroupByTable.getTableName()) + tempTuplesAdded.get(tempGroupByTable); j++){
+					for(int j = 1; j <= cvc.getNoOfOutputTuples(tempGroupByTable.getTableName()) + tempTuplesAdded.get(tempGroupByTable); j++){
 
 						temp += constraintGen.getStringConstraints(tempGroupByTable, 
-								 (cvc.getNoOfOutputTuples().get(tempGroupByTable.getTableName()) + tempTuplesAdded.get(tempGroupByTable) + 1) 
+								 (cvc.getNoOfOutputTuples(tempGroupByTable.getTableName()) + tempTuplesAdded.get(tempGroupByTable) + 1) 
 								 , tempGroupByTable.getColumnIndex(tempGroupByCol.getColumnName()), "!=",
 								tempGroupByTable, j,  tempGroupByTable.getColumnIndex(tempGroupByCol.getColumnName()),tempGroupByCol,tempGroupByCol);
 						
 						
-						//temp += "\nASSERT NOT(O_" + tempGroupByTable.getTableName() + "[" + (cvc.getNoOfOutputTuples().get(tempGroupByTable.getTableName()) + tempTuplesAdded.get(tempGroupByTable) + 1) + "]." + tempGroupByTable.getColumnIndex(tempGroupByCol.getColumnName());
+						//temp += "\nASSERT NOT(O_" + tempGroupByTable.getTableName() + "[" + (cvc.getNoOfOutputTuples(tempGroupByTable.getTableName()) + tempTuplesAdded.get(tempGroupByTable) + 1) + "]." + tempGroupByTable.getColumnIndex(tempGroupByCol.getColumnName());
 						//temp += " = O_" + tempGroupByTable.getTableName() + "[" + j + "]." + tempGroupByTable.getColumnIndex(tempGroupByCol.getColumnName()) + ");";
 					}
 
-					for(int j = cvc.getNoOfOutputTuples().get(tempGroupByTable.getTableName()) + tempTuplesAdded.get(tempGroupByTable) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempGroupByTable) + 1; j <= tempTuplesAddedForBranchQueries.get(tempGroupByTable); j++){
+					for(int j = cvc.getNoOfOutputTuples(tempGroupByTable.getTableName()) + tempTuplesAdded.get(tempGroupByTable) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempGroupByTable) + 1; j <= tempTuplesAddedForBranchQueries.get(tempGroupByTable); j++){
 
 						temp += constraintGen.getStringConstraints(tempGroupByTable, 
-								(cvc.getNoOfOutputTuples().get(tempGroupByTable.getTableName()) + tempTuplesAdded.get(tempGroupByTable) + 1) 
+								(cvc.getNoOfOutputTuples(tempGroupByTable.getTableName()) + tempTuplesAdded.get(tempGroupByTable) + 1) 
 								 , tempGroupByTable.getColumnIndex(tempGroupByCol.getColumnName()), "!=",
 								tempGroupByTable, j,  tempGroupByTable.getColumnIndex(tempGroupByCol.getColumnName()),tempGroupByCol,tempGroupByCol);
 						
 						
-						//temp += "\nASSERT NOT(O_" + tempGroupByTable.getTableName() + "[" + (cvc.getNoOfOutputTuples().get(tempGroupByTable.getTableName()) + tempTuplesAdded.get(tempGroupByTable) + 1) + "]." + tempGroupByTable.getColumnIndex(tempGroupByCol.getColumnName());
+						//temp += "\nASSERT NOT(O_" + tempGroupByTable.getTableName() + "[" + (cvc.getNoOfOutputTuples(tempGroupByTable.getTableName()) + tempTuplesAdded.get(tempGroupByTable) + 1) + "]." + tempGroupByTable.getColumnIndex(tempGroupByCol.getColumnName());
 						//temp += " = O_" + tempGroupByTable.getTableName() + "[" + j + "]." + tempGroupByTable.getColumnIndex(tempGroupByCol.getColumnName()) + ");";
 					}
 				}
@@ -368,15 +368,15 @@ public class GenerateConstraintsRelatedToBranchQuery {
 					Column tempGroupByCol = tempNode.getColumn();
 					Table tempGroupByTable = tempGroupByCol.getTable();
 
-					for(int j = cvc.getNoOfOutputTuples().get(tempGroupByTable.getTableName()) + tempTuplesAdded.get(tempGroupByTable) + 2; j <= cvc.getNoOfOutputTuples().get(tempGroupByTable.getTableName()) + tempTuplesAdded.get(tempGroupByTable) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempGroupByTable); j++){
+					for(int j = cvc.getNoOfOutputTuples(tempGroupByTable.getTableName()) + tempTuplesAdded.get(tempGroupByTable) + 2; j <= cvc.getNoOfOutputTuples(tempGroupByTable.getTableName()) + tempTuplesAdded.get(tempGroupByTable) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempGroupByTable); j++){
 
 						temp += constraintGen.getStringConstraints(tempGroupByTable, 
-								( cvc.getNoOfOutputTuples().get(tempGroupByTable.getTableName()) + tempTuplesAdded.get(tempGroupByTable) + 1)
+								( cvc.getNoOfOutputTuples(tempGroupByTable.getTableName()) + tempTuplesAdded.get(tempGroupByTable) + 1)
 								 , tempGroupByTable.getColumnIndex(tempGroupByCol.getColumnName()), "=",
 								tempGroupByTable, j,  tempGroupByTable.getColumnIndex(tempGroupByCol.getColumnName()),tempGroupByCol,tempGroupByCol);
 						
 						
-						//temp += "\nASSERT (O_" + tempGroupByTable.getTableName() + "[" + ( cvc.getNoOfOutputTuples().get(tempGroupByTable.getTableName()) + tempTuplesAdded.get(tempGroupByTable) + 1) + "]." + tempGroupByTable.getColumnIndex(tempGroupByCol.getColumnName());
+						//temp += "\nASSERT (O_" + tempGroupByTable.getTableName() + "[" + ( cvc.getNoOfOutputTuples(tempGroupByTable.getTableName()) + tempTuplesAdded.get(tempGroupByTable) + 1) + "]." + tempGroupByTable.getColumnIndex(tempGroupByCol.getColumnName());
 						//temp += " = O_" + tempGroupByTable.getTableName() + "[" + j + "]." + tempGroupByTable.getColumnIndex(tempGroupByCol.getColumnName()) + ");";
 					}
 				}
@@ -423,23 +423,23 @@ public class GenerateConstraintsRelatedToBranchQuery {
 					if(havingClause.getLeft().getAgg().getFunc().equals("MIN"))	{
 
 						temp += constraintGen.getStringConstraints(tempHavingTable, 
-								(cvc.getNoOfOutputTuples().get(tempHavingTable.getTableName()) + 
+								(cvc.getNoOfOutputTuples(tempHavingTable.getTableName()) + 
 										tempTuplesAdded.get(tempHavingTable) + 1) 
 								 , tempHavingColIndex, tempHavingOp,Integer.toString(tempHavingVal),havingClause.getLeft().getAgg().getAggExp().getColumn());
 					
-						//temp += "\nASSERT (O_" + tempHavingTable.getTableName() + "[" + (cvc.getNoOfOutputTuples().get(tempHavingTable.getTableName()) + 
+						//temp += "\nASSERT (O_" + tempHavingTable.getTableName() + "[" + (cvc.getNoOfOutputTuples(tempHavingTable.getTableName()) + 
 						//		tempTuplesAdded.get(tempHavingTable) + 1) + "]." + tempHavingColIndex;
 						//temp += " " + tempHavingOp + " " + tempHavingVal + ");";
 
-						for(int j = cvc.getNoOfOutputTuples().get(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + 2; j <= cvc.getNoOfOutputTuples().get(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempHavingTable); j++){
+						for(int j = cvc.getNoOfOutputTuples(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + 2; j <= cvc.getNoOfOutputTuples(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempHavingTable); j++){
 
 
 							temp += constraintGen.getStringConstraints(tempHavingTable, 
-									(cvc.getNoOfOutputTuples().get(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + 1)
+									(cvc.getNoOfOutputTuples(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + 1)
 									 , tempHavingColIndex, " <= ",tempHavingTable, j, tempHavingColIndex, havingClause.getLeft().getAgg().getAggExp().getColumn(),havingClause.getLeft().getAgg().getAggExp().getColumn());
 							
 						//	temp += "\nASSERT (O_" + tempHavingTable.getTableName() + "["
-						//	+ (cvc.getNoOfOutputTuples().get(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + 1) + "]." + tempHavingColIndex;
+						//	+ (cvc.getNoOfOutputTuples(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + 1) + "]." + tempHavingColIndex;
 						//	temp += " <= O_" + tempHavingTable.getTableName() + "[" + j + "]." + tempHavingColIndex + ");";
 						}
 					}
@@ -447,24 +447,24 @@ public class GenerateConstraintsRelatedToBranchQuery {
 					if(havingClause.getLeft().getAgg().getFunc().equals("MAX")){
 
 						temp += constraintGen.getStringConstraints(tempHavingTable, 
-								(cvc.getNoOfOutputTuples().get(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempHavingTable))
+								(cvc.getNoOfOutputTuples(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempHavingTable))
 								 , tempHavingColIndex, tempHavingOp,Integer.toString(tempHavingVal),havingClause.getLeft().getAgg().getAggExp().getColumn());
 				
 						
 					//	temp += "\nASSERT (O_" + tempHavingTable.getTableName() + "[" 
-					//			+ (cvc.getNoOfOutputTuples().get(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempHavingTable)) + "]." 
+					//			+ (cvc.getNoOfOutputTuples(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempHavingTable)) + "]." 
 					//			+ tempHavingColIndex;
 					//	temp += " " + tempHavingOp + " " + tempHavingVal + ");";
 
-						for(int j = cvc.getNoOfOutputTuples().get(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + 1; j < cvc.getNoOfOutputTuples().get(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempHavingTable); j++){
+						for(int j = cvc.getNoOfOutputTuples(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + 1; j < cvc.getNoOfOutputTuples(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempHavingTable); j++){
 
 							temp += constraintGen.getStringConstraints(tempHavingTable, 
-									(cvc.getNoOfOutputTuples().get(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempHavingTable))
+									(cvc.getNoOfOutputTuples(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempHavingTable))
 									 , tempHavingColIndex, "  >=  ",tempHavingTable, j, tempHavingColIndex, havingClause.getLeft().getAgg().getAggExp().getColumn(),havingClause.getLeft().getAgg().getAggExp().getColumn());
 						
 							
 							//temp += "\nASSERT (O_" + tempHavingTable.getTableName() + "[" 
-							//		+ (cvc.getNoOfOutputTuples().get(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempHavingTable)) + "]." 
+							//		+ (cvc.getNoOfOutputTuples(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempHavingTable)) + "]." 
 							//		+ tempHavingColIndex;
 							//temp += " >= O_" + tempHavingTable.getTableName() + "[" + j + "]." + tempHavingColIndex + ");";
 						}
@@ -474,7 +474,7 @@ public class GenerateConstraintsRelatedToBranchQuery {
 
 						//temp += "\nASSERT (";
 						String constraint = "";
-						for(int j = cvc.getNoOfOutputTuples().get(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + 1; j <= cvc.getNoOfOutputTuples().get(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempHavingTable); j++)
+						for(int j = cvc.getNoOfOutputTuples(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + 1; j <= cvc.getNoOfOutputTuples(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempHavingTable); j++)
 							constraint = constraintGen.getConstraintsForSUMWithAssert(tempHavingOp, Integer.toString(tempHavingVal), constraint, tempHavingTable, j, tempHavingColIndex,havingClause.getLeft().getAgg().getAggExp().getColumn());
 							//temp += "O_" + tempHavingTable.getTableName() + "[" + j + "]." + tempHavingColIndex + " + ";
 						
@@ -488,7 +488,7 @@ public class GenerateConstraintsRelatedToBranchQuery {
 
 						//temp += "\nASSERT ((";
 						String constraint = "";
-						for(int j = cvc.getNoOfOutputTuples().get(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + 1; j <= cvc.getNoOfOutputTuples().get(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempHavingTable); j++)
+						for(int j = cvc.getNoOfOutputTuples(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + 1; j <= cvc.getNoOfOutputTuples(tempHavingTable.getTableName()) + tempTuplesAdded.get(tempHavingTable) + noOfTuplesAddedToTablesForBranchQueries[i].get(tempHavingTable); j++)
 							constraint = constraintGen.getConstraintsForSUMWithoutAssert(tempHavingOp, Integer.toString(tempHavingVal), constraint, tempHavingTable, j, tempHavingColIndex,havingClause.getLeft().getAgg().getAggExp().getColumn());
 							//temp += "O_" + tempHavingTable.getTableName() + "[" + j + "]." + tempHavingColIndex + " + ";
 
@@ -524,7 +524,7 @@ public class GenerateConstraintsRelatedToBranchQuery {
 		
 		for(Table table : tempTuplesAddedForBranchQueries.keySet()){
 
-			int noOfTuples = cvc.getNoOfOutputTuples().get(table.getTableName());
+			int noOfTuples = cvc.getNoOfOutputTuples(table.getTableName());
 
 			for(int i = 1; i <= tempTuplesAddedForBranchQueries.get(table); i++){
 
@@ -650,9 +650,9 @@ public class GenerateConstraintsRelatedToBranchQuery {
 
 								if(fSingleCol.getCvcDatatype() != null){
 
-									int tupleIndexOfFCol = cvc.getNoOfOutputTuples().get(fSingleCol.getTableName()) + k + tempTuplesAdded.get(fSingleCol.getTable());
+									int tupleIndexOfFCol = cvc.getNoOfOutputTuples(fSingleCol.getTableName()) + k + tempTuplesAdded.get(fSingleCol.getTable());
 
-									int tupleIndexofPCol = cvc.getNoOfOutputTuples().get(pSingleCol.getTableName()) + k + tempTuplesAdded.get(pSingleCol.getTable());
+									int tupleIndexofPCol = cvc.getNoOfOutputTuples(pSingleCol.getTableName()) + k + tempTuplesAdded.get(pSingleCol.getTable());
 									int pos1 = fSingleCol.getTable().getColumnIndex(fSingleCol.getColumnName());
 									int pos2 = pSingleCol.getTable().getColumnIndex(pSingleCol.getColumnName());
 									
@@ -721,14 +721,14 @@ public class GenerateConstraintsRelatedToBranchQuery {
 
 				for(int i = 1; i <= tempTuplesAddedForBranchQueries.get(col.getTable()); i++){
 
-					retVal += constraintGenerator.getAndSetNotNullValuesBeforeFooter(col, (cvc.getNoOfOutputTuples().get(tabName) + i)); 
+					retVal += constraintGenerator.getAndSetNotNullValuesBeforeFooter(col, (cvc.getNoOfOutputTuples(tabName) + i)); 
 					
 					/*if(col.getCvcDatatype().equals("INT") || col.getCvcDatatype().equals("REAL") || col.getCvcDatatype().equals("TIME")
 							||col.getCvcDatatype().equals("TIMESTAMP") || col.getCvcDatatype().equals("DATE"))
 
-						retVal += "\nASSERT NOT ISNULL_"+col.getColumnName()+"(O_"+ GenerateCVCConstraintForNode.cvcMap(col, (cvc.getNoOfOutputTuples().get(tabName) + i)+"")+");";
+						retVal += "\nASSERT NOT ISNULL_"+col.getColumnName()+"(O_"+ GenerateCVCConstraintForNode.cvcMap(col, (cvc.getNoOfOutputTuples(tabName) + i)+"")+");";
 					else
-						retVal += "\nASSERT NOT ISNULL_"+col.getCvcDatatype()+"(O_"+ GenerateCVCConstraintForNode.cvcMap(col, (cvc.getNoOfOutputTuples().get(tabName) + i)+"")+");";
+						retVal += "\nASSERT NOT ISNULL_"+col.getCvcDatatype()+"(O_"+ GenerateCVCConstraintForNode.cvcMap(col, (cvc.getNoOfOutputTuples(tabName) + i)+"")+");";
 						*/
 				}
 			}

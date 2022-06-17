@@ -65,7 +65,7 @@ public class GenerateCVCConstraintForNode {
 	 */
 	public static String genPositiveCondsForPredAgg(GenerateCVC1 cvc, QueryBlockDetails queryBlock, Node n, int index){
 		if(n.getType().equalsIgnoreCase(Node.getColRefType())){
-			if(index <= cvc.getNoOfOutputTuples().get(n.getColumn().getTableName())){/**FIXME: Handle repeated relations */
+			if(index <= cvc.getNoOfOutputTuples(n.getColumn().getTableName())){/**FIXME: Handle repeated relations */
 				return cvcMap(n.getColumn(), index+"");
 			}
 			else return cvcMap(n.getColumn(), "1");
@@ -239,7 +239,7 @@ public class GenerateCVCConstraintForNode {
 			Column col = itrCol.next();
 			HashMap<String, Integer> nullValues = cvc.getColNullValuesMap().get(col);
 			String tabName = col.getTableName();
-			for(int j=1; j <= cvc.getNoOfOutputTuples().get(tabName); j++){
+			for(int j=1; j <= cvc.getNoOfOutputTuples(tabName); j++){
 				/*if(!nullValues.values().contains(j))
 					if(col != null && col.getCvcDatatype() != null && (col.getCvcDatatype().equalsIgnoreCase("INT") || col.getCvcDatatype().equalsIgnoreCase("REAL") || col.getCvcDatatype().equalsIgnoreCase("TIME")
 							||col.getCvcDatatype().equalsIgnoreCase("TIMESTAMP") || col.getCvcDatatype().equalsIgnoreCase("DATE")))
@@ -288,7 +288,7 @@ public class GenerateCVCConstraintForNode {
 			Column col = itrCol.next();
 			HashMap<String, Integer> nullValues = cvc.getColNullValuesMap().get(col);
 			String tabName = col.getTableName();
-			for(int j=1; j <= cvc.getNoOfOutputTuples().get(tabName); j++){
+			for(int j=1; j <= cvc.getNoOfOutputTuples(tabName); j++){
 				if(!nullValues.values().contains(j))
 					
 					retVal += constraintGenerator.getAndSetNotNullValuesBeforeFooter(col, j);

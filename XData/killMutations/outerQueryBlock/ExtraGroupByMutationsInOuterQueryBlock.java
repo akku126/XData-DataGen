@@ -58,7 +58,7 @@ public class ExtraGroupByMutationsInOuterQueryBlock {
 	public static void generateDataForkillingExtraGroupByMutationsInOuterQueryBlock(GenerateCVC1 cvc) throws Exception {
 
 		/** keep a copy of this tuple assignment values */
-		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
+		//HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
 		HashMap<String, Integer> noOfTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfTuples().clone();
 		HashMap<String, Integer[]> repeatedRelNextTuplePosOrig = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
 
@@ -144,7 +144,7 @@ public class ExtraGroupByMutationsInOuterQueryBlock {
 	public static void generateDataForkillingExtraGroupByMutationsInOuterQueryBlock2(GenerateCVC1 cvc) throws Exception {
 		try{		
 			/** keep a copy of this tuple assignment values */
-			HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
+			//HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
 			HashMap<String, Integer> noOfTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfTuples().clone();
 			HashMap<String, Integer[]> repeatedRelNextTuplePosOrig = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
 	

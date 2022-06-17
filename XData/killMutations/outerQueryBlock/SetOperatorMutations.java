@@ -37,7 +37,7 @@ public class SetOperatorMutations {
 		cvcNotExists.setRepeatedRelNextTuplePos(cvc.getGenCVC().getRepeatedRelNextTuplePos());
 		cvcNotExists.setResultsetTables(cvc.getGenCVC().getResultsetTables());
 		cvcNotExists.setResultsetColumns(cvc.getGenCVC().getResultsetColumns());
-		cvcNotExists.setNoOfOutputTuples(cvc.getGenCVC().getNoOfOutputTuples());
+		cvcNotExists.setNoOfOutputTuples(cvc.getGenCVC().cloneNoOfOutputTuples());
 		cvcNotExists.setForeignKeys(cvc.getGenCVC().getForeignKeys());
 		cvcNotExists.setForeignKeysModified(cvc.getGenCVC().getForeignKeysModified());
 		cvcNotExists.setUnionCVC(cvc);
@@ -69,7 +69,7 @@ public class SetOperatorMutations {
 		cvcNotExists.setRepeatedRelNextTuplePos(cvc.getGenCVC().getRepeatedRelNextTuplePos());
 		cvcNotExists.setResultsetTables(cvc.getGenCVC().getResultsetTables());
 		cvcNotExists.setResultsetColumns(cvc.getGenCVC().getResultsetColumns());
-		cvcNotExists.setNoOfOutputTuples(cvc.getGenCVC().getNoOfOutputTuples());
+		cvcNotExists.setNoOfOutputTuples(cvc.getGenCVC().cloneNoOfOutputTuples());
 		cvcNotExists.setForeignKeys(cvc.getGenCVC().getForeignKeys());
 		cvcNotExists.setForeignKeysModified(cvc.getGenCVC().getForeignKeysModified());
 		cvcNotExists.setUnionCVC(cvc);
@@ -90,7 +90,7 @@ public class SetOperatorMutations {
 		cvcNotExists.setRepeatedRelNextTuplePos(cvc.getGenCVC().getRepeatedRelNextTuplePos());
 		cvcNotExists.setResultsetTables(cvc.getGenCVC().getResultsetTables());
 		cvcNotExists.setResultsetColumns(cvc.getGenCVC().getResultsetColumns());
-		cvcNotExists.setNoOfOutputTuples(cvc.getGenCVC().getNoOfOutputTuples());
+		cvcNotExists.setNoOfOutputTuples(cvc.getGenCVC().cloneNoOfOutputTuples());
 		cvcNotExists.setForeignKeys(cvc.getGenCVC().getForeignKeys());
 		cvcNotExists.setForeignKeysModified(cvc.getGenCVC().getForeignKeysModified());
 		cvcNotExists.setUnionCVC(cvc);
@@ -449,8 +449,8 @@ public class SetOperatorMutations {
 		/** Add constraints for all the blocks of the query */
 		left.getConstraints().add(QueryBlockDetails.getConstraintsForQueryBlock(right));
 		
-		HashMap <String,Integer> hmLeft = (HashMap<String,Integer>)left.getNoOfOutputTuples().clone();
-		HashMap <String,Integer> hmRight = (HashMap<String,Integer>)right.getNoOfOutputTuples().clone();
+		HashMap <String,Integer> hmLeft = left.cloneNoOfOutputTuples();
+		HashMap <String,Integer> hmRight = right.cloneNoOfOutputTuples();
 		Iterator <String> iterator = hmRight.keySet().iterator();		   
 		while (iterator.hasNext())
 		{  
@@ -544,8 +544,8 @@ public class SetOperatorMutations {
 		if(GenerateCVC1.tupleAssignmentForQuery(left) == false)
 			return false;
 
-		HashMap <String,Integer> hmLeft = (HashMap<String,Integer>)left.getNoOfOutputTuples().clone();
-		HashMap <String,Integer> hmRight = (HashMap<String,Integer>)right.getNoOfOutputTuples().clone();
+		HashMap <String,Integer> hmLeft = left.cloneNoOfOutputTuples();
+		HashMap <String,Integer> hmRight = right.cloneNoOfOutputTuples();
 		Iterator <String> iterator = hmRight.keySet().iterator();		   
 		while (iterator.hasNext())
 		{  
@@ -681,8 +681,8 @@ public class SetOperatorMutations {
 		/** Add constraints for all the blocks of the query */
 		left.getConstraints().add(QueryBlockDetails.getConstraintsForQueryBlock(left));
 		
-		HashMap <String,Integer> hmLeft = (HashMap<String,Integer>)left.getNoOfOutputTuples().clone();
-		HashMap <String,Integer> hmRight = (HashMap<String,Integer>)right.getNoOfOutputTuples().clone();
+		HashMap <String,Integer> hmLeft = left.cloneNoOfOutputTuples();
+		HashMap <String,Integer> hmRight = right.cloneNoOfOutputTuples();
 		Iterator <String> iterator = hmRight.keySet().iterator();		   
 		while (iterator.hasNext())
 		{  

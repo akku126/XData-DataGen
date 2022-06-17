@@ -213,10 +213,10 @@ public class GenerateConstraintsForPartialGroup_case2 {
 						int ptupleOffset = noofTuples2*nofGroups2;
 
 						//Increase the number of tuples of foreign key table
-						if(cvc.getNoOfOutputTuples().get(pTable) == null)
-							cvc.getNoOfOutputTuples().put(pTable, 1);
+						if(cvc.getNoOfOutputTuples(pTable) == -1)
+							cvc.putNoOfOutputTuples(pTable, 1);
 						else
-							cvc.getNoOfOutputTuples().put(pTable, cvc.getNoOfOutputTuples().get(pTable) + 1);
+							cvc.putNoOfOutputTuples(pTable, cvc.getNoOfOutputTuples(pTable) + 1);
 
 						//generate the constraint
 						out += constrGen.getAssertConstraint(fTable,fColumn, (i*j+ fOffset -1),fIndex, pTable,pColumn, (ptupleOffset + 1), pIndex, " = ");

@@ -152,8 +152,8 @@ public class GenerateConstraintsForMissingJoinMutation {
 					n1.setType(Node.getColRefType());
 					
 					int cnt = 0;
-					//cnt = cvc.getNoOfOutputTuples().get(jnClause.getJoinTable1().getTableName());
-				//	cvc.getNoOfOutputTuples().put(tableNo,cnt+1);
+					//cnt = cvc.getNoOfOutputTuples(jnClause.getJoinTable1().getTableName());
+				//	cvc.putNoOfOutputTuples(tableNo,cnt+1);
 					//updateRepeatedTuples(cvc,tableNo,1,jnClause.getJoinTable1().getTableName());
 					/**create a node for second column*/
 					Node n2 = new Node();
@@ -172,7 +172,7 @@ public class GenerateConstraintsForMissingJoinMutation {
 					cvc.getRepeatedRelationCount().put(jnClause.getJoinTable2().getTableName(), 1);
 					Integer [] tuplePos = {1,1};
 					cvc.getRepeatedRelNextTuplePos().put(jnClause.getJoinTable2()+"1",tuplePos);
-					cvc.getNoOfOutputTuples().put(jnClause.getJoinTable2()+"1",1);
+					cvc.putNoOfOutputTuples(jnClause.getJoinTable2()+"1",1);
 					n2.setType(Node.getColRefType());
 					Integer qindex [] = {0,0};
 					cvc.getTableNames().put(jnClause.getJoinTable2()+"1",qindex);

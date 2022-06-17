@@ -16,6 +16,7 @@ import parsing.Table;
 import testDataGen.GenerateCVC1;
 import testDataGen.QueryBlockDetails;
 import util.ConstraintObject;
+import util.TableMap;
 
 import com.microsoft.z3.*;
 
@@ -119,11 +120,11 @@ public class AddDataBaseConstraints {
 				String tableName = table.getTableName();
 
 				/**If there are no tuples for this query */		
-				if( cvc.getNoOfOutputTuples().get(tableName) == null)
+				if( cvc.getNoOfOutputTuples(tableName) == -1)
 					continue ;
 
 				/**Get the number of tuples for this relation  */
-				int noOfTuples = cvc.getNoOfOutputTuples().get(tableName);
+				int noOfTuples = cvc.getNoOfOutputTuples(tableName);
 
 				/**Check for branch queries*/
 				HashMap<Table, Integer> tempTuplesAddedForBranchQueries = new HashMap<Table, Integer>();
@@ -185,14 +186,14 @@ public class AddDataBaseConstraints {
 					continue;
 
 				/**If there are no tuples for this query */			
-				if( cvc.getNoOfOutputTuples().get(tableName)==null && cvc.getTablesOfOriginalQuery().contains(table))
-					 cvc.getNoOfOutputTuples().put(tableName, 1); 
+				if( cvc.getNoOfOutputTuples(tableName)== -1 && cvc.getTablesOfOriginalQuery().contains(table))
+					 cvc.putNoOfOutputTuples(tableName, 1); 
 
-				else if ( cvc.getNoOfOutputTuples().get(tableName)==null)				
-					 cvc.getNoOfOutputTuples().put(tableName, 0); 
+				else if ( cvc.getNoOfOutputTuples(tableName)==-1)				
+					 cvc.putNoOfOutputTuples(tableName, 0); 
 				
 				/**Get the number of tuples for this relation  */
-				int noOfTuples = cvc.getNoOfOutputTuples().get(tableName);
+				int noOfTuples = cvc.getNoOfOutputTuples(tableName);
 
 				/**If there is a single tuple then nothing need to be done */
 				if(noOfTuples == 1)
@@ -244,7 +245,7 @@ public class AddDataBaseConstraints {
 								}
 							}
 							if(x == false){
-								pkConstraint += "TRUE;\n";	//TODO: Should it imply FALSE???
+								pkConstraint += "TRUE;\n";
 							}
 							else
 								pkConstraint = pkConstraint.substring(0,pkConstraint.length()-4)+";\n";
@@ -369,49 +370,138 @@ public class AddDataBaseConstraints {
 
 		String fkConstraint = "";/** To store constraints for foreign keys*/
 		try{
+			///////////////////// TEST CODE: POOJA //////////////////////////////
 			/** Get the list of foreign keys*/
 			ArrayList<ForeignKey> foreignKeys = cvc.getForeignKeysModified();
-			
-			/**For each foreign key */
-			for(int i=0; i < foreignKeys.size(); i++){
+			TableMap tableMap = cvc.getTableMap();
+			int size = tableMap.foreignKeyGraph.topSort().size();
 
-				/** Get this foreign key */
+			//System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+			HashMap<String,Vector<ForeignKey>> fmap = new HashMap<String,Vector<ForeignKey>>();
+			for(int i=0; i<foreignKeys.size(); i++) {
 				ForeignKey foreignKey = foreignKeys.get(i);
-
-				/** Get foreign key table details */
 				String fkTableName = foreignKey.getFKTablename();
-
-				/**Get the number of tuples of foreign key table*/
-				Integer[] fkCount = {0};/**one variable is sufficient, but primitives are immutable*/
-
-				/**If FK Table do not contain any tuple, at least one tuple should be there */
-				if( cvc.getNoOfOutputTuples().get(fkTableName) == null || cvc.getNoOfOutputTuples().get(fkTableName) == 0) {
-
-					fkCount[0] = 1;
-
-					/** Update the number of tuples data structure */
-					cvc.getNoOfOutputTuples().put(fkTableName,1);				
+				//fmap.put(fkTableName, foreignKey);
+				if(fmap.containsKey(fkTableName))
+					fmap.get(fkTableName).add(foreignKey);
+				else {
+					fmap.put(fkTableName, new Vector<ForeignKey>());
+					fmap.get(fkTableName).add(foreignKey);
 				}
-				else/**Get the number of tuples of FK table */
-					fkCount[0] = cvc.getNoOfOutputTuples().get(fkTableName);
-				
-				/**check if the foreign key table is present across any query block
-				 * Also we need to check if all the attributes of the foreign key are involved in joins in that query block
-				 * If yes then we should not add the extra tuples in the primary key table  because the join conditions ensure that the foreign key relationship is satisfied 
-				 * If no, we should add the extra tuples in the primary key table 
-				 * These extra tuples are added for that occurrence of the relation in the query 
-				 * In either case we will decrement the foreign key table count as for that many tuples we ensured the primary key relationship*/
 
-
-				fkConstraint += generateForeignKeyConstraints(cvc, foreignKey, fkCount);
-				
+				//System.out.println(fkTableName);
 			}
+			//System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+			//System.out.println("\n\n##################################");
+			for (int fg=(size-1);fg>=0;fg--){
+				String tableName = tableMap.foreignKeyGraph.topSort().get(fg).toString();
+				if(fmap.containsKey(tableName)) {
+					//System.out.println(tableName);
+					
+					/** Get this foreign key */
+					//ForeignKey foreignKey = fmap.get(tableName);
+					Vector<ForeignKey> fkeys = fmap.get(tableName);
+					for(int i=0; i<fkeys.size(); i++) {
+
+						/** Get foreign key table details */
+						ForeignKey foreignKey = fkeys.get(i);
+						String fkTableName = foreignKey.getFKTablename();
+						//System.out.println(fkTableName);
+						
+						/**Get the number of tuples of foreign key table*/
+						Integer[] fkCount = {0};/**one variable is sufficient, but primitives are immutable*/
+
+						/**If FK Table do not contain any tuple, at least one tuple should be there */
+						if( cvc.getNoOfOutputTuples(fkTableName) == -1 || cvc.getNoOfOutputTuples(fkTableName) == 0) {
+
+							fkCount[0] = 1;
+
+							/** Update the number of tuples data structure */
+							cvc.putNoOfOutputTuples(fkTableName,1);				
+						}
+						else/**Get the number of tuples of FK table */
+							fkCount[0] = cvc.getNoOfOutputTuples(fkTableName);
+
+						/**check if the foreign key table is present across any query block
+						 * Also we need to check if all the attributes of the foreign key are involved in joins in that query block
+						 * If yes then we should not add the extra tuples in the primary key table  because the join conditions ensure that the foreign key relationship is satisfied 
+						 * If no, we should add the extra tuples in the primary key table 
+						 * These extra tuples are added for that occurrence of the relation in the query 
+						 * In either case we will decrement the foreign key table count as for that many tuples we ensured the primary key relationship*/
+
+
+						fkConstraint += generateForeignKeyConstraints(cvc, foreignKey, fkCount);
+					}
+				}		
+			}
+			//System.out.println("#####################################");
+			//////////////////////// TEST CODE ends here ////////////////////////////
+			
 		}catch(Exception e){
 			logger.log(Level.SEVERE,"\n Exception in AddDatabaseConstraints.java: Function generateConstraintsForForeignKeys : ",e);
 			throw e;
 		}
 		return fkConstraint;
 	}
+
+//	public static String generateConstraintsForForeignKeys(GenerateCVC1 cvc) throws Exception{
+//
+//		String fkConstraint = "";/** To store constraints for foreign keys*/
+//		try{
+//			/** Get the list of foreign keys*/
+//			//ArrayList<ForeignKey> foreignKeys = cvc.getForeignKeysModified();
+//			
+//			
+//			ArrayList<ForeignKey> foreignKeys = new ArrayList<ForeignKey>();
+//			for(ForeignKey key : cvc.getForeignKeysModified()) {
+//				if(!foreignKeys.contains(key)) {
+//					foreignKeys.add(key);
+//				}
+//			}
+//			cvc.setForeignKeysModified(foreignKeys);
+//			
+//			//System.out.println("fksize:"+foreignKeys.size());
+//			/**For each foreign key */
+//			for(int i=0; i < foreignKeys.size(); i++){
+//
+//				/** Get this foreign key */
+//				ForeignKey foreignKey = foreignKeys.get(i);
+//
+//				/** Get foreign key table details */
+//				String fkTableName = foreignKey.getFKTablename();
+//
+//				/**Get the number of tuples of foreign key table*/
+//				Integer[] fkCount = {0};/**one variable is sufficient, but primitives are immutable*/
+//
+//				/**If FK Table do not contain any tuple, at least one tuple should be there */
+//				if( cvc.getNoOfOutputTuples(fkTableName) == -1 || cvc.getNoOfOutputTuples(fkTableName) == 0) {
+//
+//					fkCount[0] = 1;
+//
+//					/** Update the number of tuples data structure */
+//					cvc.putNoOfOutputTuples(fkTableName,1);				
+//				}
+//				else/**Get the number of tuples of FK table */
+//					fkCount[0] = cvc.getNoOfOutputTuples(fkTableName);
+//				//System.out.println("fkcount:"+fkCount[0]);
+//				
+//				/**check if the foreign key table is present across any query block
+//				 * Also we need to check if all the attributes of the foreign key are involved in joins in that query block
+//				 * If yes then we should not add the extra tuples in the primary key table  because the join conditions ensure that the foreign key relationship is satisfied 
+//				 * If no, we should add the extra tuples in the primary key table 
+//				 * These extra tuples are added for that occurrence of the relation in the query 
+//				 * In either case we will decrement the foreign key table count as for that many tuples we ensured the primary key relationship*/
+//
+//
+//				fkConstraint += generateForeignKeyConstraints(cvc, foreignKey, fkCount);
+//				
+//			}
+//		}catch(Exception e){
+//			logger.log(Level.SEVERE,"\n Exception in AddDatabaseConstraints.java: Function generateConstraintsForForeignKeys : ",e);
+//			throw e;
+//		}
+//		return fkConstraint;
+//	}
 
 
 	/**
@@ -486,7 +576,7 @@ public class AddDataBaseConstraints {
 						fkConstraint += getFkConstraint(cvc, foreignKey, fkTableNameNo, count, 0);
 
 						/**get the primary key tuple offset */
-						int pkOffset = cvc.getNoOfOutputTuples().get(foreignKey.getReferenceTable().getTableName()) - fkCount[0];
+						int pkOffset = cvc.getNoOfOutputTuples(foreignKey.getReferenceTable().getTableName()) - fkCount[0];
 
 						//violate += getNegativeCondsForExtraTuples(cvc, foreignKey, fkTableNameNo, count, 0, pkOffset);			
 					}
@@ -495,7 +585,7 @@ public class AddDataBaseConstraints {
 				/**once done for all relation occurrences in original query, then 
 				 * get constraints for the extra tuples (Added due to foreign key relationship)*/
 				/**get the number of tuples for which foreign keys are already added*/
-				int fOffset = cvc.getNoOfOutputTuples().get(foreignKey.getFKTablename()) - fkCount[0];
+				int fOffset = cvc.getNoOfOutputTuples(foreignKey.getFKTablename()) - fkCount[0];
 
 				/**get the foreign key constraint*/
 				fkConstraint += getFkConstraint(cvc, foreignKey, null, fkCount[0], fOffset);
@@ -685,12 +775,12 @@ public class AddDataBaseConstraints {
 		/** update the extra tuples to be added for the primary key table*/
 		/**if there are no tuple*/
 		pkCount = fkCount;
-		if( cvc.getNoOfOutputTuples().get(pkTableName) == null || cvc.getNoOfOutputTuples().get(pkTableName) == 0){
+		if( cvc.getNoOfOutputTuples(pkTableName) == -1 || cvc.getNoOfOutputTuples(pkTableName) == 0){
 			offset = 1;
 		}
 
 		else{
-			offset = cvc.getNoOfOutputTuples().get(pkTableName) + 1;
+			offset = cvc.getNoOfOutputTuples(pkTableName) + 1;
 		}
 
 		/**updates the number of tuples for primary key and foreign key table*/
@@ -912,8 +1002,7 @@ public class AddDataBaseConstraints {
 					if (fSingleCol.isNullable()) {
 						orConstraints.add(constraintGenerator.getIsNullConditionZ3(tableName1,fSingleCol, j + fkOffset -1 + ""));
 					}
-					else
-						fkConstraints.add(ctx.mkOr(orConstraints.toArray(new BoolExpr[orConstraints.size()])));
+					fkConstraints.add(ctx.mkOr(orConstraints.toArray(new BoolExpr[orConstraints.size()])));
 				}
 			}
 			
@@ -933,17 +1022,17 @@ public class AddDataBaseConstraints {
 	public static void updateTheNumberOfTuples(GenerateCVC1 cvc, String ptableName, int fkCount, int pkCount) {
 
 		/**update the number of tuples for the whole foreign key table relation*//*
-		if( cvc.getNoOfOutputTuples().get(ftableName) == null || cvc.getNoOfOutputTuples().get(ftableName) == 0) 
-			cvc.getNoOfOutputTuples().put(ftableName, fkCount);
+		if( cvc.getNoOfOutputTuples(ftableName) == null || cvc.getNoOfOutputTuples(ftableName) == 0) 
+			cvc.putNoOfOutputTuples(ftableName, fkCount);
 		else
-			cvc.getNoOfOutputTuples().put(ftableName, fkCount + cvc.getNoOfOutputTuples().get(ftableName) );*/
+			cvc.putNoOfOutputTuples(ftableName, fkCount + cvc.getNoOfOutputTuples(ftableName) );*/
 
 		/**update the number of tuples for the whole primary key table relation*/
-		if( cvc.getNoOfOutputTuples().get(ptableName) == null || cvc.getNoOfOutputTuples().get(ptableName) == 0) 
-			cvc.getNoOfOutputTuples().put(ptableName, pkCount);
+		if( cvc.getNoOfOutputTuples(ptableName) == -1 || cvc.getNoOfOutputTuples(ptableName) == 0) 
+			cvc.putNoOfOutputTuples(ptableName, pkCount);
 
 		else
-			cvc.getNoOfOutputTuples().put(ptableName, pkCount + cvc.getNoOfOutputTuples().get(ptableName) );
+			cvc.putNoOfOutputTuples(ptableName, pkCount + cvc.getNoOfOutputTuples(ptableName) );
 	}
 
 
@@ -1236,7 +1325,7 @@ public class AddDataBaseConstraints {
 						//**get the number of tuples on other relation
 						int otherCount = 0;
 						if(otherNode.getTable().getTableName() != null)
-							otherCount = cvc.getNoOfOutputTuples().get(otherNode.getTable().getTableName()) ;
+							otherCount = cvc.getNoOfOutputTuples(otherNode.getTable().getTableName()) ;
 
 						for(int k = 1; k <= otherCount; k++){
 

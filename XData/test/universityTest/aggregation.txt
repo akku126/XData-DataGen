@@ -1,0 +1,10 @@
+select avg (salary) from instructor where dept name = 'Comp. Sci.';
+select avg (salary) as avg salary from instructor where dept name = 'Comp. Sci.';
+select count (distinct ID ) from teaches where semester = 'Spring' and year = 2018;
+select count (*) from course;
+select dept name, avg (salary) as avg salary from instructor group by dept name;
+select avg (salary) from instructor;
+select dept name, count (distinct ID ) as instr_count from instructor, teaches where instructor. ID = teaches. ID and semester = 'Spring' and year = 2018 group by dept name;
+select dept name, avg (salary) as avg salary from instructor group by dept name having avg (salary) > 42000;
+select course id, semester, year, sec id, avg (tot cred) from student, takes where student. ID = takes. ID and year = 2017 group by course id, semester, year, sec id having count ( ID ) >= 2;
+select sum (salary) from instructor;

@@ -1028,6 +1028,7 @@ public class ProcessSelectClause{
 			QueryStructure qStruct, PlainSelect plainSelect, String joinType,AppTest_Parameters dbAppParameters) throws Exception {
 		
 		try{
+			//System.out.println(clause);
 			if (clause == null) {
 				return null;
 			} else if (clause instanceof Parenthesis){
@@ -2192,7 +2193,7 @@ public class ProcessSelectClause{
 			//case when fle under consideration is a table, in which case if there is a match, then fle's
 			//table name is copied to n's and also the respective table 
 			if(fle!=null&&fle.getTableName()!=null){
-				if(fle.getTableName().equalsIgnoreCase(n.getTableNameNo())){
+				if(fle.getTableName().equalsIgnoreCase(n.getTableAlias())){
 					n.setTableNameNo(fle.getTableNameNo());
 					Table table=qStruct.getTableMap().getTable(fle.getTableName());
 					n.setTable(table);
@@ -2208,7 +2209,7 @@ public class ProcessSelectClause{
 					}
 					return n;
 				}
-				else if(fle.getAliasName().equalsIgnoreCase(n.getTableNameNo())){
+				else if(fle.getAliasName().equalsIgnoreCase(n.getTableAlias())){
 					n.setTableNameNo(fle.getTableNameNo());
 					Table table=qStruct.getTableMap().getTable(fle.getTableName());
 					if(table!=null){
@@ -2242,7 +2243,7 @@ public class ProcessSelectClause{
 			// considers the case fle alias is provided and fle is not a table (hence, is a subquery or a subjoin)
 			// and alias name matches with n's table name
 			if(fle!=null&&fle.getTableName()==null && fle.getAliasName()!=null&&
-				fle.getAliasName().equalsIgnoreCase(n.getTableNameNo())){
+				fle.getAliasName().equalsIgnoreCase(n.getTableAlias())){
 				logger.log(Level.FINE," alias name is not null, but table name is null");
 					
 					// case when fle is a subquery, then its from list elements are recursively traversed and searched for a match
@@ -2318,16 +2319,17 @@ public class ProcessSelectClause{
 			//case when fle under consideration is a table, in which case if there is a match, then fle's
 			//table name is copied to n's and also the respective table 
 			if(fle!=null&&fle.getTableName()!=null){
-				if(!n.getTableNameNo().isEmpty() && fle.getTableName().equalsIgnoreCase(n.getTableNameNo())){
+				if(!n.getTableNameNo().isEmpty() && fle.getTableName().equalsIgnoreCase(n.getTableAlias())){
 					n.setTableNameNo(fle.getTableNameNo());
 					Table table=qStruct.getTableMap().getTable(fle.getTableName());
 					n.setTable(table);
 					//n.setColumn(new parsing.Column(n.getColumn().getColumnName(),table));
+					n.isCorrelated = true; //POOJA
 					n.setColumn(table.getColumn(n.getColumn().getColumnName()));
 					logger.log(Level.FINE,"table Name Found in ancestor"+n);
 					return n;
 				}
-				else if( !n.getTableNameNo().isEmpty() && fle.getAliasName().equalsIgnoreCase(n.getTableNameNo())){
+				else if( !n.getTableNameNo().isEmpty() && fle.getAliasName().equalsIgnoreCase(n.getTableAlias())){
 					n.setTableNameNo(fle.getTableNameNo());
 					Table table=qStruct.getTableMap().getTable(fle.getTableName());
 					if(table!=null){
@@ -2341,7 +2343,7 @@ public class ProcessSelectClause{
 					return n;
 				}
 				// case when there is table name of n does not match with table/alias name of fle
-				else if( !n.getTableNameNo().isEmpty() && fle.getAliasName().equalsIgnoreCase(n.getTableNameNo())){
+				else if( !n.getTableNameNo().isEmpty() && fle.getAliasName().equalsIgnoreCase(n.getTableAlias())){
 					n.setTableNameNo(fle.getTableNameNo());
 					Table table=qStruct.getTableMap().getTable(fle.getTableName());
 					if(table!=null){

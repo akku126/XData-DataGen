@@ -33,7 +33,7 @@ public class SelectionMutationsInFromSubquery {
 	public static void generateDataForkillingSelectionMutationsInFromSubquery(	GenerateCVC1 cvc) throws Exception{
 		
 		/** keep a copy of this tuple assignment values */
-		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
+		//HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
 		HashMap<String, Integer> noOfTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfTuples().clone();
 		HashMap<String, Integer[]> repeatedRelNextTuplePosOrig = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
 		

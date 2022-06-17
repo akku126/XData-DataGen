@@ -161,7 +161,7 @@ public class UtilsRelatedToNode {
 	
 	public static int getMaxCountForPredAgg(GenerateCVC1 cvc, Node n){
 		if(n.getType().equalsIgnoreCase(Node.getColRefType())){
-			return cvc.getNoOfOutputTuples().get(n.getColumn().getTableName());/**FIXME: Handle repeated relations */
+			return cvc.getNoOfOutputTuples(n.getColumn().getTableName());/**FIXME: Handle repeated relations */
 		}
 		else if(n.getType().equalsIgnoreCase(Node.getValType())){
 			return 0;
@@ -470,6 +470,7 @@ public class UtilsRelatedToNode {
 		lcm = likeCond.clone();
 		lcm.setOperator("!~");
 		d3.add(lcm);
+		likeMutants.add(d3); // TEST CODE: Pooja
 		
 		return likeMutants;
 	}
@@ -581,7 +582,25 @@ public class UtilsRelatedToNode {
 	public static Vector<Node> getStringSelectionCondMutations(Node stringCond) throws Exception{
 		
 		Vector<Node> scMutants = new Vector<Node>();
-		
+		String op = stringCond.getOperator(); 
+		/********* For LIKE operator ********/
+		if(op.contains("~")) {
+			ArrayList<ArrayList<Node>> mutants =  getLikeMutations(stringCond);
+			for(ArrayList<Node> m: mutants)
+			{
+				for(Node n: m) {
+					if(!n.getOperator().equals(op) && !scMutants.contains(n)) 
+					{	
+						scMutants.add(n);
+						//System.out.println("=>  "+n.getOperator());
+					}
+				}
+					
+			}
+				
+			return scMutants;
+		}
+			
 		Node scm = null;
 		scm = stringCond.clone();
 		scm.setOperator("=");					

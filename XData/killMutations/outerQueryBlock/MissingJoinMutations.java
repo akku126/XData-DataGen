@@ -39,7 +39,7 @@ public class MissingJoinMutations {
 	
 	public static void generateDataForkillingMissingJoinMutations(GenerateCVC1 cvc) throws Exception{
 		// keep a copy of this tuple assignment values 
-		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
+		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.cloneNoOfOutputTuples();
 		HashMap<String, Integer> noOfTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfTuples().clone();
 		HashMap<String, Integer[]> repeatedRelNextTuplePosOrig = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
 		HashMap<String, Integer> repeatedRelationCountOrig = (HashMap<String, Integer>) cvc.getRepeatedRelationCount().clone();
@@ -332,11 +332,11 @@ public class MissingJoinMutations {
 				if(noOfOutputTuples.containsKey(jnClause.getJoinTable1())
 						&& noOfOutputTuples.get(jnClause.getJoinTable1())<noOfTuples){
 					
-					noOfOutputTuples.put(jnClause.getJoinTable1().getTableName(), noOfTuples);
+					noOfOutputTuples.put(jnClause.getJoinTable1().getTableName().toUpperCase(), noOfTuples);
 				}
 				
 				if(!noOfOutputTuples.containsKey(jnClause.getJoinTable1())){
-					noOfOutputTuples.put(jnClause.getJoinTable1().getTableName(), noOfTuples);
+					noOfOutputTuples.put(jnClause.getJoinTable1().getTableName().toUpperCase(), noOfTuples);
 				}
 				else{		
 					noOfOutputTuples = (HashMap<String,Integer>)cvc.getQuery().getRepeatedRelationCount().clone();
@@ -383,11 +383,11 @@ public class MissingJoinMutations {
 				if(noOfOutputTuples.containsKey(jnClause.getJoinTable2())
 						&& noOfOutputTuples.get(jnClause.getJoinTable2())<noOfTuples){
 					
-					noOfOutputTuples.put(jnClause.getJoinTable2().getTableName(), noOfTuples);
+					noOfOutputTuples.put(jnClause.getJoinTable2().getTableName().toUpperCase(), noOfTuples);
 				}
 				
 				if(!noOfOutputTuples.containsKey(jnClause.getJoinTable2())){
-					noOfOutputTuples.put(jnClause.getJoinTable2().getTableName(), noOfTuples);
+					noOfOutputTuples.put(jnClause.getJoinTable2().getTableName().toUpperCase(), noOfTuples);
 				}
 				else{		
 					noOfOutputTuples = (HashMap<String,Integer>)cvc.getQuery().getRepeatedRelationCount().clone();

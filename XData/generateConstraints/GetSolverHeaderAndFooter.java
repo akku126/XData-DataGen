@@ -124,11 +124,9 @@ public class GetSolverHeaderAndFooter {
 	 */
 	public static String  generateSolver_Header( GenerateCVC1 cvc, Boolean unique) throws Exception{
 		DataType dt = new DataType();
-
 		String cvc_tuple = "", tableName="";
 		String tempStr = "";
 		HashMap<Vector<String>,Boolean> equivalenceColumns = new HashMap<Vector<String>, Boolean>();
-		
 		
 		String equivalenceColumnsFile=Configuration.homeDir+"/temp_smt" +cvc.getFilePath() + "/equivalenceColumns";
 		
@@ -180,6 +178,7 @@ public class GetSolverHeaderAndFooter {
 			
 			
 			Vector<String> columnValue = column.getColumnValues();
+			
 			// The keys stored in columnToStringMap are all prefixed with the table name to 
 			// avoid conflicts when same column name exits in different tables and they are
 			// not equivalent columns. So the keyNameString will prefix the table name and 
@@ -187,7 +186,7 @@ public class GetSolverHeaderAndFooter {
 			String keyNameString = column.getTableName() + "/" + columnName;
 			if (columnToStringsMap.containsKey(keyNameString)) {				
 				columnValue.addAll(columnToStringsMap.get(keyNameString));
-				columnValue = new Vector<>(new HashSet<>(columnValue));
+				//columnValue = new Vector<>(new HashSet<>(columnValue)); //Commented this line becoz order of values was getting changed.
 			}
 			
 			columnType = dt.getDataType(column.getDataType());
@@ -210,7 +209,7 @@ public class GetSolverHeaderAndFooter {
 						//								isNullMembers += "ASSERT NOT ISNULL_"+columnName+"("+colValue+");\n";
 						if (!limitsDefined) {
 							min = colValue;
-							max = colValue;
+							max = max < colValue ? colValue : max;
 							limitsDefined = true;
 							continue;
 						}
@@ -302,7 +301,6 @@ public class GetSolverHeaderAndFooter {
 				isNullMembers = "";
 				
 				cvc_datatype += constraintGen.getStringDataTypes(columnValue,column,unique);
-		
 				
 				HashMap<String, Integer> nullValuesChar = new HashMap<String, Integer>();
 				for(int k=1;k<=4;k++){
@@ -347,11 +345,11 @@ public class GetSolverHeaderAndFooter {
 			{
 				long min, max;
 				min = max = 0;
+				column.setCvcDatatype("Int");
 				boolean limitsDefined = false;
 				if(columnValue.size()>0){
 					for(int j=0; j<columnValue.size(); j++){
 						java.sql.Date t= java.sql.Date.valueOf(columnValue.get(j));
-
 						long colValue = t.getTime()/86400000;
 
 						isNullMembers += "ASSERT NOT ISNULL_"+columnName+"("+colValue+");\n";
@@ -367,6 +365,10 @@ public class GetSolverHeaderAndFooter {
 							max = colValue;
 					}
 				}
+				
+				cvc_datatype += constraintGen.getIntegerDatatypes(column, min, max);
+				cvc_datatype += constraintGen.getIntegerNullDataValues(column);
+
 				//Adding support for NULLs
 				//Consider the range -99996 to -99999 as NULL integers
 				/*cvc_datatype = "\n"+columnName+" : TYPE = SUBTYPE (LAMBDA (x: INT) : (x > "+(min-1)+" AND x < "+(max+1)+") OR (x > -100000 AND x < -99995));\n";

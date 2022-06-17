@@ -239,19 +239,18 @@ public class PopulateTestData {
 		}
 		return "cut_"+cvcOutputFileName;
 	}
-/************** ABHISHEK's CODE ******************/
+///************** API CODE ******************/
 
-	public String cutRequiredOutputForSMTWithAPI(String SMTFileName, String filePath) throws Exception {
-		String cutFileName = "api_cut_" + SMTFileName.substring(0, SMTFileName.lastIndexOf(".smt")) + ".out";
-		String cutFileFullPath = Configuration.homeDir+"/temp_smt"+filePath+"/" + cutFileName;
-		//Writing output to cut_*.out file
-		BufferedWriter out = new BufferedWriter(new FileWriter(cutFileFullPath));
-		out.close();
-		File cutFile = new File(cutFileFullPath);
-
+	public String cutRequiredOutputForSMTWithAPI(String SMTFileName, String filePath,TableMap tableMap) throws Exception {
+		
+		String sqlFileName = "DS" + SMTFileName.substring(3, SMTFileName.lastIndexOf(".smt")) + ".sql";
+		
+		String cutstr="",sqlOutput="";
+		
 		Context ctx = ConstraintGenerator.ctx;
 		Params p = ctx.mkParams();
 		p.add("smt.macro_finder", true);
+		p.add("model.compact", false);
 
 		Solver s = ctx.mkSolver();
 		s.setParameters(p);
@@ -265,33 +264,264 @@ public class PopulateTestData {
 
 		String smtStr = new String(data, "UTF-8");
 
-		BoolExpr[] exprs = ctx.parseSMTLIB2String("(set-option :model_compress false)\n"+smtStr, null, null, null, null);
+		BoolExpr[] exprs = ctx.parseSMTLIB2String(smtStr, null, null, null, null);
 		s.add(exprs);
-
+		
 		if (s.check() != Status.SATISFIABLE) {
 			//throw Exception() TODO
-			return cutFileName;
+			return sqlFileName;
 		}
 
 		Model m = s.getModel();
-
+		
 		for (FuncDecl decl : m.getFuncDecls()) {
 			if (decl.getRange().getSExpr().endsWith("_TupleType")) {
 				FuncInterp interp = m.getFuncInterp(decl);
-				if (interp.getNumEntries() == 0) {
+				if (interp.getNumEntries() == 0) 
 					continue;
-				}
+				
+				for (Entry ent : interp.getEntries()) 
+					cutstr+=ent.getValue().getSExpr();
 
-				for (Entry ent : interp.getEntries()) {
-					setContents(cutFile, ent.getValue().getSExpr()+"\n", true);
-				}
+				if(!cutstr.isEmpty()) 
+					cutstr=cleanseContents(cutstr);//cleanse
 			}
 		}
-
-		return cutFileName;
+		 
+		sqlOutput=requiredSqlOutput(cutstr,tableMap);
+		//sqlOutput = removeRepeatedqueries(sqlOutput);
+		String sqlFileFullPath = Configuration.homeDir+"/temp_smt"+filePath+"/" + sqlFileName;
+		FileWriter file = new FileWriter (sqlFileFullPath);
+		file.write(sqlOutput);
+		file.close();
+		
+		//Connection testCon=getTestConn();
+		//loadDataset(testCon, sqlFileName, Configuration.homeDir+"/temp_smt"+filePath);
+		
+		return sqlFileName;
+		
 	}
-/*****************************************************************/
+	
+//**********************************************************************************************************/	
+	
+private Connection getTestConn() throws Exception{
+		
+		//added by rambabu
+		String tempDatabaseType = Configuration.getProperty("tempDatabaseType");
+		String loginUrl = "";
+		Connection conn = null;
+		
+		//choosing connection based on database type 
+		if(tempDatabaseType.equalsIgnoreCase("postgresql"))
+		{
+			Class.forName("org.postgresql.Driver");
+			
+			loginUrl = "jdbc:postgresql://" + Configuration.getProperty("databaseIP") + ":" + Configuration.getProperty("databasePort") + "/" + Configuration.getProperty("databaseName");
+			conn = DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));;
+		}
+		else if(tempDatabaseType.equalsIgnoreCase("mysql"))
+		{
+			Class.forName("com.mysql.cj.jdbc.Driver");
+			
+			loginUrl = "jdbc:mysql://" + Configuration.getProperty("databaseIP") + ":" + Configuration.getProperty("databasePort") + "/" + Configuration.getProperty("databaseName");
+			conn=DriverManager.getConnection(loginUrl, Configuration.getProperty("testDatabaseUser"), Configuration.getProperty("testDatabaseUserPasswd"));;				
+		}		
+		return conn;
+	}
 
+    public String removeRepeatedqueries(String sqlOutput) {
+    	
+    	String[] tokens = sqlOutput.split("\n");
+    	StringBuilder resultBuilder = new StringBuilder();
+    	Set<String> alreadyPresent = new HashSet<String>();
+
+    	boolean first = true;
+    	for(String token : tokens) {
+    	    if(!alreadyPresent.contains(token)) {
+    	        if(first) first = false;
+    	        else resultBuilder.append("\n");
+
+    	        if(!alreadyPresent.contains(token))
+    	            resultBuilder.append(token);
+    	    }
+    	    alreadyPresent.add(token);
+    	}
+    	sqlOutput = resultBuilder.toString();
+    	
+    	return sqlOutput;
+    }
+	
+	public String requiredSqlOutput(String cutstr,TableMap tableMap) throws Exception {
+		
+		String copystmt="",insertQuery="", extraTables=""; 
+		Map<String,List<String>> queryMap=new HashMap<String,List<String>>();
+		String lines[]=cutstr.split("\\r?\\n");
+		for(int j=0; j<lines.length;j++)
+		{
+			if(lines[j].equals(")"))
+				continue;
+			try {
+				String tableName = lines[j].substring(lines[j].indexOf("(")+1,lines[j].indexOf("TupleType")-1);
+				String tempData = lines[j].substring(lines[j].indexOf("_TupleType ")+11,lines[j].indexOf(")"));
+				tempData=cleanseCopyString(tempData);
+				String[] copyTemp=tempData.split("\\ ");
+
+				Table t=tableMap.getTable(tableName.toUpperCase());
+				if(t != null) {
+					for(int i=0;i<copyTemp.length;i++){
+						insertQuery = "";
+						String cvcDataType=t.getColumn(i).getCvcDatatype();
+						if(cvcDataType.equalsIgnoreCase("INT") )
+							continue;
+						else if(cvcDataType.equalsIgnoreCase("REAL")){
+							/*
+							 * Sometimes Solver assigns values in the format (/ x y)
+							 *  "(/" is at ith index, x at i+1 and y at i+2 
+							 */
+							if(copyTemp[i].equals("(/")) {
+								double num=Double.parseDouble(copyTemp[i+1]); // x
+								double den=Double.parseDouble(copyTemp[i+2]); // y
+								copyTemp[i]=(num/den)+"";
+								copyTemp[i+1] = "";
+								copyTemp[i+2] = "";
+								i+=2; //
+							}
+							else {
+								String str[]=copyTemp[i].trim().split("/");
+								if(str.length==1)
+									continue;
+							}
+
+
+						}
+						else if(cvcDataType.equalsIgnoreCase("TIMESTAMP")){
+							long l=Long.parseLong(copyTemp[i].trim())*1000;
+							java.sql.Timestamp timeStamp=new java.sql.Timestamp(l);
+							copyTemp[i]=timeStamp.toString();
+						}
+						else if(cvcDataType.equalsIgnoreCase("TIME")){
+
+							int time=Integer.parseInt(copyTemp[i].trim());
+							int sec=time%60;
+							int min=((time-sec)/60)%60;
+							int hr=(time-sec+min*60)/3600;
+							copyTemp[i]=hr+":"+min+":"+sec;
+						}
+						else if(cvcDataType.equalsIgnoreCase("DATE")){
+							long l=Long.parseLong(copyTemp[i].trim())*86400000;
+
+							java.sql.Date date=new java.sql.Date(l);
+							copyTemp[i]=date.toString();
+
+						}
+						else {
+
+							String copyStr=copyTemp[i].trim();
+
+							if(copyStr.endsWith("__"))
+								copyStr = "";
+							else if(copyStr.contains("__"))
+								copyStr = copyStr.split("__")[1];
+
+							copyStr = copyStr.replace("_p", "%");
+							copyStr = copyStr.replace("_s", "+");
+							copyStr = copyStr.replace("_d", ".");
+							copyStr = copyStr.replace("_m", "-");
+							copyStr = copyStr.replace("_s", "*");
+							copyStr = copyStr.replace("_u", "_");
+							copyStr = URLDecoder.decode(copyStr,"UTF-8");
+							copyTemp[i]=copyStr.replace("_b", " ");
+						}
+					}
+					for(String k:copyTemp){
+						if(!k.isEmpty())
+							copystmt+= (k.startsWith("(") ? null : "'"+k+"'")+",";
+					}
+					copystmt = copystmt.replaceAll("'null'","null");
+
+					copystmt=copystmt.substring(0, copystmt.length()-1);
+					insertQuery += "insert into "+tableName+" values "+"("+copystmt+")\n"; 
+					copystmt="";			
+
+					//hashmap
+					String key = tableName;
+					if(queryMap.containsKey(key)) {
+						queryMap.get(key).add(insertQuery);
+					}
+					else {
+						List<String> queryList=new ArrayList<String>(); ;
+						queryList.add(insertQuery);
+						queryMap.put(key, queryList);
+					}
+				}
+				else {
+					extraTables += "-- "+lines[j]+"\n"; 
+				}
+			}
+			catch(Exception e) {
+				logger.log(Level.SEVERE,"PopulateTestData-requiredSqlOutput :  "+e.getStackTrace(),e);
+			}
+		}
+		
+		return generateSqlFile(queryMap,tableMap,extraTables);
+}
+	public String generateSqlFile(Map<String,List<String>> queryMap, TableMap tableMap, String extraTables) {
+		
+		/**Delete existing entries in Temp tables **/
+		String finalQueries="";
+		int size = tableMap.foreignKeyGraph.topSort().size();
+		for (int fg=(size-1);fg>=0;fg--){
+			String tableName = tableMap.foreignKeyGraph.topSort().get(fg).toString();
+			finalQueries +="delete from "+tableName+"\n";
+		}
+		//Vector<String> addedTables = new Vector<String>();
+		Vector<String> queryList = new Vector<String>();
+		
+		//This part helps in identifying the order of foreign key dependence and helps in
+		//populating the data accordingly.
+		for(int f=0;f<tableMap.foreignKeyGraph.topSort().size();f++){
+			String tableName = tableMap.foreignKeyGraph.topSort().get(f).toString();
+			String tName="";
+
+			if(queryMap.containsKey(tableName) ){
+				//addedTables.add(tableName);
+				//System.out.println(queryMap.get(tableName));	
+				for(String insert:queryMap.get(tableName)) {
+						//if(!queryList.contains(insert)) {
+							finalQueries += insert ;
+							queryList.add(insert);
+							//System.out.println(insert);
+						//}
+					}
+			}
+		}
+		queryMap.clear();
+//		for(Map.Entry<String, List<String>> entry: queryMap.entrySet()) {
+//			if(!addedTables.contains(entry.getKey())) {
+//				addedTables.add(entry.getKey());
+//				for(String insert: entry.getValue()) {
+//					if(!queryList.contains(insert)) {
+//						finalQueries += insert ;
+//						queryList.add(insert);
+//					}				}
+//			}
+//		}
+		
+		finalQueries += extraTables;
+		
+		return finalQueries;
+	}
+	
+	public String cleanseContents(String cutstr) {
+		cutstr = cutstr.replaceAll("\\s", " "); // extra tabs and all new lines
+		cutstr = cutstr.replace(")", ")\n");    // required new lines 
+		cutstr = cutstr.replaceAll(" +", " ");  // extra spaces
+		cutstr = cutstr.replaceAll("\n ", "\n");
+		cutstr = cutstr.replaceAll("\\- 9999[6789].0", "null");
+		return cutstr;
+
+	}
+	
 	public void setContents(File aFile, String aContents, boolean append)throws FileNotFoundException, IOException {
 		if (aFile == null) {
 			logger.log(Level.WARNING,"PopulateTesData.setContents : File is null");
@@ -377,11 +607,16 @@ public class PopulateTestData {
 				}
 				else{
 					String tableName = line.substring(line.indexOf("_")+1,line.indexOf("["));
-					if(!noOfOutputTuples.containsKey(tableName)){
+					if(!noOfOutputTuples.containsKey(tableName.toUpperCase()) && !noOfOutputTuples.containsKey(tableName.toLowerCase())){
 						continue;
 					}
 					int index = Integer.parseInt(line.substring(line.indexOf('[')+1, line.indexOf(']')));
-					if((index > noOfOutputTuples.get(tableName)) || (index <= 0)){
+					/*
+					 * Temp Code: Pooja
+					 */
+					int numOpTuples = noOfOutputTuples.containsKey(tableName.toLowerCase()) ? noOfOutputTuples.get(tableName.toLowerCase()) : noOfOutputTuples.get(tableName.toUpperCase() ) ;
+					
+					if((index > numOpTuples) || (index <= 0)){
 						continue;
 					}
 					currentCopyFileName = line.substring(line.indexOf("_")+1,line.indexOf("["));
@@ -560,9 +795,10 @@ public class PopulateTestData {
 					//String tableName = line.substring(line.indexOf("O_")+2,line.indexOf(" (store ("));
 					if(line.contains("(") && line.contains("_TupleType")) {
 						String tableName = line.substring(line.indexOf("(")+1,line.indexOf("_TupleType"));
-						if(!noOfOutputTuples.containsKey(tableName)){
+						if(!noOfOutputTuples.containsKey(tableName.toUpperCase()) && !noOfOutputTuples.containsKey(tableName.toLowerCase())){
 							continue;
 						}
+						
 						//int index = Integer.parseInt(line.substring(line.indexOf('[')+1, line.indexOf(']')));
 						//if((index > noOfOutputTuples.get(tableName)) || (index <= 0)){
 						//	continue;
@@ -582,16 +818,14 @@ public class PopulateTestData {
 							listOfCopyFiles.add(currentCopyFileName + ".copy");
 						}
 						copystmt = getCopyStmtFromCvcOutputForSMT(line);
-						
 						copyFileContents.add(copystmt);
 						////Putting back string values in CVC
 	
 						//Table t=tableMap.getTable(tableName);
 						Table t=tableMap.getTable(tableName.toUpperCase());//added by rambabu
 						String[] copyvalues = copystmt.split("\n");
-	
+						
 						for(int k=0; k<copyvalues.length; k++){
-	
 							String[] copyTemp=copyvalues[k].split("\\ ");
 							copystmt="";
 								
@@ -601,12 +835,25 @@ public class PopulateTestData {
 								if(cvcDataType.equalsIgnoreCase("INT") )
 									continue;
 								else if(cvcDataType.equalsIgnoreCase("REAL")){
-									String str[]=copyTemp[i].trim().split("/");
-									if(str.length==1)
-										continue;
-									double num=Integer.parseInt(str[0]);
-									double den=Integer.parseInt(str[1]);
-									copyTemp[i]=(num/den)+"";
+									/*
+									 * Sometimes Solver assigns values in the format (/ x y)
+									 *  "(/" is at ith index, x at i+1 and y at i+2 
+									 */
+									if(copyTemp[i].equals("(/")) {
+										double num=Double.parseDouble(copyTemp[i+1]); // x
+										double den=Double.parseDouble(copyTemp[i+2]); // y
+										copyTemp[i]=(num/den)+"";
+										copyTemp[i+1] = "";
+										copyTemp[i+2] = "";
+										i+=2; //
+									}
+									else {
+										String str[]=copyTemp[i].trim().split("/");
+										if(str.length==1)
+											continue;
+									}
+									
+									
 								}
 								else if(cvcDataType.equalsIgnoreCase("TIMESTAMP")){
 									long l=Long.parseLong(copyTemp[i].trim())*1000;
@@ -622,7 +869,7 @@ public class PopulateTestData {
 									copyTemp[i]=hr+":"+min+":"+sec;
 								}
 								else if(cvcDataType.equalsIgnoreCase("DATE")){
-									long l=Long.parseLong(copyTemp[i].trim())*86400000;
+									long l = Long.parseLong(copyTemp[i].trim())*86400000;
 	
 									java.sql.Date date=new java.sql.Date(l);
 									copyTemp[i]=date.toString();
@@ -660,7 +907,9 @@ public class PopulateTestData {
 	
 							}
 							for(String s:copyTemp){
-								copystmt+=s+"|";
+								if(!s.isEmpty())
+									//copystmt+= (s.startsWith("-") ? null : s)+"|";
+									copystmt+= ((s.startsWith("-")||s.startsWith("(")) ? null : s)+"|";
 							}
 							copystmt=copystmt.substring(0, copystmt.length()-1);
 							
@@ -681,6 +930,11 @@ public class PopulateTestData {
 		}
 		return listOfCopyFiles;
 	}
+	
+//	public String generateSqlFile(String cutString)
+//	{
+//		
+//	}
 
 
 	public String getCopyStmtFromCvcOutput(String cvcOutputLine){
@@ -698,10 +952,13 @@ public class PopulateTestData {
 		//String tableName = cvcOutputLine.substring(cvcOutputLine.indexOf("O_")+2,cvcOutputLine.indexOf(" (store ("));
 		String tableName = cvcOutputLine.substring(cvcOutputLine.indexOf("(")+1,cvcOutputLine.indexOf("_"));
 		String temp = cvcOutputLine.substring(cvcOutputLine.indexOf("_TupleType ")+11);
-		String insertTupleValues = temp.substring(temp.indexOf("_"),temp.indexOf(")"));
+		
+		/* Test Code: Pooja */
+		//String insertTupleValues = temp.substring(temp.indexOf("_"),temp.indexOf(")"));
+		String insertTupleValues = temp.startsWith("_")? temp.substring(temp.indexOf("_"),temp.indexOf(")")) : temp.substring(0,temp.indexOf(")"));
+		
 		insertTupleValues = cleanseCopyString(insertTupleValues);
 		insertTupleValues = insertTupleValues.trim().replaceAll(" +", " ");
-		
 		/*
 		String temp1 = cvcOutputLine.substring((cvcOutputLine.indexOf(" 1 (")+2), 
 				cvcOutputLine.lastIndexOf("))))"));
@@ -735,17 +992,18 @@ public class PopulateTestData {
 
 		copyStr = copyStr.replaceAll("\\b_", "");
 		copyStr = copyStr.replaceAll("\\bNULL_\\w+", "null");
-		copyStr = copyStr.replaceAll("\\-9999[6789]", "");
+		copyStr = copyStr.replaceAll("\\-9999[6789]", "null");
+		copyStr = copyStr.replaceAll("\\- 9999[6789].0", "null");
 		copyStr = copyStr.replace(",", "|");
 		if(copyStr.contains("(- ")){
-			copyStr = copyStr.replace("(- ", "");
+			copyStr = copyStr.replace("(- ", "-");
 			copyStr = copyStr.replace(")", "");
 		}
 
-
 		return copyStr;
 	}
-
+	
+	
 
 
 	/**
@@ -844,7 +1102,6 @@ public class PopulateTestData {
 		Process proc=null;
 		boolean returnVal=false;
 		String test = generateCvcOutput(cvcOutputFileName, filePath);
-
 		BufferedReader br =  new BufferedReader(new FileReader(Configuration.homeDir+"/temp_smt"+filePath+"/"+test));
 		String str = br.readLine();
 		br.close();
@@ -855,9 +1112,11 @@ public class PopulateTestData {
 
 		String cutFile = cutRequiredOutputForSMT(test, filePath);
 		
-		/************ TESTING ABHISHEK's CODE *************/
-//		String apiCutFile = cutRequiredOutputForSMTWithAPI(cvcOutputFileName, filePath);
-//		System.out.println(apiCutFile);
+		/************ TESTING API CODE *************/
+		String apiCutFile = cutRequiredOutputForSMTWithAPI(cvcOutputFileName, filePath,tableMap);
+		//System.out.println(apiCutFile);
+		
+		
 		/**************************************************/
 		
 		cutFile = modifyCutFile(cutFile,filePath); // TEMPCODE Rahul Sharma // to handle tupleTypes present in multiple lines 
@@ -963,6 +1222,33 @@ public class PopulateTestData {
 		st.close();
 	}
 
+public static void loadSQLFilesToDataBase(Connection testCon,String sqlFile,String filePath) {
+	
+	String sqlFileFullPath = Configuration.homeDir+"/temp_smt"+File.separator+filePath +File.separator+ sqlFile;
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(sqlFileFullPath));
+			String st="";
+			while((st=br.readLine())!=null){
+				try(PreparedStatement inst=testCon.prepareStatement(st)){
+					try{
+						inst.executeUpdate();
+						//If constraint not violated, that means the record is encountered first time
+					}
+					catch(Exception e){
+						// e.printStackTrace();
+						//System.out.println(e);
+					} 
+					finally{
+						inst.close();
+					}
+				}
+			}
+			br.close();
+		}
+		catch(Exception e) {
+			System.out.println(e);
+		}
+	}
 
 	public static String loadCopyFileToDataBase(Connection testCon,String dataset,String filePath, TableMap tableMap) throws Exception{
 
@@ -1027,8 +1313,9 @@ public class PopulateTestData {
 				BufferedReader br = new BufferedReader(new FileReader(dsPath+"/"+tName+".copy"));
 
 				while((st=br.readLine())!=null){
-					String row=st.replaceAll("\\|", "','");
-					String insert="insert into "+tableName+" Values ('"+row+"')";
+					String row="'"+st.replaceAll("\\|", "','") +"'";
+					row = row.replaceAll("'null'", "null");
+					String insert="insert into "+tableName+" Values ("+row+")";
 
 					try(PreparedStatement inst=testCon.prepareStatement(insert)){
 						try{
@@ -1037,7 +1324,7 @@ public class PopulateTestData {
 
 						}catch(Exception e){
 
-
+							//System.out.println(e);
 							// e.printStackTrace();
 						} finally{
 							inst.close();
@@ -1065,7 +1352,9 @@ public class PopulateTestData {
 				BufferedReader br = new BufferedReader(new FileReader(dsPath+"/"+copyFileName));
 				while((st=br.readLine())!=null){
 
-					String row=st.replaceAll("\\|", "','");
+					//String row=st.replaceAll("\\|", "','");
+					String row="'"+st.replaceAll("\\|", "','") +"'";
+					row = row.replaceAll("'null'", "null");
 					String insert="insert into "+tname+" Values ('"+row+"')";
 
 					try(PreparedStatement inst=testCon.prepareStatement(insert)){
@@ -1074,7 +1363,7 @@ public class PopulateTestData {
 
 						}catch(Exception e){
 							//If exception occurs, then this is duplicate column
-
+							//System.out.println(e);
 							//e.printStackTrace();
 						} finally{
 							inst.close();

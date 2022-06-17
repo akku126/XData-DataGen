@@ -45,7 +45,7 @@ public class SelectionMutationsInOuterQueryBlock {
 	public static void generateDataForkillingSelectionMutationsInOuterQueryBlock(GenerateCVC1 cvc) throws Exception{
 
 		/** keep a copy of this tuple assignment values */
-		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
+		//HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
 		HashMap<String, Integer> noOfTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfTuples().clone();
 		HashMap<String, Integer[]> repeatedRelNextTuplePosOrig = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
 
@@ -165,13 +165,11 @@ public class SelectionMutationsInOuterQueryBlock {
 		Constraints localConstraints=new Constraints();
 		/** Get outer query block of this query */
 		QueryBlockDetails qbt = cvc.getOuterBlock();		
-
 		/**Get the selection conditions of this conjunct*/
 		Vector<Node > selectionConds = conjunct.getSelectionConds();
 		try{
 			/** Kill each selection condition of this conjunct*/
 			for(int i=0; i < selectionConds.size(); i++){
-				
 				Node sc = selectionConds.get(i);
 	
 				Vector<Node> scMutants =  UtilsRelatedToNode.getSelectionCondMutations(sc);
@@ -200,7 +198,6 @@ public class SelectionMutationsInOuterQueryBlock {
 						
 						
 						localConstraints = GenerateConstraintsForConjunct.getConstraintsInConjuct(cvc, cvc.getOuterBlock(), conjunct);
-						
 						localConstraints = Constraints.mergeConstraints(cvc,localConstraints,constraints);
 						
 	/*					for(Disjunct disjunct:conjunct.disjuncts){
@@ -211,10 +208,21 @@ public class SelectionMutationsInOuterQueryBlock {
 						//cvc.getStringConstraints().add(Constraints.getStringConstraints(localConstraints));
 						cvc.getConstraints().add(Constraints.getConstraint(cvc,localConstraints));
 						cvc.getStringConstraints().addAll(Constraints.getStringConstraints(cvc,localConstraints));
-						ArrayList<String> strConstraints =  Constraints.getStringConstraints(cvc,localConstraints);
-						for(String constraint : strConstraints){
-							cvc.getStringConstraints().add(constraint.toString());
-						}
+						//ArrayList<String> strConstraints =  Constraints.getStringConstraints(cvc,localConstraints);
+						
+						/***** TEST CODE : Pooja**********************************/
+						Vector<String> strConstraints=new Vector<String>();
+						strConstraints.addAll(cvc.getStringConstraints());
+						
+						Vector<String> solvedStringConstraint=cvc.getStringSolver().solveConstraints(strConstraints, cvc.getResultsetColumns(), cvc.getTableMap(), true);
+						if(solvedStringConstraint != null)
+							for(String str:solvedStringConstraint)	{
+								cvc.getConstraints().add(str+"\n");
+							}
+						/*******************************************************/
+//						for(String constraint : strConstraints){
+//							cvc.getStringConstraints().add(constraint.toString());
+//						}
 						GenerateCommonConstraintsForQuery.generateDataSetForConstraints(cvc);
 					}
 				}

@@ -435,7 +435,6 @@ public class RelatedToParameters {
 											String  paramValnew = scsobj.solveSingleConstraint(s);
 											paramVal = paramValnew;
 										 }
-										
 										 paramVal = paramVal.replace("%","_p");
 										 paramVal = paramVal.replace("+","_s");								 
 										 paramVal = paramVal.replace("-","_m");
@@ -484,7 +483,6 @@ public class RelatedToParameters {
 			queryBlock.getConstraintsWithParameters().putAll(removeParameterizedConstraints( queryBlock, queryBlock.getAggConstraints(), "AGG"));
 			//These constraints have to be put into CVC with new variables for the (unsatisfiable) constants/parameters.
 		}
-
 		for(ConjunctQueryStructure con: queryBlock.getConjunctsQs()){
 			
 			if( con.getSelectionConds() != null && con.getSelectionConds().size() != 0)			//Selection conds are already flattened

@@ -34,7 +34,7 @@ public class LikeMutationsInOuterQueryBlock {
 	public static void generateDataForkillingLikeMutationsInOuterQueryBlock( GenerateCVC1 cvc) throws Exception{
 
 		/** keep a copy of this tuple assignment values */
-		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
+		//HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
 		HashMap<String, Integer> noOfTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfTuples().clone();
 		HashMap<String, Integer[]> repeatedRelNextTuplePosOrig = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
 
@@ -58,7 +58,6 @@ public class LikeMutationsInOuterQueryBlock {
 				Vector<Node> likeCondsClone = (Vector<Node>)likeConds.clone();
 				/** Kill each like condition of this conjunct*/
 				for(int i=0; i < likeCondsClone.size(); i++){
-	
 					logger.log(Level.INFO,"\n----------------------------------");
 					logger.log(Level.INFO,"\n\nGETTING LIKE MUTANTS\n");
 					logger.log(Level.INFO,"\n----------------------------------\n");
@@ -103,7 +102,17 @@ public class LikeMutationsInOuterQueryBlock {
 							/** Generate postive constraints for all the conditions of this  conjunct */
 							cvc.getConstraints().add( GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, qbt, conjunct) );
 	
-	
+							/***** TEST CODE : Pooja**********************************/
+//							Vector<String> strConstraints=new Vector<String>();
+//							strConstraints.addAll(cvc.getStringConstraints());
+//							//System.out.println(constraints.constraints);
+//							Vector<String> solvedStringConstraint=cvc.getStringSolver().solveConstraints(strConstraints, cvc.getResultsetColumns(), cvc.getTableMap());
+//							for(String str:solvedStringConstraint)	{
+//								System.out.println(str+"\n\n");
+//								cvc.getConstraints().add(str+"\n");
+//							}
+							/*******************************************************/
+							
 							/** Add negative conditions for all other conjuncts of this query block*/
 							for(ConjunctQueryStructure inner: qbt.getConjunctsQs())
 								if(inner != conjunct)

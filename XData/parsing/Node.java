@@ -373,8 +373,8 @@ public class Node implements Cloneable, Serializable, NodeInterface{
 	{
 		String S="";
 		if(op.equalsIgnoreCase("="))
-			S="<>";
-		if(op.equalsIgnoreCase("<>"))
+			S="/=";
+		if(op.equalsIgnoreCase("/="))
 			S="=";
 		if(op.equalsIgnoreCase(">"))
 			S="<=";

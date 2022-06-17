@@ -990,7 +990,7 @@ public class QueryStructure implements Serializable, QueryStructureInterface{
 			buildQueryStructureJSQL(queryId, queryString, true,dbAppParameters);
 
 		}catch(ParseException ex){
-
+			
 			//logger.log(Level.SEVERE," Function buildQueryStructure : "+ex.getMessage(),ex);
 			String tempStr="";
 			for(StackTraceElement ele:ex.getStackTrace())
@@ -998,7 +998,8 @@ public class QueryStructure implements Serializable, QueryStructureInterface{
 
 			throw new Exception("QueryStructure.java: buildQueryStructure() : JSQLParser Error : Query Parsing failed for the following query : \n"+queryString+" \n. \n Please check the logs for details.\n"+tempStr); 
 		} catch(Exception e){
-			//logger.log(Level.SEVERE," Function buildQueryStructure : "+e.getMessage(),e);			
+			//logger.log(Level.SEVERE," Function buildQueryStructure : "+e.getMessage(),e);	
+			System.out.println("EXCEPTIOn inside QueryStructure.java: "+e);
 			String tempStr="";
 			for(StackTraceElement ele:e.getStackTrace())
 				tempStr+="\n"+ele.toString();

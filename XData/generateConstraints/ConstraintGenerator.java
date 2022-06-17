@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
@@ -456,9 +457,8 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 	 */
 	public BoolExpr getIsNullConditionZ3(String tableName, Column col,String offSet) {
 		String suffix;
-		
-		if(col.getCvcDatatype().equals("INT")|| col.getCvcDatatype().equals("REAL") || col.getCvcDatatype().equals("DATE") 
-				|| col.getCvcDatatype().equals("TIME") || col.getCvcDatatype().equals("TIMESTAMP")) {
+		if(col.getCvcDatatype().equalsIgnoreCase("INT")|| col.getCvcDatatype().equalsIgnoreCase("REAL") || col.getCvcDatatype().equalsIgnoreCase("DATE") 
+				|| col.getCvcDatatype().equalsIgnoreCase("TIME") || col.getCvcDatatype().equalsIgnoreCase("TIMESTAMP")) {
 			suffix = col.getColumnName();
 		} else {
 			suffix = col.getCvcDatatype();
@@ -1225,7 +1225,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 						constrObj.setLeftConstraint(returnStr);
 						constrList.add(constrObj);
 					}
-					returnStr += generateANDConstraints(constrList);
+					returnStr += "( assert " + generateANDConstraints(constrList) +" )\n";
 					//add contsraint for distinct
 					//returnStr+=" )) ";
 					constrList = new ArrayList<ConstraintObject>();
@@ -1239,7 +1239,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 						constrList.add(constrObj);
 					//"DISTINCT( "+ ConstraintGenerator.cvcMapNode(agg, (i+offset+ind+groupOffset)+"")+" , "+ ConstraintGenerator.cvcMapNode(agg, (i+offset+ind+1+groupOffset)+"")+") AND ";
 					}
-					returnStr += generateANDConstraints(constrList);
+					returnStr += "( assert " +generateANDConstraints(constrList)+ " )\n";
 					ind++;
 					
 					constrObj1.setLeftConstraint(returnStr);
@@ -1474,7 +1474,7 @@ public static String getPositiveStatement(Column col1, Node n1, Column col2, Nod
 		}else{
 			if(constraintString.contains("(and "))
 				{	
-				constraint1 += constraintString.replaceAll("(and ", "(or ");
+				constraint1 += constraintString.replaceAll("\\(and", "(or");
 				
 				constraint += "(assert "+constraint1+") \n";
 				}
@@ -1695,13 +1695,13 @@ public String generateSMTAndConstraints(ArrayList<ConstraintObject> constraintLi
 	String constr1 ="";
 	for(ConstraintObject con : constraintList){
 		constr1 =  getSMTAndConstraint(con,constr1,constraintList);
-		constraintStr = constr1+"\n\t\t";
+		constraintStr = constr1+"\t";
 	
 	}
 	if(constraintStr == null || constraintStr == ""){
 		return "";
 	}
-	else if(constraintList!= null && constraintList.size() > 1) {
+	else if(constraintList!= null) {
 		constraintStr = " (and " + constraintStr + ")";
 	}
 	return constraintStr;
@@ -1729,7 +1729,7 @@ public String generateSMTOrConstraints(ArrayList<ConstraintObject> constraintLis
 	for(ConstraintObject con : constraintList){
 		//constraintStr += getSMTOrConstraint(con,constraintStr);
 		constr1 = getSMTOrConstraint(con, constr1,constraintList);
-		if(!constr1.isEmpty())
+	    if(!constr1.isEmpty())
 			constraintStr = constr1+"\n\t\t";
 	}
 	
@@ -2313,20 +2313,61 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 	 * @param maxVal
 	 * @return
 	 */
-	public String getIntegerDatatypes(Column col, int minVal, int maxVal){
+//	public String getIntegerDatatypes(Column col, int minVal, int maxVal){
+//		
+//		String constraint ="";
+//		if (isCVC3) {
+//			constraint = "\n"+col+" : TYPE = SUBTYPE (LAMBDA (x: INT) : (x > "+(minVal-4)+" AND x < "+(maxVal+4)+") OR (x > -100000 AND x < -99995));\n";
+//		}
+//		else {
+//			String funcName = "get"+col;
+//			FuncDecl getCol = ctx.mkFuncDecl(funcName, ctx.mkIntSort(), ctx.mkBoolSort());
+//			ctxFuncDecls.put(funcName, getCol);
+//			constraint = getCol.toString() + "\n";
+//			IntExpr[] iColArray = new IntExpr[]{ctx.mkIntConst("i_"+col)};
+//			Expr getColCall = getCol.apply(iColArray);
+//			//Expr condition = ctx.mkAnd(ctx.mkGt(iColArray[0], ctx.mkInt((minVal-4)>0?(minVal-4):0)), ctx.mkLt(iColArray[0], ctx.mkInt(maxVal+4)));
+//			//Expr condition = ctx.mkAnd(ctx.mkGt(iColArray[0], ctx.mkInt((minVal-4)>0?(minVal-4):0)), ctx.mkLt(iColArray[0], ctx.mkInt(maxVal == 2147483647 ? maxVal : maxVal+4)));
+//			Expr condition = ctx.mkAnd(ctx.mkGt(iColArray[0], ctx.mkInt((minVal-4)>0?(minVal-4):0)), ctx.mkLt(iColArray[0], ctx.mkInt("9223372036854775807")));
+//			
+//			Expr body = ctx.mkEq(getColCall, condition);
+//			Expr funcQuantifier = ctx.mkForall(iColArray, body, 1, null, null, null, null);
+//			constraint += "(assert " + funcQuantifier.toString() + ")";
+//		}
+//		return constraint +"\n\n";
+//	}
+	/**
+	 * This method returns the Constraint String for defining and declaring int, long and BigInt type data
+	 * 
+	 * @param cvc
+	 * @param col
+	 * @param minVal
+	 * @param maxVal
+	 * @return
+	 */
+	public String getIntegerDatatypes(Column col, long minVal, long maxVal){
 		
 		String constraint ="";
 		if (isCVC3) {
 			constraint = "\n"+col+" : TYPE = SUBTYPE (LAMBDA (x: INT) : (x > "+(minVal-4)+" AND x < "+(maxVal+4)+") OR (x > -100000 AND x < -99995));\n";
 		}
 		else {
-			String funcName = "get"+col;
+			String funcName = "check"+col;
 			FuncDecl getCol = ctx.mkFuncDecl(funcName, ctx.mkIntSort(), ctx.mkBoolSort());
 			ctxFuncDecls.put(funcName, getCol);
 			constraint = getCol.toString() + "\n";
 			IntExpr[] iColArray = new IntExpr[]{ctx.mkIntConst("i_"+col)};
 			Expr getColCall = getCol.apply(iColArray);
-			Expr condition = ctx.mkAnd(ctx.mkGt(iColArray[0], ctx.mkInt((minVal-4)>0?(minVal-4):0)), ctx.mkLt(iColArray[0], ctx.mkInt(maxVal+4)));
+			
+			minVal = minVal > Long.MIN_VALUE ? minVal-1 : minVal;  // TEST CODE: Pooja
+			maxVal = maxVal < Long.MAX_VALUE ? maxVal+1 : maxVal;
+			
+			//Expr condition = ctx.mkAnd(ctx.mkGt(iColArray[0], ctx.mkInt(minVal)), ctx.mkLt(iColArray[0], ctx.mkInt(maxVal)));
+			
+			//Testing.....
+			Expr condition = ctx.mkOr( ctx.mkAnd(ctx.mkGt(iColArray[0], ctx.mkInt(minVal)), ctx.mkLt(iColArray[0], ctx.mkInt(maxVal))),
+					                     ctx.mkEq(iColArray[0],ctx.mkInt(-99996)) );
+			
 			Expr body = ctx.mkEq(getColCall, condition);
 			Expr funcQuantifier = ctx.mkForall(iColArray, body, 1, null, null, null, null);
 			constraint += "(assert " + funcQuantifier.toString() + ")";
@@ -2380,13 +2421,16 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 			constraint = "\n"+col+" : TYPE = SUBTYPE (LAMBDA (x: REAL) : (x >= "+(minStr)+" AND x <= "+(maxStr)+") OR (x > -100000 AND x < -99995));\n";			
 		}
 		else{
-			String funcName = "get"+col;
+			String funcName = "check"+col;
 			FuncDecl getCol = ctx.mkFuncDecl(funcName, ctx.mkRealSort(), ctx.mkBoolSort());
 			ctxFuncDecls.put(funcName, getCol);
 			constraint = getCol.toString() + "\n";
 			RealExpr[] rColArray = new RealExpr[]{ctx.mkRealConst("r_"+col)};
 			Expr getColCall = getCol.apply(rColArray);
-			Expr condition = ctx.mkAnd(ctx.mkGe(rColArray[0], ctx.mkReal(String.valueOf(minVal))), ctx.mkLe(rColArray[0], ctx.mkReal(String.valueOf(maxVal))));
+//			Expr condition = ctx.mkAnd(ctx.mkGe(rColArray[0], ctx.mkReal(String.valueOf(minVal))), ctx.mkLe(rColArray[0], ctx.mkReal(String.valueOf(maxVal))));
+			Expr condition =ctx.mkOr( ctx.mkAnd(ctx.mkGe(rColArray[0], ctx.mkReal(String.valueOf(minVal))), ctx.mkLe(rColArray[0], ctx.mkReal(String.valueOf(maxVal)))),
+					 ctx.mkEq(rColArray[0],ctx.mkReal(-99996)));
+			
 			Expr body = ctx.mkEq(getColCall, condition);
 			Expr funcQuantifier = ctx.mkForall(rColArray, body, 1, null, null, null, null);
 
@@ -2553,7 +2597,6 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 		HashSet<String> uniqueValues = new HashSet<String>();
 		String isNullMembers = "";
 		checkAndRemoveDuplicateColumns(col);
-
 		if(isCVC3){
 			//If CVC Solver
 			constraint = "\nDATATYPE \n"+col+" = ";
@@ -2618,8 +2661,10 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 				}
 				colValue = "";
 				for(int j=1; j<columnValue.size() || j < 4; j++) {
+					colValue = "";
 					if (j<columnValue.size()) {
 						if (!unique || !uniqueValues.contains(columnValue.get(j))) {
+							if(columnValue.get(j) != null)
 							colValue =  Utilities.escapeCharacters(col.getColumnName()) + "__" + Utilities.escapeCharacters(columnValue.get(j));
 						}
 					}
@@ -2634,7 +2679,8 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 					if (!colValue.isEmpty()) {
 						colValues.add("_"+colValue);
 					}
-				}
+					//System.out.println(colValue);				
+					}
 			}
 
 			String nullVal = "NULL_"+col+"_1";
@@ -2662,7 +2708,6 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 
 			constraint +=defineIsNull(nullValuesChar, col)+"\n";
 		}
-
 		return constraint;
 	}
 	/**
@@ -2862,29 +2907,10 @@ public String generateCVCOrConstraints(ArrayList<ConstraintObject> constraintLis
 	* @param resultsetColumns
 	*/
      private void checkResultSetColumns(GenerateCVC1 cvc,Vector<Column> resultsetColumns) {
-         int size = resultsetColumns.size();
-         int start = 0;
-         int mid = size/2;
-         while(mid<size) {
-             if(resultsetColumns.get(start).getColumnName().equals(resultsetColumns.get(mid).getColumnName())) {
-                 start++;
-                 mid++;
-             }
-             else {
-                 break;
-             }
-         }
-         if(mid==size) { // duplicates are there in the resultsetcolumns, and this need to be fixed 
-             start=0;
-             mid = size/2;
-             Vector<Column> temp = new Vector<Column>();
-             while(start<mid) {
-                 Column col = resultsetColumns.get(start);
-                 temp.add(col);
-                 start++;
-             }
-             cvc.setResultsetColumns(temp);
-         }
+    	 LinkedHashSet<Column> hashSet = new LinkedHashSet<Column>(resultsetColumns);
+         resultsetColumns.clear();
+         resultsetColumns.addAll(hashSet);
+         cvc.setResultsetColumns(resultsetColumns); 
      }
 
 	public static String getAssertNotCondition(QueryBlockDetails queryBlock, Node n, int index){
@@ -2966,7 +2992,7 @@ public static String getAssertNotCondition(String constr1, String operator,Strin
 			String smtCond = "";
 			String colName = tableName+"_"+columnName+pos;
 			if(datatype!= null && (datatype.equalsIgnoreCase("INT") || datatype.equalsIgnoreCase("REAL") || datatype.equalsIgnoreCase("TIME") || datatype.equalsIgnoreCase("DATE") || datatype.equalsIgnoreCase("TIMESTAMP")))
-				constraint = "get"+n.getColumn().getColumnName() + "("+colName+" "+"(select O_"+tableName+" "+index +") )";
+				constraint = "check"+n.getColumn().getColumnName() + "("+colName+" "+"(select O_"+tableName+" "+index +") )";
 			else
 				constraint = "not (ISNULL_"+n.getColumn().getColumnName()+" ("+colName+" "+"(select O_"+tableName+" "+index +") ))";
 		}
@@ -3562,7 +3588,7 @@ public static String generateCVCForCNTForPositiveINT(QueryBlockDetails queryBloc
 					CVCStr += "ASSERT (SUM  >= MIN * COUNT);\n " +
 							" ASSERT (SUM <= MAX * COUNT);\n";
 					CVCStr += "ASSERT (AVG * COUNT = SUM);\n";
-			
+					
 					DataType dt = new DataType();
 				
 							if((dt.getDataType(c.getDataType())==1 || dt.getDataType(c.getDataType())==2) && c.getMinVal() != -1){
@@ -3926,20 +3952,20 @@ public Vector<Quantifier> getDomainConstraintsforZ3(GenerateCVC1 cvc) {
 					IntExpr[] qVarArray = new IntExpr[1];
 					IntExpr qVar = ctx.mkIntConst("i");  // i should not conflict with any global i
 					BoolExpr ac1 = ctx.mkLe(ctx.mkInt("1"), qVar);
-					//BoolExpr ac2 = ctx.mkLe(qVar, ctx.mkInt(Integer.toString(cvc.getNoOfOutputTuples().get(tableName))));
+					//BoolExpr ac2 = ctx.mkLe(qVar, ctx.mkInt(Integer.toString(cvc.getNoOfOutputTuples(tableName))));
 					// added by rambabu for temporary fix
  					BoolExpr ac2;
  					try {
- 					    ac2 = ctx.mkLe(qVar, ctx.mkInt(Integer.toString(cvc.getNoOfOutputTuples().get(tableName))));
+ 					    ac2 = ctx.mkLe(qVar, ctx.mkInt(Integer.toString(cvc.getNoOfOutputTuples(tableName))));
  					}
  					catch(Exception e){
- 					    ac2 = ctx.mkLe(qVar, ctx.mkInt(Integer.toString(cvc.getNoOfOutputTuples().get(tableName.toUpperCase()))));
+ 					    ac2 = ctx.mkLe(qVar, ctx.mkInt(Integer.toString(cvc.getNoOfOutputTuples(tableName.toUpperCase()))));
  					}
  					// added by rambabu ended here
 					
 					BoolExpr antecedant = ctx.mkAnd(ac1, ac2);
 
-					FuncDecl getFuncDecl = ctxFuncDecls.get("get"+col);
+					FuncDecl getFuncDecl = ctxFuncDecls.get("check"+col);
 					FuncDecl isNullFuncDecl = ctxFuncDecls.get("ISNULL_"+col);
 					Expr selectExpr = ConstraintGenerator.smtMap(table.getColumn(col), qVar);
 					BoolExpr con1 = ctx.mkOr((BoolExpr) getFuncDecl.apply(selectExpr), (BoolExpr) isNullFuncDecl.apply(selectExpr));

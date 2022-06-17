@@ -37,7 +37,7 @@ public class CaseMutationsInOuterQueryBlock {
 	
 	public static void generateDataForKillingCaseMutationsInOuterQueryBlock(GenerateCVC1 cvc) throws Exception{
 		/** keep a copy of this tuple assignment values */
-		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
+		////HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
 		HashMap<String, Integer> noOfTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfTuples().clone();
 		HashMap<String, Integer[]> repeatedRelNextTuplePosOrig = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
 		Vector<CaseCondition> caseConditionCompleted = new Vector<CaseCondition>();
@@ -72,7 +72,7 @@ public class CaseMutationsInOuterQueryBlock {
 	
 	public static void generateDataForCaseInProjectedColumns(GenerateCVC1 cvc) throws Exception{
 		/** keep a copy of this tuple assignment values */
-		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
+		////HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
 		HashMap<String, Integer> noOfTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfTuples().clone();
 		HashMap<String, Integer[]> repeatedRelNextTuplePosOrig = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
 		Vector<CaseCondition> caseConditionCompleted = new Vector<CaseCondition>();
@@ -176,7 +176,7 @@ public class CaseMutationsInOuterQueryBlock {
 	public static void generateDataForWherePredicate(GenerateCVC1 cvc) throws Exception{
 		
 		/** keep a copy of this tuple assignment values */
-		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
+		////HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
 		HashMap<String, Integer> noOfTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfTuples().clone();
 		HashMap<String, Integer[]> repeatedRelNextTuplePosOrig = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
 		Vector<CaseCondition> caseConditionCompleted = new Vector<CaseCondition>();

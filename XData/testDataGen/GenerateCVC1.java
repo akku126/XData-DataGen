@@ -187,7 +187,14 @@ public class GenerateCVC1 implements Serializable{
 	private transient Connection connection;
 	
 	private Map<String, TupleRange> allowedTuples;
-
+	
+	//****************** TEST CODE: POOJA ***********************//
+	public HashMap<String,String > tempJoinDefine;  //key: tempJoin_table_name, value: datatype declaration of tempJoin table 
+	public HashMap<String,ArrayList<String> > tempJoinColumns; //stores columns in tempJoinTble
+	public HashMap<String,Vector<Node> > tempJoinSelectionAndJoinConds; //stores selection conditions from subquery
+	public HashMap<String,Vector<Node> > tempJoinCorrelationConds; //stores correlation conditions from subquery
+	//****************** TEST CODE END **************************//
+	
 	/** The constructor for this class */
 	public GenerateCVC1 (){
 		baseRelation = new HashMap<String, String>();
@@ -208,6 +215,13 @@ public class GenerateCVC1 implements Serializable{
 		equiJoins = new HashMap<String, Vector<Vector<Node>>>();
 		allowedTuples = new HashMap<String, TupleRange>();
 		DBAppparams = new AppTest_Parameters();
+		
+		//**************** TEST CODE: POOJA *******************//
+		tempJoinDefine = new HashMap<String,String>();
+		tempJoinColumns = new HashMap<String,ArrayList<String>>();
+		tempJoinSelectionAndJoinConds = new HashMap<String,Vector<Node>>();
+		tempJoinCorrelationConds = new HashMap<String,Vector<Node>>();
+		//**************** TEST CODE END **********************//
 	}
 
 
@@ -296,16 +310,16 @@ public class GenerateCVC1 implements Serializable{
 	
 					/**get table name*/
 					String table=(String) pairs.getKey();
-	
+				
 					/**get the number of tuples*/
 					int noOfTuples = (Integer) pairs.getValue();
 	
 					/**Update the data structure*/
-					if(noOfOutputTuples.containsKey(table)&&noOfOutputTuples.get(table)<noOfTuples){
-						noOfOutputTuples.put(table, noOfTuples);
+					if(noOfOutputTuplesContains(table) && getNoOfOutputTuples(table)<noOfTuples){
+						putNoOfOutputTuples(table, noOfTuples);
 					}
-					if(!noOfOutputTuples.containsKey(table)){
-						noOfOutputTuples.put(table, noOfTuples);
+					if(!noOfOutputTuplesContains(table)){
+						putNoOfOutputTuples(table, noOfTuples);
 					}
 				}
 			}else if(qParser != null && !qParser.getFromClauseSubqueries().isEmpty()
@@ -335,11 +349,11 @@ public class GenerateCVC1 implements Serializable{
 						int noOfTuples = (Integer) pairs.getValue();
 		
 						/**Update the data structure*/
-						if(noOfOutputTuples.containsKey(table)&&noOfOutputTuples.get(table)<noOfTuples){
-							noOfOutputTuples.put(table, noOfTuples);
+						if(noOfOutputTuplesContains(table) && getNoOfOutputTuples(table)<noOfTuples){
+							putNoOfOutputTuples(table, noOfTuples);
 						}
-						if(!noOfOutputTuples.containsKey(table)){
-							noOfOutputTuples.put(table, noOfTuples);
+						if(!noOfOutputTuplesContains(table)){
+							putNoOfOutputTuples(table, noOfTuples);
 						}
 					}
 					
@@ -350,8 +364,8 @@ public class GenerateCVC1 implements Serializable{
 				this.noOfOutputTuples = (HashMap<String,Integer>)query.getRepeatedRelationCount().clone();
 			}
 			for(String tempTable : noOfOutputTuples.keySet())
-				if(noOfOutputTuples.get(tempTable) != null && noOfOutputTuples.get(tempTable) >= 1)
-					logger.log(Level.INFO,"START COUNT for " + tempTable + " = " + noOfOutputTuples.get(tempTable));
+				if(getNoOfOutputTuples(tempTable) != -1 && getNoOfOutputTuples(tempTable) >= 1)
+					logger.log(Level.INFO,"START COUNT for " + tempTable + " = " + getNoOfOutputTuples(tempTable));
 	
 			repeatedRelNextTuplePos = new HashMap<String, Integer[]>();
 	
@@ -549,10 +563,10 @@ public class GenerateCVC1 implements Serializable{
 					int noOfTuples = (Integer) pairs.getValue();
 	
 					//Update the data structure
-					if(noOfOutputTuples.containsKey(table)&&noOfOutputTuples.get(table)<noOfTuples){
+					if(noOfOutputTuplesContains(table)&&noOfOutputTuples.get(table)<noOfTuples){
 						noOfOutputTuples.put(table, noOfTuples);
 					}
-					if(!noOfOutputTuples.containsKey(table)){
+					if(!noOfOutputTuplesContains(table)){
 						noOfOutputTuples.put(table, noOfTuples);
 					}
 				}
@@ -583,10 +597,10 @@ public class GenerateCVC1 implements Serializable{
 						int noOfTuples = (Integer) pairs.getValue();
 		
 						//Update the data structure
-						if(noOfOutputTuples.containsKey(table)&&noOfOutputTuples.get(table)<noOfTuples){
+						if(noOfOutputTuplesContains(table)&&noOfOutputTuples.get(table)<noOfTuples){
 							noOfOutputTuples.put(table, noOfTuples);
 						}
-						if(!noOfOutputTuples.containsKey(table)){
+						if(!noOfOutputTuplesContains(table)){
 							noOfOutputTuples.put(table, noOfTuples);
 						}
 					}
@@ -681,12 +695,20 @@ public class GenerateCVC1 implements Serializable{
 					int noOfTuples = (Integer) pairs.getValue();
 	
 					/**Update the data structure*/
-					if(noOfOutputTuples.containsKey(table)&&noOfOutputTuples.get(table)<noOfTuples){
-						noOfOutputTuples.put(table, noOfTuples);
+					if(noOfOutputTuplesContains(table) && getNoOfOutputTuples(table)<noOfTuples){
+						//int noOfTuplesLeft = getNoOfOutputTuples(table);
+						//putNoOfOutputTuples(table, noOfTuples + noOfTuplesLeft);
+						putNoOfOutputTuples(table, noOfTuples);
 					}
-					if(!noOfOutputTuples.containsKey(table)){
-						noOfOutputTuples.put(table, noOfTuples);
+					
+					if(!noOfOutputTuplesContains(table)){
+						putNoOfOutputTuples(table, noOfTuples);
 					}
+//					else {
+//						int noOfTuplesLeft = getNoOfOutputTuples(table);
+//						putNoOfOutputTuples(table, noOfTuples + noOfTuplesLeft);
+//					}
+					
 				}
 			}else if(!qStructure.getFromClauseSubqueries().isEmpty()
 					&& qStructure.getFromClauseSubqueries().get(0) != null){
@@ -715,11 +737,11 @@ public class GenerateCVC1 implements Serializable{
 						int noOfTuples = (Integer) pairs.getValue();
 		
 						/**Update the data structure*/
-						if(noOfOutputTuples.containsKey(table)&&noOfOutputTuples.get(table)<noOfTuples){
-							noOfOutputTuples.put(table, noOfTuples);
+						if(noOfOutputTuplesContains(table) && getNoOfOutputTuples(table)<noOfTuples){
+							putNoOfOutputTuples(table, noOfTuples);
 						}
-						if(!noOfOutputTuples.containsKey(table)){
-							noOfOutputTuples.put(table, noOfTuples);
+						if(!noOfOutputTuplesContains(table)){
+							putNoOfOutputTuples(table, noOfTuples);
 						}
 					}
 					
@@ -730,8 +752,8 @@ public class GenerateCVC1 implements Serializable{
 				this.noOfOutputTuples = (HashMap<String,Integer>)query.getRepeatedRelationCount().clone();
 			}
 			for(String tempTable : noOfOutputTuples.keySet())
-				if(noOfOutputTuples.get(tempTable) != null && noOfOutputTuples.get(tempTable) >= 1)
-					logger.log(Level.INFO,"START COUNT for " + tempTable + " = " + noOfOutputTuples.get(tempTable));
+				if(getNoOfOutputTuples(tempTable) != -1 && getNoOfOutputTuples(tempTable) >= 1)
+					logger.log(Level.INFO,"START COUNT for " + tempTable + " = " + getNoOfOutputTuples(tempTable));
 	
 			repeatedRelNextTuplePos = new HashMap<String, Integer[]>();
 	
@@ -748,7 +770,7 @@ public class GenerateCVC1 implements Serializable{
 					currentIndexCount.put(tableName+i, i);
 				}
 			}
-	
+			//this.noOfOutputTuples = (HashMap<String,Integer>)query.getRepeatedRelationCount().clone();
 			/** Initializes the data structures that are used/updated by the tuple assignment method*/
 			initilizeDataStructuresForTupleAssignment(outerBlock);
 			for(QueryBlockDetails qbt: getOuterBlock().getFromClauseSubQueries())
@@ -775,7 +797,6 @@ public class GenerateCVC1 implements Serializable{
 		
 		/** neha -- added to initialize the param data structure**/
 		RelatedToParameters.setupDataStructuresForParamConstraints(this,queryBlock);
-
 		/** Add constraints related to parameters*/
 		this.getConstraints().add(RelatedToParameters.addDatatypeForParameters( this, queryBlock));
 
@@ -1049,15 +1070,36 @@ public class GenerateCVC1 implements Serializable{
 	public void setNoOfTuples(HashMap<String, Integer> noOfTuples) {
 		this.noOfTuples = noOfTuples;
 	}
-
-	public HashMap<String, Integer> getNoOfOutputTuples() {
-		return noOfOutputTuples;
+/*<<<<<<<<<<<<<<<<<<<<<<<<<< NEW CODE : Pooja >>>>>>>>>>>>>>>>>>>>>>>>>>*/
+	public int getNoOfOutputTuples(String tableName) {
+		if(!noOfOutputTuples.containsKey(tableName.toUpperCase()))
+			return -1;
+		return noOfOutputTuples.get(tableName.toUpperCase());
 	}
-
+	
+	public boolean noOfOutputTuplesContains(String tableName) {
+		if(this.noOfOutputTuples.containsKey(tableName.toUpperCase()))
+			return true;
+		return false;
+	}
+	
+	public void putNoOfOutputTuples(String tableName,int val) {
+		noOfOutputTuples.put(tableName.toUpperCase(), val);
+	}
+	
+	public HashMap<String, Integer> cloneNoOfOutputTuples(){
+		return (HashMap<String,Integer>) noOfOutputTuples.clone();
+	}
+	
 	public void setNoOfOutputTuples(HashMap<String, Integer> noOfOutputTuples) {
-		this.noOfOutputTuples = noOfOutputTuples;
+		this.noOfOutputTuples.clear();
+		for (Map.Entry<String, Integer> entry : noOfOutputTuples.entrySet()) {
+            this.noOfOutputTuples.put(entry.getKey().toUpperCase(),
+                           entry.getValue());
+        }
+		//this.noOfOutputTuples = noOfOutputTuples;
 	}
-
+   /*<<<<<<<<<<<<<<<<<<<<<<<<<<<<< END >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 	public QueryBlockDetails getOuterBlock() {
 		return outerBlock;
 	}
@@ -1291,7 +1333,9 @@ public class GenerateCVC1 implements Serializable{
 	public void setTupleRange(Map<String, TupleRange> tupleRange){
 		this.allowedTuples = tupleRange;
 	}
-
+	//**************** TEST CODE: POOJA *******************//
+	//TODO getter and setter for tempJoin tables
+	//**************** TEST CODE END **********************//
 	/**
 	 * This function is used to update the total number of output tuples data structure,
 	 * @param queryBlock
@@ -1321,10 +1365,10 @@ public class GenerateCVC1 implements Serializable{
 				String tableName = tableNameNo.substring(0, tableNameNo.length()-1);
 				
 				/**update the total number of output tuples data structre*/
-				if( noOfOutputTuples.get(tableName) == null)
-					noOfOutputTuples.put(tableNameNo, totCount );
+				if( getNoOfOutputTuples(tableName) == -1)
+					putNoOfOutputTuples(tableNameNo, totCount );
 				else
-					noOfOutputTuples.put(tableName, noOfOutputTuples.get(tableName)+ totCount - prevTotCount );
+					putNoOfOutputTuples(tableName, getNoOfOutputTuples(tableName)+ totCount - prevTotCount );
 			}
 		}
 

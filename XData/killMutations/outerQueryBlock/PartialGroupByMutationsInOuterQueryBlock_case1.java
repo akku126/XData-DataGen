@@ -50,7 +50,7 @@ public class PartialGroupByMutationsInOuterQueryBlock_case1 {
 	public static void generateDataForkillingParialGroupByMutationsInOuterQueryBlock(GenerateCVC1 cvc) throws Exception{
 		
 		/** keep a copy of this tuple assignment values */
-		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
+		//HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
 		HashMap<String, Integer> noOfTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfTuples().clone();
 		HashMap<String, Integer[]> repeatedRelNextTuplePosOrig = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
 		/**Get outer query block */
@@ -182,7 +182,7 @@ public class PartialGroupByMutationsInOuterQueryBlock_case1 {
 								//tableOccurrence.put(fKey.getReferenceKeyColumns().get(0).getTable().getTableName(),fKey.getReferenceKeyColumns().get(0).getTable().getTableName()+"1");
 								if(tableNames != null && tableNames.size() > 0 && !tableNames.contains(fKey.getReferenceTable().getTableName())){
 										tableNames.add(fKey.getReferenceTable().getTableName());
-										cvc.getNoOfOutputTuples().put(fKey.getReferenceTable().getTableName(), cvc.getNoOfOutputTuples().get(fKey.getReferenceTable().getTableName()) + 2);
+										cvc.putNoOfOutputTuples(fKey.getReferenceTable().getTableName(), cvc.getNoOfOutputTuples(fKey.getReferenceTable().getTableName()) + 2);
 										groups++;
 								}
 								break;

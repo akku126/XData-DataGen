@@ -13,7 +13,6 @@ import testDataGen.PopulateTestData;
 import util.Configuration;
 import util.TableMap;
 import util.Utilities;
-
 public class RegressionTests {
 
 	String basePath;
@@ -163,9 +162,9 @@ public class RegressionTests {
 			GenerateDataSet.loadSampleData(testConn, sampleData);
 			
 			TableMap tableMap=TableMap.getInstances(testConn, 1);
-			
+			//System.out.println("Testing BASIC Dataset >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 			PopulateTestData.loadCopyFileToDataBase(testConn, "DS0", filePath, tableMap);
-			
+			//PopulateTestData.loadSQLFilesToDataBase(testConn, "DS0.sql", filePath);
 			
 			PreparedStatement ptsmt=testConn.prepareStatement(query);
 			ResultSet rs=ptsmt.executeQuery();
@@ -189,10 +188,12 @@ public class RegressionTests {
 				GenerateDataSet.loadSampleData(testConn, sampleData);
 
 				TableMap tableMap=TableMap.getInstances(testConn, 1);
+				//System.out.println("MUTANT TESTING: dataset id "+datasetId+" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+				//PopulateTestData.loadCopyFileToDataBase(testConn, datasetId, filePath, tableMap);
+				//PopulateTestData.loadSQLFilesToDataBase(testConn, datasetId+".sql", filePath);
 				
-				PopulateTestData.loadCopyFileToDataBase(testConn, datasetId, filePath, tableMap);
-
 				//String testQuery= "with q as ("+query+") , m as("+mutant+") (select * from q EXCEPT ALL m) UNION ALL (select * from m EXCEPT ALL q)";
+				
 				String testQuery="(("+query+") EXCEPT ALL ("+mutant+")) UNION (("+mutant+") EXCEPT ALL ("+query+"))";
 				
 				PreparedStatement ptsmt=testConn.prepareStatement(testQuery);
@@ -206,7 +207,6 @@ public class RegressionTests {
 				e.printStackTrace();
 			}
 		}
-		
 		return false;
 	}
 	
@@ -236,7 +236,7 @@ public class RegressionTests {
 			datasets=generateDataSets(queryId,query);
 			
 			if(datasets==null || datasets.isEmpty()) {
-				System.out.println("************************8Empty dataset");
+				System.out.println("************************Empty dataset");
 				errors.add("Exception in generating datasets");
 				testResult.put(queryId, errors);
 				continue;
@@ -244,12 +244,16 @@ public class RegressionTests {
 				
 			//Check if DS0 works
 			try {
-				if(testBasicDataset(queryId,query)==false)
+				if(testBasicDataset(queryId,query)==false) {
 					errors.add("Basic datasets failed");
+					System.out.println("BASIC dataset failed: "+queryId);
+				}
+					
 			} catch (Exception e)	{
 				e.printStackTrace();
 				errors.add("Exception in running query on basic test case");
 				testResult.put(queryId, errors);
+				System.out.println("EXCEPTION: (query: "+queryId+" ) Exception in running query on basic test case");
 				continue;
 			}
 			
@@ -257,8 +261,11 @@ public class RegressionTests {
 			//Check mutation killing
 			for(String mutant:mutantMap.get(queryId))	{
 				try {
-					if(testMutantKilling(queryId, datasets, query, mutant)==false)
+					if(testMutantKilling(queryId, datasets, query, mutant)==false) {
 						errors.add(mutant);
+						System.out.println(" FAILED FOR MUTANT (query: "+queryId+" )"+mutant);
+					}
+						
 				}catch (Exception e)	{
 					e.printStackTrace();
 					errors.add("Exception in killing mutant query:"+mutant);

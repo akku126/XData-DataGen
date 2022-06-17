@@ -36,7 +36,7 @@ public class EquivalenceMutationInOuterQueryBlock {
 
 	public static void generateDataForkillingEquivalenceClassMutationsInOuterQueryBlock(GenerateCVC1 cvc) throws Exception{
 		/** keep a copy of this tuple assignment values */
-		HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
+		//HashMap<String, Integer> noOfOutputTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
 		HashMap<String, Integer> noOfTuplesOrig = (HashMap<String, Integer>) cvc.getNoOfTuples().clone();
 		HashMap<String, Integer[]> repeatedRelNextTuplePosOrig = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
 		
@@ -86,7 +86,7 @@ public class EquivalenceMutationInOuterQueryBlock {
 						continue;
 	
 					/** keep a copy of this tuple assignment values */
-					HashMap<String, Integer> noOfOutputTuplesOrig1 = (HashMap<String, Integer>) cvc.getNoOfOutputTuples().clone();
+					HashMap<String, Integer> noOfOutputTuplesOrig1 = (HashMap<String, Integer>) cvc.cloneNoOfOutputTuples();
 					HashMap<String, Integer> noOfTuplesOrig1 = (HashMap<String, Integer>) cvc.getNoOfTuples().clone();
 					HashMap<String, Integer[]> repeatedRelNextTuplePosOrig1 = (HashMap<String, Integer[]>)cvc.getRepeatedRelNextTuplePos().clone();
 					
@@ -130,8 +130,9 @@ public class EquivalenceMutationInOuterQueryBlock {
 							continue;
 
 						/** Generate positive constraints for all the conditions of this  conjunct */
+						//POOJA
+						//cvc.getConstraints().add( GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, qbt, conjunct) );
 						cvc.getConstraints().add( GenerateConstraintsForConjunct.getConstraintsForConjuct(cvc, qbt, conjunct) );
-
 						
 						/** Add negative conditions for all other conjuncts of this query block*/
 						for(ConjunctQueryStructure inner: qbt.getConjunctsQs())
