@@ -388,15 +388,10 @@ public class AddDataBaseConstraints {
 					fmap.put(fkTableName, new Vector<ForeignKey>());
 					fmap.get(fkTableName).add(foreignKey);
 				}
-
-				//System.out.println(fkTableName);
 			}
-			//System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-			//System.out.println("\n\n##################################");
 			for (int fg=(size-1);fg>=0;fg--){
 				String tableName = tableMap.foreignKeyGraph.topSort().get(fg).toString();
 				if(fmap.containsKey(tableName)) {
-					//System.out.println(tableName);
 					
 					/** Get this foreign key */
 					//ForeignKey foreignKey = fmap.get(tableName);
@@ -434,7 +429,6 @@ public class AddDataBaseConstraints {
 					}
 				}		
 			}
-			//System.out.println("#####################################");
 			//////////////////////// TEST CODE ends here ////////////////////////////
 			
 		}catch(Exception e){
@@ -443,7 +437,10 @@ public class AddDataBaseConstraints {
 		}
 		return fkConstraint;
 	}
-
+/*
+ * 
+ * OLD code for adding foreign key constraints
+ */
 //	public static String generateConstraintsForForeignKeys(GenerateCVC1 cvc) throws Exception{
 //
 //		String fkConstraint = "";/** To store constraints for foreign keys*/

@@ -483,6 +483,7 @@ public class GenerateJoinPredicateConstraints {
 					//constraintString += "(assert ("+(operator.equals("/=")? "not (= ": operator) +"  "+constraint1+ "  "+constraint2+ (operator.equals("/=")? " ) )":" ")+") )\n";
 
 					joinTable = temp1 + "join" + temp2;
+					cvc.tempjoinWithEXISTS.put(joinTable, true);
 					if(!tablesAdded.contains(joinTable)){
 						constraintString += "\n(declare-datatypes (("+joinTable +"_TupleType 0))" + "((("+joinTable +"_TupleType "; // TEMPCODE Rahul Sharma : fixed syntax error
 					}
@@ -845,42 +846,46 @@ public class GenerateJoinPredicateConstraints {
 
 			ArrayList<String> jtColumns = new ArrayList<String>();
 			jtColumns = createTempTableColumns(joinTable,table1,table2);
-
-//			constraintString += "(assert (forall ((i1 Int)(j1 Int)) \n\t(=> "+constr +"  ";
-//			constraintString += "\n \t(exists ((k1 Int)) "; // TEMPCODE : Rahul Sharma : added all other attributes
-//			constraintString+= "\n\t"+generateConstraintsForAllAttributes(table1,table2,jtColumns,joinTable) + ") \n) \n) \n)\n";
-//
-//			cvc.tempJoinDefine.put(joinTable, constraintString);
-//			cvc.tempJoinColumns.put(joinTable, jtColumns);
-//			cvc.tempJoinSelectionAndJoinConds.put(joinTable, selectionAndJoinConds);
 			
+			constraintString += "(assert (forall ((i1 Int)(j1 Int)) \n\t(=> "+constr +"  ";
+			constraintString += "\n \t(exists ((k1 Int)) "; // TEMPCODE : Rahul Sharma : added all other attributes
+			constraintString+= "\n\t"+generateConstraintsForAllAttributes(table1,table2,jtColumns,joinTable) + ") \n) \n) \n)\n";
+			
+			//Constraints for not exists
+			String constrSelConds = "";
+			String constrCorrelationConds = "";
+			/**************** TEST CODE *******************/
+			constrSelConds+= "\n\t(not (exists ((i1 Int)(j1 Int)) \n\t\t "+constr +"  \n\t) \n)";
 			if(!correlationConds.isEmpty()) {
 				//in case of NOT EXISTS negate correlation conditions so that there is no tuple in subquery Table
+				String str = "";
 				for(Node n: correlationConds) {
-					String complementOp = Node.complimentOperator(n.getOperator());
-					n.setOperator(complementOp);
+					ArrayList<String> outerTables = getOuterTables(cvc.getBaseRelation());
+					
+						String t1 = n.getLeft().getTableNameNo();
+						String t2 = n.getRight().getTableNameNo();
+						String op = n.getOperator();
+						//String innerTable,outerTable;
+						if(outerTables.contains(t1)) {
+							str += genNegativeConstraintsForCorrelationConds(cvc,n,t2,t1,joinTable,op)+"\n";
+						}
+						else if(outerTables.contains(t2)){
+							str += genNegativeConstraintsForCorrelationConds(cvc,n,t1,t2,joinTable,op)+"\n";
+						}
 				}
-				constraintString += "(assert (forall ((i1 Int)(j1 Int)) \n\t(=> "+constr +"  ";
-				constraintString += "\n \t(exists ((k1 Int)) "; // TEMPCODE : Rahul Sharma : added all other attributes
-				constraintString+= "\n\t"+generateConstraintsForAllAttributes(table1,table2,jtColumns,joinTable) + ") \n) \n) \n)\n";
-
-				cvc.tempJoinDefine.put(joinTable, constraintString);
-				cvc.tempJoinColumns.put(joinTable, jtColumns);
-				cvc.tempJoinSelectionAndJoinConds.put(joinTable, selectionAndJoinConds);
-				cvc.tempJoinCorrelationConds.put(joinTable, correlationConds);
+				constrCorrelationConds += "\n\t(not (exists ((k1 Int))\n\t\t"+str+ "\n\t))\n";
+					
 			}
-			else {
-				//TODO: Add new Code
-				constraintString += "(assert (not (exists ((i1 Int)(j1 Int)) \n\t "+constr +"  \n\t) \n) )\n";
-
-				cvc.tempJoinDefine.put(joinTable, constraintString);
-				cvc.tempJoinColumns.put(joinTable,new ArrayList<String>());
-			}
-			/**If there are no correlation conditions then there is no need of creating a subquery table
-			 * hence not storing selection conditions, join table columns etc */
-//			cvc.tempJoinCorrelationConds.put(joinTable, correlationConds);
-//			cvc.tempJoinColumns.put(joinTable, jtColumns);
-//			cvc.tempJoinSelectionAndJoinConds.put(joinTable, selectionAndJoinConds);
+			constraintString += "\n(assert (or"+ constrSelConds+constrCorrelationConds+") )\n";
+			/**********************************************/
+			
+			
+			
+			cvc.tempjoinWithEXISTS.put(joinTable, false);
+			cvc.tempJoinDefine.put(joinTable, constraintString);
+			cvc.tempJoinCorrelationConds.put(joinTable, correlationConds);
+			cvc.tempJoinColumns.put(joinTable, jtColumns);
+			cvc.tempJoinSelectionAndJoinConds.put(joinTable, selectionAndJoinConds);
 		}
 		catch(Exception e){
 			System.out.println(e);
@@ -900,10 +905,14 @@ public class GenerateJoinPredicateConstraints {
 		// TODO Auto-generated method stub
 		String correlationConstraints = "";
 		correlationConstraints += ConstraintGenerator.addCommentLine("CORRELATION CONSTRAINTS FOR SUB QUERY TABLE");
+
+		if(cvc.tempjoinWithEXISTS.get(joinTable) == false)
+			return "";
+
 		if(correlationConds == null || correlationConds.isEmpty())
 			return "";
 		ArrayList<String> outerTables = getOuterTables(cvc.getBaseRelation());
-		
+
 		for(Node n:correlationConds) {
 			String table1 = n.getLeft().getTableNameNo();
 			String table2 = n.getRight().getTableNameNo();
@@ -916,31 +925,49 @@ public class GenerateJoinPredicateConstraints {
 				correlationConstraints += generateCorrelationConstraints(cvc,n,table1,table2,joinTable,operator);
 			}
 		}
-//		Vector<QueryStructure> whereClauseSubqueries = cvc.getqStructure().getWhereClauseSubqueries();
-//		for(int i=0;i<whereClauseSubqueries.size();i++) {
-//			ArrayList<Node> selectionConditions = whereClauseSubqueries.get(i).getLstSelectionConditions();
-//
-//			for(int j=0;j<selectionConditions.size();j++) {
-//				//System.out.println(selectionConditions.get(j).getRight().getColumn());
-//				if(selectionConditions.get(j).getRight().getColumn()!=null) {
-//					Node selectionCondition = selectionConditions.get(j);
-//					String operator = selectionCondition.getOperator();
-//					ArrayList<String> tablesInSelectionConditions = getListOfTablesInSelectionConditions(selectionCondition.toString(),operator);
-//					ArrayList<String> innerTables = whereClauseSubqueries.get(i).getLstRelationInstances();
-//					ArrayList<String> outerTables = getOuterTables(cvc.getBaseRelation());
-//					if(innerTables.contains(tablesInSelectionConditions.get(0)) && outerTables.contains(tablesInSelectionConditions.get(1))) {
-//						correlationConstraints += generateCorrelationConstraints(cvc,selectionCondition,tablesInSelectionConditions.get(0),tablesInSelectionConditions.get(1),joinTable,operator);
-//					}
-//					else if(innerTables.contains(tablesInSelectionConditions.get(1)) && outerTables.contains(tablesInSelectionConditions.get(0))){
-//						correlationConstraints += generateCorrelationConstraints(cvc,selectionCondition,tablesInSelectionConditions.get(1),tablesInSelectionConditions.get(0),joinTable,operator);
-//					}
-//				}
-//			}
-//		}
+
+		//		Vector<QueryStructure> whereClauseSubqueries = cvc.getqStructure().getWhereClauseSubqueries();
+		//		for(int i=0;i<whereClauseSubqueries.size();i++) {
+		//			ArrayList<Node> selectionConditions = whereClauseSubqueries.get(i).getLstSelectionConditions();
+		//
+		//			for(int j=0;j<selectionConditions.size();j++) {
+		//				//System.out.println(selectionConditions.get(j).getRight().getColumn());
+		//				if(selectionConditions.get(j).getRight().getColumn()!=null) {
+		//					Node selectionCondition = selectionConditions.get(j);
+		//					String operator = selectionCondition.getOperator();
+		//					ArrayList<String> tablesInSelectionConditions = getListOfTablesInSelectionConditions(selectionCondition.toString(),operator);
+		//					ArrayList<String> innerTables = whereClauseSubqueries.get(i).getLstRelationInstances();
+		//					ArrayList<String> outerTables = getOuterTables(cvc.getBaseRelation());
+		//					if(innerTables.contains(tablesInSelectionConditions.get(0)) && outerTables.contains(tablesInSelectionConditions.get(1))) {
+		//						correlationConstraints += generateCorrelationConstraints(cvc,selectionCondition,tablesInSelectionConditions.get(0),tablesInSelectionConditions.get(1),joinTable,operator);
+		//					}
+		//					else if(innerTables.contains(tablesInSelectionConditions.get(1)) && outerTables.contains(tablesInSelectionConditions.get(0))){
+		//						correlationConstraints += generateCorrelationConstraints(cvc,selectionCondition,tablesInSelectionConditions.get(1),tablesInSelectionConditions.get(0),joinTable,operator);
+		//					}
+		//				}
+		//			}
+		//		}
+		
 		correlationConstraints += ConstraintGenerator.addCommentLine("CORRELATION CONSTRAINTS FOR SUB QUERY TABLE END");
 		return correlationConstraints;
 	}
+	public static String genNegativeConstraintsForCorrelationConds(GenerateCVC1 cvc, Node selectionCondition, String innerTable, String outerTable,String joinTable,String operator) {
+		String constraints = "";
+		String sC = selectionCondition.toString();
+		innerTable = innerTable.replaceAll("\\d", "").toLowerCase();
+		outerTable = outerTable.replaceAll("\\d", "").toLowerCase();
 
+		String correlationAttribute = sC.substring(sC.indexOf(".")+1,sC.indexOf(operator));
+		String joinTableIndex = getTableAttributeIndexForJoinTable(cvc, joinTable, innerTable, correlationAttribute);
+		String outerTableIndex = getTableAttributeIndex(cvc, outerTable, correlationAttribute);
+
+		if(operator.equals("/="))
+			constraints += "\n\t(not (= ("+ joinTable+"_"+correlationAttribute+joinTableIndex+" (select O_"+joinTable+" k1)) ("+outerTable+"_"+correlationAttribute+outerTableIndex+" (select O_"+outerTable+" 1)) ))";
+		else
+			constraints += "\n\t("+operator+" ("+ joinTable+"_"+correlationAttribute+joinTableIndex+" (select O_"+joinTable+" k1)) ("+outerTable+"_"+correlationAttribute+outerTableIndex+" (select O_"+outerTable+" 1)) )";
+		return constraints;
+	}
+   
    public static boolean isCorrelated(Node selectionCondition, GenerateCVC1 cvc) {
     	if(selectionCondition.getRight().getColumn()!=null) {
     		String operator = selectionCondition.getOperator();
@@ -987,43 +1014,44 @@ public class GenerateJoinPredicateConstraints {
 
 
 	private static String generateCorrelationConstraints(GenerateCVC1 cvc, Node selectionCondition, String innerTable, String outerTable,String joinTable,String operator) {
-	// TODO Auto-generated method stub
+		// TODO Auto-generated method stub
 		String constraints = "";
 		String sC = selectionCondition.toString();
 		innerTable = innerTable.replaceAll("\\d", "").toLowerCase();
 		outerTable = outerTable.replaceAll("\\d", "").toLowerCase();
-		
+
 		String correlationAttribute = sC.substring(sC.indexOf(".")+1,sC.indexOf(operator));
 		String joinTableIndex = getTableAttributeIndexForJoinTable(cvc, joinTable, innerTable, correlationAttribute);
 		String outerTableIndex = getTableAttributeIndex(cvc, outerTable, correlationAttribute);
-		
-//		int tuplesInJoinTable, tuplesInOuterTable;
-//		String t1_name = joinTable.split("join")[0].toLowerCase();
-//		String t2_name = joinTable.split("join")[1].toLowerCase();
-//		tuplesInJoinTable = cvc.getNoOfOutputTuples(t1_name)*cvc.getNoOfOutputTuples(t2_name);
-//		tuplesInOuterTable = cvc.getNoOfOutputTuples(outerTable);
-//		
-//		for(int i=1; i<= tuplesInJoinTable; i++) {
-//			for(int j=1; j<= tuplesInOuterTable; j++) {
-//				if(operator.equals("/="))
-//					constraints += "\n\t(not (= ("+ joinTable+"_"+correlationAttribute+joinTableIndex+" (select O_"+joinTable+" "+ i +")) ("+outerTable+"_"+correlationAttribute+outerTableIndex+" (select O_"+outerTable+" "+ j +")) ))";
-//				else
-//					constraints += "\n\t("+operator+" ("+ joinTable+"_"+correlationAttribute+joinTableIndex+" (select O_"+joinTable+" "+ i +")) ("+outerTable+"_"+correlationAttribute+outerTableIndex+" (select O_"+outerTable+" "+ j +")) )";
-//			}
-//		}
+
+		int tuplesInJoinTable, tuplesInOuterTable;
+		String t1_name = joinTable.split("join")[0].toLowerCase();
+		String t2_name = joinTable.split("join")[1].toLowerCase();
+		tuplesInJoinTable = cvc.getNoOfOutputTuples(t1_name)*cvc.getNoOfOutputTuples(t2_name);
+		tuplesInOuterTable = cvc.getNoOfOutputTuples(outerTable);
+
+		for(int i=1; i<= tuplesInJoinTable; i++) {
+			if(operator.equals("/="))
+				constraints += "\n\t(not (= ("+ joinTable+"_"+correlationAttribute+joinTableIndex+" (select O_"+joinTable+" "+ i +")) ("+outerTable+"_"+correlationAttribute+outerTableIndex+" (select O_"+outerTable+" 1)) ))";
+			else
+				constraints += "\n\t("+operator+" ("+ joinTable+"_"+correlationAttribute+joinTableIndex+" (select O_"+joinTable+" "+ i +")) ("+outerTable+"_"+correlationAttribute+outerTableIndex+" (select O_"+outerTable+" 1)) )";
+		}
+
+
 		//int offset1 = cvc.getRepeatedRelNextTuplePos().get(outerTable)[1];
-		
-		if(operator.equals("/="))
-			constraints += "\n\t(not (= ("+ joinTable+"_"+correlationAttribute+joinTableIndex+" (select O_"+joinTable+" 1)) ("+outerTable+"_"+correlationAttribute+outerTableIndex+" (select O_"+outerTable+" 1)) ))";
-		else
-			constraints += "\n\t("+operator+" ("+ joinTable+"_"+correlationAttribute+joinTableIndex+" (select O_"+joinTable+" 1)) ("+outerTable+"_"+correlationAttribute+outerTableIndex+" (select O_"+outerTable+" 1)) )";
-		
-		//assuming join of two tables only
-		if(operator.equals("/="))
-			constraints = "(assert (and "+ constraints + "\n))";
-		else
-			constraints = "(assert (or "+ constraints + "\n))";
-	return constraints;
+
+		//		if(operator.equals("/="))
+		//			constraints += "\n\t(not (= ("+ joinTable+"_"+correlationAttribute+joinTableIndex+" (select O_"+joinTable+" 1)) ("+outerTable+"_"+correlationAttribute+outerTableIndex+" (select O_"+outerTable+" 1)) ))";
+		//		else
+		//			constraints += "\n\t("+operator+" ("+ joinTable+"_"+correlationAttribute+joinTableIndex+" (select O_"+joinTable+" 1)) ("+outerTable+"_"+correlationAttribute+outerTableIndex+" (select O_"+outerTable+" 1)) )";
+		//		
+		//		//assuming join of two tables only
+		//		if(operator.equals("/="))
+		//			constraints = "(assert (and "+ constraints + "\n))";
+		//		else
+		//			constraints = "(assert (or "+ constraints + "\n))";
+		constraints = "(assert \n\t(and \n\t\t"+ constraints + "\n\t) \n)";
+		return constraints;
 }
 
 
@@ -1477,6 +1505,7 @@ public class GenerateJoinPredicateConstraints {
 		
 		if(jtColumns == null || jtColumns.isEmpty())
 			return "";
+		
 		jtName = jtName.toLowerCase();
 		String t1_name = jtName.split("join")[0].toLowerCase();
 		String t2_name = jtName.split("join")[1].toLowerCase();
@@ -1543,8 +1572,6 @@ public class GenerateJoinPredicateConstraints {
 		String left = n.getLeft().getTableNameNo() !=null ? (n.getLeft().getTableNameNo().replaceAll("\\d", "")).toLowerCase() : null;
 		String right = n.getRight().getTableNameNo()!= null ? (n.getRight().getTableNameNo().replaceAll("\\d", "")).toLowerCase() : null;
 		int l_index=-1,r_index=-1;
-		
-		System.out.println(left+"\t"+right);
 		
 		if(n.getLeft() != null && n.getLeft().getColumn() != null) {
 			if(t1.getTableName().equals(left)) 

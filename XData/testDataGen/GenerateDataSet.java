@@ -386,66 +386,12 @@ public class GenerateDataSet {
 				//String query = "select id, name from student where tot_cred>=30";
 	
 				int queryId=1000;
-				//String query = "SELECT DISTINCT player.player_id, player.player_name FROM player INNER JOIN player_match ON player.player_id = player_match.player_id WHERE player.country_name =  'Australia' and (role_desc = 'Captain' or role_desc = 'CaptainKeeper') ORDER BY player_name;";
-				//String query = "(select course_id from section where semester = 'Fall' and year = 2009) union (select course_id from section where semester = 'Spring' and year = 2010)";
-//				String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id) WHERE year = 2010 AND EXISTS (SELECT * FROM prereq WHERE prereq_id='CS-201' AND prereq.course_id = course.course_id)";
-				//String query = "select * from (select * from student where dept_name = 'Comp.Sci') AS q1 natural full outer join (select * from takes where semester = 'Spring' and year = 2009) AS q2";
-			//String query = "select team_name from team where team_id not in (select match_winner from match where venue_id = (select venue_id from venue where venue_name = 'M Chinnaswamy Stadium'))";
-				
-				//Ques 1
-			    //String query = "SELECT player_name FROM player WHERE dob >= '1990-01-01' AND country_name = 'India'";
-				
-				//Ques 2
-				//String query ="SELECT DISTINCT player.player_name FROM ball_by_ball, player WHERE ball_by_ball.bowler = player.player_id AND ball_by_ball.extra_runs > 2 ORDER BY player.player_name ASC";
-				
-				//Ques 3
-				//String query ="SELECT team_name, win_margin FROM match, team where team_id = match_winner AND win_margin > 10 ORDER BY win_margin DESC, team_name"; 
-
-				//Ques 4
-				//String query ="SELECT DISTINCT player.player_id, player.player_name FROM player INNER JOIN player_match ON player.player_id = player_match.player_id WHERE player.country_name =  'Australia' and (role_desc = 'Captain' or role_desc = 'CaptainKeeper') ORDER BY player_name;";
-				
-				//Ques 5
-				//String query ="SELECT DISTINCT player.player_name FROM match, player_match, player WHERE match.match_id = player_match.match_id AND match.man_of_match = player_match.player_id AND player.player_id = player_match.player_id AND (player_match.role_desc = 'Captain' OR player_match.role_desc = 'CaptainKeeper');";
-				
-				//Ques 6
-				//String query ="SELECT DISTINCT player.player_name FROM match, ball_by_ball, player WHERE match.match_id = ball_by_ball.match_id AND player.player_id = ball_by_ball.striker AND ball_by_ball.runs_scored = 6 AND (match.season_year = 2011 OR match.season_year = 2013);";
-				
-				//Ques 7
-				//String query ="SELECT DISTINCT player.player_name FROM player,ball_by_ball WHERE player.player_id = ball_by_ball.bowler AND player.bowling_skill = 'Right-arm medium' AND ball_by_ball.out_type = 'caught and bowled'";
-				
-				//Ques 8
-				//String query ="SELECT DISTINCT player.player_name FROM match INNER JOIN venue ON match.venue_id = venue.venue_id, player RIGHT OUTER JOIN player_match ON player_match.player_id = player.player_id WHERE venue.venue_name = 'Eden Gardens' AND match.match_id = player_match.match_id AND player.country_name != 'India' order by player.player_name";
-				
-				//Ques 9
-				//String query ="SELECT team.team_name FROM team, match WHERE match.season_year = 2015 AND match.toss_winner != match.match_winner AND team.team_id = match.match_winner";
-				
-				//Ques 10
-				//String query ="SELECT DISTINCT player.player_name, player.country_name FROM player, ball_by_ball, player_match WHERE player_match.match_id = ball_by_ball.match_id AND player_match.player_id = ball_by_ball.bowler AND player_match.player_id = player.player_id AND (player_match.role_desc = 'Captain' OR player_match.role_desc = 'CaptainKeeper')";
-				
-				//Ques 11
-				//String query ="SELECT DISTINCT player_id,player_name FROM ball_by_ball,player,match,venue WHERE match.match_id = ball_by_ball.match_id AND venue.venue_id = match.venue_id AND player_id = striker AND batting_hand = 'Left-hand bat' AND runs_scored = 4 AND city_name = 'Pune'";
-				
-				//Ques 12
-				//String query ="SELECT player_name FROM player WHERE country_name = 'Sri Lanka' EXCEPT SELECT player_name FROM player RIGHT OUTER JOIN ball_by_ball on ball_by_ball.striker = player.player_id";
-				
-				//Ques 13
-				//String query ="SELECT team_name FROM team EXCEPT SELECT team.team_name FROM team, match LEFT OUTER JOIN venue ON venue.venue_id = match.venue_id WHERE team.team_id = match.match_winner AND venue.venue_name = 'M Chinnaswamy Stadium'";
-				
-				//Ques 14
-				//String query ="SELECT player.player_name FROM ball_by_ball, player, match WHERE match.match_id = ball_by_ball.match_id AND player.player_id = ball_by_ball.striker AND ball_by_ball.out_type = 'bowled' AND match.season_year = 2017 INTERSECT SELECT player_name FROM ball_by_ball, player, match WHERE match.match_id = ball_by_ball.match_id AND player.player_id = ball_by_ball.striker AND ball_by_ball.out_type = 'run out' AND match.season_year = 2017";
-				
-				//Ques 15
-				//String query ="SELECT team_name FROM team EXCEPT select team_name FROM ball_by_ball,match,player_match,team WHERE team.team_id = player_match.team_id AND player_match.match_id = match.match_id AND striker = player_match.player_id AND match.match_id = ball_by_ball.match_id AND out_type = 'caught and bowled'";
-				
-				//Ques 16
-				//String query ="with temp1 as (SELECT player.player_name FROM ball_by_ball, player, match WHERE match.match_id = ball_by_ball.match_id AND player.player_id = ball_by_ball.striker AND ball_by_ball.out_type = 'bowled' AND match.season_year = 2017), temp2 as (SELECT player_name FROM ball_by_ball, player, match WHERE match.match_id = ball_by_ball.match_id AND player.player_id = ball_by_ball.striker AND ball_by_ball.out_type = 'run out' AND match.season_year = 2017) select temp1.player_name from temp1 inner join temp2 on temp2.player_name = temp1.player_name;";
-				
-				//FROM clause subquery
-				//String query ="select distinct pl.player_id,pl.player_name from (select distinct * from player_match where role_desc = 'Captain' or role_desc = 'CaptainKeeper') as p inner join player as pl on p.player_id = pl.player_id where pl.country_name = 'Australia' order by pl.player_name asc";
-				
-				
-				//String query="select venue_id,venue_name,player_id,player_name from (select venue.venue_id,venue_name, player_id, player_name,rank() over (partition by venue.venue_id order by player_name) from (select venue_id,man_of_match,count(*) as cnt from match group by venue_id,man_of_match order by cnt desc, venue_id) as A, player,venue where A.venue_id = venue.venue_id and  A.man_of_match = player.player_id order by cnt desc) as C where rank = 1 order by venue_id";
-				//String query="";
+				//String query = "select count(distinct ID) from takes where (course_id , sec_id , semester , year) in (select course_id , sec_id , semester , year from teaches where teaches.ID = '10101')";
+				String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id)\n"
+						+ "WHERE year = 2010 and \n"
+						+ "NOT EXISTS (SELECT * FROM prereq JOIN teaches USING(course_id)\n"
+						+ "WHERE prereq_id='CS-201' and prereq.course_id = course.course_id);\n"
+						+ "";
 				
 				//String query = "with dept_count(dept_name, cnt) as (select  dept_name, count(*) from takes, course where takes.course_id = course.course_id group by dept_name), maxcnt(cnt) as (select max(cnt) from dept_count) select dept_name from dept_count, maxcnt where dept_count.cnt = maxcnt.cnt";
 				
@@ -583,16 +529,23 @@ public class GenerateDataSet {
 //				
 			
 //				
-				queryId=503;
-				String query = "SELECT course_id, title FROM course "
-						 + "inner join section WHERE year = 2010 and course.course_id = 'CS-203' "
-					     + "and "
-					     + " exists (SELECT prereq.course_id FROM prereq join teaches "
-					     		+ "on teaches.course_id = prereq.course_id "
-					     		+ "WHERE prereq_id = 'CS-201' and course.course_id = prereq.course_id )";
-				
-				
+//				queryId=503;
+//				String query = "SELECT course_id, title FROM course "
+//						 + "inner join section WHERE year = 2010 and course.course_id = 'CS-203' "
+//					     + "and "
+//					     + " exists (SELECT prereq.course_id FROM prereq join teaches "
+//					     		+ "on teaches.course_id = prereq.course_id "
+//					     		+ "WHERE prereq_id = 'CS-201' and course.course_id = prereq.course_id )";
+//				
 //				queryId=504;
+//				String query = "SELECT course_id, title FROM course "
+//						 + "inner join section WHERE year = 2010 and course.course_id = 'CS-203' "
+//					     + "and "
+//					     + "not exists (SELECT prereq.course_id FROM prereq join teaches "
+//					     		+ "on teaches.course_id = prereq.course_id "
+//					     		+ "WHERE prereq_id = 'CS-201' and course.course_id = prereq.course_id )";
+				
+//				queryId=505;
 //				String query = "SELECT DISTINCT t1.ID, s1.name, t1.year "
 //					     + "FROM takes t1 , student s1 "
 //					     + "WHERE t1.ID=s1.ID and "
@@ -600,7 +553,7 @@ public class GenerateDataSet {
 //					     + 			"ON t2.course_id=s2.course_id WHERE t2.year > t1.year)"; 
 //				
 //				
-//				queryId=505;
+//				queryId=506;
 //				String query="SELECT course.course_id,title "
 //						+ "FROM course INNER JOIN section "
 //						+ "ON course.course_id=section.course_id "
@@ -614,7 +567,7 @@ public class GenerateDataSet {
 //						+ "course.course_id=prereq.course_id "
 //						+ "GROUP BY prereq.prereq_id)";
 //				
-//				queryId = 506;
+//				queryId = 507;
 //				String query="SELECT * FROM takes t1 ,student s2 " + 
 //						"    WHERE t1.ID=s2.ID and " + 
 //						"          t1.year = (SELECT min(t2.year) " + 
@@ -626,7 +579,7 @@ public class GenerateDataSet {
 //						"                                   ON c1.building=s3.building " + 
 //						"                                   WHERE c1.capacity>50))";
 //				
-//				queryId = 507;
+//				queryId = 508;
 //				String query = "SELECT name FROM instructor "
 //						+ "WHERE EXISTS (SELECT * FROM teaches t1 "
 //						+ "       WHERE instructor.ID = t1.ID  and EXISTS (select * from teaches t2 where t2.ID=t1.ID and t1.year=2010))";
@@ -667,6 +620,7 @@ public class GenerateDataSet {
 				for(String s:dataset) {
 					System.out.println(s);
 				}
+				System.out.println("\nNumber of datatsets: "+dataset.size()+"\n");
 				long stopTime = System.currentTimeMillis();
 				long elapsedTime = stopTime - startTime;
 		        System.out.println("Total time taken for data generation of the query is : ");

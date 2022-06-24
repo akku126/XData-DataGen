@@ -193,6 +193,7 @@ public class GenerateCVC1 implements Serializable{
 	public HashMap<String,ArrayList<String> > tempJoinColumns; //stores columns in tempJoinTble
 	public HashMap<String,Vector<Node> > tempJoinSelectionAndJoinConds; //stores selection conditions from subquery
 	public HashMap<String,Vector<Node> > tempJoinCorrelationConds; //stores correlation conditions from subquery
+	public HashMap<String,Boolean> tempjoinWithEXISTS;
 	//****************** TEST CODE END **************************//
 	
 	/** The constructor for this class */
@@ -221,6 +222,7 @@ public class GenerateCVC1 implements Serializable{
 		tempJoinColumns = new HashMap<String,ArrayList<String>>();
 		tempJoinSelectionAndJoinConds = new HashMap<String,Vector<Node>>();
 		tempJoinCorrelationConds = new HashMap<String,Vector<Node>>();
+		tempjoinWithEXISTS = new HashMap<String,Boolean>();
 		//**************** TEST CODE END **********************//
 	}
 

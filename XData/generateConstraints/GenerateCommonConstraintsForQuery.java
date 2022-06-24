@@ -121,9 +121,8 @@ public class GenerateCommonConstraintsForQuery {
 						ArrayList<String> jtColumns = cvc.tempJoinColumns.get(joinTable);
 						Vector<Node> correlationConds = cvc.tempJoinCorrelationConds.get(joinTable);
 						constr += cvc.tempJoinDefine.get(joinTable);
-						//System.out.println(constr);
 						constr += GenerateJoinPredicateConstraints.generateConstraintsForAllAndExistsAttributesNew(cvc, jtColumns, joinTable)+"\n";
-						constr += GenerateJoinPredicateConstraints.generateConstraintsForCorrelationAttributes(cvc, joinTable,correlationConds)+"\n";
+						constr += GenerateJoinPredicateConstraints.generateConstraintsForCorrelationAttributes(cvc, joinTable, correlationConds)+"\n";
 					}
 					CVCStr += constr;	
 				}
