@@ -8,8 +8,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.ResultSetMetaData;
 import java.util.*;
-import org.apache.commons.text.*;
-import org.apache.commons.csv.*;
+import dnl.utils.text.table.TextTable;
+
+
 
 import parsing.Table;
 import testDataGen.GenerateDataSet;
@@ -224,19 +225,32 @@ public class RegressionTests {
 
 				        try (PreparedStatement stmt = testConn.prepareStatement(selectQuery)) {
 				            try (ResultSet rs1 = stmt.executeQuery()) {
-				                ResultSetMetaData rsmd1 = rs1.getMetaData();
+				            	ResultSetMetaData rsmd1 = rs1.getMetaData();
 				                int columnCount = rsmd1.getColumnCount();
-
-				               
-
-				                while (rs1.next()) {
-				                    for (int i = 1; i <= columnCount; i++) {
-				                        String columnName = rsmd1.getColumnName(i);
-				                        String columnValue = rs1.getString(i);
-				                        System.out.println(columnName + ": " + columnValue);
-				                    }
-				                    System.out.println("");
+				                String colnames[]=new String[columnCount];
+				                for (int i = 0; i < columnCount; i++) { 
+			                        String columnName = rsmd1.getColumnName(i+1);
+			                        colnames[i]=columnName;
+			                      
 				                }
+                               String colvalues[][] =new String[0][columnCount];
+				                while (rs1.next()) {
+				                	String rowadd[]=new String[columnCount];
+				                    for (int i = 0; i < columnCount; i++) {
+				                       
+				                        String columnValue = rs1.getString(i+1);
+				                        rowadd[i]=columnValue;
+				                       
+				                    }
+				                    colvalues = Arrays.copyOf( colvalues,  colvalues.length + 1); // increase the array size by 1
+				                    colvalues[ colvalues.length - 1] = rowadd;
+				                   
+				                }
+				             
+				                TextTable tt = new TextTable(colnames, colvalues);
+				                
+				        		tt.printTable();
+				               
 				            }
 				        }
 				    }
