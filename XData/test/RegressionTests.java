@@ -6,8 +6,12 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.ResultSetMetaData;
 import java.util.*;
+import org.apache.commons.text.*;
+import org.apache.commons.csv.*;
 
+import parsing.Table;
 import testDataGen.GenerateDataSet;
 import testDataGen.PopulateTestData;
 import util.Configuration;
@@ -180,6 +184,7 @@ public class RegressionTests {
 	private boolean testMutantKilling(Integer queryId, List<String> datasets, String query, String mutant) {
 		
 		for(String datasetId:datasets) {
+			
 			try(Connection testConn=getTestConn()){
 				String filePath=queryId+"";
 				
@@ -189,25 +194,81 @@ public class RegressionTests {
 
 				TableMap tableMap=TableMap.getInstances(testConn, 1);
 				//System.out.println("MUTANT TESTING: dataset id "+datasetId+" >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-				//PopulateTestData.loadCopyFileToDataBase(testConn, datasetId, filePath, tableMap);
+				PopulateTestData.loadCopyFileToDataBase(testConn, datasetId, filePath, tableMap);
 				//PopulateTestData.loadSQLFilesToDataBase(testConn, datasetId+".sql", filePath);
+				
 				
 				//String testQuery= "with q as ("+query+") , m as("+mutant+") (select * from q EXCEPT ALL m) UNION ALL (select * from m EXCEPT ALL q)";
 				
 				String testQuery="(("+query+") EXCEPT ALL ("+mutant+")) UNION (("+mutant+") EXCEPT ALL ("+query+"))";
 				
+				
 				PreparedStatement ptsmt=testConn.prepareStatement(testQuery);
 				ResultSet rs=ptsmt.executeQuery();
+				
+				//added by Akanksha
+				ResultSetMetaData rsmd = rs.getMetaData();
+				int columnsNumber = rsmd.getColumnCount();
+				//Added by Akanksha ends
+				
 				if(rs.next()) {
-					return true;
+					//Added by Akanksha
+					System.out.println("");
+					System.out.println(mutant+" "+"Failed on following testcase");
+					
+					//Added by Akku
+					
+					for(int f=0;f<tableMap.foreignKeyGraph.topSort().size();f++){
+						String tableName = tableMap.foreignKeyGraph.topSort().get(f).toString();
+						String selectQuery = "SELECT * FROM " + tableName;
+
+				        try (PreparedStatement stmt = testConn.prepareStatement(selectQuery)) {
+				            try (ResultSet rs1 = stmt.executeQuery()) {
+				                ResultSetMetaData rsmd1 = rs1.getMetaData();
+				                int columnCount = rsmd1.getColumnCount();
+
+				               
+
+				                while (rs1.next()) {
+				                    for (int i = 1; i <= columnCount; i++) {
+				                        String columnName = rsmd1.getColumnName(i);
+				                        String columnValue = rs1.getString(i);
+				                        System.out.println(columnName + ": " + columnValue);
+				                    }
+				                    System.out.println("");
+				                }
+				            }
+				        }
+				    }
+					//Added by Akku ends
+					System.out.println("Result \n");
+					
+					for (int i = 1; i <= columnsNumber; i++) {
+					    System.out.print(rsmd.getColumnName(i) + " | ");
+					}
+					System.out.println();
+					
+					do {
+					    for (int i = 1; i <= columnsNumber; i++) {
+					        System.out.print(rs.getString(i) + " | ");
+					    }
+					    System.out.println();
+					}while (rs.next());
+					//Added by Akanksha end's,changed below return value to false.
+					return false;
 				}
 			}catch(SQLException e) {
-				return true;
+				//Added by Akanksha
+				System.out.println("got exception->");
+				e.printStackTrace();
+				
+				//Added by Akanksha ends,changed below return value to false.
+				return false;
 			} catch(Exception e) {
 				e.printStackTrace();
 			}
 		}
-		return false;
+		return true;
 	}
 	
 	public Map<Integer,List<String>> runRegressionTests() {
@@ -263,7 +324,8 @@ public class RegressionTests {
 				try {
 					if(testMutantKilling(queryId, datasets, query, mutant)==false) {
 						errors.add(mutant);
-						System.out.println(" FAILED FOR MUTANT (query: "+queryId+" )"+mutant);
+						//Below LINE COMMENTED BY akanksha
+						//System.out.println(" FAILED FOR MUTANT (query: "+queryId+" )"+mutant);
 					}
 						
 				}catch (Exception e)	{
@@ -277,7 +339,8 @@ public class RegressionTests {
 				testResult.put(queryId, errors);
 			
 			//added by rambabu for testing
-			System.out.println("query id done: "+ queryId);
+			//Below line commented by Akanksha
+			//System.out.println("query id done: "+ queryId);
 			
 		}
 		
@@ -314,7 +377,10 @@ public class RegressionTests {
 			}
 		}
 		Utilities.writeFile(basePath+File.separator+"test_result.log", errors);
-		System.out.println(errors);
+		//Added by Akanksha,commented the below print statement
+	 	System.out.println(errors);
+		
+		//Added by Akanksha ends
 		long stopTime = System.currentTimeMillis();
 		//System.out.println("Stopping time of regression test is: ");
 	    //System.out.println(stopTime);
