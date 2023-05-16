@@ -45,6 +45,12 @@ class CallableProcess implements Callable {
 public class PopulateTestData {
 
 	private static Logger logger = Logger.getLogger(PopulateTestData.class.getName());
+	
+	//Added by Akku
+	
+	private static Map<String, Integer> Referenced_table_names = new HashMap<String, Integer>();
+	
+	//Added by Akku ends
 
 	public String getParameterMapping(HashMap<String,Node> paramConstraints, HashMap<String, String> paramMap){
 
@@ -1341,13 +1347,29 @@ public static void loadSQLFilesToDataBase(Connection testCon,String sqlFile,Stri
 		for(int j=0;j<copyFiles.length;j++){
 
 			String copyFileName = copyFiles[j];
-			if(copyFilesWithFk.contains(copyFileName)){
+			//Added By Akku
+			int k = copyFileName.indexOf(".ref.copy");
+			if(k!=-1)
+			{
+				String tname1 =copyFileName.substring(0,k);
+				
+				if (!Referenced_table_names.containsKey(tname1)) {
+					Referenced_table_names.put(tname1,1);
+				}
+
+			//System.out.println(tname1);
+			}
+			
+			//Addee by Akku ends
+			
+		 if(copyFilesWithFk.contains(copyFileName)){
 				continue;
 			}else{
 				//Check for primary keys constraint and add the data to avoid duplicates
 
 
 				String tname =copyFileName.substring(0,copyFileName.indexOf(".copy"));
+				
 
 				BufferedReader br = new BufferedReader(new FileReader(dsPath+"/"+copyFileName));
 				while((st=br.readLine())!=null){
@@ -1377,7 +1399,10 @@ public static void loadSQLFilesToDataBase(Connection testCon,String sqlFile,Stri
 
 		return null;
 	}
-
+	public static Map<String, Integer> getNamesOfReferencedTables()
+	{
+		return Referenced_table_names;
+	}
 
 
 }
