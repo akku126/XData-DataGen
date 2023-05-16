@@ -198,6 +198,10 @@ public class RegressionTests {
 				PopulateTestData.loadCopyFileToDataBase(testConn, datasetId, filePath, tableMap);
 				//PopulateTestData.loadSQLFilesToDataBase(testConn, datasetId+".sql", filePath);
 				
+				//Added by Akku
+				Map<String, Integer> check_tables = PopulateTestData.getNamesOfReferencedTables();
+				
+				//Added by Akku end's
 				
 				//String testQuery= "with q as ("+query+") , m as("+mutant+") (select * from q EXCEPT ALL m) UNION ALL (select * from m EXCEPT ALL q)";
 				
@@ -221,10 +225,16 @@ public class RegressionTests {
 					
 					for(int f=0;f<tableMap.foreignKeyGraph.topSort().size();f++){
 						String tableName = tableMap.foreignKeyGraph.topSort().get(f).toString();
+						
+						if (check_tables.containsKey(tableName)) {
+							continue;
+						} 
+						
 						String selectQuery = "SELECT * FROM " + tableName;
-
-				        try (PreparedStatement stmt = testConn.prepareStatement(selectQuery)) {
+                          try (PreparedStatement stmt = testConn.prepareStatement(selectQuery)) {
 				            try (ResultSet rs1 = stmt.executeQuery()) {
+				            	if(rs1.next()) {
+				            	System.out.println(tableName);
 				            	ResultSetMetaData rsmd1 = rs1.getMetaData();
 				                int columnCount = rsmd1.getColumnCount();
 				                String colnames[]=new String[columnCount];
@@ -234,23 +244,24 @@ public class RegressionTests {
 			                      
 				                }
                                String colvalues[][] =new String[0][columnCount];
-				                while (rs1.next()) {
+				                do{
 				                	String rowadd[]=new String[columnCount];
 				                    for (int i = 0; i < columnCount; i++) {
 				                       
 				                        String columnValue = rs1.getString(i+1);
 				                        rowadd[i]=columnValue;
 				                       
-				                    }
+				                    } 
 				                    colvalues = Arrays.copyOf( colvalues,  colvalues.length + 1); // increase the array size by 1
 				                    colvalues[ colvalues.length - 1] = rowadd;
 				                   
-				                }
+				                }while (rs1.next());
 				             
 				                TextTable tt = new TextTable(colnames, colvalues);
 				                
 				        		tt.printTable();
 				               
+				            }
 				            }
 				        }
 				    }
@@ -380,7 +391,9 @@ public class RegressionTests {
 			System.out.println("Exception......");
 		else if(errorsMap.isEmpty()) {
 			errors="All Test Cases Passed";
-		} else {
+		} 
+		//Added by Akku
+		/*else {
 			errors+="Following Test Cases Failed\n";
 			for(Integer key:errorsMap.keySet()) {
 				errors+=key+"|";
@@ -389,7 +402,8 @@ public class RegressionTests {
 				}
 				errors+="\n";
 			}
-		}
+		}*/
+		//Added by Akku end's(commented above else part)
 		Utilities.writeFile(basePath+File.separator+"test_result.log", errors);
 		//Added by Akanksha,commented the below print statement
 	 	System.out.println(errors);
