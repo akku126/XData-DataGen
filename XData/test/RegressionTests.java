@@ -203,6 +203,11 @@ public class RegressionTests {
 				
 				//Added by Akku end's
 				
+				//Added by Akku
+				Map<String, Integer> check_tables = PopulateTestData.getNamesOfReferencedTables();
+				
+				//Added by Akku end's
+				
 				//String testQuery= "with q as ("+query+") , m as("+mutant+") (select * from q EXCEPT ALL m) UNION ALL (select * from m EXCEPT ALL q)";
 				
 				String testQuery="(("+query+") EXCEPT ALL ("+mutant+")) UNION (("+mutant+") EXCEPT ALL ("+query+"))";
@@ -285,6 +290,7 @@ public class RegressionTests {
 			}catch(SQLException e) {
 				//Added by Akanksha
 				System.out.println("got exception->");
+<<<<<<< HEAD
 				//e.printStackTrace();
 				
 				//Modifying the exception message to show only the content on the console instead of using e.printStackTrace()
@@ -297,6 +303,9 @@ public class RegressionTests {
 			            System.out.println("Error: " + errorPart);
 			        }
 			    }
+=======
+				e.printStackTrace();
+>>>>>>> 08bd29684964fcddb351ddd10e2154fbc031c963
 				
 				//Added by Akanksha ends,changed below return value to false.
 				return false;

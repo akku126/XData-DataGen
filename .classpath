@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+<<<<<<< HEAD
 	<classpathentry kind="src" path="XData"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
 		<attributes>
@@ -37,4 +38,34 @@
 	<classpathentry kind="lib" path="/home/akku/XData-DataGen/XData/jars/com.microsoft.z3.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
+=======
+        <classpathentry excluding="jars/" kind="src" path=""/>
+        <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11">
+                <attributes>
+                        <attribute name="module" value="true"/>
+                </attributes>
+        </classpathentry>
+        <classpathentry kind="lib" path="jars/derby-10.8.jar"/>
+        <classpathentry kind="lib" path="jars/ojdbc6-11.2.0.2.0.jar"/>
+        <classpathentry kind="lib" path="jars/postgresql-42.1.3.jre7.jar"/>
+        <classpathentry kind="lib" path="jars/automaton.jar"/>
+        <classpathentry kind="lib" path="jars/google-collect-1.0-rc2.jar"/>
+        <classpathentry kind="lib" path="jars/uncommons-maths-1.2.jar"/>
+        <classpathentry kind="lib" path="jars/tomcat-jdbc-7.0.54.jar"/>
+        <classpathentry kind="lib" path="jars/gson-2.2.4.jar"/>
+        <classpathentry kind="lib" path="jars/jsqlparser-0.9.7-SNAPSHOT.jar"/>
+        <classpathentry kind="lib" path="jars/mysql-connector-java-8.0.16.jar"/>
+        <classpathentry kind="lib" path="jars/jsqlparser.jar"/>
+        <classpathentry kind="lib" path="jars/com.microsoft.z3.jar"/>
+        <classpathentry kind="lib" path="jars/postgresql-42.2.18.jar"/>
+        <classpathentry kind="lib" path="jars/sqlite-jdbc-3.32.3.2.jar"/>
+        <classpathentry kind="lib" path="jars/tomcat-juli-7.0.54.jar"/>
+        <classpathentry kind="lib" path="/home/akku/Documents/Thesis/jarfiles/jsqlparser-4.3.jar"/>
+        <classpathentry kind="lib" path="/home/akku/XData-DataGen/XData/jars/commons-text-1.10.0-sources.jar"/>
+        <classpathentry kind="lib" path="/home/akku/XData-DataGen/XData/jars/commons-text-1.10.0-javadoc.jar"/>
+        <classpathentry kind="lib" path="/home/akku/XData-DataGen/XData/jars/commons-text-1.10.0.jar"/>
+        <classpathentry kind="lib" path="/home/akku/XData-DataGen/XData/jars/commons-csv-1.10.0-sources.jar"/>
+        <classpathentry kind="lib" path="/home/akku/XData-DataGen/XData/jars/commons-csv-1.10.0.jar"/>
+        <classpathentry kind="output" path=""/>
+>>>>>>> 08bd29684964fcddb351ddd10e2154fbc031c963
 </classpath>
