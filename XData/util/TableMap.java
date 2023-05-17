@@ -130,6 +130,7 @@ public class TableMap implements Serializable{
 				//String tableName = rs.getString("TABLE_NAME").toUpperCase(); 
 				String tableName = rs.getString("TABLE_NAME"); // added by rambabu
 				//System.out.println(tableName); //added by rambabu
+				
 				if(tables.get(tableName.toUpperCase())==null){ // modified by rambabu for mysql
 					Table table = new Table(tableName);
 					tables.put(tableName.toUpperCase(), table );

@@ -260,6 +260,7 @@ public class PreProcessingActivity {
 				ArrayList<ForeignKey> foreignK = new ArrayList<ForeignKey>();
 
 				for(ForeignKey key : cvc.getForeignKeysModified()) {
+					
 					if(!foreignK.contains(key)) {
 						foreignK.add(key);
 					}

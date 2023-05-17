@@ -8,7 +8,7 @@ create table classroom
 create table department
 	(dept_name		varchar(20), 
 	 building		varchar(15), 
-	 budget		        numeric(12,2) check (budget > 0),
+	 budget		    numeric(12,2) check (budget > 0),
 	 primary key (dept_name)
 	);
 
@@ -53,7 +53,7 @@ create table teaches
 	 course_id		varchar(8),
 	 sec_id			varchar(8), 
 	 semester		varchar(6),
-	 year			numeric(4,0),
+	 year			numeric(4,0) ,
 	 primary key (ID, course_id, sec_id, semester, year),
 	 foreign key (course_id, sec_id, semester, year) references section (course_id, sec_id, semester, year)
 		on delete cascade,

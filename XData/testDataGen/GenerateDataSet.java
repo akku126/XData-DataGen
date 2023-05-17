@@ -10,6 +10,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import util.Configuration;
 import util.TableMap;
 import util.Utilities;
@@ -23,6 +25,8 @@ import java.io.IOException;
 import parsing.AppTest_Parameters;
 
 public class GenerateDataSet {
+	
+	private static Logger logger = Logger.getLogger(PopulateTestData.class.getName());
 		/*
 		 * This function generates test datasets for a query
 		 * @param conn Database connection to use
@@ -90,7 +94,13 @@ public class GenerateDataSet {
 			fw.write(query);
 			fw.close();
 			
+			//System.out.println("1-Inside GenerateDataSets->generatedatasetforQuery");
+			
 			PreProcessingActivity.preProcessingActivity(cvc);
+			//Added by Akanksha
+			//System.out.println("2-Inside GenerateDataSets->generatedatasetforQuery");
+			
+			//Added by Akanksha end's
 			return listOfDatasets(cvc);
 				
 		}
@@ -119,7 +129,9 @@ public class GenerateDataSet {
 			listOfQueries = Utilities.createQueries(tempFile);
 			inst = listOfQueries.toArray(new String[listOfQueries.size()]);
 			listOfDDLQueries.addAll(listOfQueries);
+			//System.out.println("1-Entering GenerateDataSet->loadSchema");
 			deleteAllTablesFromTestUser(conn);
+			//System.out.println("2-Entering GenerateDataSet->loadSchema");
 			for (int i = 0; i < inst.length; i++) {
 				 
 				if (!inst[i].trim().equals("") && ! inst[i].trim().contains("drop table")) {
@@ -226,7 +238,7 @@ public class GenerateDataSet {
 
 				// added by rambabu
 				String dbType = dbm.getDatabaseProductName(); 
-				System.out.println(dbType);
+				//System.out.println(dbType);
 				
 				if (dbType.equalsIgnoreCase("MySql"))
 				{
@@ -276,14 +288,20 @@ public class GenerateDataSet {
 					ResultSet rs = dbm.getTables(conn.getCatalog(), null, "%", types);		  
 		
 					while(rs.next()){
-						String table=rs.getString("TABLE_NAME");		
-						if(!table.equalsIgnoreCase("dataset") 
+						String table=rs.getString("TABLE_NAME");	
+						
+					
+					if(!table.equalsIgnoreCase("dataset") 
 								&& !table.equalsIgnoreCase("xdata_temp1")
 								&& !table.equalsIgnoreCase("xdata_temp2")){
-							//PreparedStatement pstmt = conn.prepareStatement("delete from "+table);						
+							//PreparedStatement pstmt = conn.prepareStatement("delete from "+table);
+						//System.out.println("1-Inside GenerateDataSet->deleteAllTablesFromTestUser");
 							PreparedStatement pstmt = conn.prepareStatement("Truncate table "+table +" cascade");
+							//System.out.println("2-Inside GenerateDataSet->deleteAllTablesFromTestUser");
 							pstmt.executeUpdate();
+							//System.out.println("3-Inside GenerateDataSet->deleteAllTablesFromTestUser");
 							pstmt.close();
+							//System.out.println("4-Inside GenerateDataSet->deleteAllTablesFromTestUser");
 						}
 		
 					} 
@@ -292,7 +310,13 @@ public class GenerateDataSet {
 				}
 				
 			}catch(Exception e){
-				System.out.println(e);
+				//System.out.println("5-Inside GenerateDataSet->deleteAllTablesFromTestUser");
+				//System.out.println(e.printStackTrace());
+				//e.printStackTrace();
+				//Added by Akku
+				logger.log(Level.SEVERE,"Error executing statement :  "+e.getMessage(),e);
+				//Added by Akku ends
+				
 			}
 
 		}
@@ -387,11 +411,11 @@ public class GenerateDataSet {
 	
 				int queryId=1000;
 				//String query = "select count(distinct ID) from takes where (course_id , sec_id , semester , year) in (select course_id , sec_id , semester , year from teaches where teaches.ID = '10101')";
-				String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id)\n"
-						+ "WHERE year = 2010 and \n"
-						+ "NOT EXISTS (SELECT * FROM prereq JOIN teaches USING(course_id)\n"
-						+ "WHERE prereq_id='CS-201' and prereq.course_id = course.course_id);\n"
-						+ "";
+				//String query = "SELECT course_id, title FROM course INNER JOIN section USING(course_id)\n"
+						//+ "WHERE year = 2010 and \n"
+						//+ "NOT EXISTS (SELECT * FROM prereq JOIN teaches USING(course_id)\n"
+						//+ "WHERE prereq_id='CS-201' and prereq.course_id = course.course_id);\n"
+						//+ "";
 				
 				//String query = "with dept_count(dept_name, cnt) as (select  dept_name, count(*) from takes, course where takes.course_id = course.course_id group by dept_name), maxcnt(cnt) as (select max(cnt) from dept_count) select dept_name from dept_count, maxcnt where dept_count.cnt = maxcnt.cnt";
 				
@@ -597,7 +621,7 @@ public class GenerateDataSet {
 				
 				//AGGREGATION operation
 //				queryId = 1000;
-//				String query = "select dept_name, avg(salary) as avg_salary from instructor group by dept_name having count(name) > 4;";
+				String query = "select dept_name, avg(salary) as avg_salary from instructor group by dept_name having count(name) > 4;";
 				
 //				queryId = 5;
 //				String query = "select avg (salary) from instructor where dept_name= 'Comp. Sci.'";
