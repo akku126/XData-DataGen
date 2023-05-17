@@ -1,1 +1,0 @@
-select E.name from instructor as E , teaches where E.ID = teaches.ID 
