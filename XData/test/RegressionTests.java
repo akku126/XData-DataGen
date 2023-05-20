@@ -203,10 +203,7 @@ public class RegressionTests {
 				
 				//Added by Akku end's
 				
-				//Added by Akku
-				Map<String, Integer> check_tables = PopulateTestData.getNamesOfReferencedTables();
 				
-				//Added by Akku end's
 				
 				//String testQuery= "with q as ("+query+") , m as("+mutant+") (select * from q EXCEPT ALL m) UNION ALL (select * from m EXCEPT ALL q)";
 				
@@ -239,7 +236,7 @@ public class RegressionTests {
                           try (PreparedStatement stmt = testConn.prepareStatement(selectQuery)) {
 				            try (ResultSet rs1 = stmt.executeQuery()) {
 				            	if(rs1.next()) {
-				            	System.out.println(tableName);
+				            	System.out.print(tableName);
 				            	ResultSetMetaData rsmd1 = rs1.getMetaData();
 				                int columnCount = rsmd1.getColumnCount();
 				                String colnames[]=new String[columnCount];
@@ -265,32 +262,48 @@ public class RegressionTests {
 				                TextTable tt = new TextTable(colnames, colvalues);
 				                
 				        		tt.printTable();
+				        		System.out.println("");
 				               
 				            }
 				            }
 				        }
 				    }
 					//Added by Akku ends
-					System.out.println("Result \n");
+					System.out.print("Result");
 					
-					for (int i = 1; i <= columnsNumber; i++) {
-					    System.out.print(rsmd.getColumnName(i) + " | ");
-					}
-					System.out.println();
+					String colnames[]=new String[columnsNumber];
+	                for (int i = 0; i < columnsNumber; i++) { 
+                        String columnName = rsmd.getColumnName(i+1);
+                        colnames[i]=columnName;
+                      
+	                }
+				
 					
-					do {
-					    for (int i = 1; i <= columnsNumber; i++) {
-					        System.out.print(rs.getString(i) + " | ");
-					    }
-					    System.out.println();
-					}while (rs.next());
+					  String colvalues[][] =new String[0][columnsNumber];
+		                do{
+		                	String rowadd[]=new String[columnsNumber];
+		                    for (int i = 0; i < columnsNumber; i++) {
+		                       
+		                        String columnValue = rs.getString(i+1);
+		                        rowadd[i]=columnValue;
+		                       
+		                    } 
+		                    colvalues = Arrays.copyOf( colvalues,  colvalues.length + 1); // increase the array size by 1
+		                    colvalues[ colvalues.length - 1] = rowadd;
+		                   
+		                }while (rs.next());
+		             
+		                TextTable tt = new TextTable(colnames, colvalues);
+		                
+		        		tt.printTable();
+		               
 					//Added by Akanksha end's,changed below return value to false.
 					return false;
 				}
 			}catch(SQLException e) {
 				//Added by Akanksha
 				System.out.println("got exception->");
-<<<<<<< HEAD
+
 				//e.printStackTrace();
 				
 				//Modifying the exception message to show only the content on the console instead of using e.printStackTrace()
@@ -303,9 +316,7 @@ public class RegressionTests {
 			            System.out.println("Error: " + errorPart);
 			        }
 			    }
-=======
-				e.printStackTrace();
->>>>>>> 08bd29684964fcddb351ddd10e2154fbc031c963
+
 				
 				//Added by Akanksha ends,changed below return value to false.
 				return false;
@@ -336,7 +347,7 @@ public class RegressionTests {
 			List<String> errors=new ArrayList<String>();
 			
 			String query=queryMap.get(queryId);
-			System.out.println(query);
+			//System.out.println(query);
 			List<String> datasets;
 			//Generate datasets
 			datasets=generateDataSets(queryId,query);
@@ -349,6 +360,7 @@ public class RegressionTests {
 			}
 				
 			//Check if DS0 works
+			System.out.println("Correct Query : " + query);
 			try {
 				if(testBasicDataset(queryId,query)==false) {
 					errors.add("Basic datasets failed");
@@ -403,6 +415,40 @@ public class RegressionTests {
 		long startTime = System.currentTimeMillis();
 		//System.out.println("Starting time of regression test is:");
         //System.out.println(startTime);
+		
+		//Added by Akanksha to change content of mutant.txt file according to prutor input
+		
+		try {
+	            // Read the content of the file
+			    String mutantPath = "test/universityTest/mutants.txt";
+	            BufferedReader reader = new BufferedReader(new FileReader(mutantPath));
+	            StringBuilder content = new StringBuilder();
+	            String line;
+	            while ((line = reader.readLine()) != null) {
+	                // Remove trailing semicolon
+	                line = line.replaceAll(";$", "");
+	                content.append(line).append(System.lineSeparator());
+	            }
+	            reader.close();
+
+	            // Modify the text
+	            String modifiedText = "1| " + content.toString();
+
+	            // Write the modified content back to the file
+	            BufferedWriter writer = new BufferedWriter(new FileWriter(mutantPath));
+	            writer.write(modifiedText);
+	            writer.close();
+
+	           // System.out.println("File content modified successfully.");
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
+		
+		
+		//Added by Akanksha Ends
+		
+		
+		
 		RegressionTests r=new RegressionTests(basePath,schemaFile,sampleDataFile);
 		Map<Integer,List<String>> errorsMap=r.runRegressionTests();
 		
