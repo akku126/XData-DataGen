@@ -208,7 +208,7 @@ public class RegressionTests {
 				//String testQuery= "with q as ("+query+") , m as("+mutant+") (select * from q EXCEPT ALL m) UNION ALL (select * from m EXCEPT ALL q)";
 				
 				String testQuery="(("+query+") EXCEPT ALL ("+mutant+")) UNION (("+mutant+") EXCEPT ALL ("+query+"))";
-				
+				   
 				
 				PreparedStatement ptsmt=testConn.prepareStatement(testQuery);
 				ResultSet rs=ptsmt.executeQuery();
@@ -221,8 +221,8 @@ public class RegressionTests {
 				if(rs.next()) {
 					//Added by Akanksha
 					System.out.println("");
-					System.out.println(mutant+" "+"Failed on following testcase");
-					
+					System.out.println(mutant+" "+"Failed");
+				
 					//Added by Akku
 					
 					for(int f=0;f<tableMap.foreignKeyGraph.topSort().size();f++){
@@ -269,40 +269,97 @@ public class RegressionTests {
 				        }
 				    }
 					//Added by Akku ends
-					System.out.print("Result");
+					System.out.println("Your Result");
+					//Populate result of mutant on console -> Added by Akanksha
+					PreparedStatement mutant_ptsmt=testConn.prepareStatement(mutant);
+					ResultSet mutant_rs=mutant_ptsmt.executeQuery();
 					
-					String colnames[]=new String[columnsNumber];
-	                for (int i = 0; i < columnsNumber; i++) { 
-                        String columnName = rsmd.getColumnName(i+1);
+					ResultSetMetaData mutant_rsmd = rs.getMetaData();
+					int colNum = mutant_rsmd.getColumnCount();
+					
+					if(mutant_rs.next())
+					{
+					
+					String colnames[]=new String[colNum];
+	                for (int i = 0; i < colNum; i++) { 
+                        String columnName = mutant_rsmd.getColumnName(i+1);
                         colnames[i]=columnName;
                       
 	                }
 				
 					
-					  String colvalues[][] =new String[0][columnsNumber];
+					  String colvalues[][] =new String[0][colNum];
 		                do{
-		                	String rowadd[]=new String[columnsNumber];
-		                    for (int i = 0; i < columnsNumber; i++) {
+		                	String rowadd[]=new String[colNum];
+		                    for (int i = 0; i < colNum; i++) {
 		                       
-		                        String columnValue = rs.getString(i+1);
+		                        String columnValue = mutant_rs.getString(i+1);
 		                        rowadd[i]=columnValue;
 		                       
 		                    } 
 		                    colvalues = Arrays.copyOf( colvalues,  colvalues.length + 1); // increase the array size by 1
 		                    colvalues[ colvalues.length - 1] = rowadd;
 		                   
-		                }while (rs.next());
+		                }while (mutant_rs.next());
 		             
 		                TextTable tt = new TextTable(colnames, colvalues);
 		                
 		        		tt.printTable();
-		               
+					}
+					
+					else {
+						System.out.println("|" + " Empty "+"|\n");
+						
+					}
+		        		
+		        		//populate correct query result ->Added by Akanksha
+		        		System.out.println("Expected Result");
+					
+						PreparedStatement query_ptsmt=testConn.prepareStatement(query);
+						ResultSet query_rs=query_ptsmt.executeQuery();
+						
+						ResultSetMetaData query_rsmd = rs.getMetaData();
+						int colNum1 = query_rsmd.getColumnCount();
+						
+						if(query_rs.next()) {
+						
+						String q_colnames[]=new String[colNum1];
+		                for (int i = 0; i < colNum1; i++) { 
+	                        String columnName = query_rsmd.getColumnName(i+1);
+	                        q_colnames[i]=columnName;
+	                      
+		                }
+					
+						
+						  String q_colvalues[][] =new String[0][colNum1];
+			                do{
+			                	String rowadd[]=new String[colNum1];
+			                    for (int i = 0; i < colNum1; i++) {
+			                       
+			                        String columnValue = query_rs.getString(i+1);
+			                        rowadd[i]=columnValue;
+			                       
+			                    } 
+			                    q_colvalues = Arrays.copyOf( q_colvalues,  q_colvalues.length + 1); // increase the array size by 1
+			                    q_colvalues[ q_colvalues.length - 1] = rowadd;
+			                   
+			                }while (query_rs.next());
+			             
+			                TextTable tt1 = new TextTable(q_colnames, q_colvalues);
+			                
+			        		tt1.printTable();
+						}
+						else {
+							System.out.println("|" + " Empty "+"|");
+							
+						}
 					//Added by Akanksha end's,changed below return value to false.
 					return false;
 				}
-			}catch(SQLException e) {
+			}
+			catch(SQLException e) {
 				//Added by Akanksha
-				System.out.println("got exception->");
+				//System.out.println("got exception->");
 
 				//e.printStackTrace();
 				
@@ -360,7 +417,7 @@ public class RegressionTests {
 			}
 				
 			//Check if DS0 works
-			System.out.println("Correct Query : " + query);
+			//System.out.println("Correct Query : " + query);
 			try {
 				if(testBasicDataset(queryId,query)==false) {
 					errors.add("Basic datasets failed");
@@ -421,7 +478,8 @@ public class RegressionTests {
 		try {
 	            // Read the content of the file
 			    String mutantPath = "test/universityTest/mutants.txt";
-	            BufferedReader reader = new BufferedReader(new FileReader(mutantPath));
+			    
+			    BufferedReader reader = new BufferedReader(new FileReader(mutantPath));
 	            StringBuilder content = new StringBuilder();
 	            String line;
 	            while ((line = reader.readLine()) != null) {
@@ -443,7 +501,34 @@ public class RegressionTests {
 	        } catch (IOException e) {
 	            e.printStackTrace();
 	        }
-		
+		//modify queries.txt file,append 1| in the beginning of each query and remove trailing ';'
+		try {
+            // Read the content of the file
+		    String queryPath = "test/universityTest/queries.txt";
+		    
+		    BufferedReader reader = new BufferedReader(new FileReader(queryPath));
+            StringBuilder content = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                // Remove trailing semicolon
+                line = line.replaceAll(";$", "");
+                content.append(line).append(System.lineSeparator());
+            }
+            reader.close();
+
+            // Modify the text
+            String modifiedText = "1| " + content.toString();
+
+            // Write the modified content back to the file
+            BufferedWriter writer = new BufferedWriter(new FileWriter(queryPath));
+            writer.write(modifiedText);
+            writer.close();
+
+           // System.out.println("File content modified successfully.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+	
 		
 		//Added by Akanksha Ends
 		

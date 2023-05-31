@@ -1,1 +1,1 @@
-1| select E.name from instructor as E , teaches where E.ID != teaches.ID
+1| select E.name from instrucor as E , teaches where E.ID = teaches.ID
