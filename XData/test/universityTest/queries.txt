@@ -1,1 +1,1 @@
-1| select E.name from instructor as E , teaches where E.ID = teaches.ID
+1| SELECT name FROM instructor WHERE EXISTS (SELECT * FROM teaches t1 WHERE instructor.ID = t1.ID and NOT EXISTS (SELECT * FROM teaches t2 WHERE t2.ID=t1.ID and t2.year=2010))

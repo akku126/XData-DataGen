@@ -188,10 +188,13 @@ public class GenerateCommonConstraintsForQuery {
 				CVCStr = removeDuplicateConstraints(CVCStr);
 				
 				/************** TEMP CODE *******************/
-				System.out.println("Dataset: "+cvc.getCount()+"\t"+cvc.getTypeOfMutation());
-				System.out.println(cvc.cloneNoOfOutputTuples());
-				System.out.println("***************************");
+				
+				//Added by Akanksha,commented below lines
+				//System.out.println("Dataset: "+cvc.getCount()+"\t"+cvc.getTypeOfMutation());
+				//System.out.println(cvc.cloneNoOfOutputTuples());
+				//System.out.println("***************************");
 				/*********************************************/
+				//Added by Akanksha Ends
 				
 				Utilities.writeFile(Configuration.homeDir + "/temp_smt" + cvc.getFilePath() + "/z3_" + cvc.getCount() + ".smt", CVCStr);
 				

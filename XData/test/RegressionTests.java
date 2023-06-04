@@ -220,8 +220,8 @@ public class RegressionTests {
 				
 				if(rs.next()) {
 					//Added by Akanksha
-					System.out.println("");
-					System.out.println(mutant+" "+"Failed");
+					//System.out.println("");
+					System.out.println("Your Submission Failed On Following DataSet : ");
 				
 					//Added by Akku
 					
@@ -305,6 +305,7 @@ public class RegressionTests {
 		                TextTable tt = new TextTable(colnames, colvalues);
 		                
 		        		tt.printTable();
+		        		System.out.println("\n");
 					}
 					
 					else {

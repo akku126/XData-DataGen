@@ -468,11 +468,10 @@
 
 
 
+
 ;------------------------------------------------------------
 ; CONSTRAINTS OF THIS BLOCK 
 ;------------------------------------------------------------
-
- (assert  (and (= (instructor_ID0 (select O_instructor 1)) (teaches_ID0 (select O_teaches 1)))(= (instructor_ID0 (select O_instructor 2)) (teaches_ID0 (select O_teaches 2)))	)) 
 
 
 ;------------------------------------------------------------
@@ -482,6 +481,43 @@
 
 ;------------------------------------------------------------
 ; WHERE CLAUSE SUBQUERY BLOCK CONSTRAINTS 
+;------------------------------------------------------------
+
+
+;------------------------------------------------------------
+;CONSTRAINTS FOR WHERE CLAUSE SUBQUERY CONNECTIVE 
+;------------------------------------------------------------
+
+
+;------------------------------------------------------------
+;CONSTRAINTS FOR CONDITIONS INSIDE WHERE CLAUSE SUBQUERY CONNECTIVE 
+;------------------------------------------------------------
+(assert (=  (instructor_ID0 (select O_instructor 1))  (teaches_ID0 (select O_teaches 1))  )) 
+(assert (=  (instructor_ID0 (select O_instructor 2))  (teaches_ID0 (select O_teaches 1))  )) 
+
+
+;------------------------------------------------------------
+;GROUP BY CLAUSE CONSTRAINTS 
+;------------------------------------------------------------
+
+
+;------------------------------------------------------------
+;END OF GROUP BY CLAUSE CONSTRAINTS 
+;------------------------------------------------------------
+
+
+;------------------------------------------------------------
+;HAVING CLAUSE CONSTRAINTS 
+;------------------------------------------------------------
+
+
+;------------------------------------------------------------
+;END OF HAVING CLAUSE CONSTRAINTS 
+;------------------------------------------------------------
+
+
+;------------------------------------------------------------
+;END OF CONSTRAINTS FOR CONDITIONS INSIDE WHERE CLAUSE SUBQUERY CONNECTIVE 
 ;------------------------------------------------------------
 
 
@@ -534,11 +570,6 @@
 ; UNIQUE  KEY CONSTRAINTS 
 ;------------------------------------------------------------
 
- (assert  (or  (not (= (instructor_ID0 (select O_instructor 1)) (instructor_ID0 (select O_instructor 2))) 
-)  (not (= (teaches_ID0 (select O_teaches 1)) (teaches_ID0 (select O_teaches 2))) 
-) 
-		)) 
-
 
 ;------------------------------------------------------------
 ;END OF UNIQUE  KEY CONSTRAINTS 
@@ -574,6 +605,19 @@
 
 ;------------------------------------------------------------
 ;END OF NULL CONSTRAINTS FOR OUTER BLOCK OF QUERY
+;------------------------------------------------------------
+
+
+
+;------------------------------------------------------------
+;NULL CONSTRAINTS FOR WHERE CLAUSE NESTED SUBQUERY BLOCK
+;------------------------------------------------------------
+
+
+
+
+;------------------------------------------------------------
+;END OF NULL CONSTRAINTS FOR WHERE CLAUSE NESTED SUBQUERY BLOCK
 ;------------------------------------------------------------
 
 

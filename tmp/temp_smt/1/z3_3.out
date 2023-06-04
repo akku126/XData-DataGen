@@ -1,60 +1,155 @@
 sat
 (model 
   (define-fun O_instructor () (Array Int instructor_TupleType)
-    ((as const (Array Int instructor_TupleType))
-  (instructor_TupleType _ID__10101 _NAME__Einstein _DEPT_uNAME__Finance 40000.0)))
+    (lambda ((x!1 Int))
+  (let ((a!1 (ite (and (<= 2 x!1) (not (<= 3 x!1)))
+                  (instructor_TupleType
+                    _ID__10101
+                    _NAME__Einstein
+                    _DEPT_uNAME__Physics
+                    40000.0)
+                  (instructor_TupleType
+                    _ID__22222
+                    _NAME__Katz
+                    _DEPT_uNAME__History
+                    46798.0))))
+    (ite (and (<= 2 x!1) (<= 3 x!1))
+         (instructor_TupleType
+           _ID__12121
+           _NAME__Katz
+           _DEPT_uNAME__Finance
+           46798.0)
+         (ite (<= 2 x!1)
+              a!1
+              (instructor_TupleType
+                _ID__10101
+                _NAME__Einstein
+                _DEPT_uNAME__Physics
+                40000.0))))))
   (define-fun O_department () (Array Int department_TupleType)
     (lambda ((x!1 Int))
   (let ((a!1 (ite (and (<= 2 x!1) (not (<= 3 x!1)))
                   (department_TupleType
                     _DEPT_uNAME__History
                     _BUILDING__Taylor
-                    50000.0)
+                    111985.0)
                   (department_TupleType
-                    _DEPT_uNAME__Physics
-                    _BUILDING__Taylor
-                    50000.0))))
+                    _DEPT_uNAME__Music
+                    _BUILDING__Painter
+                    46798.0))))
   (let ((a!2 (ite (and (<= 2 x!1) (<= 3 x!1) (not (<= 4 x!1)))
                   (department_TupleType
                     _DEPT_uNAME__Finance
                     _BUILDING__Taylor
-                    58652.0)
+                    50000.0)
+                  a!1)))
+  (let ((a!3 (ite (and (<= 2 x!1)
+                       (<= 3 x!1)
+                       (<= 4 x!1)
+                       (<= 5 x!1)
+                       (not (<= 6 x!1)))
+                  (department_TupleType
+                    _DEPT_uNAME__Physics
+                    _BUILDING__Taylor
+                    108555.0)
+                  a!2)))
+  (let ((a!4 (ite (and (<= 2 x!1)
+                       (<= 3 x!1)
+                       (<= 4 x!1)
+                       (<= 5 x!1)
+                       (<= 6 x!1)
+                       (not (<= 7 x!1)))
+                  (department_TupleType
+                    _DEPT_uNAME__Physics
+                    _BUILDING__Taylor
+                    108555.0)
+                  (ite (and (<= 2 x!1)
+                            (<= 3 x!1)
+                            (<= 4 x!1)
+                            (<= 5 x!1)
+                            (<= 6 x!1)
+                            (<= 7 x!1))
+                       (department_TupleType
+                         _DEPT_uNAME__Finance
+                         _BUILDING__Taylor
+                         50000.0)
+                       a!3))))
+  (let ((a!5 (ite (and (<= 2 x!1) (<= 3 x!1) (<= 4 x!1) (not (<= 5 x!1)))
+                  (department_TupleType
+                    _DEPT_uNAME__History
+                    _BUILDING__Taylor
+                    111985.0)
+                  a!4)))
+    (ite (<= 2 x!1)
+         a!5
+         (department_TupleType _DEPT_uNAME__Finance _BUILDING__Taylor 50000.0)))))))))
+  (define-fun O_section () (Array Int section_TupleType)
+    (lambda ((x!1 Int))
+  (ite (<= 2 x!1)
+       (section_TupleType
+         _COURSE_uID__BIO_m301
+         _SEC_uID__2
+         _SEMESTER__Summer
+         2010
+         _BUILDING__Packard
+         _ROOM_uNUMBER__3128
+         _TIME_uSLOT_uID__B)
+       (section_TupleType
+         _COURSE_uID__CS_m347
+         _SEC_uID__2
+         _SEMESTER__Summer
+         2009
+         _BUILDING__Taylor
+         _ROOM_uNUMBER__120
+         _TIME_uSLOT_uID__C))))
+  (define-fun O_course () (Array Int course_TupleType)
+    (lambda ((x!1 Int))
+  (let ((a!1 (ite (and (<= 2 x!1) (not (<= 3 x!1)))
+                  (course_TupleType _COURSE_uID__BIO_m301
+                                    _TITLE__Robotics
+                                    _DEPT_uNAME__History
+                                    3)
+                  (course_TupleType _COURSE_uID__FIN_m201
+                                    _TITLE__Music_ubVideo_ubProduction
+                                    _DEPT_uNAME__History
+                                    2))))
+  (let ((a!2 (ite (and (<= 2 x!1) (<= 3 x!1) (not (<= 4 x!1)))
+                  (course_TupleType _COURSE_uID__CS_m347
+                                    _TITLE__Music_ubVideo_ubProduction
+                                    _DEPT_uNAME__Finance
+                                    4)
                   a!1)))
     (ite (<= 2 x!1)
          (ite (and (<= 2 x!1) (<= 3 x!1) (<= 4 x!1))
-              (department_TupleType
-                _DEPT_uNAME__Finance
-                _BUILDING__Taylor
-                58652.0)
+              (course_TupleType _COURSE_uID__BIO_m301
+                                _TITLE__Robotics
+                                _DEPT_uNAME__History
+                                3)
               a!2)
-         (department_TupleType _DEPT_uNAME__History _BUILDING__Taylor 50000.0))))))
-  (define-fun O_section () (Array Int section_TupleType)
-    ((as const (Array Int section_TupleType))
-  (section_TupleType
-    _COURSE_uID__BIO_m301
-    _SEC_uID__2
-    _SEMESTER__Summer
-    2009
-    _BUILDING__Taylor
-    _ROOM_uNUMBER__3128
-    _TIME_uSLOT_uID__B)))
-  (define-fun O_course () (Array Int course_TupleType)
-    ((as const (Array Int course_TupleType))
-  (course_TupleType _COURSE_uID__BIO_m301
-                    _TITLE__Music_ubVideo_ubProduction
-                    _DEPT_uNAME__History
-                    4)))
+         (course_TupleType _COURSE_uID__CS_m347
+                           _TITLE__Music_ubVideo_ubProduction
+                           _DEPT_uNAME__Finance
+                           4))))))
   (define-fun O_classroom () (Array Int classroom_TupleType)
-    ((as const (Array Int classroom_TupleType))
-  (classroom_TupleType _BUILDING__Taylor _ROOM_uNUMBER__3128 10)))
+    (lambda ((x!1 Int))
+  (ite (<= 2 x!1)
+       (classroom_TupleType _BUILDING__Packard _ROOM_uNUMBER__3128 123)
+       (classroom_TupleType _BUILDING__Taylor _ROOM_uNUMBER__120 10))))
   (define-fun O_teaches () (Array Int teaches_TupleType)
-    ((as const (Array Int teaches_TupleType))
-  (teaches_TupleType
-    _ID__10101
-    _COURSE_uID__BIO_m301
-    _SEC_uID__2
-    _SEMESTER__Summer
-    2009)))
+    (lambda ((x!1 Int))
+  (ite (<= 2 x!1)
+       (teaches_TupleType
+         _ID__12121
+         _COURSE_uID__BIO_m301
+         _SEC_uID__2
+         _SEMESTER__Summer
+         2010)
+       (teaches_TupleType
+         _ID__10101
+         _COURSE_uID__CS_m347
+         _SEC_uID__2
+         _SEMESTER__Summer
+         2009))))
   (define-fun realNullVal () Real
     (- 99996.0))
   (define-fun intNullVal () Int
